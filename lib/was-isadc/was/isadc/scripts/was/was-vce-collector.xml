@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere VCE Collector" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere VCE Collector}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/vce-shared/vce-sharedtargets.xml"/>
+
+	<property name="autopdProblem" value="WAS_VCE_Collector" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-vce" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="problem.type.script" value="was/was-vce-collector.xml" />
+	<property name="skip_banner_message" value="true" /> 
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="main target for general collection"
+	  	     depends="load_sharedelements_tasks,
+				set_problem_type_with_nls_bundle,
+				setup_autopd_v2, 
+				validate_os, 
+
+				was_stack_custom_init, 
+				execute_vce_info_for_was,
+		
+				meta_file_collection, 
+				zip_autopd_log,
+				
+				ftp_logs_to_ecurep, 
+		
+				script_completed_v2" >
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;General Problem&lt;/h2&gt;&lt;p&gt;
+			This problem category can be run for any problem. During the data collection, any trace string
+			can be entered, the application server will pick up this trace, and the problem can be reproduced
+			based on that trace string. After the problem has been reproduced the configuration, log, and trace
+				files are collected and the application server is restored to its initial state.&lt;/p&gt;">
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1145599" /> 
+
+		<condition property="remote.collector.only">
+					<equals arg1="NO_GUI" arg2="${console}"/>
+				</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category can be run for any problem. During the data collection, 
+any trace string can be entered, the application server will pick up this trace, and the problem can be reproduced 
+based on that trace string. After the problem has been reproduced the configuration, log, and trace 
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="General Problem =>
+This problem category can be run for any problem. During the data collection, any trace string can be entered,
+the application server will pick up this trace, and the problem can be reproduced
+based on that trace string. After the problem has been reproduced the configuration, log, and trace
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

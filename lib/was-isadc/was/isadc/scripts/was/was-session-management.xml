@@ -1,0 +1,396 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Session Management Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir"
+	         file="${ant.file.WebSphere Session Management Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_Session_Management_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-session-management" />
+	<property name="rolloverSize" value="100" />
+	<property name="maxNumberOfBackupFiles" value="10" />
+
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os,
+
+					was_stack_custom_init,
+
+				  	determine_persistence_type, 
+		 		  	generate_session_trace_string,  
+				  
+		 			trace_setup_custom,
+		 		  	questionnaires, 
+		 		  
+				  	execute_collector,
+		          	execute_vce_info_for_was,
+					collect_ihs_logs,
+		 		  	common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 collect_was_session_management_recovery, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+
+	<target name="determine_persistence_type" > 
+		<inputdialogtask > 
+			<fieldtask name="prompt"
+	           label="Input_Required"
+	           type="prompt"
+	           bundle="autopdtoolstrings" />
+			<fieldtask name="persistence.type"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	           label="Session_1"
+	           list="No Persistence:Database Persistence:Memory-to-Memory Persistence"
+	           listDetails="No Persistence:Database Persistence:Memory-to-Memory Persistence"
+	           type="selectlist" />
+		</inputdialogtask> 
+
+		<condition property="no_persistence">
+			<or>
+				<equals arg1="No Persistence" arg2="${persistence.type}" />
+			</or>
+		</condition>
+		<condition property="db_persistence">
+			<or>
+				<equals arg1="Database Persistence" arg2="${persistence.type}" />
+			</or>
+		</condition>
+		<condition property="mm_persistence">
+			<or>
+				<equals arg1="Memory-to-Memory Persistence" arg2="${persistence.type}" />
+			</or>
+		</condition>
+		<if isTrue="${db_persistence}||${mm_persistence}">
+			<inputdialogtask noCancel="true" > 
+				<fieldtask name="prompt"
+		           label="Information_Message"
+		           type="prompt"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label1"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="Persistence_Message_1"
+		           type="label" />
+			</inputdialogtask> 
+		</if>
+			
+	
+	</target>
+	
+	<target name="generate_session_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings_for_the_session_management_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generate trace strings for the session management problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1131"
+		           level="info" />
+		
+		<if isTrue="${no_persistence}" > 
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled" />
+			</if> 
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all" />
+			</if> 
+		</if>
+			
+		<if isTrue="${db_persistence}" >
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled" />
+			</if> 
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all:WAS.j2c=all:RRA=all:WAS.Database=all" />
+			</if> 
+		</if> 
+		
+		<if isTrue="${mm_persistence}" >
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled:com.ibm.ws.drs.*=all=enabled" />
+			</if> 
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all:com.ibm.ws.drs.*=all" />
+			</if> 
+		</if> 
+		
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target> 
+		
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="generate_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings_for_the_session_management_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generate trace strings for the session management problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1131"
+		           level="info" />
+
+
+		<if isTrue="${uses.XMI.rootelement}">
+			<echo message="xmi: ${xmi:XMI.process:Server.components.components.services(sessionPersistenceMode)}" />
+			<autopdproperty name="memory.persistence"
+			                value="${xmi:XMI.process:Server.components.components.services(sessionPersistenceMode)}" />
+		</if>
+
+		<if isTrue="${uses.processdefinition}">
+			<echo message="no xmi: ${process:Server.components.components.services(sessionPersistenceMode)}" />
+			<autopdproperty name="memory.persistence"
+			                value="${process:Server.components.components.services(sessionPersistenceMode)}" />
+		</if>
+
+		<if isTrue="${uses.processdefinitions}">
+			<echo message="no xmi: ${process:Server.components.components.services(sessionPersistenceMode)}" />
+			<autopdproperty name="memory.persistence"
+			                value="${process:Server.components.components.services(sessionPersistenceMode)}" />
+		</if>
+
+		<echo message="memory.persistence: ${memory.persistence}" />
+		<condition property="doMemoryPersistence">
+			<equals arg1="DATA_REPLICATION" arg2="${memory.persistence}" />
+		</condition>
+		<echo message="doMemoryPersistence: ${doMemoryPersistence}" />
+		<!-- DATA_REPLACATIOB/NONE/DATABASE -->
+		<if isTrue="${doMemoryPersistence}">
+			<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled:com.ibm.ws.drs.*=all=enabled" />
+		</if>
+
+		<if isNotTrue="${doMemoryPersistence}">
+			<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+	</target>
+
+	<!-- This target is used to set the path for how to proceed-->
+	<target name="set_plugin_properties_for_how_to_proceed"
+	        description="set the path for how to proceed">
+
+		<if isTrue="${restart.server}">
+			<property name="backup.http.plugin.cfg.xml.needed" value="true" />
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+			<property name="stop.app.server" value="true" />
+			<property name="start.app.server" value="true" />
+			<property name="stop.web.server.needed" value="true" />
+			<property name="start.web.server.needed" value="true" />
+			<property name="set.log.file.rollover.needed" value="true" />
+			<property name="restore.log.file.rollover.needed" value="true" />
+			<property name="restore.http.phugin.cfg.needed" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+			<property name="detect.was.status.needed" value="true" />
+			<property name="restore.app.server.status.needed" value="true" />
+			<property name="set.http.plugin.trace.needed" value="true" />
+		</if>
+	</target>
+
+
+	<target name="pause_for_session" description="Perform a Pause until input received">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_reproducing_the_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Please reproducing the problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1132"
+		           level="info" />
+
+		<inputdialogtask doSkip="true" noCancel="true">
+			<fieldtask name="prompt"
+			           label="Instructions_to_accept_session_id_from_your_browser"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was-session1"
+			           label="Notes"
+			           type="label"
+			           accessibilityName="was_session_problem"
+			           accessibilityDesc="was_session_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was-session2"
+			           label="change_your_browser_settings"
+			           type="label"
+			           accessibilityName="was_session_problem"
+			           accessibilityDesc="was_session_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was-session3"
+			           label="If_you_obtain_the_session_id_please_save_it_for_you_later_to_answer_some_questions"
+			           type="label"
+			           accessibilityName="was_session_problem"
+			           accessibilityDesc="was_session_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<autopdinput message="Please_Proceed_With_Reproducing_the_Problem_for_Session_Management_Problem"
+		             validargs="I_have_reproduced_the_problem,quit"
+		             addproperty="do.reproduce"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="do.reproduce"
+		           bundle="autopdtoolstrings"
+		           message="do.reproduce is {0}"
+		           replace="${do.reproduce}"
+		           id="2252"
+		           level="info" />
+		<condition property="do.abort1">
+			<equals arg1="quit" arg2="${do.reproduce}" />
+		</condition>
+		<fail if="do.abort1">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+
+	</target>
+
+	<target name="questionnaires" description="Provide required information into a file">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Questionnaires"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Questionnaires"
+		           replace="${autopdts};;${step.count}"
+		           id="1099"
+		           level="info" />
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt"
+			           label="Provide_the_sessionID_that_encounters_the_problem"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer1" label="Answer" type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Provide the sessionID that encounters the problem:${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			${answer1}
+		</concat>
+	</target>
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_session_management"
+	        description="Collect log tracing and other config information from Application Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for {2}"
+		           replace="${autopdts};;${step.count};;${problem.type}"
+		           id="1126"
+		           level="info" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset file="${http_plugin_cfg_log}"
+			            fullpath="autopdzip/${http_plugin_cfg_log.trimmed}" />
+
+		</zip>
+	</target>
+
+
+	<!-- This target lies on the alternate path invoked when the script is entered
+		at the "autopdmainrecovery" target. 
+	-->
+	<target name="collect_was_session_management_recovery"
+	        description="Collect log tracing and other config information for recovery from Portal Server">
+
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for {2}"
+		           replace="${autopdts};;${step.count};;${problem.type}"
+		           id="1126"
+		           level="info" />
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+			<zipfileset file="${http_plugin_cfg_log}"
+			            prefix="${http_plugin_cfg_log.trimmed}" />
+		</zip>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Session Management Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category should be run on the host machine containing the adminstration console. It sets
+			security specific trace, allows the user to reproduce the problem, and then asks various questions regarding
+			the session management problem being experienced. At the end of the script the logs, trace, and configuration files
+			are collected for further analysis. The state of the server is restored.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1192604" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category should be run on the host machine containing 
+the adminstration console. It sets security specific trace, allows the user to reproduce the 
+problem, and then asks various questions regarding the session management problem being experienced. 
+At the end of the script the logs, trace, and configuration files are collected for further analysis. 
+The state of the server is restored." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Session Management Problem =>
+This problem category should be run on the host machine containing the adminstration console. It sets
+security specific trace, allows the user to reproduce the problem, and then asks various questions regarding
+the session management problem being experienced. At the end of the script the logs, trace, and configuration files
+are collected for further analysis. The state of the server is restored." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

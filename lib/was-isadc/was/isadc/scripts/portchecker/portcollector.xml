@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="portcollector" >
+
+
+	<dirname property="portchecker.imported.basedir" file="${ant.file.portcollector}"/>
+	<dirname property="portchecker.imported.parentdir" file="${portchecker.imported.basedir}"/>
+	<dirname property="portchecker.bundle.basedir" file="${portchecker.imported.parentdir}"/>
+
+	<taskdef file="${portchecker.bundle.basedir}/properties/portchecker/portchecker.properties" />
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" />
+
+<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. -->
+	<import>
+		<javaresource name="scripts/sharedtargets.xml"/>
+	</import>
+	<import>
+		<javaresource name="scripts/sharedelements/sharedelements-sharedtargets.xml"/>
+	</import>
+
+	<target name="port_checker" description="Invokes the port collector task" unless="isZos" >
+
+		
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts"
+					pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Run_PortChecker_Tool"
+			bundle="properties/portchecker/autopd"
+			message="[{0}] Step {1}: Running Port Collector Tool."
+			replace="${autopdts};;${step.count}"  />
+		
+		<port_collector outputPath = "${autopdtmp}/port_checker" wasPath="${was.root}" />
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/port_checker" prefix="${autopdProblem}/PortChecker" > 
+				<include name="*.html"/>
+			</zipfileset>
+		</zip>
+	</target>
+</project>

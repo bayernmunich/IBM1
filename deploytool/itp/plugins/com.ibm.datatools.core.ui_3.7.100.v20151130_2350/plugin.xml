@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   <extension-point id="deletion" name="deletion" schema="schema/Deletion.exsd"/>
+   <extension-point id="newModelCommand" name="NewModelCommand" schema="schema/NewModelCommand.exsd"/>
+   <extension-point id="EMFResouceToDisplay" name="EMFResouceToDisplay" schema="schema/EMFResouceToDisplay.exsd"/>
+   <extension-point id="scriptsResourceToDisplay" name="scriptsResourceToDisplay" schema="schema/scriptsResourceToDisplay.exsd"/>
+   <extension-point id="typeChanged" name="typeChanged" schema="schema/typeChanged.exsd"/>
+   <extension-point id="ExplorerDisplayException" name="ExplorerDisplayException" schema="schema/ExplorerDisplayException.exsd"/>
+   <extension-point id="wizardPages" name="Wizard Pages" schema="schema/wizardPages.exsd"/>
+   <extension-point id="miscDisplayException" name="miscDisplayException" schema="schema/miscDisplayException.exsd"/>
+   <extension-point id="modelFilePage" name="Model File Page Extension" schema="schema/modelFilePage.exsd"/>
+   <extension-point id="reparent" name="reparent" schema="schema/reparent.exsd"/>
+   <extension-point id="IDataModelPathProvider" name="IDataModelPathProvider" schema="schema/IDataModelPathProvider.exsd"/>
+   <extension-point id="commandElementFactory" name="commandElementFactory" schema="schema/commandElementFactory.exsd"/> 
+   <extension-point id="set" name="set" schema="schema/set.exsd"/> 
+   <extension-point id="synchronization" name="%Synchronization" schema="schema/synchronization.exsd"/>
+   <extension-point id="DropSQLObjects" name="Drop SQL Objects" schema="schema/drop.exsd"/>
+   <extension-point id="groupedFilterTypes" name="Grouped Filter Types" schema="schema/groupedFilterTypes.exsd"/>
+   <extension-point id="databaseLoader" name="databaseLoader" schema="schema/databaseLoader.exsd"/>
+   <extension-point id="uiServiceHelper" name="Data Tools UI Service Helper" schema="schema/uiServiceHelper.exsd"/>
+   <extension-point id="propertyViewService" name="Property View Service" schema="schema/propertyViewService.exsd"/>
+   <extension-point id="resourceAPIProvider" name="Resource API Provider" schema="schema/resourceAPIProvider.exsd"/>
+   <extension-point id="mappingProvider" name="Provide container and contained objects mapping" schema="schema/mappingProvider.exsd"/>
+   <extension-point id="ignoreListProvider" name="%IgnoreListProvider" schema="schema/ignoreListProvider.exsd"/>
+   <extension-point id="OverrideSelectWizardPage" name="OverrideSelectWizardPage" schema="schema/OverrideSelectWizardPage.exsd"/>
+   <extension-point id="databaseResourceAPI" name="Database Resource API" schema="schema/databaseResourceAPI.exsd"/>
+   <extension-point id="runtimeUIContext" name="runtimeContext" schema="schema/runtimeUIContext.exsd"/>
+   <extension-point id="connectionDecorationEnabler" name="connectionDecorationEnabler" schema="schema/connectionDecorationEnabler.exsd"/>
+   <extension-point id="connectionDisplayTextProvider" name="connectionDisplayTextProvider" schema="schema/connectionDisplayTextProvider.exsd"/>
+   <extension-point id="referencedModelsSections" name="referencedModelsSections" schema="schema/referencedModelsSections.exsd"/>
+   <extension-point id="transferFactory" name="Transfer Factory" schema="schema/transferFactory.exsd"/>
+   <extension-point id="relationshipDialogProvider" name="relationshipDialogProvider" schema="schema/relationshipDialogProvider.exsd"/>
+   
+   
+<!-- Adding a new Nature inside the Project -->
+   <extension
+         id="DatabaseDesignNature"
+         name="%datatools.core.ui.projectNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.ibm.datatools.core.ui.project.nature.DataModelNature">
+         </run>
+      </runtime>
+   </extension>
+
+<!-- Decoration of the Model Explorer - lightweight Decoration -->
+   <extension
+         id="com.ibm.datatools.core.internal.ui.modelexplorer.decorator"
+         name="com.ibm.datatools.core.internal.ui.modelexplorer.decorator"
+         point="org.eclipse.ui.decorators">
+<!-- Decoration for the Dirty mark -->
+      <decorator
+            lightweight="true"
+            location="TOP_LEFT"
+            label="%datatools.core.ui.modelexplorer.modelExplorerDecoration"
+            state="true"
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.providers.decorators.impl.DatabaseDecorationService"
+            id="com.ibm.datatools.core.internal.ui.modelexplorer.DirtyDecoration">
+         <enablement>
+            <objectClass
+                  name="com.ibm.datatools.project.ui.node.IModel">
+            </objectClass>
+         </enablement>
+      </decorator>
+<!-- Decorator for Index and Trigger -->
+	  <decorator
+            lightweight="true"
+            adaptable="false"
+            label="%datatools.core.ui.modelexplorer.indextriggerDecoration"
+            state="true"
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.providers.decorators.impl.IndexTriggerDecorationService"
+            id="com.ibm.datatools.core.internal.ui.modelexplorer.indexTriggerDecoration">
+         <enablement>
+            <objectClass
+	            name="org.eclipse.datatools.modelbase.sql.constraints.Index">
+	        </objectClass>
+         </enablement>
+	  </decorator>	  
+   </extension>
+
+<!-- Define our own Selection Transfer Provider -->
+   <extension
+         id="transferAdapterProviders"
+         point="org.eclipse.gmf.runtime.common.ui.services.dnd.transferAdapterProviders">
+      <TransferAdapterProvider
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.providers.dnd.TransferAdapterProvider"
+            id="com.ibm.datatools.core.ui.SelectionTransferAdapterProvider">
+         <Priority
+               name="Highest">
+         </Priority>
+         <AdapterType
+               operation="drop">
+            <TransferId
+                  id="local-selection-transfer-format">
+            </TransferId>
+         </AdapterType>
+      </TransferAdapterProvider>
+   </extension>
+
+<!-- Icon support for the Project Explorer-->
+	<extension point = "org.eclipse.datatools.connectivity.sqm.core.ui.labelService">
+		<contributor
+			type = "com.ibm.datatools.project.ui.node.IDatabaseDesignProject"
+			iconLocation = "icons/dataDesignProject.gif"
+			displayType = "%dataProject">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.project.ui.node.IScriptFolder"
+			iconLocation = "icons/script.gif"
+			displayType = "%ScriptFolder">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.project.ui.node.IScript"
+			iconLocation = "icons/scripts.gif"
+			displayType = "%ScriptFolder">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.project.ui.node.IModelFolder"
+			iconLocation = "icons/modelsFolder.gif"
+			displayType = "%ModelFolder">
+		</contributor>
+		<contributor
+			type= "com.ibm.datatools.project.ui.pdm.extensions.node.ISQLStatementFolder"
+			iconLocation = "icons/folder_sqlfile.gif"
+			displayType = "%SQLFolder">
+		</contributor>
+		<contributor
+			type= "org.eclipse.datatools.modelbase.sql.schema.Comment"
+			iconLocation = "icons/URL.gif"
+			displayType = "%URL">
+		</contributor>
+	</extension>
+
+<!-- Deletion Providers -->
+   <extension
+         point="com.ibm.datatools.core.ui.deletion">
+      <deletion
+            package="http:///org/eclipse/datatools/modelbase/sql/tables.ecore"
+            class="Column"
+            provider="com.ibm.datatools.core.internal.ui.command.ColumnDeletionProvider">
+      </deletion>
+      <deletion
+            package="http:///org/eclipse/datatools/modelbase/sql/constraints.ecore"
+            class="UniqueConstraint"
+            provider="com.ibm.datatools.core.internal.ui.command.UniqueConstraintDeletionProvider">
+      </deletion>
+      <deletion
+      		package="http:///org/eclipse/datatools/modelbase/sql/constraints.ecore"
+      		class="ForeignKey"
+      		provider="com.ibm.datatools.core.internal.ui.command.FKConstraintDeletionProvider">
+      </deletion>
+      <deletion
+            class="IndexMember"
+            package="http:///org/eclipse/datatools/modelbase/sql/constraints.ecore"
+            provider="com.ibm.datatools.core.internal.ui.command.IndexMemberDeletionProvider">
+      </deletion>
+      <deletion
+            class="Role"
+            package="http:///org/eclipse/datatools/modelbase/sql/accesscontrol.ecore"
+            provider="com.ibm.datatools.core.internal.ui.command.RoleDeletionProvider">
+      </deletion>
+      <deletion
+            class="Privilege"
+            package="http:///org/eclipse/datatools/modelbase/sql/accesscontrol.ecore"
+            provider="com.ibm.datatools.core.internal.ui.command.PrivilegeDeletionProvider">
+      </deletion>
+   </extension>
+      
+<!-- export wizard -->
+	<extension 
+	       point="org.eclipse.ui.exportWizards"> 
+	  	  <category
+        	  name="%ImportExportWizards.Category.Datatools"
+              id="com.ibm.datatools.export">
+      	  </category>
+	       
+	      <wizard 
+	         id="DatatoolsExportWizard" 
+	         name="%datatools.core.ui.export" 
+	         class="com.ibm.datatools.core.ui.export.ExportModelWizard" 
+	         icon="icons/modelTemplate.gif"
+             category="com.ibm.datatools.export">
+             <description> 
+				%datatools.core.ui.export.description
+	         </description> 
+	         <selection class="org.eclipse.core.resources.IResource"/> 
+	      </wizard> 
+   </extension>
+   
+<!-- import wizard category -->
+   <extension 
+	       point="org.eclipse.ui.importWizards"> 
+	  	  <category
+        	  name="%ImportExportWizards.Category.Datatools"
+              id="com.ibm.datatools.import">
+      	  </category>
+   </extension> 
+      
+   <!-- Clone element providers -->
+   <extension 
+      point="com.ibm.datatools.core.ui.reparent">
+      <reparent
+            package="http:///org/eclipse/datatools/modelbase/sql/tables.ecore"
+            class="Column"
+            provider="com.ibm.datatools.core.internal.ui.modelexplorer.providers.dnd.reparent.ColumnReparentProvider">
+      </reparent>
+   </extension>
+   
+   <!-- Override Refresh in the Database Explorer -->
+   <extension point="org.eclipse.ui.navigator.viewer">
+      <viewerActionBinding viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+         <includes>
+             <actionExtension pattern="com.ibm.datatools.core.ui.databaseexplorer.refresh" />
+             <actionExtension
+                   pattern="com.ibm.datatools.core.ui.databaseexplorer.connectionprofile.refresh">
+             </actionExtension>
+         </includes>
+      </viewerActionBinding>
+      <viewerActionBinding viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+         <includes>
+            <actionExtension pattern="com.ibm.datatools.core.ui.databaseexplorer.actions.drop"/>
+            <actionExtension pattern="com.ibm.datatools.core.ui.databaseexplorer.actions.drop2"/>
+         </includes>
+      </viewerActionBinding>
+      <viewerActionBinding viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+         <includes>      
+      <actionExtension pattern="com.ibm.datatools.schema.manager.server.extensions.actions.filter" />
+         </includes>
+      </viewerActionBinding>
+      <viewerActionBinding
+            viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+         <includes>
+            <actionExtension
+                  pattern="com.ibm.datatools.core.ui.databaseexplorer.actions.revokeprivileges">
+            </actionExtension>
+         </includes>
+      </viewerActionBinding>      
+   </extension>
+   <extension point="org.eclipse.ui.navigator.navigatorContent">
+      <actionProvider
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.RefreshProvider"
+            id="com.ibm.datatools.core.ui.databaseexplorer.refresh"
+            overrides="org.eclipse.datatools.connectivity.sqm.server.internal.ui.explorer.actions.popup.RefreshActionProvider">
+	        <enablement>
+	        	<and>
+		            <or>
+			            <and>
+				            <or>
+					        	<adapt type="org.eclipse.datatools.modelbase.sql.schema.Database" /> 
+					        	<adapt type="org.eclipse.datatools.modelbase.sql.schema.Schema" /> 
+					        	<adapt type="org.eclipse.datatools.modelbase.sql.tables.Table" /> 
+					        	<adapt type="org.eclipse.datatools.modelbase.sql.schema.Sequence" /> 
+					        	<adapt type="org.eclipse.datatools.modelbase.sql.datatypes.UserDefinedType" />					        	
+					        </or>
+				        	<adapt type="org.eclipse.datatools.connectivity.sqm.core.rte.ICatalogObject"/>
+				        </and>
+					    <adapt type="org.eclipse.datatools.connectivity.sqm.core.ui.explorer.virtual.IVirtualNode" /> 
+				 	</or>
+			 	</and>
+			 </enablement>	
+      </actionProvider>
+      <actionProvider
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.RefreshProvider"
+            id="com.ibm.datatools.core.ui.databaseexplorer.connectionprofile.refresh"
+            overrides="org.eclipse.datatools.connectivity.ui.dse.actions.RefreshActionProvider">
+	        <enablement>
+	        	<and>
+		            <or>
+					    <adapt type="org.eclipse.datatools.connectivity.IConnectionProfile" /> 
+				 	</or>
+			 	</and>
+			 </enablement>	
+      </actionProvider>      
+      <actionProvider
+   			id = "com.ibm.datatools.core.ui.databaseexplorer.actions.drop"
+   			class = "com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.DBDropProvider"
+   			overrides = "org.eclipse.datatools.sqltools.tablewizard.ui.popup.actions.DeleteTableActionProvider">
+   			<enablement>
+   				<and>
+   					<adapt type="org.eclipse.datatools.connectivity.sqm.core.rte.ICatalogObject" />
+   					<or>   					
+            			<adapt type="org.eclipse.datatools.modelbase.sql.tables.Table" />  
+            			<adapt type="org.eclipse.datatools.modelbase.sql.datatypes.UserDefinedType" />
+             			<adapt type="org.eclipse.datatools.modelbase.sql.constraints.Index" /> 
+            			<adapt type="org.eclipse.datatools.modelbase.sql.accesscontrol.Role" /> 
+             			<adapt type="com.ibm.db.models.db2.DB2Package" /> 
+              			<adapt type="org.eclipse.datatools.modelbase.sql.schema.Sequence"/>
+           				<adapt type="com.ibm.db.models.db2.luw.LUWBufferPool" />
+           				<adapt type="com.ibm.db.models.db2.luw.LUWServer" />
+                		<adapt type="com.ibm.db.models.sqlserver.SQLServerFileGroup"/>
+                		<adapt type="com.ibm.db.models.db2.luw.LUWPartitionGroup" />  
+                		<adapt type="com.ibm.db.models.db2.iSeries.ISeriesGlobalVariable" />             
+            		</or>
+            	</and>
+   			</enablement>
+   		 </actionProvider>
+   		 <actionProvider
+   			id = "com.ibm.datatools.core.ui.databaseexplorer.actions.drop2"
+   			class = "com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.DBDropProvider"
+   			overrides = "org.eclipse.datatools.sqltools.routineeditor.actions.RoutineActionProvider">
+   			<enablement>
+   				<and>
+   					<adapt type="org.eclipse.datatools.connectivity.sqm.core.rte.ICatalogObject" />
+   					<or> 
+            			<adapt type="org.eclipse.datatools.modelbase.sql.tables.Trigger" /> 
+           				<adapt type="org.eclipse.datatools.modelbase.sql.routines.Routine" />
+            		</or>
+            	</and>
+   			</enablement>
+   		 </actionProvider>
+   		 <actionProvider
+            class="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.RevokePrivilegesActionProvider"
+            id="com.ibm.datatools.core.ui.databaseexplorer.actions.revokeprivileges"
+            overrides="com.ibm.datatools.core.ui.databaseexplorer.actions.drop">
+         <enablement>
+            <and>
+               <or>
+                  <instanceof value="org.eclipse.datatools.modelbase.sql.accesscontrol.User"/>
+                  <instanceof value="org.eclipse.datatools.modelbase.sql.accesscontrol.Group"/>
+               </or>
+               <instanceof value="org.eclipse.datatools.connectivity.sqm.core.rte.ICatalogObject"/>
+            </and>
+         </enablement>
+      </actionProvider>
+   </extension>
+       <!-- Override Filter in the Database Explorer -->
+	<extension
+         point="org.eclipse.ui.navigator.navigatorContent">      		 
+   		 <actionProvider
+   			id = "com.ibm.datatools.schema.manager.server.extensions.actions.filter"
+   			class = "com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.DBFilterProvider">
+   			<enablement>
+   				<or>
+	                <adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.ISchemaNode" />
+        		 	<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.ITableNode" />
+               		<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IViewNode" />
+               		<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IStoredProcedureNode" />
+               		<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IUDFNode" />
+               		<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.ISequenceNode" />
+               		<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IUDTNode" />
+   				</or>
+   			</enablement>
+   		 </actionProvider>
+	</extension>
+	
+       <!-- Role Membership View Action -->
+	<extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="com.ibm.datatools.core.ui.rolemembershipview"
+            nameFilter="*"
+            objectClass="org.eclipse.datatools.modelbase.sql.accesscontrol.Role">
+         <action
+               class="com.ibm.datatools.core.internal.ui.actions.accesscontrol.RoleMembershipViewAction"
+               enablesFor="1"
+               id="com.ibm.datatools.core.ui.roleMembershipViewAction"
+               label="%datatools.core.ui.actions.viewRoleMembership"
+               menubarPath="additions"/>
+      </objectContribution>
+   </extension>
+   
+   <!-- New Table... action  override -->
+	<extension point="org.eclipse.ui.navigator.viewer">
+		<viewerActionBinding viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+        	<includes>
+            	<actionExtension pattern="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.NewTableActionOverrideProvider"/>
+            </includes>
+    	</viewerActionBinding>
+    </extension>
+    <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+		 <actionProvider
+         	class="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.NewTableActionOverrideProvider"
+         	id="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.NewTableActionOverrideProvider"  
+         	overrides = "org.eclipse.datatools.sqltools.tablewizard.ui.popup.actions.NewTableActionProvider">	
+         	<enablement>
+				<or>
+                	<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.ITableNode"/>
+              	</or>
+        	</enablement>
+        </actionProvider> 
+ 	</extension>
+ 	
+ 	<!-- main New menu -->
+	<extension point="org.eclipse.ui.navigator.viewer">
+		<viewerActionBinding viewerId="org.eclipse.datatools.connectivity.DataSourceExplorerNavigator">
+        	<includes>
+            	<actionExtension pattern="com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.CreateGroupProvider"/>
+            </includes>
+    	</viewerActionBinding>
+    </extension>  
+    <extension point="org.eclipse.ui.navigator.navigatorContent">  
+   		<actionProvider
+   			id = "com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.CreateGroupProvider"
+   			class = "com.ibm.datatools.core.internal.ui.modelexplorer.actions.popup.providers.CreateGroupProvider">
+   			<enablement>
+   				<or>
+   					<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IStoredProcedureNode"/>
+   					<adapt type="org.eclipse.datatools.connectivity.sqm.core.internal.ui.explorer.virtual.IUDFNode"/>
+           		</or>
+   			</enablement>
+   	  	</actionProvider>
+	</extension>
+   
+   <!-- Set Command Providers -->
+   <extension point = "com.ibm.datatools.core.ui.set">
+      <set
+            package="http:///org/eclipse/wst/rdb/models/sql/tables.ecore"
+            class="Column"
+            provider="com.ibm.datatools.core.internal.ui.command.ColumnSetCommandProvider">
+      </set>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.preferencePages">
+   	  <!-- Preference page for Ddl Generation Options -->
+      <page
+            name="%datatools.preferences.ddlGeneration"
+            category="org.eclipse.datatools.connectivity.ui.preferences.dataNode"
+            class="com.ibm.datatools.core.ui.preferences.DdlGenerationPreferencePage"
+            id="datatools.preferences.ddlGenerationPreferences">
+      </page>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.preferencePages">
+   	  <!-- Preference page for Reverse Engineering Options -->
+      <page
+            name="%datatools.preferences.RE"
+            category="org.eclipse.datatools.connectivity.ui.preferences.dataNode"
+            class="com.ibm.datatools.core.ui.preferences.DatabaseREPreferencePage"
+            id="datatools.preferences.databaseRePreferences">
+      </page>
+   </extension>
+
+   <!-- Preference Pages Extension -->
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="%datatools.preferences.sequence"
+            category="org.eclipse.datatools.connectivity.ui.preferences.dataNode"
+            class="com.ibm.datatools.core.ui.preferences.IdentifierDefaultsPreferencePage"
+            id="datatools.preferences.NamingStandardPage">
+      </page>
+   </extension>
+   
+   <!-- Preference Pages Extension for Referential Integrity -->
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="%datatools.preferences.referentialIntegrity"
+            category="org.eclipse.datatools.connectivity.ui.preferences.dataNode"
+            class="com.ibm.datatools.core.ui.preferences.ReferentialIntegrityPreferencePage"
+            id="datatools.preferences.ReferentialIntegrityPage">
+      </page>
+   </extension>
+   
+   <!-- Preference Pages Extension for Cross-Model References -->
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="%datatools.preferences.crossModelReferences"
+            category="org.eclipse.datatools.connectivity.ui.preferences.dataNode"
+            class="com.ibm.datatools.core.ui.preferences.CrossModelReferencesPreferencePage"
+            id="datatools.preferences.CrossModelReferencesPage">
+      </page>
+   </extension>
+
+  <!-- Multiple Drops  -->   
+   <extension
+       point="com.ibm.datatools.core.ui.DropSQLObjects">
+    <multipleDropProvider>
+          <object type="com.ibm.db.models.db2.DB2Package"/>
+          <object type="com.ibm.db.models.db2.luw.LUWModule"/>
+          <object type="com.ibm.db.models.db2.DB2Table"/>
+          <object type="org.eclipse.datatools.modelbase.sql.routines.Routine"/>
+          <object type="org.eclipse.datatools.modelbase.sql.routines.Function"/>
+          <object type="org.eclipse.datatools.modelbase.sql.schema.Schema"/>
+    </multipleDropProvider>
+   </extension>
+   <extension
+         id="com.ibm.datatools.core.ui.modelVersionListener"
+         name="com.ibm.datatools.core.ui.modelVersionListener"
+         point="com.ibm.datatools.core.modelVersionListener">
+      <listener
+            class="com.ibm.datatools.core.internal.ui.resource.ModelVersionListener"
+            id="com.ibm.datatools.core.ui.modelVersionListener1">
+      </listener>
+   </extension>
+   <extension
+         point="org.eclipse.datatools.connectivity.sqm.server.ui.refreshServiceOverride">
+      <override
+            class="com.ibm.datatools.core.ui.services.ServerExplorerContextRefreshListener"
+            enhancedListenerSupportsVendors="DB2 UDB zSeries,DB2 UDB">
+      </override>
+   </extension>     
+    <extension
+  	   point="com.ibm.datatools.core.ui.synchronization">
+  		  <synchronizer
+  		        class="com.ibm.datatools.core.internal.ui.command.compare.bg.BGSynchronizationCommandFactory"
+  		        item="com.ibm.datatools.compare.bg.BGAnnotationCompareItem">
+  		  </synchronizer>
+ 	</extension>
+ 	<extension
+  	   point="com.ibm.datatools.core.ui.synchronization">
+  		  <synchronizer
+  		        class="com.ibm.datatools.core.internal.ui.command.compare.privileges.SQLPrivilegeSynchronizationCommandFactory"
+  		        item="com.ibm.datatools.internal.compare.SQLPrivilegeCompareItem">
+  		  </synchronizer>
+ 	</extension>
+ 	<extension
+  	   point="com.ibm.datatools.core.ui.synchronization">
+  		  <synchronizer
+  		        class="com.ibm.datatools.core.internal.ui.command.compare.privileges.AuthIdPrivilegeSynchronizationCommandFactory"
+  		        item="com.ibm.datatools.internal.compare.AuthIdReceivedPrivilegeCompareItem">
+  		  </synchronizer>
+ 	</extension> 		
+</plugin>

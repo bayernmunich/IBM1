@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- (C) Copyright IBM Corp. 2005, 2008. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="vce-sharedtargets" >       <!-- autopdmain is the top level target called -->
+
+
+	<!-- Set script.basedir and bundle.basedir as described in the AutoPD/ISA Script Compatibility Guidelines document  -->
+	<dirname property="vce.script.basedir" file="${ant.file.vce-sharedtargets}" />
+	<dirname property="vce.script.parentdir" file="${vce.script.basedir}" />
+	<dirname property="vce.bundle.basedir" file="${vce.script.parentdir}" />
+
+	<target name="prompt_vce_dialog" > 
+		<!-- 24238 --> 
+		<!-- Remove the prompt for VCE - Run it at all times. --> 
+		<!-- 
+		<inputdialogtask >
+			<fieldtask  name="prompt"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				label="Information_Message" 
+				type="prompt" />
+			<fieldtask name="label"
+				bundle="properties/vce-shared/autopd"
+				label="VCE_Run_Please_Wait"
+				type="label" />
+			<fieldtask name="label"
+				bundle="properties/vce-shared/autopd"
+				label="VCE_Run_Config"
+				type="label" />
+			<fieldtask name="run.vce.targets" 
+				bundle="properties/vce-shared/autopd" 
+				type="selectlist" 
+				list="Yes:No" listDetails="Yes:No" 
+				label="Do_You_Want_To_Run_VCE" /> 
+		</inputdialogtask>
+		<condition property="runVCE">
+				<equals arg1="Yes" arg2="${run.vce.targets}" casesensitive="false" />
+		</condition>	
+		-->
+		<property name="runVCE" value="true" /> 
+		
+		<wsnlsecho message=" " console="true" /> 
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="${timepattern}" />
+		<wsnlsecho
+			key="VCE_Run_Please_Wait"
+			bundle="properties/vce-shared/autopd"
+			message="[{0}] Step {1}: We are now going to collect the Virtual Configuration Explorer topology. This may take several minutes."
+			replace="${autopdts};;${step.count}" id="2324" level="info" 
+			component="\scripts\TOPOVCE\topology-collection.xml" />
+		<wsnlsecho key="VCE_Run_Please_Wait0" bundle="properties/vce-shared/autopd" console="true" /> 
+		<wsnlsecho message=" " console="true" /> 
+		
+<!-- Per 24238 - remove the message when VCE is not invoked -->
+		<!--
+		<if isNotTrue="${runVCE}">
+			<wsnlsecho
+				key="Skip_VCE"
+				bundle="properties/vce-shared/autopd"
+				message="Skipping the VCE Collection..."
+				replace="${autopdts};;${step.count}" id="2324" level="info"
+				component="\scripts\TOPOVCE\topology-collection.xml" />
+		</if> 
+		-->
+	</target> 
+	
+	<target name="create_collection_info_manifest_for_was"
+		description="Fill out an autopd-collection-info document for the collection" if="runVCE">
+			
+
+		<autopdproperty name="autopd.collection.info.doc" value="${autopdtmp}/autopd/autopd-collection-info.xml"/>
+		<copy file="${vce.bundle.basedir}/properties/vce-shared/topology-collection-info.xml" 
+				tofile="${autopd.collection.info.doc}"/>
+		
+		<!-- Update the manifest document. -->	
+		
+		<set_attribute_delete_attribute_doc
+			doc="${autopd.collection.info.doc}"
+		 	attr.context="collectionInfo!global" 
+			attr.context.delimiter="!"
+			attr.name="collectionType" 
+			attr.property="problem.type" />
+		<set_attribute_delete_attribute_doc
+			doc="${autopd.collection.info.doc}"
+			attr.context="collectionInfo!global" 
+			attr.context.delimiter="!"
+			attr.name="collectionTime" 
+			attr.property="autopdts" />
+		<set_attribute_delete_attribute_doc
+			doc="${autopd.collection.info.doc}"
+		 	attr.context="collectionInfo!global" 
+			attr.context.delimiter="!"
+			attr.name="userLocale" 
+			attr.property="user.locale" />
+			
+
+		<!-- Remove the Environment element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!global!additionalInfo(additionalInfoCategory=autopdEnvironmentInfo)" 
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+		
+
+		<set_attribute_delete_attribute_doc
+			doc="${autopd.collection.info.doc}"
+		 	attr.context="collectionInfo!system" 
+			attr.context.delimiter="!"
+			attr.name="operatingSystem" 
+			attr.property="os.name" />
+		<set_attribute_delete_attribute_doc
+			doc="${autopd.collection.info.doc}"
+		 	attr.context="collectionInfo!system" 
+			attr.context.delimiter="!"
+			attr.name="locale" 
+			attr.property="user.locale" />
+
+		<!-- Remove the PLRT element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!system!additionalInfo(additionalInfoCategory=plrtData)"
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+
+
+
+		<!-- Remove the SystemData element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!system!additionalInfo(additionalInfoCategory=generalSystemData)"
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+
+		<!-- Remove the CISA element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!system!additionalInfo(additionalInfoCategory=cisaData)"  
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+
+
+		<!-- Remove the Portal element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!productInfoList!productInfo(productName=WebSphere Portal)" 
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+		
+		
+
+		<!-- Remove the WAS profile root element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)!additionalInfo(additionalInfoCategory=WebSphere Application Server Profile Root)" 
+	     		delimiter="!">
+	    	</autopd_remove_xml_attributes>
+
+
+		<!-- Remove the WAS ISeries element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     	path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)!additionalInfo(additionalInfoCategory=WebSphere Application Server iSeries User Install Root)"  
+	     	delimiter="!">
+		</autopd_remove_xml_attributes>
+
+			
+			
+		<!-- Remove the WAS DMGR element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     	path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)!additionalInfo(additionalInfoCategory=WebSphere Application Server Deployment Manager Root)" 
+	     	delimiter="!">
+	    	
+		</autopd_remove_xml_attributes>
+		
+		
+		<!-- Remove the DB2 element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     	path="collectionInfo!productInfoList!productInfo(productName=DB2)" 
+	     	delimiter="!">
+	    </autopd_remove_xml_attributes>
+
+		<!-- Remove the MQ element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	  		path="collectionInfo!productInfoList!productInfo(productName=WebSphere MQ)" 
+	    		delimiter="!">
+	    </autopd_remove_xml_attributes>
+		
+		<!-- Remove the TDS element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!productInfoList!productInfo(productName=Tivoli Directory Server)" 
+	     		delimiter="!">
+	    </autopd_remove_xml_attributes>
+		
+		<!-- Remove the AD element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!productInfoList!productInfo(productName=Microsoft Active Directory)" 
+	     		delimiter="!">
+	    </autopd_remove_xml_attributes>
+		
+		<!-- Remove the IHS element -->
+		<autopd_remove_xml_attributes filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+	     		path="collectionInfo!productInfoList!productInfo(productName=IBM HTTP Server)" 
+	     		delimiter="!">
+	    </autopd_remove_xml_attributes>
+		
+	</target>
+
+	<target name="was_install_exporter_local" unless="wasnothere" if="runVCE"
+		description="Install latest was exporter in temp directory">
+		<autopdproperty name="vcetools.tmp" value="${vce.bundle.basedir}/VCETools" />
+		<if isTrue="${isWindows}" >
+			<if isTrue="${isIsaWorkbench}">
+<!--			<available file="${env.TEMP}/vce" type="dir" property="vcetools.dir.used"/> -->
+				<available file="${autopdtmp}/vce" type="dir" property="vcetools.dir.used"/>
+				<if isNotTrue="${vcetools.dir.used}">
+<!--				<autopdproperty name="vcetools.tmp" value="${env.TEMP}/vce" /> -->
+					<autopdproperty name="vcetools.tmp" value="${autopdtmp}/vce" />
+				</if>
+				<if isTrue="${vcetools.dir.used}">
+					<autopdproperty name="vcetools.cnt" value="0" />
+					<autopdproperty name="vcetools.not.finished" value="true" />
+					<autopdwhile property="vcetools.not.finished" >
+						<increment_count property="vcetools.cnt" />
+<!--					<autopdproperty name="vcetools.tmp" value="${env.TEMP}/vce${vcetools.cnt}" /> -->
+						<autopdproperty name="vcetools.tmp" value="${autopdtmp}/vce${vcetools.cnt}" />
+						<autopd_unset_property name="vcetools.tmp.used" />
+						<available file="${vcetools.tmp}" type="dir" property="vcetools.tmp.used"/>
+						<if isNotTrue="${vcetools.tmp.used}">
+							<autopdproperty name="vcetools.not.finished" value="false" />
+						</if>
+					</autopdwhile>	
+				</if>
+				<copy todir="${vcetools.tmp}">
+					<fileset dir="${vce.bundle.basedir}/VCETools">
+						<include name="**" />
+					</fileset>
+				</copy>
+			</if>	
+		</if>
+<!--		
+		<if isNotTrue="${isWindows}" >
+			<fixcrlf srcdir="${vce.bundle.basedir}/VCETools" includes="**/*.sh" eol="lf" eof="remove" />
+			<chmod dir="${vce.bundle.basedir}/VCETools" perm="755" includes="**/*.sh" />
+		</if>
+-->		
+		<property name="was.exporter.installed" value="true" />
+	</target>
+
+	<!-- Target is used to run the WAS exporter. -->
+	<target name="was_run_exporter_local" if="runVCE" description="Run the WAS exporter from temp directory" unless="wasnothere">
+				
+				<if isTrue="${was.exporter.installed}">
+					<mkdir dir="${vcetools.tmp}/output" />
+					<echo message=" " />
+					<stepcount />
+					<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+					<wsnlsecho
+						key="Step_running_WAS_exporter"
+						bundle="properties/SHARED/autopdtoolstrings_shared_was"
+						message="[{0}] Step {1}: Running WebSphere Application Server exporter"
+						replace="${autopdts};;${step.count}" id="1814" level="info"
+						component="\scripts\vce-shared\vce-sharedtargets.xml" />
+					<if isTrue="${isWASVersion5}">
+						
+						<ant antfile="${vcetools.tmp}/wasexport.xml">
+							<property name="was.root" location="${was.root}" />
+							<property name="was.temp" value="${vcetools.tmp}/temp" />
+							<property name="was.exp.dir" value="${vcetools.tmp}/output" />
+						</ant>
+					</if>
+					<if isTrue="${isWASVersion6}||${isWASVersion6.0}||${isWASVersion6.1}||${isWASVersion7.0}">
+						<echo message="Ready to run exporter"/>
+						<autopdloop param="currProfile" paramList="${profileName}" delimiter=":">
+							<echo message="Running exporter for ${currProfile}"/>
+							<ant antfile="${vcetools.tmp}/wasexport.xml">
+								<property name="was.root" location="${was.root}" />
+								<property name="profile.name" value="${currProfile}" />
+								<property name="was.temp" location="${vcetools.tmp}/temp" />
+								<property name="was.exp.dir" location="${vcetools.tmp}/output" />
+								<property name="was.exp.basename" value="${currProfile}.websphere" />
+							</ant>
+						</autopdloop>
+						<if isTrue="${collect.portal.topology}">
+				   			<if isNotTrue="${portalProfileCollected}">
+				   				<echo message="Running exporter for ${portalProfileName}" />
+								<ant antfile="${vcetools.tmp}/wasexport.xml">
+									<property name="was.root" location="${was.root}" />
+									<property name="profile.name" value="${portalProfileName}" />
+									<property name="was.temp" location="${vcetools.tmp}/temp" />
+									<property name="was.exp.dir" location="${vcetools.tmp}/output" />
+									<property name="was.exp.basename" value="${portalProfileName}.websphere" />
+								</ant>
+				   			</if>
+				   		</if>
+					</if>
+				</if>
+		</target>
+
+	<target name="zip_was_topology" if="runVCE"
+	        description="Zip topology for WebSphere Application Server"
+	        unless="wasnothere">
+	        <if isNotTrue="${isOS400}">
+					<if isTrue="${isWASVersion5}">
+						<if isTrue="${was.exporter.installed}">
+							<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+								<zipfileset dir="${vcetools.tmp}/output" prefix="autopdzip/autopd/wasexporter">
+									<include name="websphere.configuration" />
+									<include name="websphere.log" />
+								</zipfileset>
+							</zip>
+							<autopd_add_xml_element filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+		     					path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)" 
+		     					delimiter="!" elementname="additionalInfo">
+		      					<xml_attribute name="additionalInfoCategory" value="WebSphere Application Server WAS Exporter Output"/>
+		      					<xml_attribute name="additionalInfoLocation" value="autopdzip/autopd/wasexporter/websphere.configuration"/>
+		    				</autopd_add_xml_element>
+						</if>
+						
+					</if>
+					<!-- loop if all chosen -->
+					<if isTrue="${isWASVersion6}||${isWASVersion6.0}||${isWASVersion6.1}||${isWASVersion7.0}">
+						<autopdloop param="currProfile" paramList="${profileName}" delimiter=":">
+							<if isTrue="${was.exporter.installed}">
+								<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+									<zipfileset dir="${vcetools.tmp}/output" prefix="autopdzip/autopd/wasexporter">
+										<include name="${currProfile}.websphere.configuration" />
+										<include name="${currProfile}.websphere.log" />
+									</zipfileset>
+								</zip>
+								<autopd_add_xml_element filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+		     						path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)" 
+		     						delimiter="!" elementname="additionalInfo">
+		      						<xml_attribute name="additionalInfoCategory" value="WebSphere Application Server WAS Exporter Output"/>
+		      						<xml_attribute name="additionalInfoLocation" value="autopdzip/autopd/wasexporter/${currProfile}.websphere.configuration"/>
+		    					</autopd_add_xml_element>
+							</if>
+						</autopdloop>
+		   				<if isTrue="${collect.portal.topology}">
+		   					<if isNotTrue="${portalProfileCollected}">
+		   						<echo message="Collecting was topology for profile associated with the portal"/>
+		   						<if isTrue="${was.exporter.installed}">
+									<echo message="Zipping was exporter output for ${portalProfileName}" />
+									<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+										<zipfileset dir="${vcetools.tmp}/output" prefix="autopdzip/autopd/wasexporter">
+											<include name="${portalProfileName}.websphere.configuration" />
+											<include name="${portalProfileName}.websphere.log" />
+										</zipfileset>
+									</zip>
+									<autopd_add_xml_element filename="${autopdtmp}/autopd/autopd-collection-info.xml" 
+		     							path="collectionInfo!productInfoList!productInfo(productName=WebSphere Application Server)" 
+		     							delimiter="!" elementname="additionalInfo">
+		      							<xml_attribute name="additionalInfoCategory" value="WebSphere Application Server WAS Exporter Output"/>
+		      							<xml_attribute name="additionalInfoLocation" value="autopdzip/autopd/wasexporter/${portalProfileName}.websphere.configuration"/>
+		    						</autopd_add_xml_element>
+								</if>
+							</if>
+						</if>
+		   				
+					</if>
+	        		<delete dir="${vcetools.tmp}/output" />
+	        		<if isTrue="${isWindows}" >
+	        			<if isTrue="${isIsaWorkbench}">
+							<delete dir="${vcetools.tmp}" />
+	        			</if>
+	        		</if>
+
+			</if>
+
+			<if isTrue="${isOS400}">
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${was.enhanced.root}"
+									prefix="autopdzip/${was.enhanced.root}">
+							<exclude name="**/*.jar" />
+							<exclude name="**/*.ear" />
+							<exclude name="**/*.war" />
+							<include name="config/.repository/**/*" />
+							<include name="config/cells/**/*" />
+							<include name="config/wmm/**/*" />
+						</zipfileset>
+					</zip>
+			</if>
+		</target>
+	
+	<target name="zip_manifest_for_topology" if="runVCE" description="Zip autopd-collection-info document for the collection">
+		 <zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			  <zipfileset file="${autopdtmp}/autopd/autopd-collection-info.xml" prefix="autopdzip" /> 
+	  </zip>
+	</target>
+
+	
+
+</project>
+

@@ -1,0 +1,95 @@
+<project name="updateProxyWCCMFiles" default="updateProxyWCCMFiles" basedir=".">
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllNecessaryTokensWithRightValuesForProxyWCCMFiles"
+            description="update node name for the Proxy WCCM and template files">
+        
+        <!-- LIDB2369-16  Begin -->
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server_60X/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+                    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/http_sip_proxy_server/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+           
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/sip_proxy_server/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server_zos/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+           
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server_zos_60X/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+           
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/http_sip_proxy_server_zos/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+           
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/sip_proxy_server_zos/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/chains/proxy-chains.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/chains/orb-chains.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/chains/sipproxy-chains.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>    
+        <!-- LIDB2369-16 End -->              
+
+    </target>
+    
+    <target name="updateProxyWCCMFiles"
+        description="update proxy related WCCM and template Files"
+        depends="replaceAllNecessaryTokensWithRightValuesForProxyWCCMFiles">
+    </target>
+    
+</project>

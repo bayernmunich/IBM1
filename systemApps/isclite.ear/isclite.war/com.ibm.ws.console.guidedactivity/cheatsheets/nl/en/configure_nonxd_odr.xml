@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE cheatsheet []>
+
+<cheatsheet title="Routing work to foreign hosting environments">
+
+	<intro href="intro_configure_nonxd.htm">
+	<description>Use this activity to configure an on demand router (ODR) to route work 
+    to foreign hosting environment (non-WebSphere Extended Deployment nodes).  For example, you may wish to dynamically manage the 
+    request flow to a set of foreign servers that host an important application.
+
+        For more information:
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=todrnonxd"&gt;
+        Routing requests to external nodes with generic server clusters&lt;/A&gt;
+
+
+     </description>
+	 </intro>   
+
+	<item href="" title="Install and enable a remote agent on all foreign nodes">
+<action class=""/>
+		<description>Install and enable a remote agent on all foreign nodes 
+        to which work requests need to be routed.  The remote agent 
+        provides metrics to the ODR, which uses the data to dynamically manage the request flow to the 
+        foreign servers.
+        
+        For more information:
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+         &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=tinstallmixed"&gt;
+         Installing in a mixed environment
+        &lt;/A&gt; 
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+         &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=tarfmexternalmonitor"&gt;
+         Enabling external monitoring with the remote agent
+        &lt;/A&gt; 
+
+		</description>
+	</item>
+
+
+            
+	<item href="" title="Create a generic server cluster">
+<action class="navigatorCmd.do?forwardName=GenericContentServerGroup.content.main"/>
+		<description>Use this section to create a generic server cluster, which is the object used in WebSphere to 
+        represent communcation endpoints for foreign servers.  Once the foreign server host and port information is specified, 
+        requests can be routed by the ODR to those endpoints. 
+        For more information:
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+         &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=todrnonxd"&gt;
+         Routing requests to external nodes with generic server clusters
+        &lt;/A&gt; 
+
+        &lt;br/&gt; 
+
+
+        &lt;A HREF="javascript:showHideSection('commands1')"&gt;
+        &lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="commands1Img" ALIGN="left" BORDER="0" style="margin-left:-0.2em"/&gt;
+        &lt;/A&gt;Create a generic server cluster with scripting
+        &lt;br/&gt; 
+        &lt;div id="commands1" style="margin-left:1em;height:10em;width:90%;display:none;overflow:auto"&gt; 
+
+        &lt;table id="commands1" cellpadding="3" cellspacing="1" width="100%" style="border:1px solid gray"&gt;
+        &lt;tr&gt;&lt;td class="table-text"&gt;
+        set cell [$AdminConfig getid /Cell:myXDCell/]
+        &lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td class="table-text"&gt; 
+        set gsc [$AdminConfig create GenericServerCluster $cell {{name myGSC} {protocol HTTP}}
+        &lt;/td&gt;&lt;/tr&gt;
+        &lt;tr&gt;&lt;td class="table-text"&gt; 
+        $AdminConfig create GenericServerEndpoint $gsc {{host myForeignHost} {port 9081}}
+        &lt;/td&gt;&lt;/tr&gt;
+
+        &lt;/table&gt;
+
+        &lt;/div&gt;
+
+
+		</description>
+	</item>
+
+	<item href="" title="Define request routing with routing policy work classes">
+<action class="navigatorCmd.do?forwardName=ODR.content.main"/>
+		<description>Use this section to define routing policies for the generic server cluster within the On Demand Router Properties of the ODR.
+        Routing policy work classes are used to determine how certain request patterns are handled, such as forwarding the request to the generic server cluster.  
+        &lt;br/&gt;
+        &lt;br/&gt;
+        &lt;strong&gt;Note:&lt;/strong&gt; One or more routing policy work classes must be created in order to enable request routing 
+        to the generic server cluster.
+
+        &lt;br/&gt;
+        &lt;br/&gt;
+		For more information:
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=todoecreateodr"&gt;
+        Creating and configuring the ODR
+        &lt;/A&gt; 
+        &lt;br/&gt;
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/command_prompt.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;a target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=rodwcscript"&gt;
+        Managing work classes with scripting&lt;/a&gt;
+
+
+		</description>
+	</item>
+
+
+	<item href="" title="Define service levels with service policies">
+<action class="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.content.main"></action>
+		<description>
+        Use this section to define service levels for the application running on the generic server cluster using service policies.  
+        A service policy is used by the ODR to apply service levels to incoming requets, mainly through application placement and request prioritization. 
+
+        &lt;br/&gt;
+        &lt;br/&gt;
+        &lt;strong&gt;Tip:&lt;/strong&gt; A default transaction class is created with every new service policy with a name such as "Default_TC_{service policy name}".  
+        Additional transaction classes are necessary only if you wish to view more detailed metrics in the charts.
+
+
+        &lt;br/&gt;
+        &lt;br/&gt;
+
+        For more information:
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=todrpolicy"&gt;
+        Defining a service policy
+        &lt;/A&gt;
+        &lt;br/&gt; 
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/command_prompt.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=rxml_servicepolicy"&gt;
+        Defining a service policy with scripting
+        &lt;/A&gt;
+        
+        
+</description>
+</item>
+
+
+
+<item href="" title="Classify application requests with service policy work classes">
+<action class="navigatorCmd.do?forwardName=ODR.content.main"></action>
+		<description>Use this section to classify requests routed to the generic server cluster with work classes. Like the routing policies, 
+        service policy work classes that apply to applications on a foreign hosting environment are defined within the On Demand Router Properties of the ODR.
+        Work classes contain the 
+        URI patterns and conditional rules for associating requests to transaction classes. Transaction classes are then associated
+        with service policies. 
+        For more information:
+        &lt;br/&gt;
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/topic.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=todoecreateodr"&gt;
+        Creating and configuring the ODR
+        &lt;/A&gt; 
+        &lt;br/&gt;
+        &lt;IMG SRC="../com.ibm.ws.console.guidedactivity/images/command_prompt.gif" border="0" alt="Online task documentation" align="absmiddle"/&gt;
+        &lt;a target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=v6r0&amp;product=was-xd&amp;topic=rodwcscript"&gt;
+        Managing work classes with scripts&lt;/a&gt;
+</description>
+</item>
+
+<item
+    href=""
+    title="Save and synchronize configuration">
+    <action
+        class=""/>
+    <description>
+Click &lt;strong&gt;Save&lt;/strong&gt; in the message at the top of the console panel to update the configuration in the master repository.
+    </description>
+</item>
+
+
+<item href="" title="Task completion and next steps">
+<action class=""></action>
+		<description>
+    After completing the above tasks, the ODR will route requests to the generic server cluster, and dynamically manage the 
+    request flow based upon the defined service levels.
+    
+    The next step is
+
+    &lt;blockquote style="margin-left:0.5em;margin-top:0.5em;margin-bottom:0.5em"&gt;
+    &lt;IMG SRC="../com.ibm.ws.console.core.guidedactivity/images/start_task.gif" border="0" alt="" align="absmiddle"/&gt;
+    &lt;A TARGET="detail" HREF="../com.ibm.ws.console.xdruntime.forwardCmd.do?forwardName=xdruntime.content.main"&gt;View the available visualizations&lt;/A&gt; of the ODR
+    &lt;/blockquote&gt;
+
+        </description>
+</item>
+
+	
+	
+
+</cheatsheet>

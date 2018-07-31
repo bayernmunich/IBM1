@@ -1,0 +1,839 @@
+#===============================================================================
+#  installSdoRepository.jacl
+#===============================================================================
+#
+#	This script sets a WAS 5 DataSource on a JDBCProvider
+#	and installs the SDO Repository application.
+#
+#
+# Usage:
+#
+#   wsadmin [-conntype none] -f installSdoRepository.jacl
+#   wsadmin [-conntype none] -f installSdoRepository.jacl -createDb
+#   wsadmin [-conntype none] -f installSdoRepository.jacl targetNodeName serverName
+#   wsadmin [-conntype none] -f installSdoRepository.jacl -cluster clusterName
+#   wsadmin [-conntype none] -f installSdoRepository.jacl -editBackendId backendId
+#   wsadmin [-conntype none] -f installSdoRepository.jacl -listBackendIds
+#
+# Where:
+#
+#   '-conntype none' is optional, but is required if the server is not running.
+#   '-createDb' is optional.  This flag will configure a create a Derby
+#      database and configure the repository to use the database.
+#   targetNodeName   = name of node
+#   serverName = name of server
+#   '-cluster' is used to install the application on a cluster.  When using
+#      the -cluster flag the -createDb option cannot be specified.
+#   clusterName = name of the cluster
+#   '-backendId' = the backend ID
+#
+# Examples:
+#
+#   wsadmin -f installSdoRepository.jacl
+#   wsadmin -f installSdoRepository.jacl -createDb
+#   wsadmin -f installSdoRepository.jacl myNode myServer
+#   wsadmin -f installSdoRepository.jacl -cluster myCluster
+#   wsadmin -f installSdoRepository.jacl -editBackendId DB2UDB_V81
+#
+#
+# Note targetNodeName and serverName can be omitted if only one node and one
+# server exist.
+#
+# On successful completion, this script will exit with a zero exit code.
+# Successful completion includes identifying if the SDO Repository is already
+# installed, and therefore no action is taken.
+# If an unexpected error occurred the exit code will be 1.
+#
+#===============================================================================
+
+
+#--------------------------------------------------------------
+# Constants
+#--------------------------------------------------------------
+set APP_NAME "SDO Repository"
+set DEFAULT_BACKEND_ID DERBY_V10
+
+
+#--------------------------------------------------------------
+# Set up the NLS function
+#--------------------------------------------------------------
+set tracenls   [java::call com.ibm.ejs.ras.TraceNLS getTraceNLS com.ibm.wsspi.sdo.config.CWSJOMessages];
+
+# Takes a message key and turns it into a localised message.
+# params:
+#   key		the message key
+#   inserts	a list of strings to insert into the message
+# returns a localised message.
+proc getNLSText { key inserts } {
+	global tracenls
+	set insertArray [java::new {Object[]} [llength $inserts]]
+	for {set x 0} {$x<[llength $inserts]} {incr x} {
+		$insertArray set $x [lindex $inserts $x]
+	}
+	return [$tracenls getFormattedMessage $key $insertArray  "Message not found for key: $key"]
+}
+
+proc printNLSText { key inserts } {
+	set localMessage [getNLSText $key $inserts]
+	puts $localMessage
+}
+
+
+proc printUsage {} {
+	printNLSText INSTALL_USAGE_CWSJO0024 [list "wsadmin -f installSdoRepository.jacl\nwsadmin -f installSdoRepository.jacl -createDb\nwsadmin -f installSdoRepository.jacl targetNodeName serverName\nwsadmin -f installSdoRepository.jacl -cluster clusterName\nwsadmin -f installSdoRepository.jacl -editBackendId backendId\nwsadmin -f installSdoRepository.jacl -listBackendIds"]
+	exit 1
+}
+
+
+proc printBackendIds {} {
+	printNLSText INSTALL_BACKEND_LIST_CWSJO0059 [list "\nDB2UDB_V82\nDB2UDB_V91 (**)\nDB2UDB_V95 (**)\nDB2UDB_V97 (**)\nDB2UDBISERIES_V53\nDB2UDBISERIES_V54 (*)\nDB2UDBOS390_V7\nDB2UDBOS390_V8\nDB2UDBOS390_V9 (**)\nDERBY_V10 (*)\nINFORMIX_V94\nINFORMIX_V10 (*)\nINFORMIX_V11 (**)\nMSSQLSERVER_2000\nMSSQLSERVER_2005\nMSSQLSERVER_2008 (**)\nORACLE_V9I\nORACLE_V10G\nORACLE_V11G (**)\nSYBASE_V1250\nSYBASE_V15 (*)"]
+	printNLSText INSTALL_BACKEND_LIST_CWSJO0060 [list]
+}
+
+
+
+#--------------------------------------------------------------
+# writeFile procedure used to help generate the ddl file
+#--------------------------------------------------------------
+
+proc writefile {fileName textToOutput} {
+        if [catch {open $fileName r} fileId] {
+             set fileId [open $fileName w]
+             fconfigure $fileId -encoding utf-8
+             close $fileId
+        }
+        set fileId [open $fileName a]
+        fconfigure $fileId -encoding utf-8
+        puts $fileId $textToOutput
+        close $fileId
+}
+
+
+
+#--------------------------------------------------------------
+# syncNodes procedure
+#--------------------------------------------------------------
+
+proc syncNodes {} {
+	global AdminControl
+	set nodeSyncList [$AdminControl queryNames type=NodeSync,*]
+	foreach nodeSync $nodeSyncList {
+		$AdminControl invoke $nodeSync sync
+	}
+
+}
+
+
+
+#--------------------------------------------------------------
+# getWasVar procedure
+#--------------------------------------------------------------
+proc getWasVarForServer {nodeNameArg serverName varName} {
+	global AdminConfig
+
+	set cellName [getCurrentCellName]
+	set clusterName [$AdminConfig showAttribute [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/Server:$serverName/] clusterName]
+
+	# set up list of VariableMaps to check
+	set maps [list]
+	lappend maps [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/Server:$serverName/VariableMap:/]
+	if { [llength $clusterName]>0 } {
+		lappend maps [$AdminConfig list VariableMap [$AdminConfig getid /Cell:$cellName/ServerCluster:$clusterName/]]
+	}
+	lappend maps [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/VariableMap:/]
+	lappend maps [$AdminConfig getid /Cell:$cellName/VariableMap:/]
+
+	foreach varMap $maps {
+		# check the map exists (it might not if no vars have been set, eg at cluster scope)
+		if { [llength $varMap]==1 } {
+			set var [getVarFromMap $varMap $varName]
+			if { [llength $var]>0 } {
+				return [$AdminConfig showAttribute $var value]
+			}
+		}
+	}
+
+	# no result has been found
+	return [list]
+}
+
+proc getWasVarForCluster {clusterName varName} {
+	global AdminConfig
+
+	set cellName [getCurrentCellName ]
+
+	# set up list of VariableMaps to check
+	set maps [list]
+	lappend maps [$AdminConfig list VariableMap [$AdminConfig getid /Cell:$cellName/ServerCluster:$clusterName/]]
+	lappend maps [$AdminConfig getid /Cell:$cellName/VariableMap:/]
+
+	foreach varMap $maps {
+		if { [llength $varMap]==1 } {
+			set var [getVarFromMap $varMap $varName]
+			if { [llength $var]>0 } {
+				return [$AdminConfig showAttribute $var value]
+			}
+		}
+	}
+
+	# no result has been found
+	return [list]
+}
+
+# returns a variable of type VariableSubstitutionEntry
+proc getVarFromMap {varMap varName} {
+	global AdminConfig
+	set websphereVars [lindex [$AdminConfig showAttribute ${varMap} entries] 0]
+	foreach {var} ${websphereVars} {
+		if { [$AdminConfig showAttribute $var symbolicName]==$varName } {
+			return $var
+		}
+	}
+	return [list]
+}
+
+
+
+#--------------------------------------------------------------
+# utility procedures
+#--------------------------------------------------------------
+proc getCurrentCellName {} {
+	global AdminConfig
+	return [$AdminConfig showAttribute [$AdminConfig getid /Cell:/] name]
+}
+
+proc getDmgrServer {} {
+	global AdminConfig
+	foreach server [$AdminConfig list Server] {
+		if { [$AdminConfig showAttribute $server serverType]=="DEPLOYMENT_MANAGER" } {
+			return $server
+		}
+	}
+	return ""
+}
+
+proc getDmgrNodeName {} {
+	global AdminConfig
+	set server [getDmgrServer]
+	set serverName [$AdminConfig showAttribute $server name]
+	foreach node [$AdminConfig list Node] {
+		set nodeNameLocal [$AdminConfig showAttribute $node name]
+		if { [$AdminConfig getid /Node:${nodeNameLocal}/Server:${serverName}/]==$server } {
+			return $nodeNameLocal
+		}
+	}
+	return ""
+}
+
+proc getDmgrServerName {} {
+	global AdminConfig
+	set server [getDmgrServer]
+	set serverName [$AdminConfig showAttribute $server name]
+	return $serverName
+}
+
+proc isNd {} {
+	global AdminConfig
+	set cell [$AdminConfig list Cell]
+	set cellType [$AdminConfig showAttribute $cell cellType]
+	if { $cellType=="DISTRIBUTED" } {
+		return 1
+ 	}
+	return 0
+}
+
+proc isZOS {} {
+	global env
+
+	set osName [lindex [array get env os.name] 1]
+	if { $osName=="z/OS" } {
+		return 1
+ 	}
+	return 0
+}
+
+
+
+#--------------------------------------------------------------
+# getDataSource procedure
+#--------------------------------------------------------------
+proc getDataSource { jndiName nodeNameArg serverName } {
+	global AdminConfig
+
+	set cellName [getCurrentCellName]
+	set clusterName [$AdminConfig showAttribute [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/Server:$serverName/] clusterName]
+
+	#set list of JDBCProviders ordered by scope
+	set providerList [list]
+	set providerList [concat $providerList [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/Server:$serverName/JDBCProvider:/]]
+	if { [llength $clusterName]>0 } {
+		set providerList [concat $providerList [$AdminConfig getid /Cell:$cellName/ServerCluster:$clusterName/JDBCProvider:/]]
+	}
+	set providerList [concat $providerList [$AdminConfig getid /Cell:$cellName/Node:$nodeNameArg/JDBCProvider:/]]
+	set providerList [concat $providerList [$AdminConfig getid /Cell:$cellName/JDBCProvider:/]]
+	
+	foreach provider $providerList {
+		if { [llength $provider]>0 } {
+			foreach dataSource [$AdminConfig list DataSource $provider] {
+				if { [$AdminConfig showAttribute $dataSource jndiName]==$jndiName } {
+					return $dataSource
+				}
+			}
+		}
+	}
+
+	# no result has been found
+	return [list]
+}
+
+proc getDataSourceForCluster { jndiName clusterName } {
+	global AdminConfig
+
+	set cellName [getCurrentCellName]
+
+	#set list of JDBCProviders ordered by scope
+	set providerList [list]
+	set providerList [concat $providerList[$AdminConfig getid /Cell:$cellName/ServerCluster:$clusterName/JDBCProvider:/]]
+	set providerList [concat $providerList [$AdminConfig getid /Cell:$cellName/JDBCProvider:/]]
+	
+	foreach provider $providerList {
+		if { [llength $provider]>0 } {
+			foreach dataSource [$AdminConfig list DataSource $provider] {
+				if { [$AdminConfig showAttribute $dataSource jndiName]==$jndiName } {
+					return $dataSource
+				}
+			}
+		}
+	}
+
+	# no result has been found
+	return [list]
+}
+
+
+
+#--------------------------------------------------------------
+# createDb procedure
+#--------------------------------------------------------------
+proc createDb {} {
+
+	global WAS_INSTALL_ROOT
+	global USER_INSTALL_ROOT
+	global LOG_ROOT
+	global env
+
+ 	#--------------------------------------------------------------
+	# 	Find the ij command
+	#--------------------------------------------------------------
+	#set wincmd []
+	set fs $env(file.separator)
+	if {[string compare $fs /]} {
+		#set wincmd "cmd /c"
+		set ij $WAS_INSTALL_ROOT/derby/bin/embedded/ij.bat
+	} else {
+		set ij $WAS_INSTALL_ROOT/derby/bin/embedded/ij.sh
+	}
+
+
+	# check that we've got the ij command
+	# note: auto_execok returns "" if it did not find the command.
+	if {![string compare [auto_execok $ij] ""]} {
+		printNLSText INSTALL_IJ_NOT_FOUND_CWSJO0040 [list $ij]
+		return -code error
+	}
+
+ 	#--------------------------------------------------------------
+	# 	write a custom ddl file to disk
+	#--------------------------------------------------------------
+	set dbDirectory $USER_INSTALL_ROOT/databases
+	set ddlFile $dbDirectory/SdoRepDb.ddl
+	set sdoDbDir $dbDirectory/SdoRepDb
+	set derbyDdl $WAS_INSTALL_ROOT/util/SdoRepository/DERBY_V10/Table.ddl
+
+
+	set ijLog $LOG_ROOT/SdoRepDb.log
+
+	printNLSText INSTALL_WRITING_DDL_CWSJO0041 [list $ddlFile]
+
+	# if the directory does not exist then create it
+	if { [file exists $dbDirectory]==0 } {
+		file mkdir $dbDirectory
+	}
+
+	catch {file delete $ddlFile} fileId
+
+	writefile $ddlFile "CONNECT 'jdbc:derby:$sdoDbDir;create=true';"
+	writefile $ddlFile ""
+	writefile $ddlFile "RUN '${derbyDdl}';"
+	writefile $ddlFile ""
+	writefile $ddlFile "COMMIT;"
+
+
+ 	#--------------------------------------------------------------
+	# 	Check we're not going to overwrite an existing DB
+	#--------------------------------------------------------------
+	if { [file exists $sdoDbDir] } {
+		printNLSText INSTALL_DB_ALREDY_EXISTS_CWSJO0043 [list $sdoDbDir]
+		return -code error
+	}
+
+ 	#--------------------------------------------------------------
+	# 	Call the command to create the database
+	#--------------------------------------------------------------
+	printNLSText INSTALL_CREATING_DB_CWSJO0042 [list $ijLog]
+	set ijLogText [ eval exec \"$ij\" \"$ddlFile\" ]
+	writefile $ijLog $ijLogText
+}
+
+
+
+#--------------------------------------------------------------
+# main installation procedure
+#--------------------------------------------------------------
+proc configDb { serverName nodeNameArg } {
+
+ 	#--------------------------------------------------------------
+	# 	set up globals
+	#--------------------------------------------------------------
+	global AdminConfig
+ 	global AdminControl
+   	global AdminApp
+	global WAS_INSTALL_ROOT
+
+
+	#------------------------------------------------
+	# 	some constants
+	#------------------------------------------------
+	set dbName \${USER_INSTALL_ROOT}/databases/SdoRepDb      	
+
+	set jdbc_provider_name "Derby JDBC Provider (XA)"
+	set preferred_provider_description "Built-in Derby JDBC Provider (XA)"
+	
+	set datasource_name "SDO Repository Data Source"
+	set datasource_description "Default data source for SDO Repository"
+	set datasource_jndi jdbc/com.ibm.ws.sdo.config/SdoRepository
+	set data_source_helper_class_name com.ibm.websphere.rsadapter.DerbyDataStoreHelper
+
+	set rraName "WebSphere Relational Resource Adapter"
+	set connection_factory_name SdoRep_CF
+
+
+	#------------------------------------------------
+	# 	select a jdbc provider
+	#------------------------------------------------
+	set provider_list [$AdminConfig getid "/Node:$nodeNameArg/Server:$serverName/JDBCProvider:$jdbc_provider_name/"]
+	# pick the first one
+	set JDBCProv [lindex $provider_list 0]
+	# now search for the preferred provider and, if found, use that instead
+	foreach provider $provider_list {
+		set provider_description [$AdminConfig showAttribute $provider description]
+		if {[string compare $provider_description $preferred_provider_description ] == 0} {
+			# Found the provider we're looking for. Break out of the search loop.
+			set JDBCProv $provider
+			break;
+		}
+	}
+
+
+
+	#------------------------------------------------
+	# 	validate things are how we expect them to be
+	#------------------------------------------------
+	if {[llength $JDBCProv] == 0} {
+		printNLSText  INSTALL_JDBC_PROVIDER_NOT_FOUND_CWSJO0012 [list $jdbc_provider_name]
+		return -code error
+	}
+
+	set objectCheck [getDataSource $datasource_jndi $nodeNameArg $serverName]
+	if {[llength $objectCheck] != 0} {
+		printNLSText INSTALL_DATA_SOURCE_ALREADY_EXISTS_CWSJO0013 [list $datasource_jndi]
+		return -code error
+	}
+
+	set objectCheck [$AdminConfig getid "/Node:$nodeNameArg/J2CResourceAdapter:$rraName/CMPConnectorFactory:$connection_factory_name/"]
+	if {[llength $objectCheck] != 0} {
+		printNLSText INSTALL_CONNECTION_FACTORY_ALREADY_EXISTS_CWSJO0014 [list $connection_factory_name]
+		return -code error
+	}
+
+
+
+	#------------------------------------------------
+	#	set up DataSource
+	#------------------------------------------------
+	printNLSText INSTALL_CREATING_DATA_SOURCE_CWSJO0018 [list $datasource_name $JDBCProv]
+	set DS_name_attribute [list name $datasource_name]
+	set DS_jndiName_attribute [list jndiName $datasource_jndi]
+	set DS_description_attribute [list description $datasource_description]
+	set DS_statementCacheSize_attribute [list statementCacheSize 10]
+	set DS_datasourceHelperClassname_attribute [list datasourceHelperClassname $data_source_helper_class_name]
+	set DS_attributes [list $DS_name_attribute $DS_jndiName_attribute $DS_description_attribute $DS_statementCacheSize_attribute $DS_datasourceHelperClassname_attribute]
+	$AdminConfig create DataSource $JDBCProv $DS_attributes
+
+	#set DSid [$AdminConfig getid /Node:$nodeNameArg/Server:$serverName/JDBCProvider:$jdbc_provider_name/DataSource:$datasource_name/]
+	set DSid [getDataSource $datasource_jndi $nodeNameArg $serverName]
+
+
+
+	#------------------------------------------------
+	#	set up J2EEResourcePropertySet for DataSource
+	#------------------------------------------------
+	printNLSText INSTALL_CONFIGURING_DATA_SOURCE_CWSJO0019 [list $datasource_name]
+	set dbNameProperty_name           [list name databaseName]
+	set dbNameProperty_type           [list type java.lang.String]
+	set dbNameProperty_value          [list value $dbName]
+	set dbNameProperty_required       [list required true]
+	set dbNameProperty                [list $dbNameProperty_name $dbNameProperty_type $dbNameProperty_value $dbNameProperty_required]
+
+	set J2EERPS_resourceProperty_attribute [list resourceProperties:J2EEResourceProperty [list $dbNameProperty]]
+	set J2EERPS_attributes [list $J2EERPS_resourceProperty_attribute]
+	$AdminConfig create J2EEResourcePropertySet "$DSid" $J2EERPS_attributes propertySet
+
+
+	#------------------------------------------------
+	#	set up CMPConnectorFactory
+	#------------------------------------------------
+	printNLSText INSTALL_CREATING_CONNECTION_FACTORY_CWSJO0020 [list $datasource_name]
+	set rraid [$AdminConfig getid /Node:$nodeNameArg/Server:$serverName/J2CResourceAdapter:$rraName/]
+	set CMPCF_name_attribute [list name $connection_factory_name]
+	set CMPCF_authMechanismPreference_attribute [list authMechanismPreference BASIC_PASSWORD]
+	set CMPCF_authDataAlias_attribute [list authDataAlias JAASAuthData]
+	set CMPCF_cmpDataSource_attribute [list cmpDatasource $DSid]
+	set CMPCF_attributes [list $CMPCF_name_attribute $CMPCF_authMechanismPreference_attribute $CMPCF_authDataAlias_attribute $CMPCF_cmpDataSource_attribute]
+	$AdminConfig create CMPConnectorFactory $rraid $CMPCF_attributes
+	set CMPCFid [$AdminConfig getid "/Node:$nodeNameArg/J2CResourceAdapter:$rraName/CMPConnectorFactory:$connection_factory_name/"]
+}
+
+
+
+#--------------------------------------------------------------
+# application installation procedures
+#--------------------------------------------------------------
+
+proc isAppInstalled {} {
+	global AdminApp
+	global APP_NAME
+	
+	if { [lsearch [$AdminApp list] "${APP_NAME}"]>=0 } {
+		return 1
+	}
+	return 0	
+}
+
+proc getModuleMappingForServer { nodeNameArg serverName } {
+	set mapping [list $nodeNameArg $serverName]
+	return $mapping
+}
+proc getModuleMappingForCluster { clusterName } {
+	set mapping [list $clusterName]
+	return $mapping
+}
+
+proc getDeploymentTargetList {} {
+	global AdminConfig
+	global APP_NAME	
+	set deployment [$AdminConfig getid /Deployment:${APP_NAME}/]
+	if { [llength $deployment]>0 } {
+		set deploymentTargetList [lindex [$AdminConfig showAttribute $deployment deploymentTargets] 0]
+		return $deploymentTargetList
+	}
+	return ""
+}
+
+proc isClusteredTarget { id } {
+	global AdminConfig
+	if { [lsearch [$AdminConfig list ClusteredTarget] ${id}]>=0 } {
+		return 1
+	}
+	return 0
+}
+
+proc getExistingModuleMappingTargets {} {
+	# returns a config list of deployment targets as where each element is either
+	# a single element list containing a cluster name or a two-element list
+	# containing a nodename and server name in that order
+
+	global AdminConfig
+
+	set deploymentTargetList [getDeploymentTargetList]
+	set existingMappings [list]
+	foreach deploymentTarget $deploymentTargetList {
+		if { [isClusteredTarget $deploymentTarget] } {
+			set clusterName [$AdminConfig showAttribute $deploymentTarget name]
+			set mapping [getModuleMappingForCluster $clusterName]
+		} else {
+			# $deploymentTarget will be of type ServerTarget
+			set nodeNameLocal [$AdminConfig showAttribute $deploymentTarget nodeName]
+			set serverName [$AdminConfig showAttribute $deploymentTarget name]
+			set mapping [getModuleMappingForServer $nodeNameLocal $serverName]
+		}
+		lappend existingMappings $mapping
+	}
+	return $existingMappings
+}
+
+proc installAppGeneric { locationString backendId } {
+	global AdminApp
+	global WAS_INSTALL_ROOT
+	global APP_NAME
+
+	if { [isAppInstalled]==0 } {
+		set app_file $WAS_INSTALL_ROOT/installableApps/SdoRepository.ear
+		printNLSText INSTALL_INSTALLING_EJB_APP_CWSJO0021 [list]
+		printNLSText INSTALL_DISPLAY_BACKEND_CWSJO0052 [list $backendId]
+		$AdminApp install ${app_file} "$locationString -nodeployejb -appname \"$APP_NAME\" -BackendIdSelection {{SDORep-db-jar sib.sdoConfigEjb.jar,META-INF/ejb-jar.xml {$backendId}}}"
+	}
+
+}
+
+proc installAppOnServer { nodeNameArg serverName backendId } {
+	set locationString "-node $nodeNameArg -server $serverName"
+	installAppGeneric $locationString $backendId
+}
+
+proc editInstallNdGeneric { newTargets } {
+	global AdminApp
+	global DEFAULT_BACKEND_ID
+	global APP_NAME
+
+	# check app is installed
+	set dmgrNodeName [getDmgrNodeName]
+	set dmgrServerName [getDmgrServerName]
+	if { [isAppInstalled]==0 } {
+		installAppOnServer $dmgrNodeName $dmgrServerName $DEFAULT_BACKEND_ID
+	}
+
+	set allTargets [getExistingModuleMappingTargets]
+	foreach target $newTargets {
+		if { [lsearch $allTargets $target]<0 } {
+			# module not yet mapped
+			lappend allTargets $target
+		} # else module already mapped, do nothing
+	}
+
+	# check the dmgr is also in the list of mappings
+	set dmgrTarget [getModuleMappingForServer $dmgrNodeName $dmgrServerName]
+	if { [lsearch $allTargets $dmgrTarget]<0 } {
+		lappend allTargets $dmgrTarget
+	}
+
+	set targetString ""
+	set cellName [getCurrentCellName]
+	foreach target $allTargets {
+		if { [llength $targetString]>0 } {
+			set targetString "${targetString}+"
+		}
+		if { [llength $target]==1 } {
+			set clusterName [lindex $target 0]
+			set targetString "${targetString}+WebSphere:cell=${cellName},cluster=${clusterName}"
+		} elseif { [llength $target]==2 } {
+			set nodeNameLocal   [lindex $target 0]
+			set serverName [lindex $target 1]
+			set targetString "${targetString}WebSphere:cell=${cellName},node=${nodeNameLocal},server=${serverName}"
+		}
+	}	
+
+	set mappingString "-MapModulesToServers \{\{SDORep-db-jar sib.sdoConfigEjb.jar,META-INF/ejb-jar.xml $targetString\}\}"
+	$AdminApp edit $APP_NAME $mappingString
+}
+
+proc editInstallToAddNdServer { nodeNameArg serverName } {
+	set newTargets [list [getModuleMappingForServer $nodeNameArg $serverName]]
+	editInstallNdGeneric $newTargets
+}
+
+proc editInstallToAddNdCluster { clusterName } {
+	set newTargets [list [getModuleMappingForCluster $clusterName]]
+	editInstallNdGeneric $newTargets
+}
+
+proc complete {} {
+	global AdminConfig
+	global AdminControl
+	global APP_NAME
+
+	#------------------------------------------------
+	#	save config and start application
+	#------------------------------------------------
+	printNLSText INSTALL_SAVING_CWSJO0022 [list]
+	$AdminConfig save
+
+	set connected [catch { $AdminControl getHost }]
+	if { $connected==0 } {
+		# $AdminControl gethost did not produce an error so we know we're connected to a server
+		syncNodes
+		set appManagerList [$AdminControl queryNames type=ApplicationManager,*]
+		foreach appManager $appManagerList {
+			# the appmanager for that server is accessible
+			catch { $AdminControl invoke $appManager startApplication "\"$APP_NAME\"" }
+		}
+	}
+}
+
+
+#--------------------------------------------------------------
+# editBackendId procedure
+#--------------------------------------------------------------
+
+proc editBackendId { backendId } {
+	global AdminApp
+	global APP_NAME
+
+	printNLSText INSTALL_DISPLAY_UPDATE_CWSJO0061 "\"$APP_NAME\""
+	
+	set mappingTargets [getExistingModuleMappingTargets]
+	if { [isAppInstalled] } {
+		$AdminApp uninstall $APP_NAME
+	}
+
+	installAppGeneric "" $backendId
+
+	if { [isNd] } {
+		# need to put it back on the same servers as before
+		editInstallNdGeneric $mappingTargets
+	}
+}
+
+
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+
+
+# Retrieve all parameters
+for {set i 0 } {$i < $argc} {incr i} {
+	if { [lindex $argv $i] == "-createDb" } {
+		set createDb 1
+	} elseif { [lindex $argv $i] == "-cluster" } {
+		incr i
+		set clusterName [lindex $argv $i]
+	} elseif { [lindex $argv $i] == "-editBackendId" } {
+		incr i
+		set backendId [lindex $argv $i]
+	} elseif { [lindex $argv $i] == "-listBackendIds" } {
+		printBackendIds
+		return 0
+	} else {
+		set targetNodeName [lindex $argv $i]
+		incr i
+		if { $i<$argc } {
+			set serverName [lindex $argv $i]
+		} else {
+			printUsage
+			return 1
+		}
+	}
+}
+
+
+# check for invalid option combinations
+if { ( [info exists targetNodeName] && ([info exists backendId] || [info exists clusterName]) ) ||
+     ( [info exists createDb] && ([info exists backendId] || [info exists clusterName]) ) ||
+     ( [info exists clusterName] && [info exists backendId] ) } {
+	printUsage
+}
+if { [info exists createDb] && [isNd] } {
+	printNLSText INSTALL_CREATEDB_ON_ND_CWSJO0062 [list]
+	return 1
+}
+if { [info exists createDb] && [isZOS] } {
+	printNLSText INSTALL_CREATEDB_ON_ZOS_CWSJO0063 [list]
+	return 1
+}
+
+
+if { [info exists clusterName] } {
+	# validate the cluster name
+	if { [llength [$AdminConfig getid /ServerCluster:$clusterName/]]==0 } {
+		printNLSText INSTALL_BAD_CLUSTER_NAME_CWSJO0047 [list $clusterName]
+		return 1
+	}
+	printNLSText INSTALL_DISPLAY_CLUSTER_CWSJO0048 [list $clusterName]
+} elseif { ![info exists backendId] } {
+	# if not provided, set the node name and server name
+	if { ![info exists targetNodeName] } {
+		# guess the node name
+		set nodeCount [llength [$AdminConfig list Node]]
+		if { $nodeCount != 1 } {
+			printNLSText INSTALL_MULTIPLE_NODES_CWSJO0039 [list $nodeCount]
+			return 1
+		}
+		set targetNodeName [$AdminConfig showAttribute [$AdminConfig list Node] name]
+	
+		# guess the server name
+		set serverCount [llength [$AdminConfig list Server]]
+		if { $serverCount != 1 } {
+			printNLSText INSTALL_MULTIPLE_SERVERS_CWSJO0017 [list $serverCount $targetNodeName]
+			return 1
+		}
+		set serverName [$AdminConfig showAttribute [$AdminConfig list Server] name]
+	}
+
+
+	# validate the node and server names
+	if { [llength [$AdminConfig getid /Node:$targetNodeName/Server:$serverName/]]==0 } {
+		printNLSText INSTALL_BAD_SERVER_NAME_CWSJO0049 [list $serverName $targetNodeName]
+		return 1
+	}
+
+	printNLSText INSTALL_DISPLAY_SERVER_AND_NODE_CWSJO0016 [list $targetNodeName $serverName]
+}
+
+
+set WAS_INSTALL_ROOT [lindex [array get env was.install.root] 1]
+if { [info exists targetNodeName] } {
+	set USER_INSTALL_ROOT [getWasVarForServer $targetNodeName $serverName USER_INSTALL_ROOT]
+} else {
+	set USER_INSTALL_ROOT [lindex [array get env user.install.root] 1]
+}
+set LOG_ROOT ${USER_INSTALL_ROOT}/logs
+
+regsub -all {\\} ${WAS_INSTALL_ROOT}  {/} WAS_INSTALL_ROOT
+regsub -all {\\} ${USER_INSTALL_ROOT} {/} USER_INSTALL_ROOT
+regsub -all {\\} ${LOG_ROOT}          {/} LOG_ROOT
+
+
+if { [info exists backendId] } {
+	if { [catch {editBackendId $backendId} result] } {
+		puts $result
+		return 1
+	}
+} elseif { [info exists clusterName] } {
+	if { [catch {editInstallToAddNdCluster $clusterName} result] } {
+		puts $result
+		return 1
+	}
+} else {
+	if { [isNd] } {
+		if { [catch {editInstallToAddNdServer $targetNodeName $serverName} result] } {
+			puts $result
+			return 1
+		}
+	} else {
+		if { [isAppInstalled] } {
+			printNLSText INSTALL_APP_ALREDY_EXISTS_CWSJO0050 [list $APP_NAME]
+			return 0
+		}
+		if { [catch {installAppOnServer $targetNodeName $serverName $DEFAULT_BACKEND_ID} result] } {
+			puts $result
+			return 1
+		}
+	}
+}
+
+if { [info exists createDb] } {
+	if { [catch {configDb $serverName $targetNodeName} result] || [catch createDb result] } {
+		puts $result
+		return 1
+	}
+}
+
+
+if { [catch {complete} result] } {
+	puts $result
+	return 1
+}
+
+
+printNLSText INSTALL_SUCCESSFUL_CWSJO0023 [list]

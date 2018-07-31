@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+
+	<form-beans>
+  		<form-bean name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginForm" type="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginForm"/> 
+  		<form-bean name="com.ibm.ws.console.intellmgmt.form.RemoteCellDetailForm" type="com.ibm.ws.console.intellmgmt.form.RemoteCellDetailForm"/>
+  		<form-bean name="com.ibm.ws.console.intellmgmt.form.TraceSpecDetailForm" type="com.ibm.ws.console.intellmgmt.form.TraceSpecDetailForm"/>
+  		<form-bean name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropCollectionForm" type="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropCollectionForm"/>
+  	  	<form-bean name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropDetailForm" type="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropDetailForm"/>    
+	</form-beans>
+
+	<global-forwards>
+		<forward name="IntellMgmtPluginConfig" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.content.main&amp;sfname=intellmgmtConfig&amp;lastPage=WebServer.config.view"/>
+		<forward name="intellmgmt.tracespec.content.main" path="intellmgmt.tracespec.content.main"/>
+		<forward name="intellmgmt.plugin.prop.content.main" path="intellmgmt.plugin.prop.content.main"/>
+		<forward name="intellmgmt.plugin.prop.content.detail" path="intellmgmt.plugin.prop.content.detail"/>	        		
+	</global-forwards>
+
+	<action-mappings>
+		<action name="com.ibm.ws.console.intellmgmt.forwardCmd" path="/com.ibm.ws.console.intellmgmt.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+			<forward name="intellmgmt.plugin.content.main" path="intellmgmt.plugin.content.main" />
+			<forward name="intellmgmt.tracespec.content.main" path="intellmgmt.tracespec.content.main" />
+			<forward name="intellmgmt.plugin.prop.content.main" path="intellmgmt.plugin.prop.content.main"/>
+		</action>
+	 
+        <action name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginForm"
+                path="/intellMgmtPlugin" 
+                input="intellmgmt.plugin.content.main"
+                type="com.ibm.ws.console.intellmgmt.action.IntellMgmtPluginAction">
+            <forward name="edit_intellmgmt" path="intellmgmt.plugin.content.main"/>
+            <forward name="edit_remotecell" path="intellmgmt.remotecell.content.main2"/>
+            <forward name="add_remotecell" path="intellmgmt.remotecell.content.main"/>
+            <forward name="error" path="intellmgmt.plugin.content.main"/>
+            <forward name="cancel" path="WebServer.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=WebServer.config.view"/>
+        </action>
+
+        <action name="com.ibm.ws.console.intellmgmt.form.RemoteCellDetailForm"
+                path="/remoteCellDetail" 
+                input="intellmgmt.remotecell.content.main"
+                type="com.ibm.ws.console.intellmgmt.action.RemoteCellDetailAction">
+            <forward name="error" path="intellmgmt.remotecell.content.main"/>
+            <forward name="cancel" path="intellmgmt.plugin.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.content.main"/>
+        </action>
+
+        <action name="com.ibm.ws.console.intellmgmt.form.RemoteCellDetailForm"
+                path="/remoteCellDetail" 
+                input="intellmgmt.remotecell.content.main2"
+                type="com.ibm.ws.console.intellmgmt.action.RemoteCellDetailAction">
+            <forward name="error" path="intellmgmt.remotecell.content.main2"/>
+            <forward name="cancel" path="intellmgmt.plugin.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.content.main"/>
+        </action>
+        
+        <action name="com.ibm.ws.console.intellmgmt.form.TraceSpecDetailForm"
+                path="/traceSpecDetail" 
+                input="intellmgmt.tracespec.content.main"
+                type="com.ibm.ws.console.intellmgmt.action.TraceSpecDetailAction">
+            <forward name="edit" path="intellmgmt.tracespec.content.main"/>
+            <forward name="error" path="intellmgmt.tracespec.content.main"/>
+            <forward name="cancel" path="intellmgmt.plugin.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.content.main"/>
+        </action>
+        <action input="intellmgmt.plugin.prop.content.main" scope="session"
+            name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropCollectionForm"
+            path="/intellMgmtPluginPropCollection" type="com.ibm.ws.console.intellmgmt.action.IntellMgmtPluginPropCollectionAction">
+            <forward name="new" path="intellmgmt.plugin.prop.content.detail"/>
+            <forward name="edit" path="intellmgmt.plugin.prop.content.detail"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.prop.content.main"/>
+        </action>
+        <action input="intellmgmt.plugin.prop.content.detail" scope="session"
+            name="com.ibm.ws.console.intellmgmt.form.IntellMgmtPluginPropDetailForm"
+            path="/intellMgmtPluginPropDetail" type="com.ibm.ws.console.intellmgmt.action.IntellMgmtPluginPropDetailAction">
+            <forward name="edit" path="intellmgmt.plugin.prop.content.detail"/>
+            <forward name="error" path="intellmgmt.plugin.prop.content.detail"/>
+            <forward name="cancel" path="intellmgmt.plugin.prop.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.intellmgmt.forwardCmd.do?forwardName=intellmgmt.plugin.prop.content.main"/>
+        </action>
+	</action-mappings>
+
+</struts-config>

@@ -1,0 +1,87 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="cleanupIVTApp" default="cleanupIVTApp" basedir=".">
+
+    
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    <taskdef name="checkForOmittedApps" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.CheckForOmittedApps"/>
+	&importExternalLogs;
+		         
+    <target name="checkForOmitted">
+        <checkForOmittedApps appToCheck="deployIVTApplication" property="isIVTOmitted"/>
+  
+        <condition property="isIVTAppOmitted" value="true">
+           <equals arg1="${isIVTOmitted}" arg2="true"/>
+        </condition>
+   
+        <wscmtlog> Value of isIVTOmitted = ${isIVTAppOmitted}</wscmtlog>
+
+        <wscmtlog> Value of isIVTOmitted = ${isIVTOmitted} </wscmtlog>
+	    <echo> isIVTOmitted = ${isIVTOmitted} </echo>
+    </target>
+
+    <target name="checkForAllOmitted">
+        <checkForOmittedApps appToCheck="All" property="allAppsOmitted"/>
+  
+        <condition property="noAppsInstalled" value="true">
+           <equals arg1="${allAppsOmitted}" arg2="true"/>
+        </condition>
+   
+        <condition property="uninstallIVT" value="true">
+        <and>
+           <equals arg1="${isIVTAppOmitted}" arg2="true"/>       
+            <not>
+	      <equals arg1="${noAppsInstalled}" arg2="true"/>
+           </not>
+        </and>
+
+        </condition>
+        <wscmtlog> Value of noAppsInstalled = ${noAppsInstalled}</wscmtlog>
+
+        <wscmtlog> Value of isIVTAppOmitted = ${isIVTAppOmitted}</wscmtlog>
+
+        <echo>  Value of uninstallIVT = ${uninstallIVT} </echo>
+        <wscmtlog> Value of uninstallIVT = ${uninstallIVT}</wscmtlog>
+
+    </target>
+
+    <target name="uninstallIVTApp"
+            description="Uninstall the IVT app"
+            if="uninstallIVT"
+            >
+            
+        <wscmtlog>Uninstalling the IVT App, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/uninstallIVTApp.log</wscmtlog>
+	<!-- fail on error was true, but changed to false to accomodate F69142-65189 --> 
+         <wsadmin conntype="none"
+                 failonerror="false"
+				 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/uninstallIVTApp.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminApp uninstall ivtApp"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+				 lang="jacl"
+                 > 				 
+        </wsadmin>
+		<antcall target="importLogsToMain" >
+			<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/uninstallIVTApp.log" />
+			<param name="description" value="Uninstalling IVT Application" />
+			<param name="precondition" value="foetrue" />
+		</antcall>			
+                 
+    </target> 
+
+    <target name="cleanupIVTApp"
+        description="Adjusts the config tree to remove actifacts created by omitted actions."
+        depends="
+            checkForOmitted, 
+	    checkForAllOmitted,
+            uninstallIVTApp"/>
+</project>

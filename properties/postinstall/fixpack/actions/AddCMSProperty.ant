@@ -1,0 +1,165 @@
+<project name="AddCMSProperty" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+  <!-- WAS_HOME properties for local test -->
+  <!--property name="WAS_HOME" value="C:\WAS90ND"/-->  
+  <!--property name="WAS_HOME" value="/opt/IBM/WebSphere/AppServer"/-->  
+      
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="zos">
+            <os family="z/os"/>
+        </condition>
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="unix"/>
+            </and>            
+        </condition>
+        
+        <condition property="configWindows" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="windows"/>
+            </and>
+        </condition>
+        <condition property="configZOS" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="zos"/>
+            </and>
+        </condition>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+    </target>
+
+    <!-- Common Task -->
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <!-- Windows -->
+    <target name="checkCmsPropertyExistsWindows" if="configWindows">
+        <loadfile property="scriptUpdatedWindows" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman_old.bat">
+            <filterchain>
+                <linecontains>
+                    <contains value="ADD_CMS_SERVICE_PROVIDER_ENABLED"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+        <echo>Check script updated: ${scriptUpdatedWindows}</echo>
+    </target>
+
+    <target name="AddCMSPropWindows"
+            description="Add missing quotes to ikeyman_old.bat on windows"
+            if="configWindows" unless="scriptUpdatedWindows">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+		<param name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman_old.bat"/>
+		<param name="token" value="-classpath"/>
+                <param name="tokenValue" value="-DADD_CMS_SERVICE_PROVIDER_ENABLED=true -classpath"/>
+	      </antcall>
+    </target>
+
+    <!-- UNIX -->
+    <target name="checkCmsPropertyExistsUNIX" if="configUNIX">
+        <loadfile property="scriptUpdatedUNIX" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman.sh">
+            <filterchain>
+                <linecontains>
+                    <contains value="ADD_CMS_SERVICE_PROVIDER_ENABLED"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+        <echo>Check script updated: ${scriptUpdatedUNIX}</echo>
+    </target>
+    <target name="AddCMSPropUNIX"
+            description="Add missing quotes to ikeyman.sh on unix"
+            if="configUNIX" unless="scriptUpdatedUNIX">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+		<param name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman.sh"/>
+		<param name="token" value="-classpath"/>
+                <param name="tokenValue" value="-DADD_CMS_SERVICE_PROVIDER_ENABLED=true -classpath"/>
+	      </antcall>
+    </target>
+
+
+    <!-- ZOS -->
+    <target name="checkCmsPropertyExistsZOS" if="configZOS">
+        <loadfile property="scriptUpdatedUNIX" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman.sh">
+            <filterchain>
+                <linecontains>
+                    <contains value="ADD_CMS_SERVICE_PROVIDER_ENABLED"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+        <echo>Check script updated: ${scriptUpdatedZOS}</echo>
+    </target>
+
+   <target name="AddCMSPropZOS"
+            description="Add missing quotes to ikeyman.sh on zos"
+            if="configZOS" unless="scriptUpdatedZOS">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+		<param name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman.sh"/>
+		<param name="token" value="-classpath"/>
+                <param name="tokenValue" value="-DADD_CMS_SERVICE_PROVIDER_ENABLED=true -classpath"/>
+	      </antcall>
+    </target>
+
+                      
+    <target name="install"
+        description="Set firststeps batch and shell scripts to account for server installed"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+            checkCmsPropertyExistsWindows,
+            AddCMSPropWindows,
+            checkCmsPropertyExistsUNIX,
+            AddCMSPropUNIX,
+            checkCmsPropertyExistsZOS,
+            AddCMSPropZOS"/>
+            
+    <target name="uninstall">
+    </target>
+</project>

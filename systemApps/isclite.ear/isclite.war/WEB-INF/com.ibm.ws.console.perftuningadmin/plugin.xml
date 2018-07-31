@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<plugin id="com.ibm.ws.console.perftuningadmin"
+        name="perftuningadmin"
+        version="5.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="perfTuningAdmin">  
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+        <import plugin="com.ibm.ws.console.servermanagement"/>
+    </requires>
+    
+<!--        
+ <extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="perfTuningAdmin.additionalLink.perfTuningAdmin"
+        contextType="ApplicationServer">
+    <link label="nav.webuiPerftuning.admin"
+        description="perfTuningAdmin.description"
+        categoryId="additional.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.rules.content.main&amp;"/>
+   </linkSet>
+</extension>
+                 
+   
+  <extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="perfTuningAdmin.additionalLink.perfTuningAdmin2"
+        contextType="ApplicationServer">
+    <link label="nav.webuiPerftuning.admin2"
+        description="perfTuningAdmin.description"
+        categoryId="additional.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.rules.main&amp;"/>
+   </linkSet>
+  </extension>
+  
+     -->
+  <extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="perfTuningAdmin.additionalLink.perfTuningAdmin"
+        contextType="ApplicationServer">
+    <link label="nav.webuiPerftuning.admin"
+        description="perfTuningAdmin.description"
+        categoryId="performance.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.ruleEngine.view&amp;lastPage=ApplicationServer.config.view">
+        <compatibility>
+            <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+        </compatibility>
+    </link>
+    <link label="nav.webuiPerftuning.admin"
+        description="perfTuningAdmin.description"
+        categoryId="performance.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.ruleEngine.view&amp;lastPage=ApplicationServer.config.view">
+        <compatibility>
+             <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+             <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+        </compatibility>
+    </link>
+   </linkSet>
+  </extension>
+  
+<!-- BEGIN LIDB3726-2 -->
+  <extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="clustermember.perfTuningAdmin.additionalLink.perfTuningAdmin"
+        contextType="ClusterMember">
+    <link label="nav.webuiPerftuning.admin"
+        description="perfTuningAdmin.description"
+        categoryId="clustermember.performance.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.ruleEngine.view&amp;lastPage=ClusterMember.config.view">
+        <compatibility>
+            <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+        </compatibility>
+    </link>
+    <link label="nav.webuiPerftuning.admin"
+        description="perfTuningAdmin.description"
+        categoryId="clustermember.performance.properties"
+        actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.ruleEngine.view&amp;lastPage=ClusterMember.config.view">
+        <compatibility>
+             <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+             <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+        </compatibility>
+    </link>
+   </linkSet>
+  </extension>
+  <!-- END LIDB3726-2 -->
+  
+  <!-- additional.properties -->
+    <extension point="com.ibm.websphere.wsc.link">
+         <linkSet id="perfTuningAdmin.RPA.ruleEngine.view1"
+                contextType="RPA.ruleEngine.view">
+            <link label="perfTuningAdmin.advice.config.displayName"
+                description="perfTuningAdmin.advice.config.displayName"
+                categoryId="additional.properties"
+                actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.rules.main_contained"/>
+         </linkSet>
+    </extension>
+    <extension point="com.ibm.websphere.wsc.link">
+       <linkSet id="perfTuningAdmin.RPA.ruleEngine.view2"
+              contextType="RPA.ruleEngine.view">
+          <link label="perfTuningAdmin.advice.config.displayName"
+              description="perfTuningAdmin.advice.config.displayName"
+              categoryId="additional.properties"
+              actionURI="com.ibm.ws.console.perfTuningAdmin.forwardCmd.do?forwardName=RPA.rules.main_contained"
+              perspective="tab.runtime"/>
+       </linkSet>
+  </extension>
+
+  <!-- buttons.panel -->       
+  <extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="perftuningadmin.RPA.ruleEngine.detail1" contextType="RPA.ruleEngine.view">
+          <action
+                enablesFor="Detail"
+                perspective="Runtime"
+                label="button.restart"
+                actionURI="rPARuleEngineDetail.do">
+          </action>
+      </actionSet>
+  </extension>
+  <!--
+    <extension point="com.ibm.websphere.wsc.actionSet">
+          <actionSet id="perftuningadmin.RPA.rules.content.main1" contextType="RPA.rules.content.main">
+              <action
+                    enablesFor="Detail"
+                    label="button.start"
+                    actionURI="rPACollection.do">
+              </action>
+              <action
+                    enablesFor="Detail"
+                    label="button.stop"
+                    actionURI="rPACollection.do">
+              </action>
+              <action
+  	          enablesFor="Detail"
+  	          perspective="Runtime"
+  	          label="button.start"
+  	          actionURI="rPACollection.do">
+  	    </action>
+  	    <action
+  	          enablesFor="Detail"
+  	          perspective="Runtime"
+  	          label="button.stop"
+  	          actionURI="rPACollection.do">
+              </action>
+          </actionSet>
+    </extension>
+  -->
+  <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="perftuningadmin.RPA.rules.content.main_contained1" contextType="RPA.rules.content.main_contained">
+            <action
+                  enablesFor="Detail"
+                  label="button.start"
+                  actionURI="rPACollection.do">
+            </action>
+            <action
+                  enablesFor="Detail"
+                  label="button.stop"
+                  actionURI="rPACollection.do">              
+            </action>
+            <action
+  	        enablesFor="Detail"
+  	        perspective="Runtime"
+  	        label="button.start"
+  	        actionURI="rPACollection.do">
+  	  </action>
+  	  <action
+  	        enablesFor="Detail"
+  	        perspective="Runtime"
+  	        label="button.stop"
+  	        actionURI="rPACollection.do">
+            </action>
+        </actionSet>
+  </extension>
+  
+  <!-- collection.table.extends -->
+  <extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="perftuningadmin.RPA.rules.content.main_contained1" contextType="RPA.rules.content.main_contained">
+          <item
+                attributeName="ruleName"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.advice.displayName">
+                <compatibility>
+                  <match key="com.ibm.ws.console.perfTuningAdmin.advanced" value="false"/>
+                </compatibility>
+
+          </item>
+          <item
+                attributeName="ruleName"
+                sortable="sort"
+                itemURI="rpaAdviceParamDetail.do?EditAction=true"
+                label="perfTuningAdmin.advice.displayName">
+                <compatibility>
+                  <match key="com.ibm.ws.console.perfTuningAdmin.advanced" value="true"/>
+                </compatibility>
+
+          </item>
+          <item
+                attributeName="component"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.component.displayName">
+          </item>
+          <item
+                attributeName="adviceType"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.adviceType.displayName">
+          </item>
+          
+          <item
+                attributeName="impact"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.performanceImpact.displayName">
+          </item>
+
+          <item
+                attributeName="status"
+                sortable="nosort"
+                itemURI=""
+                label="perfTuningAdmin.status.displayName">
+          </item>
+      </collectionItem>
+  </extension>
+  <!--
+  <extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="perftuningadmin.RPA.rules.content.main1" contextType="RPA.rules.content.main">
+          <item
+                attributeName="ruleName"
+                sortable="sort"
+                itemURI="rpaAdviceParamDetail.do?EditAction=true"
+                label="perfTuningAdmin.advice.displayName">
+          </item>
+          <item
+                attributeName="component"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.component.displayName">
+          </item>
+          <item
+                attributeName="status"
+                sortable="sort"
+                itemURI=""
+                label="perfTuningAdmin.status.displayName">
+          </item>
+      </collectionItem>
+  </extension>
+  -->
+
+ <!-- tabsLayout -->
+ <extension point="com.ibm.websphere.wsc.detailTab">
+     <detailTab id="perftuningadmin.RPA.ruleEngine.view1" contextType="RPA.ruleEngine.view">
+         <tab
+               label="tab.runtime"
+               contentURI="RPA.ruleEngine.runtime.tab.view">
+         </tab>
+         <tab
+               label="tab.configuration"
+               contentURI="RPA.ruleEngine.config.tab.view">
+         </tab>
+     </detailTab>
+ </extension>
+ <extension point="com.ibm.websphere.wsc.detailTab">
+     <detailTab id="perftuningadmin.perfTuningAdmin1" contextType="perfTuningAdmin">
+         <tab
+               label="tab.runtime"
+               contentURI="RPA.runtime.tab.view">
+         </tab>
+         <tab
+               label="tab.configuration"
+               contentURI="perfTuningAdmin.config.tab.view">
+         </tab>
+     </detailTab>
+ </extension>
+ <extension point="com.ibm.websphere.wsc.detailTab">
+     <detailTab id="perftuningadmin.RPA.advice.param.config.view1" contextType="RPA.advice.param.config.view">
+         <tab
+               label="tab.runtime"
+               contentURI="RPA.advice.param.runtime.tab.view">
+         </tab>
+         <tab
+               label="tab.configuration"
+               contentURI="RPA.advice.param.config.tab.view">
+         </tab>
+     </detailTab>
+ </extension>
+ <extension point="com.ibm.websphere.wsc.detailTab">
+     <detailTab id="perftuningadmin.RPA.rules.main1" contextType="RPA.rules.main">
+         <tab
+               label="tab.runtime"
+               contentURI="RPA.rules.runtime.tab.view">
+         </tab>
+         <tab
+               label="tab.configuration"
+               contentURI="RPA.rules.config.tab.view">
+         </tab>
+     </detailTab>
+ </extension>
+ <extension point="com.ibm.websphere.wsc.detailTab">
+     <detailTab id="perftuningadmin.RPA.rules.main_contained1" contextType="RPA.rules.main_contained">
+         <tab
+               label="tab.runtime"
+               contentURI="RPA.rules.runtime.tab.view_contained">
+         </tab>
+         <tab
+               label="tab.configuration"
+               contentURI="RPA.rules.config.tab.view_contained">
+         </tab>
+     </detailTab>
+ </extension>
+ 
+ 
+ <extension point="com.ibm.websphere.wsc.form">
+    <form id="RPA.ruleEngine.runtime.general.properties" contextType="RPA.ruleEngine.view">
+        
+        <field 
+                  attributeName="numberOfProcessors"
+                  perspective="config">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field >
+        <field 
+              attributeName="numberOfProcessors"
+              perspective="runtime">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field > 
+        <field 
+              attributeName="minCpuUsage"
+              perspective="config">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field > 
+        <field 
+              attributeName="minCpuUsage"
+              perspective="runtime">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field > 
+        <field 
+              attributeName="cpuSaturated"
+              perspective="config">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field > 
+        <field 
+              attributeName="cpuSaturated"
+              perspective="runtime">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+        </field > 
+        
+        
+        
+        <field 
+              attributeName="memoryLeakDataCollection"
+              perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(aix|linux|windows|os390)"/>
+                <match key="com.ibm.websphere.baseProductVersion" value="(6\.[1-9].*)|(6\.[0-9]\.[2-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+             </compatibility>             
+         </field >
+            
+    </form>
+</extension>                 
+<extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true" />
+</extension>
+</plugin>
+
+

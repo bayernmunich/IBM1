@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N01, 5733-W61 (C) COPYRIGHT International Business Machines Corp. 2006
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp. 
+-->
+
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+
+    <!-- Begin WAS.webui.webservices.trust -->
+    <form-beans>
+      <form-bean name="com.ibm.ws.console.webservices.trust.SCClientCache.SCClientCacheDetailForm" type="com.ibm.ws.console.webservices.trust.SCClientCache.SCClientCacheDetailForm"/>
+      <form-bean name="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeDetailForm" type="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeDetailForm"/>
+      <form-bean name="com.ibm.ws.console.webservices.trust.ConfirmDetailForm" type="com.ibm.ws.console.webservices.trust.ConfirmDetailForm"/>
+      <form-bean name="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionForm" type="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionForm"/>
+      <form-bean name="com.ibm.ws.console.webservices.trust.attachments.TrustServiceAttachmentDetailForm" type="com.ibm.ws.console.webservices.trust.attachments.TrustServiceAttachmentDetailForm"/>
+      <form-bean name="com.ibm.ws.console.webservices.trust.targets.TargetEndpointsDetailForm" type="com.ibm.ws.console.webservices.trust.targets.TargetEndpointsDetailForm"/>
+    </form-beans>
+
+	<!-- cross Action/Component forwards need a global forwards entry -->
+    <global-forwards> 
+    <forward name="TrustServiceAttachment.content.main" path="TrustServiceAttachment.content.main"/>
+    <forward name="NewAttachment.config.view" path="NewAttachment.config.view"/> 
+    <forward name="tokenDisplay" path="WSTokenType.config.view"/>
+    <forward name="updatePrompt" path="WSTokenType.config.confirm.view"/>
+    <forward name="WSTokenType.config.view" path="WSTokenType.config.view"/>
+    <forward name="STSTargets.content.main" path="STSTargets.content.main"/>
+    <forward name="TargetURL.config.view" path="TargetURL.config.view"/>
+    <forward name="trustAttachmentCollection" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TrustServiceAttachment.content.main"/>
+    
+    </global-forwards>
+
+    <action-mappings>
+        <action
+            name="com.ibm.ws.console.webservices.trust.forwardCmd"
+                path="/com.ibm.ws.console.webservices.trust.forwardCmd" 
+                type="com.ibm.ws.console.core.action.ForwardAction">
+          
+            <forward name="WSSupportedTokenTypes.content.main" path="WSSupportedTokenTypes.content.main"/>
+            <forward name="SCClientCache.config.view" path="SCClientCache.config.view"/>
+            <forward name="WSTokenType.config.view" path="WSTokenType.config.view"/>
+            <forward name="TrustPolicySet.content.main" path="TrustPolicySet.content.main"/>
+            <forward name="TrustServiceAttachment.content.main" path="TrustServiceAttachment.content.main"/>
+            <forward name="NewAttachment.config.view" path="NewAttachment.config.view"/> 
+            <forward name="STSTargets.content.main" path="STSTargets.content.main"/> 
+            <forward name="STSTargetEndpoints.content.main" path="STSTargetEndpoints.content.main"/> 
+            <forward name="TargetURL.config.view" path="TargetURL.config.view"/>           
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeDetailForm"
+            path="/wsTokenTypeDetailAction" 
+            type="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeDetailAction" 
+            input="WSTokenType.config.view">
+            <forward name="error" path="WSTokenType.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=WSSupportedTokenTypes.content.main"/>
+        </action>     
+        
+        <action
+            name="com.ibm.ws.console.webservices.trust.ConfirmDetailForm"
+            path="/wsConfirmDetailAction" 
+            type="com.ibm.ws.console.webservices.trust.ConfirmDetailAction" 
+            input="WSSupportedTokenTypes.content.main">
+            <forward name="error" path="WSSupportedTokenTypes.content.main"/>           
+			<!-- These use long format so that controller runs and can intercept STS.confirmOverride in session
+			        to overwrite the Show confirmation preference                                               -->
+            <forward name="wsTokenTypeCollectionAction" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=WSSupportedTokenTypes.content.main"/>
+            <forward name="trustAttachmentCollection" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TrustServiceAttachment.content.main"/>
+            <forward name="STSTargetsCollection" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=STSTargets.content.main"/>
+            <forward name="success" path="WSSupportedTokenTypes.content.main"/>
+        </action>      
+        
+        <action
+            name="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionForm"
+            path="/wsTokenTypeCollectionAction" 
+            type="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionAction" 
+            input="WSSupportedTokenTypes.content.main">
+            <forward name="error" path="WSSupportedTokenTypes.content.main"/>
+            <forward name="wsTokenTypeCollectionAction" path="WSSupportedTokenTypes.content.main"/>
+            <forward name="success" path="WSTokenType.config.view"/>
+            <forward name="updatePrompt" path="WSTokenType.config.confirm.view"/>
+        </action>
+    
+        <action
+            name="com.ibm.ws.console.webservices.trust.SCClientCache.SCClientCacheDetailForm"
+            path="/sCClientCacheDetail" 
+            type="com.ibm.ws.console.webservices.trust.SCClientCache.SCClientCacheDetailAction" 
+            input="SCClientCache.config.view">
+            <forward name="error" path="SCClientCache.config.view"/>
+            <forward name="success" path="SCClientCache.config.view"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentCollectionForm"
+            path="/trustAttachmentCollection" 
+            type="com.ibm.ws.console.webservices.trust.attachments.TrustPolicySetAttachmentCollectionAction" 
+            input="TrustServiceAttachment.content.main">
+            <forward name="error" path="TrustServiceAttachment.content.main"/>
+            <forward name="trustAttachmentCollection" path="TrustServiceAttachment.content.main"/>
+            <forward name="trustAttachmentCollectionRedraw" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TrustServiceAttachment.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TrustServiceAttachment.content.main"/>
+            <forward name="updatePrompt" path="WSTokenType.config.confirm.view"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentCollectionForm"
+            path="/STSTargetsCollection" 
+            type="com.ibm.ws.console.webservices.trust.targets.STSTargetsCollectionAction" 
+            input="STSTargets.content.main">
+            <forward name="error" path="STSTargets.content.main"/>
+            <forward name="STSTargetsCollection" path="STSTargets.content.main"/>
+            <forward name="STSTargetsCollectionRedraw" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=STSTargets.content.main"/>
+            <forward name="success" path="STSTargets.content.main"/>
+            <forward name="updatePrompt" path="WSTokenType.config.confirm.view"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.webservices.trust.attachments.TrustServiceAttachmentDetailForm"
+            path="/NewTrustServiceAttachmentsDetail" 
+            type="com.ibm.ws.console.webservices.trust.attachments.TrustServiceAttachmentDetailAction" 
+            input="NewAttachment.config.view">
+            <forward name="error" path="NewAttachment.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TrustServiceAttachment.content.main"/>
+        </action>
+            
+        <action
+            name="com.ibm.ws.console.webservices.trust.targets.TargetEndpointsDetailForm"
+            path="/TargetEndpoints" 
+            type="com.ibm.ws.console.webservices.trust.targets.TargetEndpointsDetailAction" 
+            input="TargetURL.config.view">
+            <forward name="error" path="TargetURL.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=STSTargets.content.main"/>
+        </action>
+    </action-mappings>
+</struts-config>

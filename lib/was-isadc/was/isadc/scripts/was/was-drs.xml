@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Data Replication Service Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Data Replication Service Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/archive-utilities.xml" />
+
+	<property name="autopdProblem" value="WAS_DRS_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="infocollectProblemType" value="was-drs" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2,  
+					validate_os,
+
+					was_stack_custom_init,	         		 		  	  		    		   
+		    		 recovery_needed_with_condition, 
+		    		 
+		    		 start_time, 
+		    		 
+		    		 generate_drs_trace_string,
+					 
+					 check_set_trace_choice_valid_with_condition,
+			         get_default_trace_values,	 
+			      	 set_was_runtime_trace_with_condition,   
+			      	 set_was_trace_with_condition,
+		    		 	    		  
+		    		 pause, 
+		    		 end_time, 
+		    		 gen_history_report, 
+		    		 
+		    		 restore_user_default_trace_values,
+		    		 recovery_completed_with_condition, 
+			         set_server_restore_status_with_condition,
+			         restore_app_server_status, 
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<!-- exit if this is not WAS v5 -->
+	<target name="check_is_was_5">
+		<if isNotTrue="${isWASVersion5}">
+			<fail message="Only WebSphere Application Server v5.x is supported for this problem type." />
+		</if>
+	</target>
+
+	<!--  generate the DRS trace string or v5 -->
+	<target name="generate_drs_trace_string"
+	        description="Enable the data replication tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<property name="was.trace.string"
+		          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.drs.*=all=enabled:com.ibm.ws.cache.*=all=enabled" />
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Data Replication Service Problem&lt;/h2&gt;&lt;p&gt;
+					Run this problem category to the Data Replication Service trace string. 
+					After the problem has been reproduced the logs, configuration, and trace
+					files will be archived for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1164068" />
+		
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Run this problem category to the Data Replication Service trace string. 
+After the problem has been reproduced the logs, configuration, and trace files will be archived 
+for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Data Replication Service Problem =>
+Run this problem category to the Data Replication Service trace string.
+After the problem has been reproduced the logs, configuration, and trace
+files will be archived for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

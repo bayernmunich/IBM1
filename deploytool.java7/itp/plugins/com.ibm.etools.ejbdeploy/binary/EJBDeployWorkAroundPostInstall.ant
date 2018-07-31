@@ -1,0 +1,135 @@
+<project name="EJBDeployWorkAroundPostInstall" default="EJBDeployWorkAroundPostInstall" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows).">
+
+        <condition property="currentOSFamily" 
+                value="os/400">
+            <equals arg1="${os.name}" 
+                arg2="OS/400"/>
+        </condition>
+        <condition property="currentOSFamily" 
+                value="windows">
+            <os family="windows"/>
+        </condition>
+        <condition property="currentOSFamily" 
+                value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX, OS400 or Windows)">
+        
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        <condition property="isCurrentOSWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        <condition property="isCurrentOSUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4).">
+            
+        <condition property="separatorFile" 
+                value="/">
+            <equals arg1="${currentOSFamily}" 
+                arg2="os/400"/>
+        </condition>
+        <condition property="separatorFile" 
+                value="/">
+            <equals arg1="${currentOSFamily}" 
+                arg2="unix"/>
+        </condition>
+        <condition property="separatorFile" 
+                value="\">
+            <equals arg1="${currentOSFamily}" 
+                arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setExecutable"
+            description="Sets the name of the executable file based on the os family.">
+    
+        <condition property="executable"
+                value="${WAS_HOME}${separatorFile}deploytool${separatorFile}scripts${separatorFile}install${separatorFile}ejbdeploy-clear-cache">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        <condition property="executable"
+                value="${WAS_HOME}${separatorFile}deploytool${separatorFile}scripts${separatorFile}install${separatorFile}ejbdeploy-clear-cache.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="executable"
+                value="${WAS_HOME}${separatorFile}deploytool${separatorFile}scripts${separatorFile}install${separatorFile}ejbdeploy-clear-cache.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>The full path of the executable is: ${executable}</wscmtlog>
+    </target>
+    
+    <target name="checkExecutableExistence"
+		description="Determine whether the executable file exists">
+		
+		<available property="executableExists" file="${executable}" type="file"/>
+		<wscmtlog>executableExists value is ${executableExists}</wscmtlog>
+	</target>
+	
+	<target name="issueWarning" unless="executableExists"
+		description="Issue a warning if executable does not exist">
+		
+		<wscmtlog priority="severe">Executable ${executable} does not exist, therefore it was not executed.</wscmtlog>
+	</target>
+
+	<target name="invokeExecutableOS400"
+		description="Invoke the executable on OS400"
+		if="isCurrentOSOS400">
+		
+		<wscmtlog>Invoking ${executable}.</wscmtlog>
+		<exec executable="${executable}" failonerror="false"/>
+	</target>
+
+	<target name="invokeExecutableUNIX"
+		description="Invoke the executable on UNIX"
+		if="isCurrentOSUNIX">
+		
+		<wscmtlog>Invoking ${executable}.</wscmtlog>
+		<exec executable="sh" dir="${WAS_HOME}${separatorFile}bin">
+		    <arg value="${executable}"/>
+		</exec>
+	</target>
+	
+	<target name="invokeExecutableWindows"
+		description="Invoke the executable on Windows"
+		if="isCurrentOSWindows">
+		
+		<wscmtlog>Invoking ${executable}.</wscmtlog>
+		<exec executable="cmd" dir="${WAS_HOME}${separatorFile}bin">
+		    <arg value="/c"/>
+		    <arg value="${executable}"/>
+		</exec>
+	</target>
+	
+	<target name ="invokeExecutable"
+	    description="Invoke the executable"
+	    depends="invokeExecutableOS400,
+	             invokeExecutableUNIX,
+	             invokeExecutableWindows"/>
+    
+    <target name="EJBDeployWorkAroundPostInstall"
+        description="Purge OSGi resolver cache for EJBDeploy tool."
+        depends="detectCurrentOSFamily,
+            setCurrentOSFamily,
+            setOSFileSeparator,
+            setExecutable,
+			checkExecutableExistence,
+			issueWarning,
+			invokeExecutable"/>   
+    
+</project>

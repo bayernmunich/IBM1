@@ -1,0 +1,53 @@
+// Licensed Materials - Property of IBM
+//
+// (C) Copyright IBM Corp. 2010, 2011 All Rights Reserved
+//
+// US Government Users Restricted Rights - Use, duplicate or
+// disclosure restricted by GSA ADP Schedule Contract with
+// IBM Corp.
+// IBM_COPYRIGHT_END
+
+#pragma namespace ("root/usmi")
+
+class Tivoli_ProviderData
+{
+    [key] string Id;
+    string CriteriaFile;
+    boolean Defer;
+    string Files[];
+    string Protocols[];
+    string ProtocolClasses[];
+    string ClassNames[];
+    string RunLocal;
+    uint16 RunIfHasAgent;
+};
+
+class Tivoli_ObjectProviderData
+{
+    [Key]
+    Tivoli_ProviderData REF Data;
+
+    [Key]
+    Tivoli_ObjectProvider REF Provider;
+
+};
+
+instance of Tivoli_ObjectProvider as $CIT_Transformer
+{
+	Name = "CIT_Transformer";
+	Version = "1.0.0";
+	ClassName = "com.ibm.sysmgmt.uim.provider.cit.sw.SWTransformer";
+};
+
+instance of Tivoli_ProviderData as $CIT_TransformerData
+{
+	Id = "CITTransformer";
+        ClassNames = {"SoftwareInstallation", "TemporaryFixInstallation", "SoftwareComponentInstallation", "SoftwareResourceInstalledOnComputerSystem", "TemporaryFixInstallationFixesSoftwareInstallation"};
+        RunLocal = "ANY";
+};
+
+instance of Tivoli_ObjectProviderData
+{
+	Data = $CIT_TransformerData;
+	Provider = $CIT_Transformer;
+};

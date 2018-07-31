@@ -1,0 +1,43 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createDefaultControllersProject" default="createDefaultControllers" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;
+        
+    <target name="init">
+        <loadproperties srcFile="${profilePath}/properties/profileKey.metadata"/> 
+        <wscmtlog> serverType = ${com.ibm.ws.profile.type}</wscmtlog>
+        <condition property="isDmgr" value="true">
+             <equals arg1="${com.ibm.ws.profile.type}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <wscmtlog message="isDmgr=${isDmgr}"/>     
+    </target>
+	
+    <target name="createDefaultControllers"
+            description="createDefaultControllers" depends="init" if="isDmgr">
+        <wsadmin conntype="none"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  lang="jython"
+                  script="${templatePath}/actions/scripts/createDefaultControllers.py"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/createDefaultControllers.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+        </wsadmin>
+	<antcall target="importLogsToMain" >
+		<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createDefaultControllers.log" />
+		<param name="description" value="Create WVE default controllers" />
+		<param name="precondition" value="foetrue" />
+	</antcall>        
+    </target>
+</project>

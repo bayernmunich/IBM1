@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N02, 5733-W70 (C) COPYRIGHT International Business Machines Corp. 1997, 2005
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp. 
+-->
+
+<plugin id="com.ibm.ws.console.servermanagement.sipcontainer"
+        name="SIPContainer"
+        version="7.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="SIPContainer">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+	<import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.channelfw"/>
+	<import plugin="com.ibm.ws.console.channelfw.channels"/>
+	<import plugin="com.ibm.ws.console.webservices"/>
+	<import plugin="com.ibm.ws.console.wssecurity"/>		
+	<import plugin="com.ibm.ws.console.distmanagement"/>	
+</requires>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer2" contextType="ApplicationServer">
+        <categoryDefinition weight="20" id="SIPContainer.properties" parent="containers.properties" label="addprops.category.label.SIPContainers">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+		</categoryDefinition>     
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer3" contextType="ApplicationServer">		
+        <link
+              categoryId="SIPContainer.properties"
+              label="SIPContainer.link.displayName"
+              description="SIPContainer.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPContainer.config.view&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+
+        <!-- link
+              categoryId="SIPContainer.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link -->
+
+        <link
+              categoryId="SIPContainer.properties"
+              label="SIPContainer.channelfw.transports.displayName"
+              description="SIPContainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ApplicationServer.config.view&amp;chainAcceptorFilter=SIPContainerInboundChannel&amp;chainEndPointFilter=null&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- End WAS.webui.common.server -->
+
+<!-- Begin WAS.webui.j2ee.SIPContainer -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.sipcontainer.detailTab1" contextType="SIPContainer">
+        <tab
+              label="tab.configuration"
+              contentURI="SIPContainer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.SIPContainer1" contextType="SIPContainer">
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=SIPContainer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+        
+        <link
+              categoryId="additional.properties"
+              label="SIPContainer.channelfw.transports.displayName"
+              description="SIPContainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=SIPContainer.config.view&amp;chainAcceptorFilter=SIPContainerInboundChannel&amp;chainEndPointFilter=null">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+        
+        <link
+              categoryId="additional.properties"
+              label="SIPContainer.sipStack.displayName"
+              description="SIPContainer.sipStack.description"
+              actionURI="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPStack.config.view&amp;sfname=stack&amp;lastPage=SIPContainer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+ 
+        <link
+              categoryId="additional.properties"
+              label="SIPContainer.Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+	<form id="SIPContainer.config.general.properties" contextType="SIPContainer">
+   		<field 
+        	attributeName="DNSServer"
+            perspective="config">
+        	<compatibility>
+            	<match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+            </compatibility>
+      	</field >
+	</form>
+</extension>
+
+<!-- End WAS.webui.j2ee.SIPContainer -->
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.SIPStack" contextType="SIPStack">
+       <link
+              categoryId="additional.properties"
+              label="SIPContainer.sipTimers.displayName"
+              description="SIPContainer.sipTimers.description"
+              actionURI="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPTimers.config.view&amp;sfname=timers&amp;lastPage=SIPStack.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- defect 306175 begins -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.SIPModuleDeployment"
+          contextType="SIPModuleDeployment">
+
+   <!-- Define section category for Webservices items -->
+   <!-- categoryDefinition weight="42"
+       id="wssecurity.properties.category"
+       parent="root"
+       label="wssecurity.properties.category.displayName"/>
+       <link label="WSServerBinding.displayName"
+                description="WSServerBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerBinding.content.main" -->
+       <link label="WSServerBinding.displayName"
+                description="WSServerBinding.description"
+                categoryId="additional.properties"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerBinding.content.main">
+           <compatibility>
+               <match class="com.ibm.ws.console.wssecurity.WSServerBindingCollectionForm"
+                      key="com.ibm.ws.console.wssecurity.hasWebserviceServerModules" value="true"/>
+               <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+               <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+           </compatibility>
+       </link>
+       <!-- link label="WSClientBinding.displayName"
+                description="WSClientBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSClientBinding.content.main" -->
+       <link label="WSClientBinding.displayName"
+                description="WSClientBinding.description"
+                categoryId="additional.properties"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSClientBinding.content.main">                
+           <compatibility>
+               <match class="com.ibm.ws.console.wssecurity.WSClientBindingCollectionForm"
+                      key="com.ibm.ws.console.wssecurity.hasWebserviceClientModules" value="true"/>
+               <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+               <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+           </compatibility>
+       </link>
+   </linkSet>
+</extension>
+
+   <extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="appmanagement.SIPModuleDeployment1"
+           contextType="SIPModuleDeployment">
+
+          <!-- Define section category for Webservices items -->
+          <!-- categoryDefinition weight="40" id="webservices.properties.category" parent="root" label="webservices.properties.category.displayName"/>
+          <link label="ProvideScope.server.displayName"                       
+                    description="ProvideScope.plugin.description"
+                    categoryId="webservices.properties.category"
+                    actionURI="com.ibm.ws.console.webservices.editbind.forwardCmd.do?forwardName=ProvideScope.config.view"
+                    role="administrator,configurator" -->
+          <link label="ProvideScope.server.displayName"                       
+                    description="ProvideScope.plugin.description"
+                    categoryId="additional.properties"
+                    actionURI="com.ibm.ws.console.webservices.editbind.forwardCmd.do?forwardName=ProvideScope.config.view"
+                    role="administrator,configurator">                    
+              <compatibility>
+                  <match class="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm"
+                         key="com.ibm.ws.console.webservices.edit.hasWebserviceServerModules" value="true"/>
+                  <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                  <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+              </compatibility>
+          </link>
+          
+          <!-- link label="ProvideClient.plugin.displayName"                       
+                description="ProvideClient.plugin.description"
+                categoryId="webservices.properties.category"
+                actionURI="com.ibm.ws.console.webservices.editbind.forwardCmd.do?forwardName=ProvideClient.config.view"
+                role="administrator,configurator" -->
+          <link label="ProvideClient.plugin.displayName"                       
+                description="ProvideClient.plugin.description"
+                categoryId="additional.properties"
+                actionURI="com.ibm.ws.console.webservices.editbind.forwardCmd.do?forwardName=ProvideClient.config.view"
+                role="administrator,configurator">                
+              <compatibility>
+                  <match class="com.ibm.ws.console.webservices.editbind.ProvideClientDetailForm"
+                         key="com.ibm.ws.console.webservices.edit.hasWebserviceClientModules" value="true"/>
+                  <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                  <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+              </compatibility>
+          </link>
+      </linkSet>
+    </extension>
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="webmodule.additionalLink.WSClientWSDDE" contextType="SIPModuleDeployment">
+            <!-- link  
+                categoryId="webservices.properties.category"
+                label="Webservices.viewWSClientDDE.displayName"
+                description="Webservices.viewWSClientDDE.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_client_dde" -->
+            <link  
+                categoryId="additional.properties"
+                label="Webservices.viewWSClientDDE.displayName"
+                description="Webservices.viewWSClientDDE.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_client_dde">                
+            <compatibility>
+                <match class="com.ibm.ws.console.webservices.editbind.ProvideClientDetailForm"
+                       key="com.ibm.ws.console.webservices.edit.hasWebserviceClientModules" value="true"/>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+    
+    <!-- begin server deployment descriptor extension -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="webmodule.additionalLink.WSServerWSDDE" contextType="SIPModuleDeployment">
+            <!-- link 
+                categoryId="webservices.properties.category"
+                label="Webservices.viewWSServerDDE.displayName"
+                description="Webservices.viewWSServerDDE.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_server_dde" -->
+            <link 
+                categoryId="additional.properties"
+                label="Webservices.viewWSServerDDE.displayName"
+                description="Webservices.viewWSServerDDE.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_server_dde">                
+            <compatibility>
+                <match class="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm"
+                       key="com.ibm.ws.console.webservices.edit.hasWebserviceServerModules" value="true"/>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+           </link>     
+        </linkSet>
+    </extension>        
+    
+    <!-- begin server deployment descriptor --> 
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="webmodule.additionalLink.WSServerWSDD" contextType="SIPModuleDeployment">
+            <!-- link 
+                categoryId="webservices.properties.category"
+                label="Webservices.viewWSServerDD.displayName"
+                description="Webservices.viewWSServerDD.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_server_dd" -->
+            <link 
+                categoryId="additional.properties"
+                label="Webservices.viewWSServerDD.displayName"
+                description="Webservices.viewWSServerDD.description"
+                actionURI="com.ibm.ws.console.webservices.ddviewer.viewCmd.do?resource=web_server_dd">                
+            <compatibility>
+                <match class="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm"
+                       key="com.ibm.ws.console.webservices.edit.hasWebserviceServerModules" value="true"/>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+            </link>
+        </linkSet>
+    </extension>    
+<!-- defect 306175 ends -->  
+
+	<extension point="com.ibm.ws.console.core.help">
+		<toc file="toc.xml" primary="true" />
+	</extension>
+	
+	
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ClusterMemberServer1" contextType="ClusterMember">
+        <categoryDefinition weight="20" id="clustermember.SIPContainer.properties" parent="clustermember.containers.properties" label="addprops.category.label.SIPContainers"/>
+
+        <link
+              categoryId="clustermember.SIPContainer.properties"
+              label="SIPContainer.link.displayName"
+              description="SIPContainer.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPContainer.config.view&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+        
+        <link
+              categoryId="clustermember.SIPContainer.properties"
+              label="SIPContainer.channelfw.transports.displayName"
+              description="SIPContainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ApplicationServer.config.view&amp;chainAcceptorFilter=SIPContainerInboundChannel&amp;chainEndPointFilter=null&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+</plugin>

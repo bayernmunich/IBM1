@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Hang Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Hang Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-linux.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-aix.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-solaris.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-windows.xml" />
+
+	<property name="autopdProblem" value="WAS_Hangs_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-collect-hangs" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		 validate_os,
+		 usage, obtain_hangs_platform_info,
+		 was_stack_custom_init, 
+					 
+					 generate_VM_string,
+			         enable_jvm_verbose_gc,			        
+			         set_jvm_arguments_with_condition,	 		  	 					  
+					 was_jvm_working_directory,
+					 collect_sychronization_info, 
+					 obtain_was_java_processid, 
+					 create_linux_hangs_pre_output, 
+					 create_aix_hangs_pre_output, 
+					 create_solaris_hangs_pre_output, 
+					 create_windows_hangs_output, 
+					 create_unix_hangs_javacore, 
+					 create_aix_hangs_post_output, 
+					 create_linux_hangs_post_output, 
+					 create_solaris_hangs_post_output,  
+					 create_unix_hangs_systemcore, 
+					 create_unix_hangs_output_options,
+					 gen_history_report, 
+					 
+					 collect_linux_was_hangs, 
+					 collect_aix_was_hangs, 
+					 collect_solaris_was_hangs, 
+					 collect_windows_was_hangs, 
+		
+					 collect_ihs_logs,
+					 collect_all, 
+					 collect_autopd_reports,
+					 zip_Hang_Must_Gather, 
+					 common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed"
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- This target is used to set some properties for the supported platforms -->
+	<target name="obtain_hangs_platform_info"
+	        description="Create properties for platform information">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_setting_some_properties_for_the_supported_platforms"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Setting some properties for the supported platforms"
+		           replace="${autopdts};;${step.count}"
+		           id="1018"
+		           level="info" />
+
+		<condition property="isSupportedUnix">
+			<and>
+				<os family="unix" />
+				<not>
+					<equals arg1="OS/400" arg2="${os.name}" />
+				</not>
+			</and>
+		</condition>
+		<condition property="isSupportedUnixExceptSunOS">
+			<and>
+				<os family="unix" />
+				<not>
+					<equals arg1="OS/400" arg2="${os.name}" />
+				</not>
+				<not>
+					<equals arg1="SunOS" arg2="${os.name}" />
+				</not>
+			</and>
+		</condition>
+		<echo message="isSupportedUnix: ${isSupportedUnix}" />
+		<echo message="isSupportedUnixExceptSunOS: ${isSupportedUnixExceptSunOS}" />
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Hang Problem&lt;/h2&gt;&lt;p&gt;
+			This script should be run on the managed node experiencing the hang problem.
+			During the running of this script, it will set trace, JVM, and heap dump 
+			variables on the managed node experiencing the problem. Once the problem has
+			been reproduced, the logs, configuration, trace, heapdump, and java core files
+			will be archived for further analysis.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script should be run on the managed node experiencing the hang 
+problem. During the running of this script, it will set trace, JVM, and heap dump variables on 
+the managed node experiencing the problem. Once the problem has been reproduced, the logs, 
+configuration, trace, heapdump, and java core files will be archived for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Hang Problem =>
+This script should be run on the managed node experiencing the hang problem.
+During the running of this script, it will set trace, JVM, and heap dump
+variables on the managed node experiencing the problem. Once the problem has
+been reproduced, the logs, configuration, trace, heapdump, and java core files
+will be archived for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

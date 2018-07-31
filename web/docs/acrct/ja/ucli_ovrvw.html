@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="ja-jp" xml:lang="ja-jp">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta content="public" name="security" />
+<meta content="index,follow" name="Robots" />
+<meta http-equiv="PICS-Label" content='(PICS-1.1 "http://www.icra.org/ratingsv02.html" l gen true r (cz 1 lz 1 nz 1 oz 1 vz 1) "http://www.rsac.org/ratingsv01.html" l gen true r (n 0 s 0 v 0 l 0) "http://www.classify.org/safesurf/" l gen true r (SS~~000 1))' />
+<meta content="concept" name="DC.Type" />
+<meta name="DC.Title" content="JMS を使用する WebSphere Application Server の非同期メッセージング" />
+<meta name="abstract" content="WebSphere Application Server は、 Java Message Service (JMS) プログラミング・インターフェースに基づく通信方式として、 非同期メッセージングをサポートします。 JMS インターフェースは、Java プログラム (クライアントおよび Java Platform, Enterprise Edition (Java EE) アプリケーション) が非同期要求を JMS メッセージとして作成、 送信、受信、および読み取りを行うための共通の方法を提供します。" />
+<meta name="description" content="WebSphere Application Server は、 Java Message Service (JMS) プログラミング・インターフェースに基づく通信方式として、 非同期メッセージングをサポートします。 JMS インターフェースは、Java プログラム (クライアントおよび Java Platform, Enterprise Edition (Java EE) アプリケーション) が非同期要求を JMS メッセージとして作成、 送信、受信、および読み取りを行うための共通の方法を提供します。" />
+<meta scheme="URI" name="DC.Relation" content="tcli_appclients.html" />
+<meta scheme="URI" name="DC.Relation" content="tcli_deployjava.html" />
+<meta name="copyright" content="IBM Corporation 2002, 2009" />
+<meta name="DC.Rights.Owner" content="IBM Corporation 2002, 2009" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="ucli_ovrvw" name="DC.Identifier" />
+<meta content="ja-jp" name="DC.Language" />
+<link href="ibmdita.css" type="text/css" rel="stylesheet" />
+<link href="swg_info_common.css" type="text/css" rel="stylesheet" />
+<link href="monospace.css" type="text/css" rel="stylesheet" disabled="" />
+<title>JMS を使用する WebSphere Application Server の非同期メッセージング</title>
+<script language="JavaScript">
+       var helpProdVersion;
+        try {
+           helpProdVersion = top.window.opener.helpProdVersion;
+       } catch(e) { 
+           helpProdVersion = "was-nd-dist";
+       }
+     </script><style type="text/css">
+        span.stealth { visibility:hidden; }
+   </style></head>
+<body id="ucli_ovrvw"><a name="ucli_ovrvw"><!-- --></a>
+
+<h1 class="topictitle1">JMS を使用する WebSphere Application Server の非同期メッセージング</h1>
+
+
+
+
+<div><p>WebSphere<sup>®</sup> Application Server は、
+Java™ Message Service (JMS) プログラミング・インターフェースに基づく通信方式として、
+非同期メッセージングをサポートします。
+JMS インターフェースは、Java プログラム
+(クライアントおよび Java Platform,
+Enterprise Edition (Java EE) アプリケーション) が非同期要求を JMS メッセージとして作成、
+送信、受信、および読み取りを行うための共通の方法を提供します。</p>
+
+<p>このトピックでは、WebSphere Application Server が提供する JMS サポートを使用した非同期メッセージングについて、包括的に概説します。</p>
+
+<p>JMS API を使用する非同期メッセージングの基本サポートは、
+JMS クライアントがどのようして JMS プロバイダーの機能にアクセスできるかを定義した、
+JMS インターフェースと関連セマンティクスの共通セットを提供します。 これにより、
+WebSphere 製品 Java EE アプリケーションは、
+JMS クライアントとして、JMS 宛先 (キューまたはトピック) を使用して他の JMS クライアントと非同期でメッセージを交換できるようになります。
+Java EE アプリケーションでは、Point-to-Point メッセージングには
+JMS キューの宛先を使用し、パブリッシュおよびサブスクライブ・メッセージングには
+JMS トピックの宛先を使用することができます。
+Java EE アプリケーションは、
+宛先上で明示的にメッセージのポーリングを行ってから、
+ビジネス・ロジック Bean (エンタープライズ Bean) を使用して処理するためにメッセージを検索することができます。</p>
+
+<p>基本となる JMS および XA サポートにより、Java EE アプリケーションは、標準 JMS 呼び出しを使用して、
+応答やアウトバウンド・メッセージングなどのメッセージを処理します。
+エンタープライズ Bean は、送信側 Bean として振る舞うことによって、
+あるいは着信メッセージを受信するエンタープライズ Bean 内で、応答を処理することができます。
+このプロセスは、オプションで、トランザクションの有効範囲内で 2 フェーズ・コミットを使用することができます。
+非同期メッセージングに対するこのレベルの機能は <em>Bean 管理メッセージング</em> と呼ばれ、
+この機能により、エンタープライズ Bean がメッセージング・インフラストラクチャー全体を完全に制御できるようになり
+ます (例えば、接続プールおよびセッション・プールの管理など)。
+共通コンテナーには、Bean 管理メッセージングに関する役割はありません。</p>
+
+<p>WebSphere Application Server は、メッセージ駆動型 Bean (Enterprise JavaBeans™ (EJB) 2.0 仕様で定義されるエンタープライズ Bean
+のタイプ) および JMS リスナー (JMS アプリケーション・サーバー機能の一部) を使用した、自動非同期メッセージングもサポートします。
+メッセージは、JMS 宛先から (オプションによってはトランザクション内で) 自動的に検索され、
+その後、Java EE アプリケーションの
+メッセージ駆動型 Bean に送信されます。
+アプリケーションは JMS 宛先を明示的にポーリングする必要はありません。</p>
+
+</div>
+
+<br /><br /><hr align="left" /><div>
+<p>マーク付きのリンク (オンライン) では、インターネットにアクセスする必要があります。</p>
+<script language="JavaScript">document.write('<p><a target="_blank" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=compass&amp;product='+helpProdVersion+'&amp;topic=ucli_ovrvw">このトピックの更新を確認します。</a>  (オンライン)</p>');</script>
+
+<div class="familylinks">
+</div>
+<div class="reltasks"><strong>関連タスク</strong><br />
+<div>
+<script language="JavaScript">document.write('<a target="_blank" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=compass&amp;product='+helpProdVersion+'&amp;topic=tcli_appclients">アプリケーション・クライアントの使用</a>  (オンライン)');</script></div>
+
+<script language="JavaScript">document.write('<a target="_blank" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=compass&amp;product='+helpProdVersion+'&amp;topic=tcli_deployjava">Java EE クライアント・アプリケーションのデプロイ</a>  (オンライン)');</script></div>
+</div>
+
+<hr align="left" /><br /><span class="runningfooter">ファイル名: ucli_ovrvw.html</span></body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-I63, 5724-H88 (C) COPYRIGHT International Business Machines Corp. 2003, 2012 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+<tiles-definitions>
+
+  <!-- Chain collection view -->
+  <definition name="Chain.content.main" 
+              path="/secure/layouts/contentLayout.jsp" 
+              controllerClass="com.ibm.ws.console.channelfw.ChainController">
+
+    <put name="contextType" value="Chain"/>
+    <put name="descTitle"   value="Chain.displayName"/>
+    <put name="descImage"   value="pluginId=com.ibm.ws.console.channelfw"/>
+    <put name="descText"    value="Chain.description"/>
+    <put name="formName"    value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="bcHandler" value="com.ibm.ws.console.channelfw.ChainContentMainBreadcrumbHandler"/>
+    <putList name="contentList">
+      <add value="Chain.paging.extend"/>
+      <add value="Chain.quicksearch.extend"/>
+      <add value="Chain.collection.table.extends"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.quicksearch.extend" extends="quicksearch.main">
+    <put name="selectUri"      value="chainCollection.do?ToggleViewAction=true"/>
+    <put name="collectionForm" value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formAction"     value="chainCollection.do"/>
+    <put name="formName"       value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formType"       value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <putList name="searchList">
+      <add value="Chain.name.displayName:name"/>
+      <add value="Chain.enable.displayName:enable"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.paging.extend" extends="paging.main">
+    <put name="displayLabelKey" value="Chain.displayName"/>
+    <put name="collectionForm"  value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formAction"      value="chainCollection.do"/>
+    <put name="formName"        value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formType"        value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+  </definition>
+
+  <definition name="Chain.collection.table.extends" extends="collection.table.main">
+    <put name="iterationName" value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formAction"    value="chainCollection.do"/>
+    <put name="formName"      value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formType"      value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="buttons"       value="Chain.collection.buttons.panel"/>
+    <put name="parent"        value="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main"/>
+
+    <putList name="collectionList"/>
+
+    <putList name="collectionPreferenceList">
+      <item value="text:UI/Collections/Chain/Preferences#maximumRows:25" 
+            link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+
+      <item value="checkbox:UI/Collections/Chain/Preferences#retainSearchCriteria:32"
+            link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.collection.buttons.panel" extends="buttons.panel">
+    <put name="buttonCount"    value="2"/>
+    <put name="definitionName" value="Chain.collection.buttons.panel"/>
+    <put name="includeForm"    value="no"/>
+
+    <putList name="actionList"/>
+  </definition>
+  
+  <!-- 371964 begin -->
+  <definition name="ORBChain.content.main" extends="Chain.content.main">
+     <put name="contextType" value="ORBChain"/>
+  </definition>
+  
+  <definition name="ORBChain.collection.table.extends" extends="Chain.collection.table.extends">
+     <put name="parent" value="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=ORBChain.content.main"/>
+  </definition>
+  <!-- 371964 end -->
+
+  <!-- Chain collection view (end point filtered view) -->
+  <definition name="Chain.ep.content.main" 
+              path="/secure/layouts/contentLayout.jsp" 
+              controllerClass="com.ibm.ws.console.channelfw.ChainController">
+
+    <put name="contextType" value="Chain.ep"/>
+    <put name="descTitle"   value="Chain.displayName"/>
+    <put name="descImage"   value="pluginId=com.ibm.ws.console.channelfw"/>
+    <put name="descText"    value="Chain.description"/>
+
+    <putList name="contentList">
+      <add value="Chain.paging.extend"/>
+      <add value="Chain.quicksearch.extend"/>
+      <add value="Chain.ep.collection.table.extends"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.ep.collection.table.extends" extends="collection.table.main">
+    <put name="iterationName" value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formAction"    value="chainCollection.do"/>
+    <put name="formName"      value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="formType"      value="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <put name="buttons"       value="Chain.ep.collection.buttons.panel"/>
+    <put name="parent"        value="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.ep.content.main"/>
+
+    <putList name="collectionList"/>
+
+    <putList name="collectionPreferenceList">
+      <item value="text:UI/Collections/Chain/Preferences#maximumRows:25" 
+            link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+
+      <item value="checkbox:UI/Collections/Chain/Preferences#retainSearchCriteria:32"
+            link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+    </putList>
+  </definition>
+  
+  <definition name="Chain.ep.collection.buttons.panel" extends="buttons.panel">
+    <put name="buttonCount"    value="1"/>
+    <put name="definitionName" value="Chain.collection.buttons.panel"/>
+    <put name="includeForm"    value="no"/>
+
+    <putList name="actionList"/>
+  </definition>
+  
+  <!-- Chain detail view -->
+  <definition name="Chain.config.view" extends="detail.config.view">
+    <put name="contextType" value="Chain"/>
+
+    <putList name="list">
+      <add value="Chain.detail.title"/>
+      <add value="Chain.detail.tabsLayout"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.detail.title" extends="detail.title">
+    <put name="formName"            value="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+    <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.channelfw"/>
+    <put name="titleKey"            value="Chain.displayName"/>
+    <put name="collectionLink"      value="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&#38;noChange=true"/>
+    <put name="includeLink"         value="yes"/>
+    <put name="instanceDetails"     value="name"/>
+    <put name="instanceDescription" value="Chain.description"/>
+    <put name="displayName"         value="Chain.displayName"/>
+  </definition>
+  
+  <definition name="Chain.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+    <put name="selectUri"           value="chainDetail.do"/>
+    <put name="selectedPerspective" value="tab.configuration"/>
+    <put name="formName"            value="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+    <putList name="tabList">
+      <item value="tab.configuration"
+            link="Chain.config.tab.view"
+            classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.config.tab.view" extends="detail.config.tab.view">
+    <putList name="list">
+      <add value="Chain.detail.buttons.panel"/>
+      <add value="Chain.config.general.properties"/>
+      <add value="Chain.config.additional.properties"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.detail.buttons.panel" extends="buttons.panel">
+    <put name="buttonCount"    value="2"/>
+    <put name="definitionName" value="Chain.detail.buttons.panel"/>
+    <put name="includeForm"    value="yes"/>
+    <putList name="actionList">
+    </putList>
+  </definition>
+
+  <definition name="Chain.config.general.properties" extends="detail.config.general.properties">
+    <put name="formAction"   value="chainDetail.do"/>
+    <put name="formName"     value="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+    <put name="formType"     value="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+    <put name="formFocus"    value="name"/>
+    <put name="readOnlyView" value="no"/>
+
+    <putList name="attributeList">
+      <item value="Chain.name.displayName:name:yes:Text:Chain.name.description:no:yes" 
+            link="" 
+            icon="" 
+            tooltip="" 
+            classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+
+      <item value="Chain.enable.displayName:enable:no:Checkbox:Chain.enable.description:no:yes"
+            link="" 
+            icon="" 
+            tooltip="" 
+            classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+
+	  <item value="TransportChannel.displayName: :no:Custom:TransportChannel.description:no:yes: : :/com.ibm.ws.console.channelfw/ChannelCollection.jsp" 
+	  		link="" 
+	  		icon="" 
+	  		tooltip="" 
+	  		classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+    </putList>
+  </definition>
+
+  <definition name="Chain.config.additional.properties" extends="detail.config.additional.properties">
+    <put name="formName" value="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+    <putList name="list"/>
+  </definition>
+
+  <!-- New chain wizard -->
+  <definition name="chain.wizard.steps" path="/secure/layouts/stepsLayout.jsp">
+    <put name="contextType"         value="chain.wizard.steps"/>
+    <put name="titleKey"            value="chain.create.new.title"/>
+    <put name="descKey"             value="chain.create.new.description"/>
+    <put name="actionHandler"       value=""/>
+    <put name="actionForm"          value=""/>
+    <put name="formType"            value=""/>
+    <put name="reqdTaskSessionKey"  value=""/>
+    <put name="stepArraySessionKey" value="CHAIN_STEPARRAY"/>
+    <put name="disableStepsLink"    value="true"/>
+    <putList name="stepsList">
+      <item value="chain.new.step1" link="/com.ibm.ws.console.channelfw/chainwizard/SelectChainTemplate" classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="chain.new.step2" link="/com.ibm.ws.console.channelfw/chainwizard/SelectEndPoint"      classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="chain.new.step3" link="/com.ibm.ws.console.channelfw/chainwizard/ConfirmCreateChain"  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+    </putList>
+  </definition>
+
+  <definition name="chain.new.step1" extends="chain.wizard.steps">
+    <put name="actionHandler" value="selectChainTemplate"/>
+    <put name="actionForm"    value="SelectChainTemplateForm"/>
+    <put name="formType"      value="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+  </definition>
+
+  <definition name="chain.new.step2" extends="chain.wizard.steps">
+    <put name="actionHandler" value="selectEndPoint"/>
+    <put name="actionForm"    value="SelectEndPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+  </definition>
+
+  <definition name="chain.new.step3" extends="chain.wizard.steps">
+    <put name="actionHandler" value="confirmCreateChain"/>
+    <put name="actionForm"    value="ConfirmCreateChainForm"/>
+    <put name="formType"      value="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+  </definition>
+</tiles-definitions>

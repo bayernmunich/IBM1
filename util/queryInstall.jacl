@@ -1,0 +1,55 @@
+#-------------------------------------------
+# query.ear Installation Script
+# Invocation:
+# wsadmin.sh -conntype NONE -f ${WAS_HOME}/util/queryInstall.jacl -nodeName NODE  -installRoot "${WAS_HOME_UNIXSTYLE}" [UNINSTALL]
+# Example:
+#   wsadmin.bat -conntype NONE -f "C:\Program Files\WAS\util\queryInstall.jacl -nodeName DefaultNode  -installRoot "C:/Program Files/WAS" INSTALL
+# Required Variables:
+#  NODE_NAME - The name of the node to install the application to
+#  WAS_HOME  - The path where WebSphere is installed.
+#-------------------------------------------
+
+set command "INSTALL"
+
+# Retrieve all parameters
+for {set i 0 } {$i < $argc} {incr i} {
+   if { [lindex $argv $i] == "-serverName" } {
+       incr i
+       set serverName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-cellName" } {
+       incr i
+       set cellName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-nodeName" } {
+       incr i
+       set nodeName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-installRoot" } {
+       incr i
+       set installRoot [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "INSTALL" } {
+       incr i
+       set command "INSTALL"
+   } elseif { [lindex $argv $i] == "UNINSTALL" } {
+       incr i
+       set command "UNINSTALL"
+   }
+}
+
+if {$command == "INSTALL"} {
+    puts "Installing query.ear"
+    puts "-installRoot=$installRoot"
+    puts "-nodeName=$nodeName"
+    puts "-serverName=$serverName"
+    $AdminApp install "$installRoot/installableApps/query.ear" "-node $nodeName -server $serverName -nocreateMBeansForResources -appname query -installed.ear.destination $(APP_INSTALL_ROOT)/$(CELL)"
+
+    puts "Saving the Configuration"
+    $AdminConfig save
+} elseif {$command == "UNINSTALL"} {
+    puts "Uninstalling query.ear"
+    puts "-nodeName=$nodeName"
+    $AdminApp uninstall query "-node $nodeName"
+
+    puts "Saving the Configuration"
+    $AdminConfig save
+} else {
+	puts "Invalid command: $command"	
+}

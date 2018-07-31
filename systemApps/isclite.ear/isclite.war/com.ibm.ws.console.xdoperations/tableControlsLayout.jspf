@@ -1,0 +1,158 @@
+<% 
+MessageResources messages = MessageResources.getMessageResources("com.ibm.ws.console.core.resources.ConsoleAppResources");
+String hideLegend = messages.getMessage(request.getLocale(),"hide.legend");
+String showLegend = messages.getMessage(request.getLocale(),"show.legend");
+
+//TODO -- remember expand/collapse state
+//	currently the unique ID "refId" is changing everytime page is reloaded so we can not uniquely save each state.
+//  We need to fix that issue before we can save states.  Code commented below is the code that should save state
+//  once refId is fixed.
+String expandGraphic = request.getContextPath()+"/images/arrow_expanded.gif";
+//String expandState = (String)session.getAttribute("com_ibm_ws_"+dashboardContext+refId+"dataSetTable");
+//String legendMessage = "";
+//if (expandState == null) {
+//	System.out.println("tableControlsLayout.jspf: expandState is null");
+//	expandState = "display:block";
+//	legendMessage = hideLegend;
+//} else if (expandState.equals("display:none")) {
+//	expandGraphic = request.getContextPath()+"/images/arrow_collapsed.gif";
+//	legendMessage = showLegend;
+//}
+
+//System.out.println("tableControlsLayout.jspf: id: "+"com_ibm_ws_"+dashboardContext+refId+"dataSetTable");
+//System.out.println("tableControlsLayout.jspf: expandState: "+expandState);
+%>
+
+<script language="JavaScript">
+function showHideLegend(sectionId) {
+    if (document.getElementById(sectionId) != null) {
+        if (document.getElementById(sectionId).style.display == "none") {
+			var hideLegend = document.getElementById(sectionId+"Link");			
+			hideLegend.replaceChild(document.createTextNode("<%=hideLegend%>"), hideLegend.lastChild);
+	        
+            document.getElementById(sectionId).style.display = "block";
+            if (document.getElementById(sectionId+"Img")) {
+                document.getElementById(sectionId+"Img").src = "<%=request.getContextPath()%>/images/arrow_expanded.gif";
+                document.getElementById(sectionId+"Img").alt = "<%=hideLegend%>";
+                document.getElementById(sectionId+"Img").title = "<%=hideLegend%>";
+            }			
+            state = "display:block";
+        } else {
+			var showLegend = document.getElementById(sectionId+"Link");
+			showLegend.replaceChild(document.createTextNode("<%=showLegend%>"), showLegend.lastChild);
+            document.getElementById(sectionId).style.display = "none";
+            if (document.getElementById(sectionId+"Img")) {
+                document.getElementById(sectionId+"Img").src = "<%=request.getContextPath()%>/images/arrow_collapsed.gif";
+                document.getElementById(sectionId+"Img").alt = "<%=showLegend%>";
+                document.getElementById(sectionId+"Img").title = "<%=showLegend%>";
+            }			
+            state = "display:none";
+        }
+
+		//TODO -- save expand/collapse. Code commented below is the code that should save state
+        //  once refId is fixed.
+		//uriState = "secure/javascriptToSession.jsp?req=set&sessionVariable=com_ibm_ws_<%=dashboardContext%>"+sectionId+"&variableValue="+state;
+		//setState = doXmlHttpRequest(uriState);
+		//setState = setState.substring(0,setState.indexOf("+endTransmission"));        
+    }
+}
+</script>
+
+<% if (chartLite.equalsIgnoreCase("true")) { %>
+<table border="0" cellpadding="2" cellspacing="0" valign="top" width="100%" summary="Framing Table" >
+<tbody>
+  <tr valign="top"> 
+    <td class="table-text-white" id="chart_prefs_<%=refId%>" nowrap scope="rowgroup"> 
+      <a href="javascript:showHideLegend('<%=refId%>dataSetTable')" id="<%=refId%>dataSetTableLink" CLASS="expand-task">
+        <img id="<%=refId%>dataSetTableImg" src="<%=expandGraphic%>" alt="" border="0" align="top"  />
+        <bean:message key="hide.legend" />
+      </a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+<% } %>
+
+<div id="<%=refId%>dataSetTable" style="display:block">
+<table CLASS="button-section" style="z-index:1" border="0" cellpadding="3" cellspacing="0" valign="top" width="100%" summary="Generic funtions for the table, such as content filtering">
+	<tr valign="top">
+        <td class="function-button-section"  nowrap>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+         	<DIV id="com_ibm_ws_chart_prefsTable_<%=selectedRefId%>" style="display:none;position:absolute;top:100;left:100;width:275;z-index:101;border-top:1px solid #E2E2E2;border-left:1px solid #E2E2E2;border-right:3px outset #CCCCCC;border-bottom:3px outset #CCCCCC;background-color:#eeeeee" >         
+          		<TABLE WIDTH="100%" CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                	<TR>
+                		<TD CLASS="find-filter" >               
+                			<H3 style="font-size:100%;margin-left:0.5em"><bean:message key="statustray.preferences.label" /></H3>                
+                  			<table border="0" cellpadding="4" cellspacing="1" width="100%" role="presentation">
+                     			<tr>
+                                 	<td class="find-filter" valign="top" nowrap>        
+				                		<label for="chartType"><bean:message key="chart.type" /></label><br/>
+				                		<html:select property="type" styleId="chartType">				                
+				                			<%for (int n = 0; n < Constants.NUMTYPES; n++) {
+				                				String currtype = Constants.TYPES[n];
+				                				String key = "type." + currtype + ".name";%>
+				                				<html:option value="<%=currtype%>">
+				                					<bean:message key="<%=key%>" />
+				                				</html:option>
+				                			<%}%>
+				                		</html:select>                                                              
+                          			</td>
+                          		</tr>
+                          		<tr>
+                                 	<td class="find-filter" valign="top" nowrap>        
+				                		<label for="size"><bean:message key="chart.size" /></label><br/>
+				                		<html:select property="size" styleId="size">				    
+				                			<%for (int n = 0; n < 3; n++) {
+				                				String currsize = Constants.SIZES[n];
+				                				String key = "size." + currsize + ".name";%>
+				                				<html:option value="<%=currsize%>">
+				                					<bean:message key="<%=key%>" />
+				                				</html:option>
+				                			<%}%>
+				                		</html:select>    
+				                	</td>
+                          		</tr>                  
+                          		<tr>
+                                 	<td class="find-filter" valign="top" nowrap>    
+										<html:checkbox property="showShapes" styleId="showShapes"/><label for="showShapes"><bean:message key="prefs.show.shapes"/></label>                 
+				                		                                   
+                          			</td>
+                          		</tr>
+                          		<tr>
+                                 	<td class="find-filter" valign="top" nowrap>        
+				                		 <html:checkbox property="showGoals" styleId="showGoals"/><label for="showGoals"><bean:message key="prefs.show.goals"/></label>         
+				                		                                    
+                          			</td>
+                          		</tr>
+                          		<tr>
+                          			<td>
+                              			<INPUT TYPE="button" name="submit" VALUE="<bean:message key="button.ok"/>" class="buttons_section-button" onclick="scriptScope.submitForm();"/>
+                              			<INPUT TYPE="button" name="cancel" VALUE="<bean:message key="button.cancel"/>" class="buttons_section-button" onclick="scriptScope.showHidePrefs('com_ibm_ws_chart_prefsTable_<%=selectedRefId%>');"/>
+                           			</td>
+                           		</tr>
+                        	</table>	           
+            			</td>
+          			</tr>
+        		</table>
+        	</DIV>
+        	
+        	<a id=selectAllButton" HREF="javascript:scriptScope.selectAll('<%=detailFormName%>')" CLASS="expand-task">
+            	<img id="selectAllImg" align="top" SRC="<%=request.getContextPath()%>/images/wtable_select_all.gif" ALT='<bean:message key="select.all.items"/>' title='<bean:message key="select.all.items"/>' BORDER="0" ALIGN="texttop">
+        	</a>
+    		<a id="deselectAllButton" HREF="javascript:scriptScope.deselectAll('<%=detailFormName%>')" CLASS="expand-task">
+         		<img id="deselectAllImg" align="top" SRC="<%=request.getContextPath()%>/images/wtable_deselect_all.gif" ALT='<bean:message key="deselect.all.items"/>' title='<bean:message key="deselect.all.items"/>' BORDER="0" ALIGN="texttop">
+     		</a>
+ 	
+ 			<input type="button" class="buttons_functions" valign="bottom" name="Add" value="<bean:message key="add.data"/>" onclick="scriptScope.showHidePrefs('com_ibm_ws_chart_settings_<%=selectedRefId%>','1');"/>
+    		<% if (contextType.equals(Constants.XDOPS_CONTEXTTYPE)) { %>
+    		<input type="button" class="buttons_functions" valign="bottom" name="Change" value="<bean:message key="change.scope"/>" onclick="scriptScope.showHidePrefs('com_ibm_ws_chart_settings_<%=selectedRefId%>','2');"/>
+    		<% } %>
+ 			<input type="button" class="buttons_functions" name="remove" value="<bean:message key="remove.dataset"/>" onclick="scriptScope.removeDataSets();"/>
+ 			<input type="button" class="buttons_functions" name="showTable" value="<bean:message key="view.table"/>" onclick="scriptScope.getTable();"/>
+			&nbsp;&nbsp;      
+        </td>
+	</tr>
+<% } // end chartLite%>
+</table>
+
+

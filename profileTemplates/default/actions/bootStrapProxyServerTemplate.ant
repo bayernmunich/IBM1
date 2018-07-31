@@ -1,0 +1,192 @@
+<project name="bootstrapProxyServerTemplate" default="bootstrapProxyServerTemplate" basedir=".">
+    
+    <property environment="env"/>
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="replaceStringRegExp"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>        
+	
+    <taskdef name="convertStringEncoding"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ChangeStringEncodingAntTask" />
+    <taskdef name="detectlocale"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.DetectLocaleAntTask"/>
+
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+    
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+	    
+       <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+	
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+	
+         <!-- Need to define the quote string for filenames with spaces -->
+        <condition property="stringQuote" value='"'>
+          <os family="unix"/>
+        </condition>
+	
+        <condition property="stringQuote" value='\"'>
+          <os family="windows"/>
+        </condition>
+
+    </target>
+    
+    <target name="defineLocale"
+            description="Defines locale">
+
+        <detectlocale property="currentLocale"/>
+
+        <condition property="detectedLocaleFlag" value="true">
+              <equals arg1="${currentLocale}" arg2="en_US"/>              
+        </condition>       
+    </target>
+    
+    <target name="detectFileEncoding"
+            description="Detects the current file encoding">
+
+        <condition property="isFileEncodingCp1252" value="true">
+              <equals arg1="${file.encoding}" arg2="Cp1252" casesensitive="false"/>
+        </condition>
+    </target>
+
+    <target name="checkForEncodingConditions">
+      <condition property="isPerformEncoding" value="true">
+        <and>
+          <isset property="isCurrentOSWindows"/>
+          <isset property="isFileEncodingCp1252"/>
+          <not>
+            <isset property="detectedLocaleFlag"/>
+          </not>
+        </and>
+      </condition>
+    </target>
+    
+   <target name="convertNode"   
+           if="isPerformEncoding"
+           description="converts Node Name">
+	    
+      <convertStringEncoding string="${env.WAS_NODE}"
+			encodingFrom="Cp1252"
+			encodingTo="Cp850"
+			property="WAS_NODE" />
+			
+      <wscmtlog>WAS_NODE is ${WAS_NODE}</wscmtlog>
+
+       
+    </target>
+    
+    <target name="setNode"
+            description="Sets Node">
+
+        <condition property="WAS_NODE" value="${env.WAS_NODE}">
+	  <not>
+            <equals arg1="${isPerformEncoding}" arg2="true"/>
+	  </not>  
+        </condition>
+	
+        <wscmtlog>set node</wscmtlog>
+    </target>
+
+
+
+
+	
+
+    <target name="copytemplates" description="copy config and template files to the profile directory">
+        <copy todir="${profilePath}">
+            <fileset dir="${templatePath}/documents/"/>
+        </copy>
+    </target>
+
+    
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>    
+    
+        <replace file="${file}"
+            token="${token}"
+	    encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+    
+    <target name="replaceAllNecessaryTokensWithRightValuesForAllWCCMFiles">
+    
+    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server/server.xml"/>
+			<param name="token" value="$$(node.name)"/>
+			<param name="tokenValue" value="${WAS_NODE}"/>
+	</antcall>
+        
+	
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${profilePath}/config/templates/servertypes/PROXY_SERVER/servers/proxy_server_zos/server.xml"/>
+			<param name="token" value="$$(node.name)"/>
+			<param name="tokenValue" value="${WAS_NODE}"/>
+	</antcall>
+    </target>
+
+	
+    <target name="replaceAllNecessaryTokensWithRightValuesForProxyChains">
+    
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${profilePath}/config/templates/chains/proxy-chains.xml"/>
+			<param name="token" value="$$(node.name)"/>
+			<param name="tokenValue" value="${WAS_NODE}"/>
+	</antcall>
+    </target>
+
+
+    <target name="bootstrapProxyServerTemplate"
+        description="Bootstrap WCCM Files"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator, 
+	    setCurrentOSFamily,
+	    defineLocale,
+            detectFileEncoding,
+            checkForEncodingConditions,
+	    convertNode,
+	    setNode,
+	    copytemplates,
+            replaceAllNecessaryTokensWithRightValuesForAllWCCMFiles,
+            replaceAllNecessaryTokensWithRightValuesForProxyChains"/>
+</project>

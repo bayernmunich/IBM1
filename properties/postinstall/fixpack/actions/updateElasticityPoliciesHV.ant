@@ -1,0 +1,36 @@
+<project name="Update HV dmgr Elasticity Policies on WAS 8.5" default="install">
+
+  <target name="install" depends="init" if="isWASHV" >
+	<!--antcall target="listProfiles"></antcall-->      
+  </target>
+  
+  <target name="uninstall" depends="init" if="isWASHV" >
+	<!--antcall target="listProfiles"></antcall-->
+  </target>
+  
+  
+  <taskdef name="wscmtlog"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+  <!-- Document startup -->
+  <target name="init">
+    <tstamp/>
+    <wscmtlog>Updating HV dmgr Elasticity Policies</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+    
+    <available file="${WAS_HOME}/properties/version/WASHV.product" type="file" property="isWASHV"/>
+    <wscmtlog message="isWASHV=${isWASHV}"/>   
+    
+    <loadproperties srcFile="${WAS_HOME}/properties/wasprofile.properties"/> 
+    <property name="profileRegistry" value="${WS_PROFILE_REGISTRY}" />    
+    <wscmtlog>profileRegistry=${WS_PROFILE_REGISTRY}</wscmtlog>
+    <wscmtlog message="WS_PROFILE_REGISTRY=${profileRegistry}"/>
+
+    <available file="${profileRegistry}" type="file" property="isProfileRegistryExist"/>
+    <wscmtlog message="isProfileRegistryExist=${isProfileRegistryExist}"/>
+    
+  </target>
+  
+</project>
+

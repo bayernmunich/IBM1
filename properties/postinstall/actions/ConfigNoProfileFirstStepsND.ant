@@ -1,0 +1,261 @@
+<project name="configNoProfileFirstStepsND" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="unix"/>
+            </and>            
+        </condition>
+        
+        <condition property="configWindows" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="windows"/>
+            </and>
+        </condition>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+        <replace dir="${dir}"           
+            token="${token}"
+            value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>    
+
+    <target name="copyFirstStepsFileSet" unless="configOS400">            
+            <copy todir="${WAS_HOME}${separatorFile}firststeps">
+                 <fileset dir="${WAS_HOME}${separatorFile}properties${separatorFile}version${separatorFile}install${separatorFile}firststeps">
+    	              <include name="*.*"/>
+    	         </fileset>
+    	         <fileset dir="${WAS_HOME}${separatorFile}firststeps${separatorFile}html${separatorFile}noprofile">
+    	              <include name="*.*"/>
+    	         </fileset>
+            </copy>
+            <wscmtlog>Copying FirstSteps file set to: ${WAS_HOME}${separatorFile}firststeps</wscmtlog>
+    </target> 
+
+    <target name="setUnixShellScriptPermissions"
+            description="Set permissions for *.sh with execute bit on unix systems"
+            if="configUNIX">           
+		<chmod dir="${WAS_HOME}${separatorFile}firststeps" perm="a+x" includes="**/*.sh"/>
+    </target>
+
+    <target name="replaceTokensForFirstStepsScriptUnix"
+            description="Configure WAS and java path to fully qualified directory on unix"
+            if="configUNIX">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.sh"/>
+			<param name="token" value="${JAVAROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}/java/jre/bin/java"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.sh"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.sh"/>
+			<param name="token" value="${HTMLSHELLJAR}"/>
+			<param name="tokenValue" value="${WAS_HOME}/lib/htmlshell.jar"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+                        <param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.sh"/>
+                        <param name="token" value="${CELLNAME}"/>
+                        <param name="tokenValue" value="DefaultCell"/>
+            </antcall>	    	    	    	    	    	    	    
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+                        <param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.sh"/>
+                        <param name="token" value="${WASROOT}"/>
+                        <param name="tokenValue" value="${WAS_HOME}"/>
+            </antcall>	    	    	    	    	    	    	    
+    </target>
+
+    <target name="replaceTokensForFirstStepsScriptWindows"
+            description="Configure WAS and java path to fully qualified directory on windows"
+            if="configWindows">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.bat"/>
+			<param name="token" value="${JAVAWROOT}"/>
+			<param name="tokenValue" value="&quot;${WAS_HOME}\java\jre\bin\javaw&quot;"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.bat"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.bat"/>
+			<param name="token" value="${HTMLSHELLJAR}"/>
+			<param name="tokenValue" value="&quot;${WAS_HOME}\lib\htmlshell.jar&quot;"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+                        <param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.bat"/>
+                        <param name="token" value="${CELLNAME}"/>
+                        <param name="tokenValue" value="${WS_CMT_CELL_NAME}"/>
+            </antcall>	     	    	    	    
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+                        <param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.bat"/>
+                        <param name="token" value="${WASROOT}"/>
+                        <param name="tokenValue" value="${WAS_HOME}"/>
+            </antcall>	     	    	    	    
+    </target>
+    
+    <target name="replaceTokensForFirstStepsHTML"
+            description="Replaces tokens for First Steps HTML(s)"
+            unless="configOS400">
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_noadmin.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_noadmin.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_nopmt.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_nopmt.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_nopmt_noadmin.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_nopmt_noadmin.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_noadmin.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_noadmin.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_nopmt.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_nopmt.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_nopmt_noadmin.html"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${WAS_HOME}${separatorFile}firststeps${separatorFile}firststeps_stop_nopmt_noadmin.html"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>	    	     	     	     	       	    		    		
+    </target>
+                      
+    <target name="install"
+        description="Set firststeps batch and shell scripts to account for server installed"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+            copyFirstStepsFileSet,
+            replaceTokensForFirstStepsScriptUnix,                        
+            replaceTokensForFirstStepsScriptWindows,
+            replaceTokensForFirstStepsHTML,
+            setUnixShellScriptPermissions"/>
+            
+    <target name="uninstall" 
+        description="Delete First Steps files"
+        unless="configOS400"
+        depends="detectCurrentOSFamily,
+                 setOSFileSeparator">
+        <delete dir="${WAS_HOME}${separatorFile}firststeps"/>
+    </target>
+</project>

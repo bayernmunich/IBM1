@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2011-2012. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Liberty Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Liberty Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_Liberty_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+		
+		ask_for_middleware_root_for_liberty, validate_liberty_install, run_liberty_script,
+
+		analysis_file_collection, zip_autopd_log,ftp_logs_to_ecurep, script_completed_v2">
+	</target>
+
+
+	<target name="validate_liberty_install">
+		<available file="${was.liberty.root}/wlp/bin" type="dir" property="wlp.install.true" /> 
+		
+		<if isNotTrue="${wlp.install.true}">
+			<wsnlsecho message="" console="true" /> 
+			<wsnlsecho key="Liberty_Install_Not_Found" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				console="true" /> 
+			<wsnlsecho message="" console="true" /> 
+			
+		</if>
+		
+	</target>
+	
+	
+	<target name="run_liberty_script" if="wlp.install.true">
+	
+	<!--  Determine liberty severname  -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+				label="Input_Required_WAS"
+				type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="wlp.server"
+				label="Input_Name_of_Liberty_Server" 
+				type="plaintext"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"  />
+		</inputdialogtask>
+	
+	<!--  Check if server exists ? Validate ? -->
+	
+	<!--  Run server dump command  -->
+		
+		<mkdir dir="${autopdtmp}/Liberty"/> 
+		
+		<copy
+			file="${bundle.basedir}/scripts/was/shell/liberty/liberty-dump.bat"
+			tofile="${autopdtmp}/Liberty/liberty.bat"
+			overwrite="true">
+			<filterset>
+				<filter token="was_home" value="${was.liberty.root}" />
+				<filter token="server_name" value="${wlp.server}" />
+				<filter token="output_file" value="${autopdtmp}/Liberty/LibertyDump.zip" />
+			</filterset>
+		</copy>
+		<copy
+			file="${bundle.basedir}/scripts/was/shell/liberty/liberty-dump.sh"
+			tofile="${autopdtmp}/Liberty/liberty.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="was_home" value="${was.liberty.root}" />
+				<filter token="server_name" value="${wlp.server}" />
+				<filter token="output_file" value="${autopdtmp}/Liberty/LibertyDump.zip" />
+			</filterset>
+		</copy>
+		<copy
+			file="${bundle.basedir}/scripts/was/shell/liberty/liberty-dump"
+			tofile="${autopdtmp}/Liberty/libertySystemI"
+			overwrite="true">
+			<filterset>
+				<filter token="was_home" value="${was.liberty.root}" />
+				<filter token="server_name" value="${wlp.server}" />
+				<filter token="output_file" value="${autopdtmp}/Liberty/LibertyDump.zip" />
+			</filterset>
+		</copy>
+		<chmod file="${autopdtmp}/Liberty/liberty.sh" perm="766"/>
+		<chmod file="${autopdtmp}/Liberty/libertySystemI" perm="766"/>
+		
+		<exec executable="${autopdtmp}/Liberty/liberty.bat"
+		      dir="${autopdtmp}"
+		      output="${autopd.echolog.instance}"
+		      append="true" os="${os.windows}">
+			<arg line=' ' />
+		</exec>
+		<exec executable="${autopdtmp}/Liberty/liberty.sh"
+		      dir="${autopdtmp}"
+		      output="${autopd.echolog.instance}"
+		      append="true" os="${os.unixkind.exclude.iseries}">
+			<arg line=' ' />
+		</exec>
+		<exec executable="${autopdtmp}/Liberty/libertySystemI"
+		      dir="${autopdtmp}"
+		      output="${autopd.echolog.instance}"
+		      append="true" os="OS/400">
+			<arg line=' ' />
+		</exec>
+<!-- z/OS --> 		
+		<condition property="isZos">
+			<equals arg1="z/OS" arg2="${os.name}" />
+		</condition>
+		<if isTrue="${isZos}">
+			<exec executable="${autopdtmp}/Liberty/liberty.sh"
+			      dir="${autopdtmp}"
+			      output="${autopd.echolog.instance}"
+			      append="true" >
+				<arg line=' ' />
+			</exec>
+
+		</if> 
+
+		
+		<!--  Pick the resultant output  -->			
+        <zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+            <zipfileset file="${autopdtmp}/Liberty/LibertyDump.zip" prefix="${autopdProblem}/Liberty" />
+        </zip>		
+		
+	
+	
+	</target>
+	
+	
+	<target name="ask_for_middleware_root_for_liberty"
+		unless="wasnothere">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_WAS_Root"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Ask for WebSphere Application Root Directory and build environment..."
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+		
+		<!-- copy one setupCmdLine exec to autopdtmp -->
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec.sh"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec.sh" perm="766"/>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec" perm="766"/>
+
+
+		<!-- 24112 --> 
+		<if isTrue="${isWindows}">
+			<available type="file" file="${bundle.basedir}/../../../../bin/setupCmdLine.bat" property="was.root.true" />
+		</if> 
+		<if isNotTrue="${isWindows}" >
+			<!-- Defect 27259 --> 
+			<if isNotTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine.sh" property="was.root.true" />
+			</if> 
+			<if isTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine" property="was.root.true" />
+			</if> 
+		</if> 
+		<if isTrue="${was.root.true}" >
+			<property name="was.liberty.root" location="${bundle.basedir}/../../../../" /> 
+		</if>
+		<!--25004  --> 
+		<mkdir dir="${autopdtmp}/trace/config"/> 
+		<mkdir dir="${autopdtmp}/trace/jacl"/> 
+		
+		<property name="autopd.echolog.instance" value="${autopdtmp}/trace/config/Output.txt" />
+		
+		<condition property="no.was">
+			<not>
+				<isset property="was.liberty.root" />
+			</not>
+		</condition>
+
+		<if isTrue="${no.was}">
+
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.liberty.root" label="WAS_Liberty_root"
+					type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"
+				/>
+			</inputdialogtask>
+		</if>
+			
+ 
+	</target>
+	
+</project>

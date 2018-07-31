@@ -1,0 +1,30 @@
+<!--
+In this example, there are two deployment targets:
+a cluster named "M13", and an unclustered server
+named "alice" on the node named "lymph".
+In the first DT, there are two service classes,
+gold and silver.  The gold service class
+gets 12 seats and 200 dialogs/second, divided equally among
+the gateways sending load of the gold class
+to M13.  For silver, 20 seats are evenly divided
+among the HTTP gateways and another 12 seats are
+divided explicitly and unequally among two SIP proxies;
+no explicit dialog admission rate limit is given, which
+means the dialog admissions are unlimited.
+-->
+
+<cell>
+  <dt cluster="M13">
+    <sc name="gold" numo="12" dlgrate="200"/>
+    <sc name="silver">
+      <pf name="HTTP" numo="20"/>
+      <pf name="SIP">
+        <proxy name="mycell/pnode1/odr" numo="4"/>
+        <proxy name="mycell/pnode2/odr" numo="8"/>
+      </pf>
+    </sc>
+  </dt>
+  <dt node="lymph" server="alice">
+    <sc name="gold" numo="15"/>
+  </dt>
+</cell>

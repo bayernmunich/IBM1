@@ -1,0 +1,64 @@
+<!-- ***************************************************************************
+Licensed Materials - Property of IBM
+
+5724-I63, 5724-H88, 5724-H89, 5655-N02, 5724-J08
+ 
+Copyright IBM Corp. 2007 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or
+disclosure restricted by GSA ADP Schedule Contract with
+IBM Corp.
+***************************************************************************  -->
+<project name="addPostinstallLogCleanupParam" default="install" basedir=".">
+
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles" />
+
+	<property name="fullFilePath" value="${WAS_HOME}/properties/wasprofile.properties"/>
+	<property name="postinstallLogCleanupParam" value="WS_CMT_PI_LOGS"/>
+
+	<target name="checkIfModificationIsNeeded" description="Determine whether WS_CMT_PI_LOGS statement should be added or not">
+		<loadfile property="fileContent" srcFile="${fullFilePath}" />
+		<condition property="postinstallLogCleanup" value="true">
+			<not>
+				<contains string="${fileContent}" substring="${postinstallLogCleanupParam}" />
+			</not>
+		</condition>
+	</target>
+
+	<target name="conditionModificationNotNeeded" unless="postinstallLogCleanup">
+		<wscmtlog>${postinstallLogCleanupParam} statement ALREADY EXISTS in ${fullFilePath}. No modification is required.</wscmtlog>
+	</target>
+
+	<target name="addPostinstallLogCleanupParam" description="Add WS_CMT_PI_LOGS statement to WAS_HOME/properties/wasprofile.properties" if="postinstallLogCleanup">
+		<wscmtlog>${postinstallLogCleanupParam} statement is NOT FOUND in ${fullFilePath}. Proceeding to add it.</wscmtlog>
+
+		<concat destfile="${fullFilePath}" append="true" encoding="ASCII">
+#-------------------------------------------------------------------------
+# Specify if post installer should clean up its logs. This will cleanup logs for each product located in
+# PROFILE_HOME/properties/service/productDir. One of the following cleanup criteria can be used/specified:
+#	1. Specify the number of logs to keep from 0-999. EG. ${postinstallLogCleanupParam}=10
+#
+#	2. Specify the total size the logs should occupy from 0-999. EG. ${postinstallLogCleanupParam}=10MB
+#		KB = Kilobytes	MB = Megabytes	GB = Gigabytes
+#
+#	3. Specify the amount of time to keep logs around from 0-999. EG. ${postinstallLogCleanupParam}=2W
+#		D = Days	W = Weeks	M = Months	Y = Years
+#
+#	4. Specify a specific date after which a log older than the date will be deleted in a format of DD-MM-YYYY. EG. 05-10-2012
+#		Must be all numerics and be separated by dashes or it will be ignored.
+#
+# Note that only one criteria can be used at a time. If more than one is specified, the last value specified in this file will be used.
+#-------------------------------------------------------------------------
+#${postinstallLogCleanupParam}=10
+</concat>
+		
+		<wscmtlog>Successfully added ${postinstallLogCleanupParam} statement to ${fullFilePath}</wscmtlog>
+	</target>
+
+	<target name="install" description="Calls postinst with various parameters" depends="checkIfModificationIsNeeded,conditionModificationNotNeeded,addPostinstallLogCleanupParam" />
+
+	<target name="uninstall" description="Calls postinst with various parameters">
+		<wscmtlog>Custom property ${postinstallLogCleanupParam} is not removed from wasprofile.properties.</wscmtlog>
+	</target>
+</project>
+

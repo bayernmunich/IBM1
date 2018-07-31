@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Crash Problem Step 2" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Crash Problem Step 2}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-linux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-aix.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-solaris.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-windows.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-hp.xml"/>
+
+	<property name="autopdProblem" value="WAS_Crash_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-collect-core" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="skip_banner_message" value="true" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					 set_problem_type_with_nls_bundle,
+					 setup_autopd_v2,
+					 validate_os,
+
+					 was_stack_custom_init,
+			
+					 was_jvm_working_directory, determine_java_version_for_server,
+					 determine_based_on_versions,
+					 obtain_unix_core_file_location, 
+					 obtain_windows_core_file_location,
+		
+					 create_aix_core_output, 
+					 create_linux_core_output, 
+					 create_solaris_core_output, 
+					 create_windows_core_output, 
+					 create_hp_core_output,
+					 gen_history_report, 
+					 
+		common_postamble_general,
+		
+					 collect_aix_was_core,
+					 collect_hp_was_core,
+					 collect_linux_was_core,
+					 collect_solaris_was_core,
+					 collect_windows_was_core,
+		execute_vce_info_for_was,
+
+		common_postamble_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed"
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- determine where the UNIX core files are -->
+	<target name="obtain_unix_core_file_location"
+	        description="obtain core file location for unix type platform"
+	        unless="isWindows">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_obtaining_the_core_file_location"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Obtaining the core file location"
+		           replace="${autopdts};;${step.count}"
+		           id="1036"
+		           level="info" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Please_provide_the_core_file_location"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="core.file.path"
+			           label="Core_File_Path"
+			           defaultValue=""
+			           type="filebrowser"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           initialValueSource="persisted" />
+		</inputdialogtask>
+
+		<persistproperty property="core.file.path" />
+
+		<dirname property="core.file.dir" file="${core.file.path}" />
+		<basename property="core.file.name" file="${core.file.path}"/> 
+		
+		<trim_filename key="core.file.dir.trimmed"
+		               filename="${core.file.dir}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+<!-- No need to backup core 
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_backing_up_the_core_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Backing up the core file"
+		           replace="${autopdts};;${step.count}"
+		           id="1037"
+		           level="info" />
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true" preservelastmodified="true">
+			<fileset file="${core.file.path}" />
+		</copy>
+--> 		
+	</target>
+	
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Crash Problem&lt;/h2&gt;&lt;p&gt;
+								This script should be run on the host where the crash occured.
+							This script will generate heap dumps, core files
+							and will collect these files into a single archive.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script should be run on the host where the crash occured.
+This script will generate heap dumps, core files and will collect these files into a single archive." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Crash Problem =>
+This script should be run on the host where the crash occured.
+This script will generate heap dumps, core files and will collect these files into a single archive." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

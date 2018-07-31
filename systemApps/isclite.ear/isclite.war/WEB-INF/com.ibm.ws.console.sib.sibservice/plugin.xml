@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--
+ * @start_restricted_prolog@
+ * Version: @(#) 1.21 SIB/ws/code/sib.admin.webui/src/sibservice/WEB-INF/plugin.xml, SIB.admin.webui, WAS855.SIB, cf131750.05 07/06/07 02:39:02 [12/17/17 19:58:52]
+ * 
+ * Licensed Materials - Property of IBM
+ * 
+ * "Restricted Materials of IBM"
+ * 
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70
+ * 
+ * Copyright IBM Corp. 2003, 2007 All Rights Reserved.
+ * 
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ * @end_restricted_prolog@
+-->
+
+<plugin id="com.ibm.ws.console.sib.sibservice"
+           name="sibservice"
+           version="1.0.0"
+           vendor-name="IBM Corp. - WebSphere Server Group"
+           embedded="true"
+           context-root="sibservice">
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core" />
+        <import plugin="com.ibm.ws.console.servermanagement" />
+    </requires>
+
+    <!-- Extension - SIB Service as part of server management -->
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="sibservice.server.link" contextType="Server">
+            <link
+                  categoryId="serverSIBMessaging.properties"
+                  weight="30"
+                  label="SIBService.displayName"
+                  description="SIBService.description"
+                  actionURI="com.ibm.ws.console.sib.sibservice.forwardCmd.do?forwardName=SIBService.config.view&amp;sfname=services&amp;resourceUri=sib-service.xml">
+                <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion"
+                           value="([6-9])"/>
+                </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="sibservice.appserver.link" contextType="ApplicationServer">
+            <link
+                  categoryId="serverSIBMessaging.properties"
+                  weight="30"
+                  label="SIBService.displayName"
+                  description="SIBService.description"
+                  actionURI="com.ibm.ws.console.sib.sibservice.forwardCmd.do?forwardName=SIBService.config.view&amp;sfname=services&amp;resourceUri=sib-service.xml">
+                <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+                    <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+                </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="sibservice.clustermember.link" contextType="ClusterMember">
+            <link
+                  categoryId="clusterMemberSIBMessaging.properties"
+                  weight="30"
+                  label="SIBService.displayName"
+                  description="SIBService.description"
+                  actionURI="com.ibm.ws.console.sib.sibservice.forwardCmd.do?forwardName=SIBService.config.view&amp;sfname=services&amp;resourceUri=sib-service.xml&amp;lastPage=ClusterMember.config.view">
+                <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion"
+                           value="([7-9])"/>
+                </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true"/>
+    </extension>
+
+<!-- LI2505 Detail Tab Extensions -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sibservice.SIBService.detailTab1" contextType="SIBService">
+        <tab
+              label="tab.configuration"
+              contentURI="SIBService.config.tab.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+            </compatibility>
+        </tab>
+    </detailTab>
+</extension>
+
+</plugin>
+

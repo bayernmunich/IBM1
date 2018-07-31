@@ -1,0 +1,146 @@
+<project name="fixWRDScripts" default="fixWRDScripts" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+	<target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="OSext" value="sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="OSext" value="bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+	
+	<target name="previouslyInstalled" >
+		<loadfile property="installed" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.${OSext}">
+			<filterchain>         
+			    <linecontains>
+					<contains value="failedFeature"/>
+			    </linecontains>
+			</filterchain>
+		</loadfile>
+	</target>
+	
+	<target name="notInstalledAndOS">
+		<condition property="notInstalledWin" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="windows"/>
+			</and>
+		</condition>
+		<condition property="notInstalledUnix" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+			</and>
+		</condition>		
+	</target>
+	
+	<target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+        <replace dir="${dir}"           
+            token="${token}"
+            value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>
+	
+    <target name="replaceLineUnix"
+            description=""
+            if="notInstalledUnix">
+
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.sh"
+                           token="binDir=`dirname $0`"
+                           value="failedFeature() {&#10;  if [ -f ${JAVA_HOME}/bin/java ]; then&#10;    JAVA_EXE=&quot;${JAVA_HOME}/bin/java&quot;&#10;  else&#10;    JAVA_EXE=&quot;${JAVA_HOME}/jre/bin/java&quot;&#10;  fi&#10;  ${JAVA_EXE} -Djava.endorsed.dirs=&quot;$WAS_ENDORSED_DIRS&quot; -cp &quot;${WAS_HOME}/lib/commandlineutils.jar&quot; com.ibm.ws.install.commandline.utils.CommandLineUtils -ejbdeployfeaturenotinstalled&#10;  quit&#10;}&#10;&#10;binDir=`dirname $0`"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.sh"
+                           token=". &quot;$binDir/setupCmdLine.sh&quot;"
+                           value=". &quot;$binDir/setupCmdLine.sh&quot;&#10;&#10;if [ ! -f $ITP_LOC/ejbdeploy.sh ]; then&#10;	failedFeature&#10;fi"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config.sh"
+                           token="binDir=`dirname $0`"
+                           value="failedFeature() {&#10;  if [ -f ${JAVA_HOME}/bin/java ]; then&#10;    JAVA_EXE=&quot;${JAVA_HOME}/bin/java&quot;&#10;  else&#10;    JAVA_EXE=&quot;${JAVA_HOME}/jre/bin/java&quot;&#10;  fi&#10;  ${JAVA_EXE} -Djava.endorsed.dirs=&quot;$WAS_ENDORSED_DIRS&quot; -cp &quot;${WAS_HOME}/lib/commandlineutils.jar&quot; com.ibm.ws.install.commandline.utils.CommandLineUtils -ejbdeployfeaturenotinstalled&#10;  quit&#10;}&#10;&#10;binDir=`dirname $0`"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config.sh"
+                           token=". &quot;$binDir/setupCmdLine.sh&quot;"
+                           value=". &quot;$binDir/setupCmdLine.sh&quot;&#10;&#10;if [ ! -f $ITP_LOC/ejbdeploy.sh ]; then&#10;	failedFeature&#10;fi"/>
+			<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.sh" perm="+x"/>
+			<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config.sh" perm="+x"/>
+    </target>
+	
+	<target name="replaceLineWin"
+            description=""
+            if="notInstalledWin">
+
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.bat"
+                           token="if &quot;%ITP_LOC%&quot;==&quot;&quot; goto darn" 
+                           value="if NOT exist &quot;%ITP_LOC%\\\\ejbdeploy.bat&quot; goto failedFeature&#10;if &quot;%ITP_LOC%&quot;==&quot;&quot; goto darn"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd.bat"
+                           token="GOTO :EOF" 
+                           value="GOTO :EOF&#10;&#10;:failedFeature&#10;if exist &quot;%JAVA_HOME%\\\\bin\\\\java.exe&quot; (&#10;  set JAVA_EXE=&quot;%JAVA_HOME%\\\\bin\\\\java&quot;&#10;) else (&#10;  set JAVA_EXE=&quot;%JAVA_HOME%\\\\jre\\\\bin\\\\java&quot;&#10;)&#10;%JAVA_EXE% -Djava.endorsed.dirs=&quot;%WAS_ENDORSED_DIRS%&quot; -cp &quot;%WAS_HOME%\\\\lib\\\\commandlineutils.jar&quot; com.ibm.ws.install.commandline.utils.CommandLineUtils -ejbdeployfeaturenotinstalled&#10;GOTO :EOF&#10;"/>
+			
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config.bat"
+                           token="if &quot;%ITP_LOC%&quot;==&quot;&quot; goto darn" 
+                           value="if NOT exist &quot;%ITP_LOC%\\\\ejbdeploy.bat&quot; goto failedFeature&#10;&#10;if &quot;%ITP_LOC%&quot;==&quot;&quot; goto darn"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config.bat"
+                           token="GOTO :EOF" 
+                           value="GOTO :EOF&#10;&#10;:failedFeature&#10;if exist &quot;%JAVA_HOME%\\\\bin\\\\java.exe&quot; (&#10;  set JAVA_EXE=&quot;%JAVA_HOME%\\\\bin\\\\java&quot;&#10;) else (&#10;  set JAVA_EXE=&quot;%JAVA_HOME%\\\\jre\\\\bin\\\\java&quot;&#10;)&#10;%JAVA_EXE% -Djava.endorsed.dirs=&quot;%WAS_ENDORSED_DIRS%&quot; -cp &quot;%WAS_HOME%\\\\lib\\\\commandlineutils.jar&quot; com.ibm.ws.install.commandline.utils.CommandLineUtils -ejbdeployfeaturenotinstalled&#10;GOTO :EOF&#10;"/>
+    </target>
+                      
+    <target name="fixWRDScripts"
+        description=""
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+			setOSScriptExtension,
+			previouslyInstalled,
+			notInstalledAndOS,
+            replaceLineUnix,
+			replaceLineWin"/>
+</project>

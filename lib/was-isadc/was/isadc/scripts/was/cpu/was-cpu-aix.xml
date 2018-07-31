@@ -1,0 +1,188 @@
+<project name="was-cpu-aix">
+
+	<dirname property="was.cpu.aix.basedir" file="${ant.file.was-cpu-aix}"/>
+	<dirname property="was.cpu.aix.parentdir" file="${was.cpu.aix.basedir}"/>
+	<dirname property="was.cpu.aix.grandparentdir" file="${was.cpu.aix.parentdir}"/>
+	<dirname property="was.cpu.aix.bundle.basedir" file="${was.cpu.aix.grandparentdir}"/>
+
+	<target name="run_aix_high_cpu_targets" if="isAIX" > 
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1052641" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Aix_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for Aix..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<if isTrue="${jextract_new}">
+			<!-- Task 22830 --> 
+			<mkdir dir="${autopdtmp}/autopd/highcpu/aix" />
+			<chmod file="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf.sh" perm="766"/>
+			<exec executable="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf.sh" dir="${autopdtmp}/autopd/highcpu/aix" 
+				output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${was.java.process.id}" />
+			</exec>	
+<!--
+			<copy file="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf.sh" 
+				tofile="${autopdtmp}/autopd/highcpu/aix/aixperf-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="pid" value="${was.java.process.id}" />			
+				</filterset>
+			</copy>
+-->			
+		</if> 
+		<if isTrue="${jextract_prev}">
+			<!-- Task 22830 --> 
+			<mkdir dir="${autopdtmp}/autopd/highcpu/aix" />
+			<chmod file="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf60.sh" perm="766"/>
+			<exec executable="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf60.sh" dir="${autopdtmp}/autopd/highcpu/aix" 
+				output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${was.java.process.id}" />
+			</exec>	
+<!--			
+			<copy file="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/aixperf60.sh" 
+				tofile="${autopdtmp}/autopd/highcpu/aix/aixperf-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="pid" value="${was.java.process.id}" />			
+				</filterset>
+			</copy>
+			<copy file="${was.cpu.aix.bundle.basedir}/scripts/was/shell/aix/dbxtrace_aix.sh" 
+				tofile="${autopdtmp}/autopd/highcpu/aix/dbxtrace_aix.sh" overwrite="true">
+			</copy>
+			<exec executable="sh" dir="${autopdtmp}/autopd/highcpu/aix" 
+				output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${autopdtmp}/autopd/highcpu/aix/aixperf-filled.sh" />
+			</exec>
+-->
+		</if> 
+
+	</target>
+	
+	<target name="collect_aix_high_cpu_targets"  if="isAIX" > 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Aix_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting High-CPU/Crash Output for Aix..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/highcpu/aix" prefix="${autopdProblem}" > 
+				<include name="*.gz" /> 
+			</zipfileset>
+		</zip> 	
+	</target>
+	
+	<target name="run_aix_cpu_script" if="isAIX">
+		<property name="logfile" value="${autopdtmp}/cpu_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1116458" />	
+<!--		
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="120" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<exec executable="${autopdrootdir}/scripts/was/shell/aix/AIX_433_memory_leak.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile} -i ${sleepinterval}" />
+		</exec>
+	
+		<exec executable="${autopdrootdir}/scripts/was/shell/aix/AIX_51_memory_leak.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile} -i ${sleepinterval}" />
+		</exec>
+-->		
+	</target>
+	
+	<target name="kill_aix_cpu_script" if="isAIX">
+		<echo message="Cleanup: Kill AIX memory script" />
+
+		<copy file="${bundle.basedir}/scripts/was/shell/kill-all-processes-template.sh" tofile="${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-9" />			
+				<filter token="searchString" value="/was/shell/aix" />
+			</filterset>
+		</copy>
+		
+		
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" />
+		</exec>
+	</target>
+	
+	<target name="enable_mmap" if="isAIX">
+
+	 	<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line="export IBM_JAVA_MMAP_JAVA_HEAP=true" />
+		</exec>	
+	 
+	</target>
+	
+	<target name="change_native_heap_aix" if="isAIX">
+	
+		<autopdinput message="JVM_32_Bit" validargs="Yes,No" addproperty="JVM.32bit" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		
+		<if isNotTrue="${JVM.32bit}" >
+			<inputdialogtask>
+				<fieldtask name="label" label="Explain_JVM_32_bit" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>
+			
+			<fail>WebSphere Application Server only supports the 32-bit Java Virtual Machine (JVM)</fail>
+		</if>		
+	
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line="bootinfo -K" /> 
+		</exec>
+		
+		<!-- 
+      			where n = (10 - round(Xmx/256)
+		 -->
+		 
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Enter the n value (where n = (10 - round(Xmx/256) ) and press OK" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="nValue" label="Value" defaultValue=""  type="plaintext" accessibilityName="was_mem" accessibilityDesc="was_mem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>	
+		 
+		<copy file="${autopdrootdir}/scripts/was/shell/aix/memory-setup-template.sh" tofile="${autopdrootdir}/scripts/was/shell/aix/memory-setup-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="n" value="${nValue}" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${serverName}" />
+				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdrootdir}/scripts/was/shell/aix/memory-setup-filled.sh" />
+		</exec>	
+			
+	<!-- 
+	
+	# For releases of V6.0:
+
+   1. Verifiy the Java Virtual Machine (JVM™) is 32-bit, since that is what WebSphere Application Server supports.
+   2. Issue bootinfo -K from the AIX command line.
+   3. Add the following line to the top of the startServer.sh file in the install_root/profiles/profile_name/bin directory:
+
+      export LDR_CNTRL=MAXDATA=0xn0000000
+
+      where n = (10 - round(Xmx/256)
+
+# For releases of V5.0 and V5.1:
+
+   1. Verifiy the JVM is 32-bit, since that is what WebSphere Application Server supports.
+   2. Issue bootinfo -K from the AIX command line.
+   3. Add the following line to the top of the startServer.sh file in the install_root/bin directory:
+
+      export LDR_CNTRL=MAXDATA=0xn0000000
+
+      where n = (10 - round(Xmx/256)
+	
+	 -->
+	</target>
+</project>

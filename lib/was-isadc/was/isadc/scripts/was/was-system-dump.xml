@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS DBCS Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS DBCS Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_DBCS_Problem" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="infocollectProblemType" value="was-dbcs" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+			depends="set_was_problem_type,
+					setup_autopd, 
+					validate_os,
+					was_stack_custom_init,
+			          		  	  		    		   
+		    		 recovery_needed_with_condition, 
+		    		 
+		    		 start_time, 
+		    		 gen_system_dump,
+		    		 gen_history_report, 
+		    		 
+		    		 restore_user_default_trace_values,
+		    		 recovery_completed_with_condition, 
+			         set_server_restore_status_with_condition,
+			         restore_app_server_status, 
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+	
+	
+	<target name="gen_system_dump" description="This target uses the wsadmin tool and a jacl script to set 
+				the trace value using the configuration option of the application
+				server.">
+	
+	<copy file="${was.shared.targets.bundle.basedir}/scripts/jython/was-sys-dump-template.py"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jython/was-sys-dump-filled.py"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+			</filterset>
+		</copy>
+		
+		<property name="dump.output" location="${autopdtmp}/dump.out"/>
+		
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${dump.output}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jython/was-sys-dump-filled.py" ${was.admin.info}' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${dump.output}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jython/was-sys-dump-filled.py ${was.admin.info}" />
+		</exec>
+		
+	</target>
+</project>

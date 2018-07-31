@@ -1,0 +1,228 @@
+<project name="fixBaseShellScripts" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="install" depends="fixBaseShellScripts"/>
+    <target name="uninstall" depends="restoreBaseShellScripts"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+         <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                <not>
+                    <equals arg1="${os.name}" arg2="OS/400"/>
+                </not>
+            </and>
+        </condition>
+
+        <condition property="currentOSFamily" value="zos">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="isISeries" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="isUnix" value="true">
+            <or>
+                <and>
+                    <os family="unix"/>
+                    <not>
+                        <equals arg1="${os.name}" arg2="OS/400"/>
+                    </not>
+                </and>
+                <os family="z/os"/>
+            </or>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+        <wscmtlog>Determination as OS/400: ${isISeries}</wscmtlog>
+        <wscmtlog>Determination as Unix based: ${isUnix}</wscmtlog>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+
+        <condition property="OSext" value="">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="runChmod" if="isUnix">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="chmod a+x &quot;${WAS_HOME}${separatorFile}bin${separatorFile}setupCmdLine.sh&quot;"/>
+        </exec>
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="chmod a+x &quot;${WAS_HOME}${separatorFile}bin${separatorFile}sdk${separatorFile}_setupSdk.sh&quot;"/>
+        </exec>
+    </target>
+
+    <target name="replaceLinesUnix"
+            description=""
+            if="isUnix">
+
+            <!-- Adjust the setupCmdLine.sh script. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}setupCmdLine.sh">
+                <replacefilter token="-d $${REPLACE_WAS_HOME}"
+                               value="-d &quot;$${REPLACE_WAS_HOME}&quot;"/>
+                <replacefilter token="WAS_HOME=$${REPLACE_WAS_HOME}"
+                               value="WAS_HOME=&quot;$${REPLACE_WAS_HOME}&quot;"/>
+                <replacefilter token="-f $${DEFAULT_PROFILE_REGISTRY_LOC}"
+                               value="-f &quot;$${DEFAULT_PROFILE_REGISTRY_LOC}&quot;"/>
+                <replacefilter token="FSDB_PATH=`$$JAVA_HOME/jre/bin/java -classpath $$WAS_HOME/lib/setup.jar com.ibm.ws.setup.SetupFsdbPath $$WAS_HOME 2>/dev/null`"
+                               value="FSDB_PATH=`&quot;$$JAVA_HOME&quot;/jre/bin/java -classpath &quot;$$WAS_HOME&quot;/lib/setup.jar com.ibm.ws.setup.SetupFsdbPath &quot;$$WAS_HOME&quot; 2>/dev/null`"/>
+                <replacefilter token="$$JAVA_HOME/jre/bin/sparcv9"
+                               value="&quot;$$JAVA_HOME&quot;/jre/bin/sparcv9"/>
+                <replacefilter token="WAS_PROFILE_FSDB_SCRIPT=$${PROFILE_REGISTRY_LOC}/$${WAS_PROFILE_NAME}.sh"
+                               value="WAS_PROFILE_FSDB_SCRIPT=&quot;$${PROFILE_REGISTRY_LOC}&quot;/$${WAS_PROFILE_NAME}.sh"/>
+                <replacefilter token="-f $${WAS_PROFILE_FSDB_SCRIPT}"
+                               value="-f &quot;$${WAS_PROFILE_FSDB_SCRIPT}&quot;"/>
+                <replacefilter token="WAS_PROFILE_FSDB_SCRIPT=$${DEFAULT_PROFILE_SCRIPT}"
+                               value="WAS_PROFILE_FSDB_SCRIPT=&quot;$${DEFAULT_PROFILE_SCRIPT}&quot;"/>
+                <replacefilter token=". $${WAS_PROFILE_FSDB_SCRIPT}"
+                               value=". &quot;$${WAS_PROFILE_FSDB_SCRIPT}&quot;"/>
+                <replacefilter token="-f $${WAS_USER_SCRIPT}"
+                               value="-f &quot;$${WAS_USER_SCRIPT}&quot;"/>
+                <replacefilter token=". $$WAS_USER_SCRIPT"
+                               value=". &quot;$$WAS_USER_SCRIPT&quot;"/>
+                <replacefilter token="-d $${USER_INSTALL_ROOT}"
+                               value="-d &quot;$${USER_INSTALL_ROOT}&quot;"/>
+                <replacefilter token="WAS_CLASSPATH=$${USER_INSTALL_ROOT}/properties:$${WAS_CLASSPATH}"
+                               value="WAS_CLASSPATH=&quot;$${USER_INSTALL_ROOT}/properties:$${WAS_CLASSPATH}&quot;"/>
+            </replace>
+
+            <!-- Adjust the _setupSdk.sh script. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}sdk${separatorFile}_setupSdk.sh">
+                <replacefilter token=". $$WAS_HOME/properties/sdk/cmdDefaultSDK.properties"
+                               value=". &quot;$$WAS_HOME/properties/sdk/cmdDefaultSDK.properties&quot;"/>
+                <replacefilter token="$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh"
+                               value="&quot;$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh&quot;"/>
+                <replacefilter token=". $$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh"
+                               value=". &quot;$$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh&quot;"/>
+            </replace>
+
+            <!-- Adjust the _setupSdk.sh script located in the profileTemplates directory. There are various copies of the file in this directory 
+                 so multiple replace tasks are needed. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace dir="${WAS_HOME}${separatorFile}profileTemplates">
+                <include name="**${separatorFile}_setupSdk.sh"/>
+                <replacefilter token="$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh"
+                               value="&quot;$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh&quot;"/>
+                <replacefilter token=". $$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh"
+                               value=". &quot;$$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh&quot;"/>
+            </replace>
+    </target>
+
+    <target name="removeModifiedLinesUnix"
+            description=""
+            if="isUnix">
+
+            <!-- Adjust the setupCmdLine.sh script. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}setupCmdLine.sh">
+                <replacefilter value="-d $${REPLACE_WAS_HOME}"
+                               token="-d &quot;$${REPLACE_WAS_HOME}&quot;"/>
+                <replacefilter value="WAS_HOME=$${REPLACE_WAS_HOME}"
+                               token="WAS_HOME=&quot;$${REPLACE_WAS_HOME}&quot;"/>
+                <replacefilter value="-f $${DEFAULT_PROFILE_REGISTRY_LOC}"
+                               token="-f &quot;$${DEFAULT_PROFILE_REGISTRY_LOC}&quot;"/>
+                <replacefilter value="FSDB_PATH=`$$JAVA_HOME/jre/bin/java -classpath $$WAS_HOME/lib/setup.jar com.ibm.ws.setup.SetupFsdbPath $$WAS_HOME 2>/dev/null`"
+                               token="FSDB_PATH=`&quot;$$JAVA_HOME&quot;/jre/bin/java -classpath &quot;$$WAS_HOME&quot;/lib/setup.jar com.ibm.ws.setup.SetupFsdbPath &quot;$$WAS_HOME&quot; 2>/dev/null`"/>
+                <replacefilter value="$$JAVA_HOME/jre/bin/sparcv9"
+                               token="&quot;$$JAVA_HOME&quot;/jre/bin/sparcv9"/>
+                <replacefilter value="WAS_PROFILE_FSDB_SCRIPT=$${PROFILE_REGISTRY_LOC}/$${WAS_PROFILE_NAME}.sh"
+                               token="WAS_PROFILE_FSDB_SCRIPT=&quot;$${PROFILE_REGISTRY_LOC}&quot;/$${WAS_PROFILE_NAME}.sh"/>
+                <replacefilter value="-f $${WAS_PROFILE_FSDB_SCRIPT}"
+                               token="-f &quot;$${WAS_PROFILE_FSDB_SCRIPT}&quot;"/>
+                <replacefilter value="WAS_PROFILE_FSDB_SCRIPT=$${DEFAULT_PROFILE_SCRIPT}"
+                               token="WAS_PROFILE_FSDB_SCRIPT=&quot;$${DEFAULT_PROFILE_SCRIPT}&quot;"/>
+                <replacefilter value=". $${WAS_PROFILE_FSDB_SCRIPT}"
+                               token=". &quot;$${WAS_PROFILE_FSDB_SCRIPT}&quot;"/>
+                <replacefilter value="-f $${WAS_USER_SCRIPT}"
+                               token="-f &quot;$${WAS_USER_SCRIPT}&quot;"/>
+                <replacefilter value=". $$WAS_USER_SCRIPT"
+                               token=". &quot;$$WAS_USER_SCRIPT&quot;"/>
+                <replacefilter value="-d $${USER_INSTALL_ROOT}"
+                               token="-d &quot;$${USER_INSTALL_ROOT}&quot;"/>
+                <replacefilter value="WAS_CLASSPATH=$${USER_INSTALL_ROOT}/properties:$${WAS_CLASSPATH}"
+                               token="WAS_CLASSPATH=&quot;$${USER_INSTALL_ROOT}/properties:$${WAS_CLASSPATH}&quot;"/>
+            </replace>
+
+            <!-- Adjust the _setupSdk.sh script. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}sdk${separatorFile}_setupSdk.sh">
+                <replacefilter value=". $$WAS_HOME/properties/sdk/cmdDefaultSDK.properties"
+                               token=". &quot;$$WAS_HOME/properties/sdk/cmdDefaultSDK.properties&quot;"/>
+                <replacefilter value="$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh"
+                               token="&quot;$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh&quot;"/>
+                <replacefilter value=". $$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh"
+                               token=". &quot;$$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh&quot;"/>
+            </replace>
+
+            <!-- Adjust the _setupSdk.sh script located in the profileTemplates directory. There are various copies of the file in this directory 
+                 so multiple replace tasks are needed. Since the changes are strictly to the shell script, no need to differentiate the file extension. -->
+            <replace dir="${WAS_HOME}${separatorFile}profileTemplates">
+                <include name="**${separatorFile}_setupSdk.sh"/>
+                <replacefilter value="$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh"
+                               token="&quot;$${WAS_HOME}/bin/sdk/_highest_available_sdk.sh&quot;"/>
+                <replacefilter value=". $$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh"
+                               token=". &quot;$$WAS_HOME/bin/sdk/_setupsdk$${COMMAND_SDK}.sh&quot;"/>
+            </replace>
+    </target>
+
+    <target name="fixBaseShellScripts"
+        description=""
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            setOSScriptExtension,
+            replaceLinesUnix,
+            runChmod"/>
+
+    <target name="restoreBaseShellScripts"
+        description=""
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            setOSScriptExtension,
+            removeModifiedLinesUnix,
+            runChmod"/>
+</project>

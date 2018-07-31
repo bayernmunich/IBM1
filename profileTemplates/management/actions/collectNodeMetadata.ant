@@ -1,0 +1,120 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="collectNodeMetadata" default="collectNodeMetadata" basedir=".">
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    &importExternalLogs;     
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+    
+    <target name="resolveCollectMetadataExecutableForTheCurrentPlatform"
+            description="Sets COLLECT_METADATA to the right script for the current platform">
+            
+        <condition property="COLLECT_METADATA" value="${templatePath}/actions/scripts/collectNodeMetadata">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="COLLECT_METADATA" value="${templatePath}/actions/scripts/collectNodeMetadata.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="COLLECT_METADATA" value="${templatePath}/actions/scripts/collectNodeMetadata.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>collectNodeMetadata interpretor set to: ${COLLECT_METADATA}</wscmtlog>
+    </target>    
+
+    <target name="resolveSetupCmdLineName">
+        <available property="setupCmdLineName"
+            value="setupCmdLine"
+            file="${WAS_HOME}/bin/setupCmdLine"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.bat"
+            file="${WAS_HOME}/bin/setupCmdLine.bat"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.sh"
+            file="${WAS_HOME}/bin/setupCmdLine.sh"/>
+
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>    
+
+    <target name="setProfileType"
+            description="Set the profile type">
+      <condition property="profileType" value="adminagent">
+            <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+      </condition>
+      <condition property="profileType" value="dmgr">
+        <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+      </condition>
+      <condition property="profileType" value="jobmgr">
+        <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+      </condition>
+      <wscmtlog> profile type is: ${profileType}</wscmtlog>
+    </target>
+    
+    <target name="runCollectNodeMetadata"
+            description="collects the node metadata and writes to local repository">
+           <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->             
+        <exec executable="${COLLECT_METADATA}"
+                output="${WS_CMT_LOG_HOME}/${profileName}/collect_metadata.log" failonerror="false" resultproperty="rcProperty">
+            <arg value="${profileType}"/>
+                <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+         <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/collect_metadata.log" />
+            <param name="description" value="Collecting Node Metadata" />
+            <param name="precondition" value="foetrue" />
+        </antcall>          
+        <wscmtlog>Done.</wscmtlog>
+    </target>
+
+    <target name="collectNodeMetadata"
+        description="Collects Node Metadata"
+        depends="detectCurrentOSFamily,
+            setCurrentOSFamily,
+            resolveCollectMetadataExecutableForTheCurrentPlatform,
+                resolveSetupCmdLineName,
+                setProfileType,
+                runCollectNodeMetadata"/>
+
+</project>
+

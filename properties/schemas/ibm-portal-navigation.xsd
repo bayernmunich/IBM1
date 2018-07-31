@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-navigation.xsd"
+           xmlns:portal="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-topology.xsd" 
+           xmlns:navigation="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-navigation.xsd"
+           xmlns:base="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" 
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+           elementFormDefault="qualified" attributeFormDefault="unqualified" version="0.9" xml:lang="en">
+
+  <xs:import namespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" schemaLocation="ibm-portal-base.xsd"/>
+	
+	<!--
+        Navigation Description - Root Element 
+    -->
+	<xs:element name="navigation-tree" type="navigation:NavigationTree">
+		<xs:annotation>
+			<xs:documentation>
+                This tree holds the concatenation of the navigation elements of all the deployed
+                topology.xmls.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:complexType name="NavigationTree">
+		<xs:sequence>
+			<xs:element name="nav-element" type="navigation:NavElement" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+		
+    <xs:complexType name="NavElement">
+		<xs:annotation>
+			<xs:documentation>
+	            A mirror of the navigation-element in the topology.xml.
+                IDREF has been replaced by a string.
+       	     </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="title" type="base:Text" minOccurs="0"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+            <xs:element name="parentTree" type="navigation:ParentTree" minOccurs="0"/>
+			<xs:element name="parameter" type="base:Preference" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="page-params" type="navigation:PageParams" minOccurs="0" maxOccurs="1"/>
+            <!-- xs:element name="navigation-content" type="portal:NavigationContent" minOccurs="0" maxOccurs="unbounded"/ -->
+           	<xs:element name="navigation-content" type="navigation:NavigationContent" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="nav-element" type="navigation:NavElement" minOccurs="0" maxOccurs="unbounded"/> 
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:string" use="optional"/>
+		<xs:attribute name="layout-element-ref" type="xs:string" use="optional"/>
+        <xs:attribute name="moduleID" type="xs:string" use="required"/>
+        <xs:attribute name="nodeType" type="navigation:NodeType" default="page"/>
+        <xs:attribute name="wscRole" type="xs:string" use="optional"/>  <!-- temporary attribute added for for WSC role filtering -->
+        <xs:attribute name="isWscNode" type="xs:boolean" use="optional"/>
+        <xs:attribute name="url" type="xs:string" use="optional"/>      <!-- This attribute holds the value of the url string, if nodeType=url -->
+        <xs:attribute name="hidden" type="xs:boolean" use="optional" />
+        <xs:attribute name="formPersistence" type="xs:boolean" use="optional" />
+        <xs:attribute name="taskType" type="navigation:TaskType" default="hiddenTask" use="optional"/>
+	<xs:attribute name="resourceType" type="xs:string" use="optional"/>
+	</xs:complexType>
+
+    <!--
+       Navigation Content - Mapping of an application entity to a layout spot
+       -->
+   <!--       
+   <xs:complexType name="NavigationContent">
+       <xs:annotation>
+           <xs:documentation> Mapping of an application entity to a window in a layout.  If no window is specified the application entity applies to the entire LayoutElement</xs:documentation>
+       </xs:annotation>
+       <xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+       <xs:attribute name="application-element-ref" type="xs:IDREF" use="required"/>
+       <xs:attribute name="window-ref" type="xs:IDREF" use="optional"/>
+   </xs:complexType>
+   -->
+   <xs:complexType name="NavigationContent">
+       <xs:annotation>
+           <xs:documentation> Mapping of an application entity to a window in a layout.  If no window is specified the application entity applies to the entire LayoutElement</xs:documentation>
+       </xs:annotation>
+       <xs:attribute name="uniqueName" type="xs:ID" use="required"/>       
+       <xs:attribute name="componentDefinitionRef" type="xs:IDREF" use="required" ecore:reference="portal:ComponentDefinition"/>
+	   <xs:attribute name="windowRef" type="xs:IDREF" use="optional" ecore:reference="portal:Window"/>
+   </xs:complexType>
+
+
+    <!--
+		Parent Tree 
+		-->
+	<xs:complexType name="ParentTree">
+		<xs:annotation>
+			<xs:documentation>The Parent Tree element allows the instance document creator to specify the parent node and position
+			under the parent node where the current navigation element is to be merged.  The parent node need not be part of the current
+			instance document, but the document author should ensure that the parent node is defined in the Portal before requesting the merge.
+			If a requested parent node does not exist, the node will be merged at the bottom of the navigation tree.
+			Ordinals are non negative numbers that can be optionally defined while requesting to be merged under a particular parent node.
+			They determine the relative order of nodes under a particular parentTree.  If no ordinal is specified, the nodes will be merged in 
+			the deployment order under the specified parent.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="parentTreeRef" type="xs:string"/>
+		<xs:attribute name="ordinal" type="xs:nonNegativeInteger" use="optional"/>
+	</xs:complexType>
+	
+	<xs:simpleType name="NodeType">
+		<xs:restriction base="xs:NCName">
+                  <xs:enumeration value="url"/> 
+			<xs:enumeration value="label"/>
+			<xs:enumeration value="page"/>                  
+		 </xs:restriction>
+	</xs:simpleType>
+	
+	<!--
+		Task Type - List of Task Types that can be applied on a naviation-element of type page/url
+	-->
+	<xs:simpleType name="TaskType">
+		<xs:restriction base="xs:NCName">
+		  <xs:enumeration value="singleTask"/> 
+		  <xs:enumeration value="multiTask"/>
+		  <xs:enumeration value="hiddenTask"/>		  		  
+		  <xs:enumeration value="modalTask"/>                   
+		</xs:restriction>
+	</xs:simpleType>	
+	
+	<!--
+		Page Params - Mapping of Page Parameters to a navigation-element
+	-->
+	<xs:complexType name="PageParams">
+		<xs:annotation>
+			<xs:documentation>The Page Params element allows the instance document creator to specify the page paramters to be used while rendering the page.
+			Two types of page paramters can be specifed, render-param and page-header. redner-params will be passed as RenderParamter to all portlets on that page while rendering page.
+			page-header value will be added to HTML Head tag of the rendering page.			
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="render-param" type="navigation:RenderParam" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="page-header" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      		</xs:sequence>
+	</xs:complexType>
+
+	<!--
+		Render Parameter for a given PageParams
+	-->	
+	<xs:complexType name="RenderParam">
+			<xs:annotation>
+			<xs:documentation>RenderParameter defined by name/value pair will be passed to all portlets as RenderParameters on a page being rendered.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="xs:NCName" use="required"/>
+		<xs:attribute name="value" type="xs:string" use="required"/>
+  	</xs:complexType>
+  	
+</xs:schema>

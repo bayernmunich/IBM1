@@ -1,0 +1,38 @@
+<project name="deployAdminConsole" default="webuiConfig" basedir=".">
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+    
+    <target name="checkWebXml">
+          <condition property="webXmlExists">
+                <available file="${profilePath}/config/cells/${cellName}/applications/isclite.ear/deployments/isclite/isclite.war/WEB-INF/web.xml"/>
+          </condition> 
+   </target>
+   
+    <target name="copyWebXML"
+            description="Copy web xml from install to profile location" 
+	    if="webXmlExists">
+        	<wscmtlog>Copying web.xml to profile location. From ${WAS_HOME_UNIX_STYLE}/systemApps/isclite.ear/isclite.war/WEB-INF/web.xml 
+         		to ${profilePath}/config/cells/${cellName}/applications/isclite.ear/deployments/isclite/isclite.war/WEB-INF/web.xml</wscmtlog>
+         	<copy 
+         		file="${WAS_HOME_UNIX_STYLE}/systemApps/isclite.ear/isclite.war/WEB-INF/web.xml" 
+         		tofile="${profilePath}/config/cells/${cellName}/applications/isclite.ear/deployments/isclite/isclite.war/WEB-INF/web.xml" 
+         		overwrite="true" failonerror="false"/>   
+    </target>
+    
+    
+    <target name="webuiConfig"
+        description="Configures WebUI"
+        depends="convertWASHomeToUNIXStylePath, checkWebXml, copyWebXML"/>
+    
+</project>

@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2006,2011
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.  -->
+
+<plugin id="com.ibm.ws.console.webservices.wsadmin"
+        name="wsadmin"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="wsadmin">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+
+    <tasks>
+      <categoryDefinition id="wsadminCategoryId" parent="root" icon="/com.ibm.ws.console.webservices.wsadmin/images/onepix.gif" label="nav.wsadmin.management" weight="25"/>
+
+      <task id="wsadminId" icon="/com.ibm.ws.console.webservices.wsadmin/images/onepix.gif" label="task.wsadmin.administration" view="/navigatorCmd.do?forwardName=WebservicesAdmin.content.main&amp;wsadminAppCollection=false&amp;attachmentType=application" external="false" weight="33">
+        <category id="wsadminCategoryId"/>
+      </task>
+
+      <task id="wsadminId" icon="/com.ibm.ws.console.webservices.wsadmin/images/onepix.gif" label="client.task.wsadmin.administration" view="/navigatorCmd.do?forwardName=ClientWSAdmin.content.main&amp;wsadminAppCollection=false&amp;attachmentType=client" external="false" weight="37">
+        <category id="wsadminCategoryId"/>
+      </task>
+
+    </tasks>
+</extension>
+
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+
+<!--  Only show nav link if we're ND install -->
+<!--  for Nav link, use separate directory,
+       W:\WEBUI\ws\code\webui.environment\src\environment_nd\WEB-INF
+       with files:
+       plugin.xml  web.xml
+-->
+<!--
+  <compatibility>
+     <match key="com.ibm.websphere.baseProductShortName" value="ND"/>
+  </compatibility>
+-->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="webservicesAdmin.wsadmin.collection1" contextType="WebservicesAdminCell">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.wsadmin.start"
+              actionURI="webservicesAdminCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm.generateButtonVisible" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.stop.listener"
+              actionURI="webservicesAdminCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm.generateButtonVisible" value="true"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="webservicesAdmin.wsadmin.collection1" contextType="WebservicesAdminApp">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.wsadmin.start"
+              actionURI="webservicesAdminCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm.generateButtonVisible" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.stop.listener"
+              actionURI="webservicesAdminCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm.generateButtonVisible" value="true"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wsadmin.collectionItem1" contextType="WebservicesAdminCell">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditAction=true"
+              label="WSAdmin.Webservice.column.displayName">
+        </item>
+        <item
+              attributeName="type"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.Type.column.displayName">
+        </item>
+        <item
+              attributeName="deployedAsset"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditApplication=true"
+              label="WSAdmin.DeployedAsset.column.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.ServiceStatus.column.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="client.wsadmin.collectionItem1" contextType="ClientWSAdminCell">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditAction=true"
+              label="WSAdmin.ServiceClient.column.displayName">
+        </item>
+        <item
+              attributeName="type"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.Type.column.displayName">
+        </item>
+        <item
+              attributeName="deployedAsset"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditApplication=true"
+              label="WSAdmin.DeployedAsset.column.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- LIDB 4474-2 begin Web services collection, application view  -->
+
+    <extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="appmanagement.ApplicationDeployment"  contextType="ApplicationDeployment">
+
+        <link label="wsadmin.administration.applevel"
+              description="wsadmin.administration.applevel.link.description"
+              weight="32"
+              categoryId="webservices.properties.category"
+              actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WebservicesAdminApp.content.main&amp;wsadminAppCollection=true&amp;attachmentType=application">
+
+          <!-- Make the link dynamic, to show up only if the application has any
+               JAX-WS service providers configured and if the profile is enabled for WSFP -->
+
+          <compatibility>
+            <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                   key="com.ibm.ws.console.webservices.wsadmin.jaxwsprovider" value="true"/>
+          </compatibility>
+
+        </link>
+
+        <link label="PolicySetBindings.provider.displayName"
+              description="wsadmin.PolicySetBindings.provider.link.description"
+              weight="34"
+              categoryId="webservices.properties.category"
+              actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WSPolicySetAttachment.content.main&amp;attachmentScope=application&amp;attachmentType=application">
+
+          <compatibility>
+            <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                   key="com.ibm.ws.console.webservices.wsadmin.jaxwsprovider" value="true"/>
+          </compatibility>
+
+        </link>
+
+        <link label="client.wsadmin.administration.applevel.display"
+              description="client.wsadmin.administration.applevel.link.description"
+              weight="36"
+              categoryId="webservices.properties.category"
+              actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientWSAdminApp.content.main&amp;wsadminAppCollection=true&amp;attachmentType=client">
+
+          <!-- Make the link dynamic, to show up only if the application
+               has any service client configured and if the profile is enabled for WSFP -->
+
+          <compatibility>
+            <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                   key="com.ibm.ws.console.webservices.wsadmin.jaxwsclient" value="true"/>
+            </compatibility>
+
+         </link>
+
+        <link label="client.PolicySetBindings.client.displayName"
+              description="client.PolicySetBindings.client.link.description"
+              weight="38"
+              categoryId="webservices.properties.category"
+              actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientPolicySetAttachment.content.main&amp;attachmentScope=application&amp;attachmentType=client">
+
+          <compatibility>
+            <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                   key="com.ibm.ws.console.webservices.wsadmin.jaxwsclient" value="true"/>
+          </compatibility>
+
+         </link>
+
+       </linkSet>
+    </extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wsadmin.collectionItem1" contextType="WebservicesAdminApp">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditAction=true"
+              label="WSAdmin.Webservice.column.displayName">
+        </item>
+        <item
+              attributeName="type"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.Type.column.displayName">
+        </item>
+        <item
+              attributeName="module"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditModule=true"
+              label="WSAdmin.Module.column.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.ServiceStatus.column.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wsadmin.collectionItem1" contextType="ClientWSAdminApp">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditAction=true"
+              label="WSAdmin.ServiceClient.column.displayName">
+        </item>
+        <item
+              attributeName="type"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="WSAdmin.Type.column.displayName">
+        </item>
+        <item
+              attributeName="module"
+              sortable="sort"
+              itemURI="webservicesAdminCollection.do?EditModule=true"
+              label="WSAdmin.Module.column.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="WebservicesAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="WebservicesAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="ClientWSAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="ClientWSAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="SrvRefClientWSAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="SrvRefClientWSAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="WSNClientWSAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="WSNClientWSAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.ClientWS.linkset.id1" contextType="ClientWSAdminDetail">
+     <categoryDefinition id="wsadminClientPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+<!-- Application and module links are dynamic, pulled from form by addPropLayoutDynamicLabel.jsp -->
+<!-- All match values: "(j2ee|scaj2ee|scanonj2ee|wsnclient|wsnj2ee)" -->
+<!-- This extension supports j2ee clients and WS-Notification (WSN) clients -->
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.application.link"
+           description="client.WSAdmin.application.link.description"
+           weight="40"
+           actionURI="wsAdminDetailPath.do?EditApplication=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+           </compatibility>
+     </link>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.module.link"
+           description="client.WSAdmin.module.link.description"
+           weight="50"
+           actionURI="wsAdminDetailPath.do?EditModule=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+           </compatibility>
+     </link>
+
+   </linkSet>
+
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.SrvRefClientWS.linkset.id1" contextType="SrvRefClientWSAdminDetail">
+     <categoryDefinition id="wsadminSrvRefClientPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+<!-- Application and module links are dynamic, pulled from form by addPropLayoutDynamicLabel.jsp -->
+<!-- All match values: "(j2ee|scaj2ee|scanonj2ee|wsnclient|wsnj2ee)" -->
+<!-- This extension supports j2ee clients and WS-Notification (WSN) clients -->
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.application.link"
+           description="client.WSAdmin.application.link.description"
+           weight="40"
+           actionURI="wsAdminDetailPath.do?EditApplication=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+           </compatibility>
+     </link>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.module.link"
+           description="client.WSAdmin.module.link.description"
+           weight="50"
+           actionURI="wsAdminDetailPath.do?EditModule=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+           </compatibility>
+     </link>
+    
+      <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.serviceclient.link"
+           description="client.WSAdmin.srvRef.link.description"
+           weight="60"
+           actionURI="webservicesAdminCollection.do?clientService=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceReferenceType" value="true"/>
+           </compatibility>
+     </link>
+   </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.WSNClientWS.linkset.id1" contextType="WSNClientWSAdminDetail">
+     <categoryDefinition id="wsadminApplicationPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.bus.link"
+           description="WSAdmin.bus.link.description"
+           weight="50"
+           actionURI="wsAdminDetailPath.do?EditBus=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(wsnclient)"/>
+           </compatibility>
+     </link>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.wsnservicepoint.link"
+           description="WSAdmin.wsnservicepoint.link.description"
+           weight="50"
+           actionURI="wsAdminDetailPath.do?EditWSN=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(wsnclient)"/>
+           </compatibility>
+     </link>
+
+   </linkSet>
+
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.Webservices.linkset.id1" contextType="WebservicesAdminDetail">
+     <categoryDefinition id="wsadminApplicationPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+<!-- Application and module links are dynamic, pulled from form by addPropLayoutDynamicLabel.jsp -->
+<!--   Module link does not apply to SCA services in SOA Feature Pack -->
+
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.wsdl.document"
+           description="WSAdmin.wsdl.document.link.description"
+           weight="30"
+           actionURI="wsAdminDetailPath.do?ViewWSDL=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.attachmentType.client" value="false"/>
+           </compatibility>
+     </link>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.application.link"
+           description="WSAdmin.application.link.description"
+           weight="40"
+           actionURI="wsAdminDetailPath.do?EditApplication=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee|scaj2ee|wsnj2ee)"/>
+           </compatibility>
+     </link>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.module.link"
+           description="WSAdmin.module.link.description"
+           weight="50"
+           actionURI="wsAdminDetailPath.do?EditModule=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(j2ee)"/>
+           </compatibility>
+     </link>
+
+   </linkSet>
+
+</extension>
+
+<!-- LIDB 4474-2 end Web services collection, application view  -->
+
+</plugin>

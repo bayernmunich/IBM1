@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" 
+                           xmlns:process="http://www.ibm.com/websphere/appserver/schemas/5.0/process.xmi" 
+                           xmlns:adminservice="http://www.ibm.com/websphere/appserver/schemas/5.0/adminservice.xmi" 
+                           xmlns:coregroupbridgeservice="http://www.ibm.com/websphere/appserver/schemas/6.0/coregroupbridgeservice.xmi" 
+                           xmlns:traceservice="http://www.ibm.com/websphere/appserver/schemas/5.0/traceservice.xmi" 
+                           xmlns:channelservice="http://www.ibm.com/websphere/appserver/schemas/6.0/channelservice.xmi" 
+                           xmlns:channelservice.channels="http://www.ibm.com/websphere/appserver/schemas/6.0/channelservice.channels.xmi" 
+                           xmlns:loggingservice.ras="http://www.ibm.com/websphere/appserver/schemas/5.0/loggingservice.ras.xmi"
+                           xmlns:properties="http://www.ibm.com/websphere/appserver/schemas/5.0/properties.xmi"  
+                           xmlns:datareplicationserver="http://www.ibm.com/websphere/appserver/schemas/6.0/datareplicationserver.xmi" 
+                           xmlns:applicationserver="http://www.ibm.com/websphere/appserver/schemas/5.0/applicationserver.xmi" 
+                           xmlns:ipc="http://www.ibm.com/websphere/appserver/schemas/5.0/ipc.xmi" 
+                           xmlns:ipc.ssl="http://www.ibm.com/websphere/appserver/schemas/5.0/ipc.ssl.xmi" 
+                           xmlns:processexec="http://www.ibm.com/websphere/appserver/schemas/5.0/processexec.xmi" 
+                           xmlns:proxy="http://www.ibm.com/websphere/appserver/schemas/6.0/proxy.xmi" 
+                           xmlns:threadpoolmanager="http://www.ibm.com/websphere/appserver/schemas/6.0/threadpoolmanager.xmi" 
+                           xmlns:pmiservice="http://www.ibm.com/websphere/appserver/schemas/5.0/pmiservice.xmi"
+						   xmlns:diagnosticproviderservice="http://www.ibm.com/websphere/appserver/schemas/5.0/diagnosticproviderservice.xmi"
+                           xmlns:loggingservice.http="http://www.ibm.com/websphere/appserver/schemas/6.0/loggingservice.http.xmi">
+  <xmi:Documentation>
+    <contact>WebSphere Application Server v5.0 Default Configuration Files v1.40.1.1 4/4/03</contact>
+  </xmi:Documentation>
+
+  <!-- Default Server shell Configuration Template -->
+  <process:Server xmi:id="Server_1" name="secure_proxy_server" provisionComponents="true">
+    <stateManagement xmi:id="StateManageable_1" initialState="START"/>
+    
+    <!--  not sure if the statistics provider is needed -->
+    <statisticsProvider xmi:id="StatisticsProvider_1" specification="com.ibm.orb=disabled"/>
+
+    <services xmi:type="pmiservice:PMIService" xmi:id="PMIService_1" enable="true" initialSpecLevel="" statisticSet="basic" synchronizedUpdate="false"/>
+    <services xmi:type="adminservice:AdminService" xmi:id="AdminService_1" enable="true" preferredConnector="IPCConnector_1">
+      <connectors xmi:type="adminservice:IPCConnector" xmi:id="IPCConnector_1" enable="true"/>
+      <configRepository xmi:id="RepositoryService_1"/>
+    </services>
+    <services xmi:type="traceservice:TraceService" xmi:id="TraceService_1" enable="true" startupTraceSpecification="*=all=disabled" traceOutputType="SPECIFIED_FILE" traceFormat="BASIC" memoryBufferSize="8">
+      <traceLog xmi:id="TraceLog_1" fileName="$(SERVER_LOG_ROOT)/trace.log" rolloverSize="20" maxNumberOfBackupFiles="1"/>
+    </services>
+    <services xmi:type="loggingservice.ras:RASLoggingService" xmi:id="RASLoggingService_1" enable="true" messageFilterLevel="NONE" enableCorrelationId="true" >
+      <serviceLog xmi:id="ServiceLog_1" name="${LOG_ROOT}/activity.log" size="2" enabled="false"/>
+    </services>
+    <services xmi:type="diagnosticproviderservice:DiagnosticProviderService" xmi:id="DiagnosticProviderService_1" enable="true" startupStateCollectionSpec=".*:.*=0"/>
+    
+    <services xmi:type="channelservice:TransportChannelService" xmi:id="TransportChannelService_1" enable="true">                            
+      <transportChannels xmi:type="channelservice.channels:TCPOutboundChannel" xmi:id="TCPOutboundChannel_1" name="DefaultOutboundChannelForChannel_com.ibm.ws.tcp.channel.impl.WSTCPChannelFactory" inactivityTimeout="60" threadPool="ThreadPool_Proxy">
+        <properties xmi:id="Property_13" name="pureNonblocking" value="true"/>
+      </transportChannels>      
+    </services>
+    <services xmi:type="coregroupbridgeservice:CoreGroupBridgeService" xmi:id="CoreGroupBridgeService_1" enable="true"/>
+    <services xmi:type="threadpoolmanager:ThreadPoolManager" xmi:id="ThreadPoolManager_1" enable="true">
+      <threadPools xmi:id="ThreadPool_startup" minimumSize="0" maximumSize="10" inactivityTimeout="30000" isGrowable="false" name="server.startup" description="This pool is used by WebSphere during server startup."/>
+      <threadPools xmi:id="ThreadPool_4"   minimumSize="5"  maximumSize="20" name="Default">    
+             <customProperties xmi:id="CustomProperty_1" name="com.ibm.websphere.threadpool.requestBufferSize" value="100" required="false"/>
+      </threadPools>   
+      <threadPools xmi:id="ThreadPool_Proxy"   minimumSize="5"  maximumSize="20" name="Proxy" />
+    </services>
+    <services xmi:type="loggingservice.http:HTTPAccessLoggingService" xmi:id="HTTPAccessLoggingService_1" enable="false" enableErrorLogging="true" enableAccessLogging="true" errorLogLevel="WARNING">
+      <errorLog xmi:id="LogFile_1" filePath="${SERVER_LOG_ROOT}/http_error.log" maximumSize="500"/>
+      <accessLog xmi:id="LogFile_2" filePath="${SERVER_LOG_ROOT}/http_access.log" maximumSize="500"/>
+    </services>
+
+    <errorStreamRedirect xmi:id="StreamRedirect_1" fileName="$(SERVER_LOG_ROOT)/SystemErr.log" rolloverType="SIZE" maxNumberOfBackupFiles="1" rolloverSize="1" baseHour="24" rolloverPeriod="24" formatWrites="true" messageFormatKind="BASIC" suppressWrites="false" suppressStackTrace="false"/>
+    <outputStreamRedirect xmi:id="StreamRedirect_2" fileName="$(SERVER_LOG_ROOT)/SystemOut.log" rolloverType="SIZE" maxNumberOfBackupFiles="1" rolloverSize="1" baseHour="24" rolloverPeriod="24" formatWrites="true" messageFormatKind="BASIC" suppressWrites="false" suppressStackTrace="false"/>
+    
+    <components xmi:type="applicationserver:ApplicationServer" xmi:id="ApplicationServer_1" applicationClassLoaderPolicy="MULTIPLE">
+      <stateManagement xmi:id="StateManageable_4" initialState="START"/>
+      <services xmi:type="applicationserver:DynamicCache" xmi:id="DynamicCache_1" enable="true">
+        <cacheGroups xmi:id="ExternalCacheGroup_1" name="EsiInvalidator">
+          <members xmi:id="ExternalCacheGroupMember_1" address="localhost" adapterBeanName="com.ibm.websphere.servlet.cache.ESIInvalidatorServlet"/>
+        </cacheGroups>
+      </services>
+      <components xmi:type="proxy:ProxyServer" xmi:id="Proxy_1091202428318" name="ProxyServer">
+        <stateManagement xmi:id="StateManageable_12" initialState="START" /> 
+      </components>
+    </components>
+     
+    <processDefinitions xmi:type="processexec:JavaProcessDef" xmi:id="JavaProcessDef_1" executableTarget="com.ibm.ws.runtime.WsServer" executableTargetKind="JAVA_CLASS" workingDirectory="${USER_INSTALL_ROOT}">
+      <execution xmi:id="ProcessExecution_1" processPriority="20" runAsUser="" runAsGroup=""/>
+      <monitoringPolicy xmi:id="MonitoringPolicy_1" pingInterval="60" maximumStartupAttempts="3" pingTimeout="300" autoRestart="true" nodeRestartState="STOPPED" />
+      <ioRedirect xmi:id="OutputRedirect_1" stdoutFilename="${SERVER_LOG_ROOT}/native_stdout.log" stderrFilename="${SERVER_LOG_ROOT}/native_stderr.log"/>
+      <jvmEntries xmi:id="JavaVirtualMachine_1" classpath="" bootClasspath="" verboseModeClass="false" verboseModeGarbageCollection="false" verboseModeJNI="false" runHProf="false" hprofArguments="" debugMode="false" debugArgs="-Djava.compiler=NONE -Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=7777" genericJvmArguments="-Djava.util.prefs.userRoot=prefs/user">
+      </jvmEntries>
+    </processDefinitions>
+  </process:Server>
+</xmi:XMI>

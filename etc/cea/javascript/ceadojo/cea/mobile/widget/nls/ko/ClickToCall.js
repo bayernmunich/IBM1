@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"협업 창","SHOW_COLLABORATION_WINDOW":"협업 창 표시","CLICK_TO_CALL":"Click To Call"})

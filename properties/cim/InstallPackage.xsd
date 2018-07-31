@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ********************************************************************************************************** -->
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                          -->
+<!-- 5639-D57, 5630-A36, 5630-A37, 5724-D18 (C) COPYRIGHT International Business Machines Corp. 2007, 2008      -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                                 -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                     -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                     -->
+<!-- ********************************************************************************************************** -->
+<!-- Change activity:                                                                                           -->
+<!-- Ver   Date   Description                                                                                   -->
+<!-- ===  ======  ============================================================================================= -->
+<!-- 1.2  101507  10096  Add RelatedProduct element and RelatedProductType                                      -->
+<!-- 2.0  112507  6422 - Add support for WASCE                                                                  -->
+<!--                     Remove defn for AllPlatformMaintenanceZipEntries                                       -->
+<!-- 3.0  011107  Add support for i5OS and zOS.                                                                 -->
+<!--              Add defn for ResponseFileHelper and InstallWithRespFileCmd                                    -->
+<!--              New Operation type for SummaryMessage Operation attribute                                     -->
+<!--              Add Operation attribute for SpecialInstallParameters                                          -->
+<!--              Add SpecialInstaller element                                                                  -->
+<!--      062808  Add a MandatoryIFixType and an optional ProductLongName attribute to RelatedProduct element   -->
+<!-- ********************************************************************************************************** -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="InstallPackage">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="PackageShortName"        minOccurs="1" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageLongName"         minOccurs="1" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageMsgKeyPrefix"     minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageMsgBundleBaseName" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="ProductShortName"        minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="ProductShortNames"       minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="RelatedProduct"			minOccurs="0" maxOccurs="unbounded" 
+            			 type="RelatedProductType"/>
+            
+            <xsd:element name="PackageDir"              minOccurs="1" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageVersionString"    minOccurs="1" maxOccurs="1" type="VersionType"/>
+            <xsd:element name="PackageProvider"	        minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageProviderURL"	    minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            
+            <xsd:element name="PackageURL"	    		minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="FileDownloadURLs"	    minOccurs="0" maxOccurs="1" type="xsd:string"/>
+
+			<xsd:element name="PackageLicenseZipPrefix" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageLicenseFile"	    minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageLicenseInfoFile"	minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="PackageFileList"	        minOccurs="0" maxOccurs="1" type="xsd:string"/>
+
+            <xsd:element name="FeatureCommonFileList"	minOccurs="0" maxOccurs="1" type="xsd:string"/>
+
+            <xsd:element name="Feature"	                minOccurs="0" maxOccurs="unbounded" 
+            			 type="FeatureType"/>
+
+            <xsd:element name="SpecialInstruction"		minOccurs="0" maxOccurs="1" type="Instruction"/>
+
+			<xsd:element name="ExclusivePlatforms"		minOccurs="0" maxOccurs="unbounded"
+            			 type="ExclusivePlatformsType"/>
+
+            <xsd:element name="ResponseFileHelper"			minOccurs="0" maxOccurs="1" type="BasicHelper"/>		 
+			
+            <xsd:element name="SpecialInstallParameters" 	minOccurs="0" maxOccurs="unbounded" 
+            			 type="SpecialInstallParameter"/>
+            			 
+            <xsd:element name="SpecialUninstallParameters" 	minOccurs="0" maxOccurs="unbounded" 
+            			 type="SpecialUninstallParameter"/>
+
+            <xsd:element name="ParameterValidator"			minOccurs="0" maxOccurs="unbounded" 
+            			 type="ParameterValidatorType"/>		 
+
+            <xsd:element name="MandatoryIFix"			minOccurs="0" maxOccurs="unbounded" 
+            			 type="MandatoryIFixType"/>		 
+
+            <xsd:element name="InstallPrepCmd" 			minOccurs="0" maxOccurs="unbounded" 
+            			 type="RemoteCommandType"/>
+            			 
+            <xsd:element name="UninstallPrepCmd" 		minOccurs="0" maxOccurs="unbounded" 
+            			 type="CommandType"/>
+            			 
+            <xsd:element name="InstallLocation"      	minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            
+            <xsd:element name="DefaultInstallLocation"  minOccurs="0" maxOccurs="unbounded" 
+            			 type="DefaultInstallLocationType"/>
+
+            <xsd:element name="UninstallLocation"      	minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            			 
+            <xsd:element name="ManagedInstallationHelper"	minOccurs="0" maxOccurs="1" type="BasicHelper"/>		 
+            			 
+            <xsd:element name="OtherInstallLocation"	minOccurs="0" maxOccurs="unbounded" 
+            			 type="InstallLocationType"/>		 
+
+            <xsd:element name="SummaryMessage"			minOccurs="0" maxOccurs="unbounded" 
+            			 type="SummaryMessageType"/>		 
+            			 
+            <xsd:element name="InstallCmd"      		minOccurs="1" maxOccurs="1" type="CommandType">
+		      <xsd:annotation>
+		        <xsd:documentation>The Install Manager supports several variables. Supported variables are: </xsd:documentation>
+		        <xsd:documentation>${INSTALLER_NAME}, ${WORKING_DIR}, ${INSTALL_LOCATION}, ${FEATURE_NAME}.</xsd:documentation>
+		      </xsd:annotation>
+            </xsd:element>
+
+            <xsd:element name="InstallWithRespFileCmd"  minOccurs="0" maxOccurs="1" type="CommandType"/>
+            
+            <xsd:element name="UninstallCmd"        	minOccurs="1" maxOccurs="1" type="CommandType"/>
+            <xsd:element name="InstallWorkSpaceSize"    minOccurs="0" maxOccurs="1" type="StorageSize"/>
+            <xsd:element name="InstallSize"             minOccurs="0" maxOccurs="1" type="StorageSize"/>
+            
+            <xsd:element name="AllPlatformMaintenancePaks"  minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            <xsd:element name="AllPlatformMaintenance"  minOccurs="0" maxOccurs="unbounded" 
+            			 type="MaintenancePak"/>
+            
+<!--        <xsd:element name="AllPlatformMaintenanceZipEntries" minOccurs="0" maxOccurs="1" type="xsd:string"/ -->
+            
+            <xsd:element name="UpdateInstallerMinimumVersion"  minOccurs="0" maxOccurs="1" type="xsd:string"/>
+            
+            <xsd:element name="InstallerGroup"          minOccurs="0" maxOccurs="unbounded" 
+            			 type="InstallerGroupType"/>
+            
+            <xsd:element name="Installer"               minOccurs="0" maxOccurs="unbounded" 
+            			 type="InstallerType"/>
+
+            <xsd:element name="SpecialInstaller"        minOccurs="0" maxOccurs="unbounded" 
+            			 type="InstallerType"/>
+            			 
+            <xsd:element name="PackageDependency"       minOccurs="1" maxOccurs="unbounded" 
+            			 type="PackageDependencyType"/>
+            			 
+            <xsd:element name="PostInstallCmd"          minOccurs="0" maxOccurs="unbounded" 
+            			 type="CommandType"/>
+            			 
+            <xsd:element name="PostUninstallCmd"        minOccurs="0" maxOccurs="unbounded" 
+            			 type="CommandType"/>
+          </xsd:sequence>
+	  	  <xsd:attribute name="DescriptorVersion"    			type="xsd:string"   			default="1.0"   />
+	  	  <xsd:attribute name="SelectionGroup"    				type="SelectionGroupName"   	use="required"  />
+	  	  <xsd:attribute name="MaintenancePackage"      		type="MaintenancePackageType"   default="false" />
+	  	  <xsd:attribute name="PrereqPackage"      				type="xsd:string"   			default=""      />
+	  	  <xsd:attribute name="MutuallyExclusiveFeatureSet"		type="xsd:boolean"  			default="false" />
+	  	  <xsd:attribute name="OptionalFeatureSet"				type="xsd:boolean"  			default="false" />
+	  	  <xsd:attribute name="StaticFeatureSet"				type="xsd:boolean"  			default="true"  />
+	  	  <xsd:attribute name="FeatureSelectableForUninstall"	type="xsd:boolean"  			default="true"  />
+	  	  <xsd:attribute name="Restriction"      		    	type="RestrictionType"  		default="none"  />
+        </xsd:complexType>
+	</xsd:element>
+
+	<xsd:simpleType name="RestrictionType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="none"/>
+        <xsd:enumeration value="forInstallOnly"/>
+        <xsd:enumeration value="forUninstallOnly"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+	<xsd:simpleType name="SelectionGroupName">
+      <xsd:annotation>
+        <xsd:documentation>The SelectionGroup attribute is mainly for classifying the packages for selection by the user as a group.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="productInstall"/>
+        <xsd:enumeration value="interimFix"/>
+        <xsd:enumeration value="fixPack"/>
+        <xsd:enumeration value="refreshPack"/>
+        <xsd:enumeration value="maintenanceTool"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+	
+	<xsd:simpleType name="MaintenancePackageType">
+      <xsd:annotation>
+        <xsd:documentation>MaintenancePackage type of "true" and "preDefined" are equivalent values.</xsd:documentation>
+        <xsd:documentation>MaintenancePackage type of "userSelect" means the maintenance to be applied are selected by the user from a list.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="true"/>
+        <xsd:enumeration value="false"/>
+        <xsd:enumeration value="preDefined"/>
+        <xsd:enumeration value="userSelect"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+	
+	<xsd:simpleType name="StorageSize">
+      <xsd:annotation>
+        <xsd:documentation>Non-negative integer followed by an 'M' or a 'K'.</xsd:documentation>
+        <xsd:documentation>Leading and trailing blanks are ignored.       </xsd:documentation>
+      </xsd:annotation>
+      <xsd:restriction base="xsd:string">
+        <xsd:pattern value="(\s)*(\d)+(M|G)(\s)*"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+	<xsd:complexType name="RelatedProductType">
+	  <xsd:attribute name="ProductId"     				type="xsd:string"   use="required"  />
+	  <xsd:attribute name="ProductShortName"     		type="xsd:string"   use="required"  />
+	  <xsd:attribute name="ProductLongName"     		type="xsd:string"     				/>
+	  <xsd:attribute name="NodeMetadataKeyPrefix"     	type="xsd:string"   use="required"  />
+    </xsd:complexType>
+
+    <xsd:complexType name="FeatureType">
+      <xsd:sequence>
+        <xsd:element name="FeatureLicenseURL" 	minOccurs="0" maxOccurs="unbounded" type="LicenseURL"/>
+      </xsd:sequence>
+	  <xsd:attribute name="Name"     					type="xsd:string"   use="required"  />
+	  <xsd:attribute name="LongName" 					type="xsd:string"  />
+	  <xsd:attribute name="DescriptionKey" 				type="xsd:string"  />
+	  <xsd:attribute name="Filename" 					type="xsd:string"  />
+	  <xsd:attribute name="LicenseFile" 				type="xsd:string"  />
+	  <xsd:attribute name="LicenseInfoFile" 			type="xsd:string"  />
+	  <xsd:attribute name="ConditionalOnFilePresence" 	type="xsd:string"   default="" />
+	  <xsd:attribute name="Selected"					type="xsd:boolean"	default="false"	/>
+	  <xsd:attribute name="HiddenFromUI"				type="xsd:boolean"	default="false"	/>
+	  <xsd:attribute name="UseIfNoneIntended"			type="xsd:boolean"	default="false"	/>
+    </xsd:complexType>
+
+    <xsd:complexType name="LicenseURL">
+	  <xsd:attribute name="URL" 						type="xsd:string"   use="required" />
+	  <xsd:attribute name="ProgramName" 				type="xsd:string"   use="required" />
+	  <xsd:attribute name="ConditionalOnFilePresence" 	type="xsd:string"   default="" />
+    </xsd:complexType>
+
+    <xsd:complexType name="ExclusivePlatformsType">
+      <xsd:attribute name="Platform" 				type="PlatformType" use="required" 	/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="DefaultInstallLocationType">
+      <xsd:attribute name="Platform" 				type="PlatformType" use="required" 	/>
+	  <xsd:attribute name="Location" 				type="xsd:string"   use="required" 	/>
+	  <xsd:attribute name="UserModifiable"  		type="xsd:boolean"	default="true" 	/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="InstallLocationType">
+      <xsd:sequence>
+        <xsd:element name="DefaultLocation" 	minOccurs="0" maxOccurs="unbounded" 
+        			 type="DefaultInstallLocationType"/>
+      </xsd:sequence>
+	  <xsd:attribute name="HelperClass" 			type="xsd:string"   default="" 		/>
+	  <xsd:attribute name="HelperParms" 			type="xsd:string"   default="" 		/>
+	  <xsd:attribute name="ConditionalOnFeature" 	type="xsd:string"   default="" 		/>
+	  <xsd:attribute name="DescriptionKey" 			type="xsd:string"   use="required" 	/>
+	  <xsd:attribute name="ParamName" 				type="xsd:string"   use="required" 	/>
+	  <xsd:attribute name="HiddenFromUI"  			type="xsd:boolean"	default="false" />
+	  <xsd:attribute name="EmptyLocationAllowed"  	type="xsd:boolean"	default="false" />
+    </xsd:complexType>
+    
+    <xsd:complexType name="ParameterValidatorType">
+	  <xsd:attribute name="HelperClass" 			type="xsd:string"   	default="" 		/>
+	  <xsd:attribute name="Operation" 				type="OperationType"	default="_ANY_" />
+    </xsd:complexType>
+
+    <xsd:complexType name="MandatoryIFixType">
+	  <xsd:attribute name="ProductId" 				type="xsd:string"   	use="required" 	/>
+	  <xsd:attribute name="AparNumber" 				type="xsd:string"   	use="required" 	/>
+	  <xsd:attribute name="PakName" 				type="xsd:string"   	use="required" 	/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="SummaryMessageType">
+	  <xsd:attribute name="HelperClass" 			type="xsd:string"   	default="" 		/>
+	  <xsd:attribute name="HelperParms" 			type="xsd:string"   	default="" 		/>
+	  <xsd:attribute name="Operation" 				type="OperationType2"	default="_ANY_" />
+	  <xsd:attribute name="Platform"    			type="PlatformType" 	default="_ANY_" />
+	  <xsd:attribute name="ConditionalOnFeature" 	type="xsd:string"   	default="" 		/>
+	  <xsd:attribute name="MessageKey"     			type="xsd:string"   	use="required" 	/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="InstallerGroupType">
+      <xsd:sequence>
+        <xsd:element name="Installer"               minOccurs="1" 			maxOccurs="unbounded" 
+            		 type="InstallerType"/>
+      </xsd:sequence>
+	  <xsd:attribute name="ConditionalOnFeature" 	type="xsd:string"   	use="required"	/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="InstallerType">
+      <xsd:annotation>
+        <xsd:documentation>The DownloadURL attribute holds the index into the array/List of URLs specified by the FileDownloadURLs element.</xsd:documentation>
+        <xsd:documentation>The DownloadDir attribute specifies the directory relative to the URL where the installer file and lib can be downloaded from the FTP server.</xsd:documentation>
+        <xsd:documentation>The FromPrereq attribute specifies if the installer file and lib are from the prerequisite package specified by the PrereqPackage attribute.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:sequence>
+        <xsd:element name="PlatformSpecificMaintenancePaks" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="PlatformSpecificMaintenance" 	minOccurs="0" maxOccurs="unbounded" 
+        			 type="MaintenancePak"/>
+      </xsd:sequence>
+      <xsd:attribute name="Platform" 			type="PlatformType" 			default="_ANY_" />
+      <xsd:attribute name="Arch"     			type="ArchType"     			default="_ANY_" />
+	  <xsd:attribute name="Lib"      			type="xsd:string"   			default=""      />
+	  <xsd:attribute name="DownloadURL" 		type="xsd:nonNegativeInteger"	default="0"     />
+  	  <xsd:attribute name="DownloadDir" 		type="xsd:string"   			default=""      />
+  	  <xsd:attribute name="DownloadCategory" 	type="CategoryType" 			default="_unspecified_" />
+	  <xsd:attribute name="FromPrereq"  		type="xsd:boolean"  			default="false" />
+	  <xsd:attribute name="Filename" 			type="xsd:string"   			use="required"  />
+    </xsd:complexType>
+
+    <xsd:complexType name="MaintenancePak">
+      <xsd:annotation>
+        <xsd:documentation>The DownloadURL attribute holds the index into the array/List of URLs specified by the FileDownloadURLs element.</xsd:documentation>
+        <xsd:documentation>The DownloadDir attribute specifies the directory relative to the URL where the installer file and lib can be downloaded from the FTP server.</xsd:documentation>
+        <xsd:documentation>The PakEntryName element(s) list the names of pak files bundled within the Zip File if the PakFilename attribute specifies a zip filename.</xsd:documentation>
+        <xsd:documentation>The order of the PakEntry elements is the order the pak file will be installed.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:sequence>
+        <xsd:element name="PakEntryName" 		minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+      </xsd:sequence>
+	  <xsd:attribute name="DownloadURL"     	type="xsd:nonNegativeInteger"	default="0"  	/>
+	  <xsd:attribute name="DownloadDir"			type="xsd:string"   			default=""      />
+	  <xsd:attribute name="PakFilename"			type="xsd:string"   			use="required"	/>
+    </xsd:complexType>
+
+	<xsd:complexType name="BasicHelper">
+	  <xsd:attribute name="HelperClass" 		type="xsd:string"   	use="required"   />
+    </xsd:complexType>
+
+    <xsd:complexType name="SpecialInstallParameter">
+      <xsd:sequence>
+        <xsd:element name="ParamName" 			minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
+      </xsd:sequence>
+	  <xsd:attribute name="HelperClass" 		type="xsd:string"   	use="required"   />
+	  <xsd:attribute name="MsgKeyRoot"  		type="xsd:string"   	use="required"   />
+	  <xsd:attribute name="PromptType"  		type="PromptType"   	default="EntryField" />
+	  <xsd:attribute name="Operation" 			type="InstallType"		default="install"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="SpecialUninstallParameter">
+      <xsd:sequence>
+        <xsd:element name="ParamName" 			minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
+      </xsd:sequence>
+	  <xsd:attribute name="HelperClass" 		type="xsd:string"   	use="required"   />
+	  <xsd:attribute name="MsgKeyRoot"  		type="xsd:string"   	use="required"   />
+	  <xsd:attribute name="PromptType"  		type="PromptType"   	default="EntryField" />
+	  <xsd:attribute name="Operation" 			type="UninstallType"	default="uninstall"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="PromptType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="EntryField"/>
+        <xsd:enumeration value="CheckBox"/>
+        <xsd:enumeration value="NodePickerMiddlewareNode"/>
+        <xsd:enumeration value="NodePickerMiddlewareNodeXD"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="Instruction">
+	  <xsd:attribute name="Name"     	type="InstructionName"  use="required"  />
+	  <xsd:attribute name="Interface"	type="xsd:string"   	default=""      />
+    </xsd:complexType>
+
+    <xsd:simpleType name="InstructionName">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="NodeCentric"/>
+        <xsd:enumeration value="ProfileAugmentationRequired"/>
+        <xsd:enumeration value="UninstallOnly"/>
+        <xsd:enumeration value="EmptyInstallDirRequired"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="ArchType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="32bit" 	/>
+        <xsd:enumeration value="64bit" 	/>
+        <xsd:enumeration value="amd64" 	/>
+        <xsd:enumeration value="ia32"  	/>
+        <xsd:enumeration value="ia64"  	/>
+        <xsd:enumeration value="i686"  	/>
+        <xsd:enumeration value="ppc"   	/>
+        <xsd:enumeration value="ppc64" 	/>
+        <xsd:enumeration value="s390"  	/>
+        <xsd:enumeration value="s390x" 	/>
+        <xsd:enumeration value="sparc" 	/>
+        <xsd:enumeration value="sparc64"/>
+        <xsd:enumeration value="x86"    />
+        <xsd:enumeration value="x86_64" />
+        <xsd:enumeration value="_ANY_"  />
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="CategoryType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="aix"/>
+        <xsd:enumeration value="aix.ppc32" 	 />
+        <xsd:enumeration value="aix.ppc32.v52"		/>
+        <xsd:enumeration value="aix.ppc64" 	 />
+        <xsd:enumeration value="aix.ppc64.v52"		/>
+        <xsd:enumeration value="hpux"/>
+        <xsd:enumeration value="hpux.parisc" />
+        <xsd:enumeration value="hpux.ia64"   />
+        <xsd:enumeration value="hpux.ia64.11i"		/>
+        <xsd:enumeration value="i5os"/>
+        <xsd:enumeration value="i5os.ppc64"  />
+        <xsd:enumeration value="linux"/>
+        <xsd:enumeration value="linux.ia32"  />
+        <xsd:enumeration value="linux.ia32.RHEL30"	/>
+        <xsd:enumeration value="linux.ia64"  />
+        <xsd:enumeration value="linux.amd64" />
+        <xsd:enumeration value="linux.x86_64.RHEL30"/>
+        <xsd:enumeration value="linux.ppc32" />
+        <xsd:enumeration value="linux.ppc32.RHEL30" />
+        <xsd:enumeration value="linux.ppc64" />
+        <xsd:enumeration value="linux.ppc64.RHEL30" />
+        <xsd:enumeration value="linux.s390"  />
+        <xsd:enumeration value="linux.s390.RHEL30"  />
+        <xsd:enumeration value="linux.s39064"/>
+        <xsd:enumeration value="linux.s39064.RHEL30"/>
+        <xsd:enumeration value="solaris"/>
+        <xsd:enumeration value="solaris.sparc"  />
+        <xsd:enumeration value="solaris.sparc64"/>
+        <xsd:enumeration value="solaris.amd64"  />
+        <xsd:enumeration value="solaris.ia64"   />
+        <xsd:enumeration value="solaris.x86_64" />
+        <xsd:enumeration value="windows"/>
+        <xsd:enumeration value="windows.ia32"  />
+        <xsd:enumeration value="windows.ia64"  />
+        <xsd:enumeration value="windows.amd64" />
+        <xsd:enumeration value="zos"/>
+        <xsd:enumeration value="zos.s39064"	/>
+        <xsd:enumeration value="_unspecified_" />
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="PlatformType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="aix"/>
+        <xsd:enumeration value="hpux"/>
+        <xsd:enumeration value="linux"/>
+        <xsd:enumeration value="os390"/>
+        <xsd:enumeration value="os400"/>
+        <xsd:enumeration value="solaris"/>
+        <xsd:enumeration value="windows"/>
+        <xsd:enumeration value="_ANY_"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="OperationType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="install"/>
+        <xsd:enumeration value="uninstall"/>
+        <xsd:enumeration value="_ANY_"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="OperationType2">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="install"/>
+        <xsd:enumeration value="uninstall"/>
+        <xsd:enumeration value="installWithRespFile"/>
+        <xsd:enumeration value="_ANY_"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="InstallType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="install"/>
+        <xsd:enumeration value="installWithRespFile"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="UninstallType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="uninstall"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="VersionType">
+      <xsd:annotation>
+        <xsd:documentation>Up to 4 groups of decimal digits separated by '.'</xsd:documentation>
+        <xsd:documentation>Leading and trailing blanks are ignored.         </xsd:documentation>
+      </xsd:annotation>
+      <xsd:restriction base="xsd:string">
+        <xsd:pattern value="(\s)*(\d)+(\s)*"/>
+        <xsd:pattern value="(\s)*(\d)+\.(\d)+(\s)*"/>
+        <xsd:pattern value="(\s)*(\d)+\.(\d)+\.(\d)+(\s)*"/>
+        <xsd:pattern value="(\s)*(\d)+\.(\d)+\.(\d)+\.(\d)+(\s)*"/>
+        <xsd:pattern value="(\s)*"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="PackageDependencyType">
+      <xsd:sequence>
+        <xsd:element name="OsName"				 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="OsNameList"			 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="OsVersionString"		 minOccurs="0" maxOccurs="1" type="VersionType"/>
+        <xsd:element name="OsServicePackLevel"	 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="ProductName"			 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="ProductVersionString" minOccurs="0" maxOccurs="1" type="VersionType"/>
+      </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="CommandType">
+      <xsd:annotation>
+        <xsd:documentation>The TargetPlatforms attribute value may be omitted to mean any platform types.</xsd:documentation>
+        <xsd:documentation>The Timeout attribute value is in seconds. A zero value indicates an indefinite timeout for the command.</xsd:documentation>
+        <xsd:documentation>The AlternateLog if present is a failure log.								</xsd:documentation>
+        <xsd:documentation>The AlternateMsg if present is a message that indicates a partial success.	</xsd:documentation>
+      </xsd:annotation>
+      <xsd:sequence>
+        <xsd:element name="CommandStringUnix"    minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="CommandStringWindows" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="CommandStringQShell"  minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="OptionalCommandParms" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+        <xsd:element name="CommandPath"          minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="CommandLogs"       	 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="AlternateLog"       	 minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="SuccessMsg"           minOccurs="0" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="AlternateMsg"         minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      </xsd:sequence>
+	  <xsd:attribute name="HelperClass" 		 type="xsd:string"   			default=""    />
+	  <xsd:attribute name="HelperParms" 		 type="xsd:string"   			default=""	  />
+	  <xsd:attribute name="TargetPlatforms" 	 type="xsd:string"   			default=""	  />
+	  <xsd:attribute name="TimeoutInSecs"     	 type="xsd:nonNegativeInteger"	default="0"   />
+    </xsd:complexType>
+
+    <xsd:complexType name="RemoteCommandType">
+      <xsd:sequence>
+        <xsd:element name="CommandStringUnix"    minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+        <xsd:element name="CommandStringWindows" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+        <xsd:element name="CommandStringQShell"  minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+        <xsd:element name="OptionalCommandParms" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
+        <xsd:element name="CommandPath"          minOccurs="1" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="CommandLogs"       	 minOccurs="1" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="SuccessMsg"           minOccurs="1" maxOccurs="1" type="xsd:string"/>
+        <xsd:element name="AlternateMsg"         minOccurs="0" maxOccurs="1" type="xsd:string"/>
+      </xsd:sequence>
+	  <xsd:attribute name="HelperClass" 		 		type="xsd:string"   use="required"  	/>
+	  <xsd:attribute name="HelperParms" 		 		type="xsd:string"   default=""	  		/>
+	  <xsd:attribute name="SuccessMsgCheck" 	 		type="MsgCheckType" default="contains"  />
+	  <xsd:attribute name="AlternateMsgCheck" 	 		type="MsgCheckType" default="contains"  />
+	  <xsd:attribute name="ScriptFilesToSendUnix" 		type="xsd:string"   default=""   		/>
+	  <xsd:attribute name="ScriptFilesToSendWindows" 	type="xsd:string"   default=""   		/>
+	  <xsd:attribute name="ScriptFilesToSendOs400" 		type="xsd:string"   default=""   		/>
+	  <xsd:attribute name="ConditionalOnInstallerFile"	type="xsd:string"   default=""   		/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="MsgCheckType">
+      <xsd:restriction base="xsd:string">
+        <xsd:enumeration value="contains"/>
+        <xsd:enumeration value="startsWith"/>
+        <xsd:enumeration value="endsWith"/>
+      </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>

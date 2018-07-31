@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Begin Copyright
+
+  Licensed Materials - Property of IBM
+
+  Virtual Member Manager
+
+  (C) Copyright IBM Corp. 2005 All Rights Reserved.
+
+  US Government Users Restricted Rights - Use, duplication or
+  disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+
+  %Z% %W% %I% %E% %U%
+
+  End Copyright
+-->
+<sdo:datagraph xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:config="http://www.ibm.com/websphere/wim/config" xmlns:sdo="commonj.sdo"
+	xsi:schemaLocation="commonj.sdo datagraph.xsd ">
+  <config:configurationProvider maxPagingResults="500" maxSearchResults="4500" maxTotalPagingResults="1000"
+      pagedCacheTimeOut="900" pagingEntityObject="true" searchTimeOut="600000"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.ibm.com/websphere/wim/config wimconfig.xsd ">
+    <config:dynamicModel xsdFileName="wimdatagraph.xsd"/>
+    <config:supportedEntityTypes defaultParent="cn=users,dc=yourco,dc=com" name="PersonAccount">
+      <config:rdnProperties>uid</config:rdnProperties>
+    </config:supportedEntityTypes>
+    <config:supportedEntityTypes defaultParent="cn=groups,dc=yourco,dc=com" name="Group">
+      <config:rdnProperties>cn</config:rdnProperties>
+    </config:supportedEntityTypes>
+    <config:supportedEntityTypes defaultParent="cn=users,dc=yourco,dc=com" name="OrgContainer">
+      <config:rdnProperties>o</config:rdnProperties>    
+      <config:rdnProperties>ou</config:rdnProperties>
+      <config:rdnProperties>dc</config:rdnProperties>
+      <config:rdnProperties>cn</config:rdnProperties>
+    </config:supportedEntityTypes>
+	<config:entryMappingRepository xsi:type="config:EntryMappingRepositoryType"
+		id="FED" databaseType="DB_TYPE" dataSourceName="jdbc/wimDS" dbURL="DB_URL"/>
+	<config:propertyExtensionRepository xsi:type="config:PropertyExtensionRepositoryType"
+	   id="LA" databaseType="DB_TYPE" dataSourceName="jdbc/wimDS" entityRetrievalLimit="200" dbURL="DB_URL"/>
+	<config:repositories xsi:type="config:DatabaseRepositoryType" 
+	id="REPOSID" supportPaging="false" databaseType="DB_TYPE" dataSourceName="jdbc/wimDS" dbURL="DB_URL" 
+	 encryptionKey="rZ15ws0ely9yHk3zCs3sTMv/ho8fY17s" entityRetrievalLimit="200" saltLength="12">
+      <config:baseEntries name="o=default organization"/>
+	</config:repositories>
+    <config:realmConfiguration defaultRealm="YourCo" >
+    		<!-- realm definitions -->
+      		<config:realms
+      			name="YourCo"
+      			securityUse="active"
+    			delimiter="/">
+				    <config:uniqueUserIdMapping propertyForInput="uniqueName" propertyForOutput="uniqueName"/>
+					<config:userSecurityNameMapping propertyForInput="principalName" propertyForOutput="principalName"/>
+					<config:userDisplayNameMapping propertyForInput="principalName" propertyForOutput="principalName"/>
+					<config:uniqueGroupIdMapping propertyForInput="uniqueName" propertyForOutput="uniqueName"/>
+					<config:groupSecurityNameMapping propertyForInput="cn" propertyForOutput="externalName"/>
+					<config:groupDisplayNameMapping propertyForInput="cn" propertyForOutput="cn"/>	
+      		</config:realms> 
+      	
+  </config:realmConfiguration>
+  
+    <config:pluginManagerConfiguration>
+      <config:topicSubscriberList>
+      </config:topicSubscriberList>
+      <config:topicRegistrationList>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.create">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.delete">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.login">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.search">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.update">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+			<config:topicEmitter topicEmitterName="com.ibm.ws.wim.ProfileManager.get">
+				<config:preExit>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+				</config:preExit>
+				<config:postExit>
+					<config:modificationSubscriberList>
+					</config:modificationSubscriberList>
+					<config:notificationSubscriberList>
+					</config:notificationSubscriberList>
+				</config:postExit>
+			</config:topicEmitter>
+      </config:topicRegistrationList>
+    </config:pluginManagerConfiguration>
+	<!-- Authorization settings -->
+    <config:authorization
+        isSecurityEnabled="true" useSystemJACCProvider="false" importPolicyFromFile="true"
+        isAttributeGroupingEnabled="true" defaultAttributeGroup="default" 
+        jaccPolicyClass="com.ibm.sec.authz.provider.CommonAuthzPolicy" 
+        jaccRoleMappingClass="com.ibm.sec.authz.provider.CommonAuthzRoleMapping" 
+        jaccPolicyConfigFactoryClass="com.ibm.sec.authz.provider.CommonAuthzPolicyConfigurationFactory" 
+        jaccRoleMappingConfigFactoryClass="com.ibm.sec.authz.provider.CommonAuthzRoleMappingConfigurationFactory"
+        jaccRoleToPermissionPolicyId="WIM Policy"
+        jaccPrincipalToRolePolicyId="WIM Policy"
+        jaccRoleToPermissionPolicyFileName="wim-policy.xml"
+        jaccPrincipalToRolePolicyFileName="wim-rolemapping.xml">
+        <config:attributeGroups>
+            <config:groupName>general</config:groupName>
+            <config:attributeNames>cn</config:attributeNames>
+            <config:attributeNames>sn</config:attributeNames>
+            <config:attributeNames>uid</config:attributeNames>
+        </config:attributeGroups>
+        <config:attributeGroups>
+            <config:groupName>sensitive</config:groupName>
+            <config:attributeNames>password</config:attributeNames>
+        </config:attributeGroups>
+        <config:attributeGroups>
+            <config:groupName>unchecked</config:groupName>
+            <config:attributeNames>identifier</config:attributeNames>
+            <config:attributeNames>createTimestamp</config:attributeNames>
+            <config:attributeNames>modifyTimestamp</config:attributeNames>
+            <config:attributeNames>entitlementInfo</config:attributeNames>
+        </config:attributeGroups>
+    </config:authorization>
+
+  </config:configurationProvider>
+</sdo:datagraph>

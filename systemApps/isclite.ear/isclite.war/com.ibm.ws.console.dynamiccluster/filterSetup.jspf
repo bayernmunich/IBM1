@@ -1,0 +1,61 @@
+<%
+
+    String sortable = "true";
+    String columnField = "name";
+    String defaultIconList [] = {"Sort_ascend2.gif", "Sort_desc2.gif", "Sort_none.gif"};
+
+   ServletContext servletContext = (ServletContext)pageContext.getServletContext();
+   MessageResources translatedText = (MessageResources)servletContext.getAttribute(Action.MESSAGES_KEY);
+
+    String searchFilter = "";
+    String filterImage = "wtable_filter_row_show";
+    String filterDisplay = "none";
+
+    if (request.getParameter("searchFilter") != null) {
+       searchFilter = request.getParameter("searchFilter");
+    } else {
+       searchFilter = (String)session.getAttribute("searchFilter");
+    }
+
+    String patternId = "searchPattern";
+    List searchList = new ArrayList();
+    try {
+       searchList = new ArrayList((List)session.getAttribute("searchList"));
+    } catch (Exception e) {e.printStackTrace();}
+
+	boolean searchUsesSelect = false;
+
+    for (int i=0; i<searchList.size(); i++)
+    {
+        String tempString = (String) searchList.get(i);
+        String[] splitString = tempString.split(":");
+        if(searchFilter.equals(splitString[1])){
+            if (splitString.length > 2){
+                searchUsesSelect = true;
+            }
+        }
+    }
+
+    //  This section places the filter row into the table
+    String searchPattern = request.getParameter(patternId);
+
+    if ((searchPattern == null)) {
+       searchPattern = (String)session.getAttribute(patternId);
+       if ((searchPattern == null)) {
+          searchPattern = "*";
+       }
+    }
+
+    if(searchUsesSelect && !searchPattern.equals("*")){
+        MessageResources messages1 = (MessageResources)servletContext.getAttribute(Action.MESSAGES_KEY);
+        searchPattern = messages1.getMessage(request.getLocale(),searchPattern);
+    }
+
+    if (!searchPattern.equals("*")) {
+       filterDisplay = "block";
+       filterImage = "wtable_filter_row_hide";
+    }
+
+
+%>
+

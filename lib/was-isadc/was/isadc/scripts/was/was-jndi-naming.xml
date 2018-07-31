@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS JNDI Naming Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS JNDI Naming Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_JNDI_Naming_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-jndi" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+			set_problem_type_with_nls_bundle,
+			setup_autopd_v2, 
+			validate_os, 
+
+			
+			was_stack_custom_init,		
+			jndi_collect_info, 
+			jndi_generate_trace_string,			         
+			trace_setup_custom,	
+						
+			execute_collector, 
+			execute_vce_info_for_was,
+			common_postamble_general_with_ftp">
+	</target>
+	
+	<target name="jndi_generate_trace_string" description="Enable JNDI tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="Naming=all" />
+		</if>
+
+		<!-- WAS v5 -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="Naming=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<target name="jndi_collect_info" > 
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_information_for_the_jndi_specific_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the JNDI / Naming problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1123"
+		           level="info" />
+		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jndi.question1"
+			           label="JNDI_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jndi.question2"
+			           label="JNDI_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Is the client local or remote to the server? If a remote server is involved, is there firewall present?${line.separator}
+					${ws.jndi.question1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What type of client is being used (J2EE Application, Thin Client, Thick Client, EJB)?${line.separator}
+					${ws.jndi.question2}${line.separator}
+		</concat>
+		
+	</target> 
+	
+	
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere JNDI Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the JNDI and Naming
+					problem. It will set the appropriate trace string.
+					After the problem has been reproduced the logs, configuration,
+					and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1143296" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the JNDI 
+and Naming problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration, and trace 
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere JNDI Problem =>
+This problem category is run on the managed node experiencing the JNDI 
+and Naming problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration,
+and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

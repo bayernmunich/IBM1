@@ -1,0 +1,88 @@
+<project name="installXDPortletProject" default="installXDPortlet" basedir=".">
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+
+        <pathconvert targetos="unix"
+            property="WAS_HOME_UNIX_STYLE"
+            refid="id.was.home"/>
+    </target>
+
+    <target name="setScriptExtension"
+            description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="scriptExtension" value="sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="scriptExtension" value="bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="removeXDPortlet"
+            description="Remove the systemApps/isclite.ear/xdportlet.war">
+         <delete includeEmptyDirs="true" failonerror="false">
+              <fileset dir="${WAS_HOME}/systemApps/isclite.ear/xdportlet.war"/>
+	 </delete>
+	 <delete failonerror="false" file="${WAS_HOME}/systemApps/isclite.ear/xdportlet.war"/>
+	 
+    </target>
+    
+    <target name="copyXDPortlet"
+            description="Copy the xdportlet.war to the systemApps/isclite.ear directory">
+         <copy failonerror="false" file="${WAS_HOME}/systemApps/xdportlet.war" todir="${WAS_HOME}/systemApps/isclite.ear"/>
+      
+    </target>
+    
+    <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+            description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+    </target>
+
+    <target name="installXDPortlet"
+            description="install XD Portlet into the ISC"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform, removeXDPortlet, copyXDPortlet">
+
+        <exec executable="${WSADMIN_EXECUTABLE}"
+                output="${WAS_HOME}/logs/installXDPortletfp.log">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-lang"/>
+            <arg value="jython"/>
+            <arg value="-f"/>
+            <arg value="${WAS_HOME}/properties/version/nif/config.ve/install/installXDPortletfp.py"/>
+            <arg value="-washome"/>
+            <arg value="${WAS_HOME}"/>
+        </exec>
+    </target>
+
+</project>
+

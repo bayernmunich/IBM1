@@ -1,0 +1,542 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used toset your system to accept fullcore   
+	 for Linux platform. It should be included in the WAS set core Ant scripts. 
+-->
+<project name="was-crash-set-core-linux" >
+
+	<dirname property="was.crash.set.core.linux.basedir" file="${ant.file.was-crash-set-core-linux}"/>
+	<dirname property="was.crash.set.core.linux.parentdir" file="${was.crash.set.core.linux.basedir}"/>
+	<dirname property="was.crash.set.core.linux.grandparentdir" file="${was.crash.set.core.linux.parentdir}"/>
+	<dirname property="was.crash.set.core.linux.bundle.basedir" file="${was.crash.set.core.linux.grandparentdir}"/>
+
+	<!-- This target is used to set up your system to accept a full core -->	
+	<target name="set_linux_fullcore" description="Make sure system is set up to accecpt a full core" if="isLinux">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_running_ulimit_command_to_ensure_you_have_enough_free_file_system_space" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running the ulimit command to ensure there is enough free space in the file system" 
+			replace="${autopdts};;${step.count}" 
+			id="1072"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-linux.xml"/>
+
+	<copy file="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-template.sh" tofile="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" overwrite="true">
+		<filterset>
+			<filter token="ulimit-c" value="ulimit -c unlimited" />
+			<filter token="ulimit-u" value="ulimit -u unlimited" />
+			<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+			<filter token="serverName" value="${ServerName}" />
+		</filterset>
+	</copy>
+
+<!--  
+		<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux" output="${autopd.echolog.instance}" append="true" >
+			<arg line="	-f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/ulimit.sh" />
+		</exec>
+-->
+
+		<saveresourcebundleproperty 
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			key="Make_sure_the_jvm_workingdir_with_write_access_right" 
+			propertyName="jvm.workingdir.nlskey" 
+			message="Make sure the JVM working directory {0} with 'write' access right"
+			replace="${was.jvm.workingDirectory}"/>
+
+		<autopdinput message="${jvm.workingdir.nlskey}" validargs="OK,Quit" addproperty="has.write.right" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.access.right.set">
+			<equals arg1="Quit" arg2="${has.write.right}" />
+		</condition>
+		<fail if="do.abort.access.right.set">Automated Problem Determination Tool aborted by user.</fail>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_setting_JAVA_DUMP_OPTS_variable" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Setting JAVA_DUMP_OPTS variable" 
+			replace="${autopdts};;${step.count}" 
+			id="1073"
+			level="info"/>
+
+		<property name="java.dump.opts.value" value='"ONERROR(JAVADUMP,SYSDUMP),ONEXCEPTION(JAVADUMP,SYSDUMP),ONDUMP(JAVADUMP)"' />
+
+		<copy file="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-template.jacl" tofile="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl" overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="property.name" value="JAVA_DUMP_OPTS" />
+				<filter token="property.value" value="${java.dump.opts.value}" />
+			</filterset>
+		</copy>
+
+		<if isTrue="${isStandalone}" >
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+		<if isTrue="${isCluster}" >		
+			<autopdxmlproperty filename="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/serverindex.xml" path="ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint" property="port" output="was.server.soap.port" />
+			<echo message="was.server.soap.port:${was.server.soap.port}" />		
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl ${was.admin.info} -conntype SOAP ${wsadmin.args}" />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/syncNode.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" ${was.dmgr.hostname} ${was.dmgr.soap.port} -conntype SOAP ${was.admin.info}" />
+			</exec>						
+		</if>
+
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+ 
+		<autopdinput message="To_test_if_a_full_core_can_be_created_for_Application_Server_restart_it_now?" validargs="OK,Quit" addproperty="needRestart"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>		
+
+		<condition property="do.restart">
+			<equals arg1="OK" arg2="${needRestart}" />
+		</condition>
+
+		<if isTrue="${do.restart}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		<if isNotTrue="${do.restart}" >
+			<fail message="Automated Problem Determination Tool aborted by user." />	
+		</if>
+
+	</target>
+
+
+	<target name="restart_app_server_from_linux" description="Restart WebSphere Application Server" if="linux.has.core" >
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+
+		<autopdinput message="An_environment_has_been_set_to_accept_a_full_core_of_Application_Server_restart_Application_Server_now" validargs="OK,Quit" addproperty="needRestart1"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+
+		<condition property="do.restart1">
+			<equals arg1="OK" arg2="${needRestart1}" />
+		</condition>
+
+		<if isTrue="${do.restart1}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		<if isNotTrue="${do.restart1}" >
+			<fail message="Automated Problem Determination Tool aborted by user." />	
+		</if>
+	
+	</target> 
+
+	<target name="second_try_set_linux_fullcore"  description="Try different command to obtain fullcore" if="linux.nocore">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_setting_DISABLE_JAVADUMP_variable" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Setting DISABLE_JAVADUMP variable" 
+			replace="${autopdts};;${step.count}" 
+			id="1074"
+			level="info" />
+		<autopdlog message="DISABLE_JAVADUMP=true" 
+			id="1070"
+			level="info" />
+
+		<copy file="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-template.jacl" tofile="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl" overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="property.name" value="DISABLE_JAVADUMP" />
+				<filter token="property.value" value="ture" />
+			</filterset>
+		</copy>
+
+		<if isTrue="${isStandalone}" >
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+		<if isTrue="${isCluster}" >
+				
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-processdef-envs-filled.jacl ${was.admin.info} -conntype SOAP ${wsadmin.args}" />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/syncNode.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" ${was.dmgr.hostname} ${was.dmgr.soap.port} -conntype SOAP ${was.admin.info}" />
+			</exec>						
+		</if>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+ 
+		<autopdinput message="To_test_if_a_full_core_can_be_created_for_Application_Server_restart_it_now?" validargs="OK,Quit" addproperty="needRestart2"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>		
+
+		<condition property="do.restart2">
+			<equals arg1="OK" arg2="${needRestart2}" />
+		</condition>
+
+		<if isTrue="${do.restart2}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		<if isNotTrue="${do.restart2}" >
+			<fail message="Automated Problem Determination Tool aborted by user." />	
+		</if>
+
+
+	</target>
+
+
+	<!-- This target is used to make second try to create full core via running command kill -3 -->
+	<target name="second_try_create_linux_fullcore" description="" if="linux.nocore">			
+
+		<waitfor maxwait="20" maxwaitunit="second" >
+			<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+		</waitfor>
+
+		<wasprocessid key="was.java.process.id" filename="${logFilePath}/${ServerName}.pid" />
+		<echo message="${was.java.process.id}" />
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_trying_to_create_core_file" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Trying to create core file" 
+			replace="${autopdts};;${step.count}" 
+			id="1032" 
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-linux.xml"/>
+
+		<autopdinput message="To_create_core_file_Proceed_run_kill_command" validargs="OK,Quit" addproperty="do.kill2" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nokill2">
+			<equals arg1="Quit" arg2="${do.kill2}" />
+		</condition>
+		<fail if="do.abort.nokill2">Automated Problem Determination Tool aborted by user.</fail>
+
+		<if isTrue="${isAIX}" >
+			<property name="signal_num" value="-3" />
+		</if>
+
+		<if isTrue="${isLinux}" >
+			<property name="signal_num" value="-11" />
+		</if>
+
+
+		<!-- issue kill -3/-11 command -->		
+		<copy file="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/kill-template.sh" tofile="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/kill-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="${signal_num}" />			
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/kill-filled.sh" />
+		</exec>	
+		
+		<waitfor maxwait="30" maxwaitunit="second" >
+			<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+		</waitfor>
+
+		<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/kill-filled.sh" />
+		</exec>	
+		
+		<waitfor maxwait="30" maxwaitunit="second" >
+			<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+		</waitfor>
+
+		
+		<file_available path_key="system.core.path" existing_key="core.existing" paths="${was.jvm.workingDirectory}|${was.enhaced.root}/bin|/tmp" pattern="^core\.${was.java.process.id}" />	
+
+
+		<autopdlog message="system.core.path: ${system.core.path}" 
+			id="1023"
+			level="info"/>								
+		<autopdlog message="core.existing: ${core.existing}" 
+			id="1024"
+			level="info"/>
+
+		<condition property="linux.nocore1" >
+			<and>	
+				<istrue value="${isLinux}" />
+				<not>
+					<istrue value="${core.existing}" />
+				</not>	
+			</and>
+		</condition>
+
+		<condition property="linux.has.core1" >
+			<and>	
+				<istrue value="${isLinux}" />
+				<istrue value="${core.existing}" />
+			</and>
+		</condition>
+
+		<condition property="hasCore2" >
+			<istrue value="${core.existing}" />
+		</condition>
+
+	</target>
+
+	<target name="restart_app_server_from_linux1" description="Restart WebSphere Application Server" if="linux.has.core1" >
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+
+		<autopdinput message="An_environment_has_been_set_to_accept_a_full_core_of_Application_Server_restart_Application_Server_now" validargs="OK,Quit" addproperty="needRestart3"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<condition property="do.restart3">
+			<equals arg1="OK" arg2="${needRestart3}" />
+		</condition>
+
+		<if isTrue="${do.restart3}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		<if isNotTrue="${do.restart3}" >
+			<fail message="Automated Problem Determination Tool aborted by user." />	
+		</if>
+	
+	</target> 
+
+
+	<target name="different_try_set_linux_fullcore"  description="Try different command to obtain fullcore" if="linux.nocore1">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Trying_to_obtain_a_core_file_by_issuing_a_kill_-11_against_the_PID_of_another_running_process_such_as_vi" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Trying to obtain a core file by issuing a kill -11 against the PID of another running process such as vi" 
+			replace="${autopdts};;${step.count}" 
+			id="1079"
+			level="info"/>
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Describe_if_you_obtain_a_core_file_by_issuing_a_kill_-11_against_the_PID_of_another_running_process_such_as_vi" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="answer1" label="Answer"  type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >Describe if you obtain a core file by issuing a kill -11 against the PID of another running process such as vi${line.separator}</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >${answer1}${line.separator}</concat>		
+
+	</target>
+
+
+	<!-- This target is used to try to accept a full core via an alternative approach -->
+	<target name="third_try_set_linux_fullcore"  description="Third try to enable fullcore" if="linux.nocore1">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_enabling_the_verbose_java_native_interface_trace_and_start_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Enabling the verbose java native interface trace and start Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1080"
+			level="info"/>
+
+		<property name="verboseModeJNI" value="true" />
+		<copy file="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-verboseJNI-template.jacl" tofile="${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-verboseJNI-filled.jacl" overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="verboseModeJNI" value="${verboseModeJNI}" />
+			</filterset>
+		</copy>
+		<if isTrue="${isStandalone}" >
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-verboseJNI-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+		<if isTrue="${isCluster}" >
+				
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/jacl/was-verboseJNI-filled.jacl ${was.admin.info} -conntype SOAP ${wsadmin.args}" />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/syncNode.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+				<arg line=" ${was.dmgr.hostname} ${was.dmgr.soap.port} -conntype SOAP ${was.admin.info}" />
+			</exec>						
+		</if>
+
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+
+		<autopdinput message="Restart_WebSphere_Application_Server_now?" validargs="OK,Quit" addproperty="needRestart4"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>		
+
+
+		<condition property="do.restart4">
+			<equals arg1="OK" arg2="${needRestart4}" />
+		</condition>
+
+		<if isTrue="${do.restart4}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+			<exec executable="sh" dir="${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.linux.bundle.basedir}/scripts/was/shell/linux/startServer-filled.sh" />
+			</exec>
+
+
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		<if isNotTrue="${do.restart4}" >
+			<fail message="Automated Problem Determination Tool aborted by user." />	
+		</if>
+				
+	</target>
+
+
+	<!-- This target is used to collect core file and related information -->
+
+	<target name="collect_linux_was_core" description="Collect was no core, or a truncated core problem" if="isLinux">
+		<wsnlsecho key="Time_To_Gather_Logs" 
+			bundle="autopdtoolstrings" 
+			message="Time to gather logs" 
+			id="2218"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-linux.xml"/>
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_core_information_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Application Server core information" 
+			replace="${autopdts};;${step.count}" 
+			id="1044"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-linux.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-linux.xml"/>
+
+		<dirname property="system.core.dir" file="${system.core.path}" />
+		<trim_filename key="system.core.dir.trimmed" filename="${system.core.dir}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+		<trim_filename key="usr.trimmed" filename="/usr" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+		
+			<zipfileset dir="${was.enhanced.root}" prefix="autopdzip/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root.bin.trimmed}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+		
+			<zipfileset file="${system.core.path}" prefix="autopdzip/${system.core.dir.trimmed}">
+			</zipfileset>
+
+			<zipfileset dir="/usr" prefix="autopdzip/${usr.trimmed}">
+				<include name="var/messages/**/*" />
+			</zipfileset>
+		</zip>	
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="autopdzip/${jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>		
+	</target>
+</project>

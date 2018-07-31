@@ -1,0 +1,265 @@
+#-------------------------------------------------------------------
+# Licensed Material - Property of IBM
+#
+# 5724-J34 Copyright IBM Corp. 2007
+# All Rights Reserved.
+# U.S. Government users - RESTRICTED RIGHTS - Use, Duplication, or
+# Disclosure restricted by GSA-ADP schedule contract with IBM Corp.
+# Status = JEJO610
+#
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# name: storeODRPropsToFile.jacl 
+#
+# purpose: locate ODRs in cell and write their essential 
+#          configuration values to file as properties.
+#
+# invocation: wsadmin[.sh] -conntype none -f storeODRPropsToFile.jacl <cellname>
+#
+# output: one properties file per ODR, of form:
+#
+#            <nodename>.<servername>.odr.props
+# 
+#-------------------------------------------------------------------------------
+# java imports 
+
+java::import java.util.Properties
+java::import java.io.FileOutputStream
+java::import java.io.File
+
+#--------------------------------------------------------------
+proc getNodeNames { cellName } {
+#
+# Input - string cell name 
+# Output - string list of node names
+#--------------------------------------------------------------
+
+   global AdminConfig
+
+   set cell [$AdminConfig getid /Cell:$cellName/]
+   set nodes [$AdminConfig list Node $cell]
+   set nodeList [list]
+
+   foreach node $nodes {
+      set nodeName [$AdminConfig showAttribute $node name]
+      lappend nodeList $nodeName
+   }
+
+   return $nodeList
+}
+
+#--------------------------------------------------------------
+proc getServerNames { nodeName } {
+#
+# Input - string node name 
+# Output - string list of server names
+#--------------------------------------------------------------
+
+   global AdminConfig
+
+   set node [$AdminConfig getid /Node:$nodeName/]
+   set servers [$AdminConfig list Server $node]
+   set serverList [list]
+
+   foreach server $servers {
+      set serverName [$AdminConfig showAttribute $server name]
+      lappend serverList $serverName
+   }
+
+   return $serverList
+}
+
+
+#--------------------------------------------------------------
+proc isODR { nodeName serverName } {
+#
+# Input - string node name, string server name 
+# Output - 0 false, 1 true 
+#--------------------------------------------------------------
+
+   global AdminConfig
+
+   set node [$AdminConfig getid /Node:$nodeName]
+
+   set serverEntries [$AdminConfig list ServerEntry $node]
+
+   set retval 0
+
+   foreach serverEntry $serverEntries {
+      set serverEntryName [$AdminConfig showAttribute $serverEntry serverName]
+
+      if {[string compare $serverName $serverEntryName] == 0} {
+   
+         set serverEntryType [$AdminConfig showAttribute $serverEntry serverType]
+
+         if {[string compare $serverEntryType "ONDEMAND_ROUTER"] == 0} {
+            set retval 1
+         } 
+
+      }
+   }
+
+   return $retval
+
+}
+
+#--------------------------------------------------------------
+proc getEndPoints { nodeName serverName } {
+#
+# Input - string node name, string server name 
+# Output - endpoint list of tuples {endpointName host port} 
+#--------------------------------------------------------------
+
+   global AdminConfig
+
+   set node [$AdminConfig getid /Node:$nodeName/]
+
+   set serverEntries [$AdminConfig list ServerEntry $node]
+
+   set namedEndPointList [list]
+
+   foreach serverEntry $serverEntries {
+      set serverEntryName [$AdminConfig showAttribute $serverEntry serverName]
+      
+      if {[string compare $serverName $serverEntryName] == 0} {
+         set namedendpoints [lindex [lindex [$AdminConfig show $serverEntry "specialEndpoints"] 0] 1]
+         foreach namedendpoint $namedendpoints {
+            set endpoint [$AdminConfig showAttribute $namedendpoint "endPoint"]
+            set host [$AdminConfig showAttribute $endpoint "host"]
+            set port [$AdminConfig showAttribute $endpoint "port"]
+            set endpointname [$AdminConfig showAttribute $namedendpoint "endPointName"]
+            set epTuple [list]
+            lappend epTuple $endpointname 
+            lappend epTuple $host
+            lappend epTuple $port
+            lappend namedEndPointList $epTuple
+         }
+      }
+   }
+
+   return $namedEndPointList
+
+}
+
+#--------------------------------------------------------------
+proc storeODRSettingsToProperties { nodeName serverName props} {
+#
+# Input - string node name, string server name 
+# Output - none
+#--------------------------------------------------------------
+
+global AdminConfig
+
+set allProxySettings [$AdminConfig list ProxySettings]
+
+foreach proxySettings $allProxySettings {
+
+   if {[string match "*/nodes/$nodeName/servers/$serverName:*" $proxySettings] > 0} {
+
+       puts "Found settings for $serverName on $nodeName"
+
+       set settings [$AdminConfig show $proxySettings]
+
+       foreach setting $settings {
+
+           set key [lindex $setting 0]
+
+         
+	     switch $key {
+              "properties" {}
+              "routingPolicy" {}
+              "uriGroups" {}            
+              "proxyAcessLog" {}
+              "proxyAccessLog" {}
+              "cacheAccessLog" {}
+              "errorPagePolicy" {
+                 # errorPagePolicy is a nested object, must navigate to next level
+                 set id [lindex $setting 1]
+                 set attrs [$AdminConfig show $id]
+                 foreach attr $attrs {
+                    set subkey [lindex $attr 0]                    
+                    set value [lindex $attr 1]
+                    $props setProperty "SETTING:errorPagePolicy:$subkey" $value
+                 }
+              }
+	        default {
+                 set value [lindex $setting 1]
+                 $props setProperty "SETTING:$key" $value
+	        }
+
+	     }         
+       
+       }
+
+   }
+
+}
+
+} 
+
+
+
+#--------------------------------------------------------------
+# Main routine starts here 
+#--------------------------------------------------------------
+
+set cellName [lindex $argv 0]
+puts "Searching for ODRs in cell $cellName."
+
+set configRoot [java::call System getProperty "was.repository.root"]
+puts "Searching config root $configRoot"
+
+set nodeList [getNodeNames $cellName]
+puts "Searching nodes: $nodeList"
+
+
+set odrProps [java::new java.util.Properties]
+
+foreach node $nodeList {
+
+   set serverList [getServerNames $node]
+   foreach server $serverList {
+
+      # check if this server is an odr 
+      if {[isODR $node $server] == 1} {
+
+         puts "Found ODR $server on node $node."
+
+         $odrProps setProperty "NODENAME" $node
+         $odrProps setProperty "SERVERNAME" $server
+
+         set eps [getEndPoints $node $server]
+
+	 # collect endpoint data
+         
+         foreach ep $eps {
+            set epname [lindex $ep 0]
+            set host [lindex $ep 1]
+            set port [lindex $ep 2]
+            		
+            #puts "Endpoint name=$epname host=$host port=$port"
+
+            $odrProps setProperty ENDPOINT:$epname $host:$port
+
+         }
+
+         storeODRSettingsToProperties  $node $server $odrProps
+
+         # write props for current odr to file 
+
+         set propsFile $node.$server.odr.props
+
+         puts "Writing properties to $propsFile."
+
+         set f [java::new File $propsFile]
+         set fos [java::new FileOutputStream $f]
+
+         $odrProps store $fos "odr config data"
+         
+      }
+
+   } 
+
+} 
+

@@ -1,0 +1,1 @@
+({"CALL_NOTIFICATION":"Уведомление о вызове","COLLABORATION_WINDOW":"Окно коллективной работы","SHOW_COLLABORATION_WINDOW":"Показать окно коллективной работы"})

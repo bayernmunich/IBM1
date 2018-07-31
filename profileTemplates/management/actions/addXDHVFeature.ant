@@ -1,0 +1,47 @@
+<project name="addXDFeatureProject" default="main" basedir=".">
+
+	<target name="detectZOS">
+		<condition property="isZOS" value="true">
+			<os family="z/os"/>
+		</condition>
+	</target>
+
+
+    <target name="addXDFeature"
+            description="adds the XD feature">
+
+         <replace encoding="ISO8859-1" dir="${profilePath}/config">
+
+            <include name="**/node-metadata.properties"/>
+
+            <!-- remove existing occurences to make this script idempotent -->
+            <replacefilter token=",com.ibm.ws.xd.base_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.base_6.0.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.xd.nd_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.nd_6.0.0.0," value="" />
+            <replacefilter token="com.ibm.ws.taskmanagement_6.1.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.taskmanagement_6.1.0.0" value="" />
+            <replacefilter token="#com.ibm.websphere.wxdopProductShortName=WXDOP" value="com.ibm.websphere.wxdopProductShortName=WXDOP" />
+            <replacefilter token="#com.ibm.websphere.xdProductShortName=XD" value="com.ibm.websphere.xdProductShortName=XD" />
+
+            <!-- always add the XD base feature -->
+            <replacefilter token="com.ibm.websphere.deployed.features=" value="com.ibm.websphere.deployed.features=com.ibm.ws.xd.base_6.0.0.0," />
+
+            <!-- add the XD ND feature when ND is deployed -->
+            <replacefilter token="com.ibm.ws.nd_6.0.0.0" value="com.ibm.ws.nd_6.0.0.0,com.ibm.ws.taskmanagement_6.1.0.0,com.ibm.ws.xd.nd_6.0.0.0" />
+         </replace>
+
+         <mkdir dir="${profilePath}/properties" />
+         <copy toDir="${profilePath}/properties" >
+            <fileset dir="${templatePath}/properties" />
+         </copy>
+
+         <mkdir dir="${profilePath}/properties/version" />
+         <copy toDir="${profilePath}/properties/version"
+               file="${basedir}/../wxdop.augment" />
+
+    </target>
+
+    <target name="main" depends="detectZOS, addXDFeature"/>
+    	
+</project>

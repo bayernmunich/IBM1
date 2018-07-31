@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="was-memory-aix">
+
+	<dirname property="was.memory.aix.basedir" file="${ant.file.was-memory-aix}"/>
+	<dirname property="was.memory.aix.parentdir" file="${was.memory.aix.basedir}"/>
+	<dirname property="was.memory.aix.grandparentdir" file="${was.memory.aix.parentdir}"/>
+	<dirname property="was.memory.aix.bundle.basedir" file="${was.memory.aix.grandparentdir}"/>
+
+	<target name="run_aix_memory_script" if="isAIX">
+		<property name="logfile" value="${autopdtmp}/memory_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1138587" />
+	
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="120" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<exec executable="${autopdrootdir}/scripts/was/shell/aix/AIX_433_memory_leak.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile} -i ${sleepinterval}" />
+		</exec>
+	
+		<exec executable="${autopdrootdir}/scripts/was/shell/aix/AIX_51_memory_leak.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile} -i ${sleepinterval}" />
+		</exec>
+	</target>
+	
+	<target name="kill_aix_memory_script" if="isAIX">
+		<echo message="Cleanup: Kill AIX memory script" />
+
+		<copy file="${bundle.basedir}/scripts/was/shell/kill-all-processes-template.sh" tofile="${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-9" />			
+				<filter token="searchString" value="/was/shell/aix" />
+			</filterset>
+		</copy>
+		
+		
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" />
+		</exec>
+	</target>
+	
+	<target name="enable_mmap" if="isAIX">
+
+	 	<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line="export IBM_JAVA_MMAP_JAVA_HEAP=true" />
+		</exec>	
+	 
+	</target>
+	
+	<target name="change_native_heap_aix" if="isAIX">
+	
+		<autopdinput message="JVM_32_Bit" validargs="Yes,No" addproperty="JVM.32bit" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		
+		<if isNotTrue="${JVM.32bit}" >
+			<inputdialogtask>
+				<fieldtask name="label" label="Explain_JVM_32_bit" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>
+			
+			<fail>WebSphere Application Server only supports the 32-bit Java Virtual Machine (JVM)</fail>
+		</if>		
+	
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line="bootinfo -K" /> 
+		</exec>
+		
+		<!-- 
+      			where n = (10 - round(Xmx/256)
+		 -->
+		 
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Enter the n value (where n = (10 - round(Xmx/256) ) and press OK" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="nValue" label="Value" defaultValue=""  type="plaintext" accessibilityName="was_mem" accessibilityDesc="was_mem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>	
+		 
+		<copy file="${autopdrootdir}/scripts/was/shell/aix/memory-setup-template.sh" tofile="${autopdrootdir}/scripts/was/shell/aix/memory-setup-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="n" value="${nValue}" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${serverName}" />
+				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdrootdir}/scripts/was/shell/aix/memory-setup-filled.sh" />
+		</exec>	
+			
+	<!-- 
+	
+	# For releases of V6.0:
+
+   1. Verifiy the Java Virtual Machine (JVM™) is 32-bit, since that is what WebSphere Application Server supports.
+   2. Issue bootinfo -K from the AIX command line.
+   3. Add the following line to the top of the startServer.sh file in the install_root/profiles/profile_name/bin directory:
+
+      export LDR_CNTRL=MAXDATA=0xn0000000
+
+      where n = (10 - round(Xmx/256)
+
+# For releases of V5.0 and V5.1:
+
+   1. Verifiy the JVM is 32-bit, since that is what WebSphere Application Server supports.
+   2. Issue bootinfo -K from the AIX command line.
+   3. Add the following line to the top of the startServer.sh file in the install_root/bin directory:
+
+      export LDR_CNTRL=MAXDATA=0xn0000000
+
+      where n = (10 - round(Xmx/256)
+	
+	 -->
+	</target>
+	
+	<target name="run_gencore_aix" if="isAIX" > 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Run_Gencore_for_Aix"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Running Gencore for Aix 5.2 or above to create a system core"
+		           replace="${autopdts};;${step.count}"
+		           id="1109"
+		           level="info"
+		           component="\scripts\was\was-memory-aix.xml" />
+		
+		<inputdialogtask>
+			<fieldtask name="prompt1"
+	        		   label="Ask_how_to_proceed"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt2"
+			           label="gencore_1"
+	        		   type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt3"
+	        		   label="gencore_2"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="create.gencore"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	        		   label="select_one"
+			           list="no:yes"
+			           listDetails="no:yes"
+	        		   type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="execute.gencore">
+			<equals arg1="yes" arg2="${create.gencore}" />
+		</condition>
+
+		<if isTrue="${execute.gencore}" >
+			<echo message="Running Gencore to generate a System Core File.." />
+			<property name="core.file.path" value="${autopdtmp}/autopd/core" />
+			
+			<fixcrlf srcdir="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix" 
+				includes="**/*.sh" eol="lf" eof="remove"  />
+			
+			<copy file="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/gencore.sh"
+			      tofile="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/gencore-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="pid" value="${was.java.process.id}" />
+					<filter token="core.path" value="${core.file.path}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh" dir="${autopdtmp}/autopd" output="${autopd.echolog.instance}" append="true">
+				<arg line=" -f ${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/gencore-filled.sh" />
+			</exec>	
+			
+			<property name="getlib.archive.path" value="${autopdtmp}/autopd/getlib_archive.tar.Z" />
+		
+			<copy file="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-template.sh" 
+				tofile="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-filled.sh" 
+				overwrite="true">
+				<filterset>
+					<filter token="getlib.sh" value="${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/getlib.sh" />
+					<filter token="java.path" value="${was.root}/java/jre/bin/java" />
+					<filter token="core.path" value="${core.file.path}" />
+				</filterset>
+			</copy>
+	
+			<exec executable="sh" dir="${autopdtmp}/autopd" output="${autopd.echolog.instance}" append="true">
+				<arg line=" -f ${was.memory.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-filled.sh" />
+			</exec>
+			
+			<!-- pick up the system core and the getlib_archive.tar.Z -->
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd" >
+					<include name="core" />
+					<include name="getlib_archive.tar.Z" />
+				</zipfileset>
+<!-- uncomment in case files are not generated properly results in error					
+				<zipfileset file="${getlib.archive.path}" prefix="autopdzip/autopd" />
+				<zipfileset file="${core.file.path}"      prefix="autopdzip/autopd" />
+-->				
+			</zip>
+			
+		</if>
+			
+
+	</target>
+	
+</project>

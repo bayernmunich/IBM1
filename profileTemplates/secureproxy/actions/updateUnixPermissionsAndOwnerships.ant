@@ -1,0 +1,101 @@
+<project name="updateUnixPermissionsAndOwnerships" default="updateUnixPermissionsAndOwnerships" basedir=".">
+	
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+	
+	<target name="detectPlatform" description="Checks if the the current platform is in the unix family.">
+			<condition property="isSun" value="true">
+				<os name="SunOS" />
+			</condition>
+                        <condition property="groupId" value="nobody">
+                                        <not>
+                                                <os name="HP-UX" />
+                                        </not>
+                        </condition>
+                        <condition property="groupId" value="other">
+                                <os name="HP-UX" />
+                        </condition>
+
+                        <condition property="userId" value="nobody">
+                                        <not>
+                                                <os name="HP-UX" />
+                                        </not>
+                        </condition>
+                        <condition property="userId" value="www">
+                                <os name="HP-UX" />
+                        </condition>
+    		<condition property="isUnix" value="true">
+				<and>
+       				<os family="unix"/>
+					<not>
+						<os name="SunOS" />
+					</not>
+				</and>
+    		</condition>		    
+  	</target>
+
+  	<target name="checkPrivilegedUser" description="Checks if the current user is privileged." if="isUnix">
+   		<exec executable="id" outputproperty="id.value">
+     			<arg value="-u"/>
+   		</exec>
+
+		<wscmtlog>id.value: ${id.value}</wscmtlog>
+
+   		<condition property="isPrivilegedUser" value="true">
+       			<equals arg1="${id.value}" arg2="0"/>
+   		</condition>
+
+		<wscmtlog>isPrivilegedUser: ${isPrivilegedUser}</wscmtlog>
+
+  	</target>
+	
+	<target name="checkPrivilegedUserSun" description="Checks if the current user is privileged." if="isSun">
+	   		<exec executable="/usr/xpg4/bin/id" outputproperty="id.value">
+	     			<arg value="-u"/>
+	   		</exec>
+
+			<wscmtlog>id.value: ${id.value}</wscmtlog>
+
+	   		<condition property="isPrivilegedUser" value="true">
+	       			<equals arg1="${id.value}" arg2="0"/>
+	   		</condition>
+
+			<wscmtlog>isPrivilegedUser: ${isPrivilegedUser}</wscmtlog>
+
+	  	</target>
+
+	<target name="updateOwnerships" description="Updates the ownership of the filesystem for a root install" if="isPrivilegedUser">
+  		<chgrp group="${groupId}" maxparallel="100">
+   			<dirset dir="${profilePath}"/>
+   			<fileset dir="${profilePath}"/>
+  		</chgrp>
+		<wscmtlog>groupId: ${groupId}</wscmtlog>
+                <chown owner="${userId}" maxparallel="100">
+                        <dirset dir="${profilePath}"/>
+                        <fileset dir="${profilePath}"/>
+                </chown>
+                <wscmtlog>userId: ${userId}</wscmtlog>
+
+        </target>
+
+   	<target name="updatePermissions" description="Updates the permissions of the filesystem for a root install" if="isPrivilegedUser">
+   		<chmod perm="775" maxparallel="100">
+    			<dirset dir="${profilePath}">
+				<exclude name="**/bin/**"/>
+    				<exclude name="**/etc/**"/>
+				<exclude name="**/properties/**"/>
+			</dirset>
+    			<fileset dir="${profilePath}">
+				<exclude name="**/bin/**"/>
+				<exclude name="**/etc/**"/>
+				<exclude name="**/properties/**"/>
+			</fileset>
+  		</chmod>
+
+  	</target>
+
+	 
+	<target name="updateUnixPermissionsAndOwnerships" description="Updates the permissions and ownerships of the filesystem." 
+                depends="detectPlatform, checkPrivilegedUser, checkPrivilegedUserSun, updateOwnerships, updatePermissions"/>
+
+</project>
+

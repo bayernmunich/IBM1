@@ -1,0 +1,87 @@
+###############################################################################
+#
+# Licensed Materials - Property of IBM
+# (C) Copyright IBM Corp. 2004, 2010.  ALL RIGHTS RESERVED 
+# 5724-I63, 5724-H88, 5655-N02, 5733-W70
+# US Government Users Restricted Rights - Use, duplication, or disclosure
+# restricted by GSA ADP Schedule Contract with IBM Corp.
+#
+###############################################################################
+#
+# This JACL script calls Common Events infrastructure configuration reload 
+#
+# Usage:
+# Invoke wsadmin and supply the name of this script on the -f parameter.
+# wsadmin -conntype rmi -port <port> -f ceiconfigreload.jacl
+#                           help |
+#                           [-serverName server_name]
+#
+#Where   "server_name" is the name of an application server to which the Event Service
+#               is deployed. This field should only be specified if the Event Service
+#               is deployed to multiple application servers on the local WebSphere node.
+#                
+#       Example for configuration reload:
+#               wsadmin
+#         -f ceiconfigreload.jacl
+#        
+#-----------------------------------------------------------------------------
+#First init the cli helper
+set cliHelperObject [java::new com.ibm.events.cli.util.ConfigUtilCliHelper]
+
+#Add each argument to an array for processing
+set argArray [java::new {String[]} [llength $argv]]
+
+set counter 0
+foreach {argOpt} $argv {
+   $argArray set $counter $argOpt
+   set counter [expr $counter+1]
+}
+     
+# Pass the argument array to the CLI helper to be validated.
+# If all arguments are valid, the helper returns an array of two objects.
+# The first object is a string naming the MBean operation 
+# to be called.
+# The second object is an array of objects containing arguments to be
+# passed to the MBean.
+# If any argument is invalid, the helper displays a message and returns null.
+set argObjects [$cliHelperObject processConfigUtilArguments $argArray]
+
+# Do nothing if the CLI helper returned null, otherwise call the indicated
+# operation on the  MBean
+
+
+if { [java::isnull $argObjects] == 0 } {
+    #get the object name for the mbean
+    set node $env(local.node)
+
+    #get the server process if specified
+    set process [[$argObjects get 0] toString]
+      
+    if {[string compare $process ""] == 0} {
+	set objectName [$AdminControl queryNames WebSphere:type=ConfigUtil,node=$node,*]
+    } else {
+		set objectName [$AdminControl completeObjectName WebSphere:type=ConfigUtil,node=$node,process=$process,*]
+    }
+
+    if [expr [string compare $objectName ""] == 0] then {
+        set mBeanName ConfigUtilMBean
+        $cliHelperObject reportMBeanNotFound $mBeanName
+        exit
+    }
+     java::try \
+    {
+    	#call the mbean  
+    	set result [$AdminControl invoke $objectName reloadResources] 
+    	#print out the return value
+    	$cliHelperObject displayConfigUtilResults
+      } \
+    catch {Throwable t} \
+    {
+       set rc 1
+       java::throw t
+    }
+} \
+else {
+  set rc 1
+}
+

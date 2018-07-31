@@ -1,0 +1,912 @@
+#
+#===============================================================================
+# @start_source_copyright@
+# @end_source_copyright@
+#===============================================================================
+#
+# This JACL script installs the UDDI application for supplied node and server
+# and optionally creates a default Derby datasource using the  Derby
+# JDBC Provider.
+#
+# The name of the datasource will be set to "UDDI.Default.Datasource",
+# and its JNDI name set to "datasources/uddids". The datasource
+# is accessed via the a Resource Reference with a JNDI name of
+# "jdbc/uddids"
+#
+# The name of the database referred to by the datasource will be set to
+# "${USER_INSTALL_ROOT}/databases/com.ibm.uddi/UDDI30".
+#
+#-------------------------------------------------------------------------------
+# Path, Component, Release:  UDDI/ws/code/uddi.install/src/com/ibm/uddi/install/uddiDeploy.jacl, UDDI, WAS855.UDDI, cf131750.05
+# Version:                   1.2
+# Last-changed:              05/07/28 03:56:28
+#-------------------------------------------------------------------------------
+#
+#===============================================================================
+#
+# USAGE:
+#
+#   wsadmin [-conntype none] -f uddiDeploy.jacl <clusterName> 
+#   or
+#   wsadmin [-conntype none] -f uddiDeploy.jacl <nodeName> <serverName>
+#   or
+#   wsadmin [-conntype none] -wsadmin_classpath <was home>/Derby/lib/derby.jar -f uddiDeploy.jacl <nodeName> <serverName> default
+#
+# Where:
+#
+#   '-conntype none' is optional, but is required if the server is not running.
+#   'default' is optional, but if supplied will activate the creation of
+#             a default Derby UDDI data source and creation of that database.
+#             However this keyword is not valid in a WebSphere Application Server Network Deployment configuration.
+#
+# Also:
+#
+#   nodeName    = name of node
+#   serverName  = name of server
+#   clusterName = name of cluster
+#
+# Note that either nodeName and serverName are required, or clusterName.
+#
+#===============================================================================
+#
+# PRE-CONDITIONS:
+#
+# 1. The specified node must already exist.
+# 2. The specified server must already exist on the specified node.
+# 3. The specified cluster must already exist.
+#
+#===============================================================================
+
+
+#-------------------------------------------------------------------------------
+#--- Constants
+#-------------------------------------------------------------------------------
+set DEFAULT_DB_NAME           "UDDI30"
+set DEFAULT_DS_NAME           "UDDI.Default.Datasource"
+set DEFAULT_JDBC_PROVIDER     "Derby JDBC Provider"
+
+#-------------------------------------------------------------------------------
+#--- NLS Enablement - Get hold of the current locale and resource bundle
+#-------------------------------------------------------------------------------
+set thisLocale [java::call java.util.Locale getDefault]
+set bundle     [java::call java.util.ResourceBundle getBundle com.ibm.uddi.install.SetupUDDIMessages $thisLocale]
+
+
+#-------------------------------------------------------------------------------
+#--- getNLSText - Given a key looks up the translated text from the resource bundle
+#-------------------------------------------------------------------------------
+proc getNLSText { key } {
+
+    global bundle
+    return [$bundle getString $key]
+}
+
+
+#-------------------------------------------------------------------------------
+#--- Check that this script has been invoked correctly. If it hasn't, puts the
+#--- correct usage and then exit
+#-------------------------------------------------------------------------------
+set errorFlag 0
+
+if {[llength $argv] < 1 || [llength $argv] > 3} {
+    puts ""
+    set tIncorrectNumArgs [getNLSText ErrMsgDeployIncorrectNumArgs]
+    puts "$tIncorrectNumArgs"
+    set errorFlag 1
+}
+
+if {[llength $argv] == 3 & [string compare [lindex $argv 2] "default"] != 0} {
+    puts ""
+    set tIncorrectArgs [getNLSText ErrMsgDeployIncorrectArgs]
+    puts "$tIncorrectArgs"
+    set errorFlag 1
+}
+
+
+
+#-------------------------------------------------------------------------------
+#--- Extract the arguments from the argument list and validate
+#-------------------------------------------------------------------------------
+
+if {[llength $argv] > 0} {
+    set nodeName   [lindex $argv 0]
+    set clusterName [lindex $argv 0] 
+} 
+ 
+if {[llength $argv] > 1} {
+    set serverName [lindex $argv 1]
+}
+
+
+set defaultds 0
+set nd 0
+set cluster 0
+
+#-------------------------------------------------------------------------------
+#--- Check in which WebSphere configuration this script is being run
+#-------------------------------------------------------------------------------
+set cell [$AdminConfig list Cell]
+set cellType [$AdminConfig show $cell cellType]
+
+if {$cellType == "{cellType DISTRIBUTED}"} {
+    set nd 1
+}
+
+if {[llength $argv] == 1} {
+
+  set cluster 1
+}
+    
+if {[llength $argv] > 2} {
+
+    set temp [string tolower [lindex $argv 2]]
+
+    if {[string compare $temp "default"] == 0} {
+
+        set defaultds 1
+    }
+}
+
+if {$nd == 1} {
+    
+    if {$defaultds == 1} {
+      puts ""
+      set tNoDefaultInDistributed [getNLSText ErrMsgDeployNoDefaultInDistributed]
+      puts "$tNoDefaultInDistributed"
+
+      set errorFlag 1
+    }
+    
+} else {
+
+    if {$cluster == 1} {
+      puts ""
+      set tNoClusterInBase [getNLSText ErrMsgDeployNoClusterInBase]
+      puts "$tNoClusterInBase"
+
+      set errorFlag 1
+    }
+}
+
+if {$errorFlag == 1} {
+
+    puts ""
+    set tUsageSetupUddi1 [getNLSText ErrMsgDeployUsageSetupUddi1]
+    puts "$tUsageSetupUddi1"
+
+    puts ""
+
+    if {$nd == 0} {
+       puts {CWUDD6002E: wsadmin [-conntype none] -f uddiDeploy.jacl nodeName serverName [default]}
+    } else {
+       puts {CWUDD6002E: wsadmin [-conntype none] -f uddiDeploy.jacl nodeName serverName}
+       set tUsageSetupUddi21 [getNLSText ErrMsgDeployUsageSetupUddi21]
+       puts "$tUsageSetupUddi21"
+       puts {CWUDD6002E: wsadmin [-conntype none] -f uddiDeploy.jacl clusterName}
+    }
+
+    puts ""
+    set tUsageSetupUddi2 [getNLSText ErrMsgDeployUsageSetupUddi2]
+    puts "$tUsageSetupUddi2"
+
+    puts ""
+    set tUsageSetupUddi3 [getNLSText ErrMsgDeployUsageSetupUddi3]
+    puts "$tUsageSetupUddi3"
+
+    puts ""
+    set tUsageSetupUddi4 [getNLSText ErrMsgDeployUsageSetupUddi4]
+    puts "$tUsageSetupUddi4"
+
+    puts ""
+    set tUsageSetupUddi5 [getNLSText ErrMsgDeployUsageSetupUddi5]
+    puts "$tUsageSetupUddi5"
+   
+    set tUsageSetupUddi6 [getNLSText ErrMsgDeployUsageSetupUddi6]
+    puts "$tUsageSetupUddi6"
+
+    if {$nd == 1} {
+        set tUsageSetupUddi61 [getNLSText ErrMsgDeployUsageSetupUddi61]
+        puts "$tUsageSetupUddi61"
+    }
+    puts ""
+   
+    if {$nd == 0} {
+        set tUsageSetupUddi7 [getNLSText ErrMsgDeployUsageSetupUddi7]
+        puts "$tUsageSetupUddi7"
+    } else {
+        set tUsageSetupUddi71 [getNLSText ErrMsgDeployUsageSetupUddi71]
+        puts "$tUsageSetupUddi71"
+    }
+
+    if {$nd == 0} {
+        puts ""
+        set tUsageSetupUddi8 [getNLSText ErrMsgDeployUsageSetupUddi8]
+        puts "$tUsageSetupUddi8"
+    }
+    
+    puts ""
+    exit
+}
+
+
+#-------------------------------------------------------------------------------
+#--- Announce the node and server, or cluster names.
+#-------------------------------------------------------------------------------
+if {$cluster == 1} {
+    puts "--- Cluster : $clusterName"
+} else {
+    puts "--- Node   : $nodeName"
+    puts "--- Server : $serverName"
+}
+
+puts ""
+
+
+#-------------------------------------------------------------------------------
+#--- Discard unsaved configuration changes so that we can work in a clean
+#--- environment. Any scripts called prior to this one should save their
+#--- configuration changes before exiting.
+#-------------------------------------------------------------------------------
+if [catch {$AdminConfig reset} reason] {
+
+    set tDiscardChanges [getNLSText MsgDeployDiscardChanges]
+    puts "$tDiscardChanges Exc=$reason"
+    puts ""
+}
+
+
+#-------------------------------------------------------------------------------
+#--- Get the server's ID or cluster ID.
+#-------------------------------------------------------------------------------
+if {$cluster == 0} {
+
+    if [catch {set serverId [$AdminConfig getid /Node:$nodeName/Server:$serverName/]} reason] {
+    
+        set tServerId [getNLSText ErrMsgDeployServerId]
+        puts "$tServerId Exc=$reason"
+    
+        exit
+    }
+    
+    if {[string length $serverId] == 0} {
+    
+        set tServerId2 [getNLSText ErrMsgDeployServerId2]
+        puts "$tServerId2"
+    
+        exit
+    }
+} else {
+    if [catch {set clusterId [$AdminConfig getid /ServerCluster:$clusterName/]} reason] {
+    
+        set tClusterId [getNLSText ErrMsgDeployClusterId]
+        puts "$tClusterId Exc=$reason"
+    
+        exit
+    }
+    
+    if {[string length $clusterId] == 0} {
+    
+        set tClusterId2 [getNLSText ErrMsgDeployClusterId2]
+        puts "$tClusterId2"
+    
+        exit
+    }
+}
+
+#-------------------------------------------------------------------------------
+#--- Locate the WebSphere Install directory using the VariableMap
+#-------------------------------------------------------------------------------
+set installDirectory ""
+set userInstallDirectory "X"
+
+if {$cluster == 0} {
+    
+    set userInstallDirectory ""
+    
+    if [catch {set varMap [$AdminConfig getid /Node:$nodeName/VariableMap:/]} reason] {
+    
+        set tVariableMap [getNLSText ErrMsgDeployVariableMap]
+        puts "$tVariableMap Exc=$reason"
+    
+        exit
+    }
+    
+    set vses [lindex [$AdminConfig showAttribute $varMap entries] 0]
+    
+    foreach {x} ${vses} {
+        
+        set symbName [$AdminConfig showAttribute $x symbolicName]
+        set value [$AdminConfig showAttribute $x value]
+    
+        if {$symbName == "USER_INSTALL_ROOT" } {
+            regsub -all {\\} ${value} {/} value
+            set userInstallDirectory ${value}
+        }
+    }
+}
+
+set installDirectory [java::call java.lang.System getProperty "was.install.root"]
+if {$installDirectory == "" ||
+    $userInstallDirectory == ""} {
+
+    set tInstallDir [getNLSText ErrMsgDeployInstallDirectory]
+    puts "$tInstallDir"
+
+    exit 
+}
+
+#-------------------------------------------------------------------------------
+#--- Set the install variables
+#-------------------------------------------------------------------------------
+set uddiEar "${installDirectory}/installableApps/uddi.ear"
+
+puts ""
+set tAppInstall [getNLSText MsgDeployAppInstall]
+puts "$tAppInstall"
+
+puts ""
+
+#-------------------------------------------------------------------------------
+#--- Obtain the appmanager handle for stopping the app (not for clusters)
+#-------------------------------------------------------------------------------
+set appmgrAvailable 0
+
+if {$cluster == 0} {
+    if {[catch {set appmgr [$AdminControl queryNames type=ApplicationManager,process=$serverName,node=$nodeName,*]} reason]} {
+    
+        set tNoAppMgr [getNLSText MsgDeployNoAppMgr]
+        puts "$tNoAppMgr Exc=$reason"
+    
+    } else {
+    
+        set appmgrAvailable 1
+    
+        set tAppMgr [getNLSText MsgDeployAppMgr]
+        puts "$tAppMgr"
+    }
+    
+    puts ""
+}
+
+set appName     "UDDIRegistry"
+set appV3Name   "UDDI V3 Registry"
+
+#-------------------------------------------------------------------------------
+#--- Stop & remove and previous versions that may exist
+#--- with a name of UDDIRegistry, UDDI V3 Registry, 
+#--- UDDIRegistry."node"."server", or UDDIRegistry."cluster"
+#-------------------------------------------------------------------------------
+set tCheckingApp [getNLSText MsgDeployCheckingApp]
+
+if {$cluster == 1} {
+    set deployedAppName "UDDIRegistry.$clusterName"
+} else {
+    set deployedAppName "UDDIRegistry.$nodeName.$serverName"
+}
+
+puts "$tCheckingApp appname=$deployedAppName / $appName / $appV3Name"
+
+#-------------------------------------------------------------------------------
+#--- If the application server is running, the UDDI Registry might be running and should be stopped
+#-------------------------------------------------------------------------------
+if { !$appmgrAvailable || [llength $appmgr] == 0 } {
+
+    set tAppMgrNotRunning [getNLSText MsgDeployAppMgrNotRunning]
+    puts "$tAppMgrNotRunning"
+    puts ""
+}
+
+foreach app [$AdminApp list] {
+
+    if {[string compare $appName $app] == 0 || [string compare $appV3Name $app] == 0 || [string compare $deployedAppName $app] == 0} {
+
+        if { $appmgrAvailable && [llength $appmgr] != 0 } {
+
+            set tStoppingApp [getNLSText MsgDeployStoppingApp]
+            puts "$tStoppingApp appname=$app"
+
+            if {[catch {$AdminControl invoke $appmgr stopApplication $app} reason]} {
+
+                set tAppStopExc [getNLSText MsgDeployAppStopExc]
+                puts "$tAppStopExc appname=$app, Exc=$reason"
+
+            } else {
+
+                set tAppStopped [getNLSText MsgDeployAppStopped]
+                puts "$tAppStopped appname=$app"
+            }
+
+            puts ""
+        }
+
+        set tRemoveApp [getNLSText MsgDeployRemoveApp]
+        puts "$tRemoveApp appname=$app"
+        puts ""
+
+        if {[catch {$AdminApp uninstall $app} reason]} {
+
+            set tAppRemoveExc [getNLSText ErrMsgDeployAppRemoveExc]
+            puts "$tAppRemoveExc appname=$app Exc=$reason"
+
+            exit 
+
+        } else {
+
+            set tAppRemoved [getNLSText MsgDeployAppRemoved]
+            puts "$tAppRemoved appname=$app"
+        }
+
+        puts ""
+    }
+}
+
+puts ""
+set tAttemptSave [getNLSText MsgDeployAttemptSave1]
+puts "$tAttemptSave"
+
+if {[catch {$AdminConfig save} reason]} {
+    set tSaveErr [getNLSText ErrMsgDeploySaveErr1]
+    puts "$tSaveErr Exc=$reason"
+
+    exit
+
+} else {
+
+   set tSaveGood [getNLSText MsgDeploySaveGood1]
+   puts "$tSaveGood"
+}
+
+puts ""
+
+
+#-------------------------------------------------------------------------------
+#--- Requested to create the UDDI Derby DS ?
+#-------------------------------------------------------------------------------
+if {$defaultds == 1} {
+
+    set tAttemptCreateDS [getNLSText MsgDeployAttemptCreateDS]
+    puts "$tAttemptCreateDS"
+
+    #-------------------------------------------------------------------------------
+    #--- Get a list of all JDBC providers at the specified server scope.
+    #-------------------------------------------------------------------------------
+    if [catch {set providerList [$AdminConfig list JDBCProvider $serverId]} reason] {
+
+        set tNoJDBCList [getNLSText ErrMsgDeployNoJDBCList]
+        puts "$tNoJDBCList Exc=$reason"
+
+        exit 
+    }
+    
+    #-------------------------------------------------------------------------------
+    #--- Count the number of providers called "Derby JDBC Provider" at
+    #--- the server level - there should be only 1. Record the ID of the first one
+    #--- found.
+    #-------------------------------------------------------------------------------
+    set count 0
+
+    if {[llength $providerList] > 0} {
+
+        foreach id $providerList {
+
+            if [catch {set name [$AdminConfig showAttribute $id name]} reason] {
+
+                set tNoProviderName [getNLSText ErrMsgDeployNoProviderName]
+                puts "$tNoProviderName Exc=$reason"
+
+                exit 
+            }
+
+            if {[string compare $name $DEFAULT_JDBC_PROVIDER] == 0} {
+
+                incr count
+
+                if { $count == 1} {
+                    set providerId $id
+                }
+            }
+        }
+    }
+
+    if { $count == 0 } {
+
+        #-------------------------------------------------------------------------------
+        #--- Create a Derby JDBC Provider
+        #-------------------------------------------------------------------------------
+        set name         [list name $DEFAULT_JDBC_PROVIDER]
+        set description  [list description "Derby JDBC Provider"]
+        set implClass    [list implementationClassName "org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource"]
+        set classpath    [list classpath "\${WAS_INSTALL_ROOT}/derby/lib/derby.jar"]
+        set attributes   [list $name $description $classpath $implClass]
+
+        if [catch {set providerId [$AdminConfig create JDBCProvider $serverId $attributes]} reason] {
+
+            set tNoDerby [getNLSText ErrMsgDeployNoDerby]
+            puts "$tNoDerby Exc=$reason"
+
+            exit 
+        }
+    }
+
+    if { $count > 1 } {
+
+        set tDerbyProviders [getNLSText MsgDeployDerbyProviders]
+        puts "$tDerbyProviders"
+    }
+
+    #-------------------------------------------------------------------------------
+    #--- Define the datasource attributes.
+    #-------------------------------------------------------------------------------
+    set name                      [list name $DEFAULT_DS_NAME]
+    set jndiName                  [list jndiName "datasources/uddids"]
+    set description               [list description "Data Source for IBM WebSphere UDDI Registry"]
+    set statementCacheSize        [list statementCacheSize "100"]
+    set datasourceHelperClassname [list datasourceHelperClassname "com.ibm.websphere.rsadapter.DerbyDataStoreHelper"]
+
+    set attributes [list $name $jndiName $description $statementCacheSize $datasourceHelperClassname]
+
+    #-------------------------------------------------------------------------------
+    #--- Delete any previous datasource for the Derby JDBC Provider.
+    #-------------------------------------------------------------------------------
+    set datasourceId [ $AdminConfig getid /DataSource:$DEFAULT_DS_NAME/ ]
+    catch {[$AdminConfig remove $datasourceId]} reason
+
+    #-------------------------------------------------------------------------------
+    #--- Create a datasource for the Derby JDBC Provider.
+    #-------------------------------------------------------------------------------
+    if [catch {set datasourceId [$AdminConfig create DataSource $providerId $attributes]} reason] {
+
+        set tCreateDS [getNLSText ErrMsgDeployCreateDS]
+        puts "$tCreateDS Exc=$reason"
+
+        exit
+    }
+
+    #-------------------------------------------------------------------------------
+    #--- Add resource properties to the datasource.
+    #-------------------------------------------------------------------------------
+    if [catch {set resourcePropertySetId [$AdminConfig create J2EEResourcePropertySet $datasourceId ""]} reason] {
+
+        set tCreateResPropSet [getNLSText ErrMsgDeployCreateResPropSet]
+        puts "$tCreateResPropSet Exc=$reason"
+
+        exit
+    }
+
+    set name              [list name "databaseName"]
+    set description       [list description "Location of default UDDI Derby database."]
+    set type              [list type "java.lang.String"]
+    set value             [list value "\${USER_INSTALL_ROOT}/databases/com.ibm.uddi/$DEFAULT_DB_NAME"]
+    set dbLocation        "$userInstallDirectory/databases/com.ibm.uddi"
+    set dbScriptLocation  "$installDirectory/UDDIReg/databaseScripts"
+
+    set resourceProperty [list $name $description $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp1 [getNLSText ErrMsgDeployResourceProp1]
+        puts "$tResourceProp1 Exc=$reason"
+
+        exit
+    }
+
+    set name  [list name "shutdownDatabase"]
+    set type  [list type "java.lang.String"]
+    set value [list value ""]
+
+    set resourceProperty [list $name $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp2 [getNLSText ErrMsgDeployResourceProp2]
+        puts "$tResourceProp2 Exc=$reason"
+
+        exit
+    }
+
+    set name  [list name "dataSourceName"]
+    set type  [list type "java.lang.String"]
+    set value [list value ""]
+
+    set resourceProperty [list $name $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp3 [getNLSText ErrMsgDeployResourceProp3]
+        puts "$tResourceProp3 Exc=$reason"
+
+        exit
+    }
+
+    set name  [list name "description"]
+    set type  [list type "java.lang.String"]
+    set value [list value ""]
+
+    set resourceProperty [list $name $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp4 [getNLSText ErrMsgDeployResourceProp4]
+        puts "$tResourceProp4 Exc=$reason"
+
+        exit
+    }
+
+    set name  [list name "connectionAttributes"]
+    set type  [list type "java.lang.String"]
+    set value [list value "upgrade=true"]
+
+    set resourceProperty [list $name $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp5 [getNLSText ErrMsgDeployResourceProp5]
+        puts "$tResourceProp5 Exc=$reason"
+
+        exit
+    }
+
+    set name  [list name "createDatabase"]
+    set type  [list type "java.lang.String"]
+    set value [list value ""]
+
+    set resourceProperty [list $name $type $value]
+
+    if [catch {set id [$AdminConfig create J2EEResourceProperty $resourcePropertySetId $resourceProperty]} reason] {
+
+        set tResourceProp6 [getNLSText ErrMsgDeployResourceProp6]
+        puts "$tResourceProp6 Exc=$reason"
+
+        exit
+    }
+
+    #------------------------------------------------------------------------------------
+    #---Instanciate a Java object to create the UDDI default Registry Derby database
+    #------------------------------------------------------------------------------------
+    if [catch {set derbyDatabase [java::new com.ibm.uddi.install.DerbyDatabase]} reason] {
+        set tCreateDBErr [getNLSText ErrMsgDeployCreateDBErr]
+        puts "$tCreateDBErr Exc=$reason"
+
+        exit
+    }
+    
+    #-----------------------------------------------------------
+    #---Execute the CREATE method with DEFAULT PROFILE parameter
+    #-----------------------------------------------------------
+    if [catch {set exc [$derbyDatabase create  $dbScriptLocation $dbLocation $DEFAULT_DB_NAME "DEFAULT"]} reason] {
+
+        set tCreateDBErr [getNLSText ErrMsgDeployCreateDBErr]
+        puts "$tCreateDBErr Exc=$reason"
+
+        exit
+    }
+
+    set tCreateDSGood [getNLSText MsgDeployCreateDSGood]
+    puts "$tCreateDSGood name=$DEFAULT_DS_NAME"
+    puts ""
+
+    #--- end if {defaultds == 1}
+}
+
+#-------------------------------------------------------------------------------
+#--- Install the UDDIRegistry application with a name of 
+#--- UDDIRegistry."node"."server" or UDDIRegistry."cluster"
+#-------------------------------------------------------------------------------
+if {$cluster == 1} {    
+    if {[catch {$AdminApp install $uddiEar [list -appname $deployedAppName -cluster $clusterName -nocreateMBeansForResources]} reason ]} {
+    
+        set tAppInstallExc [getNLSText ErrMsgDeployAppInstallExc]
+        puts "$tAppInstallExc Exc=$reason"
+    
+        exit
+    }
+} else {
+    if {[catch {$AdminApp install $uddiEar [list -appname $deployedAppName -server $serverName -node $nodeName -nocreateMBeansForResources]} reason ]} {
+    
+        set tAppInstallExc [getNLSText ErrMsgDeployAppInstallExc]
+        puts "$tAppInstallExc Exc=$reason"
+    
+        exit
+    }
+}
+
+puts ""
+set tAttemptSave [getNLSText MsgDeployAttemptSave2]
+puts "$tAttemptSave"
+
+if {[catch {$AdminConfig save} reason]} {
+
+    set tSaveErr [getNLSText ErrMsgDeploySaveErr2]
+    puts "$tSaveErr Exc=$reason"
+
+    exit 
+
+} else {
+
+    set tSaveGood [getNLSText MsgDeploySaveGood2]
+    puts "$tSaveGood"
+}
+
+puts ""
+
+
+#-------------------------------------------------------------------------------
+#--- Set the Application classloader to requested mode..
+#-------------------------------------------------------------------------------
+set tSetClassLdr [getNLSText MsgDeploySetClassLdr]
+puts ""
+puts "$tSetClassLdr"
+
+set reqmode PARENT_LAST
+
+if {[catch {set classloader [$AdminConfig showAttribute [$AdminConfig showAttribute [$AdminConfig getid /Deployment:$deployedAppName/] deployedObject] classloader]} reason]} {
+
+    set tNoClassLdr [getNLSText ErrMsgDeployNoClassLdr]
+    puts "$tNoClassLdr Exc=$reason"
+
+    exit 
+}
+
+if {[catch {set oldmod [$AdminConfig showAttribute $classloader mode]} reason]} {
+
+    set tModeReadErr [getNLSText ErrMsgDeployModeReadErr]
+    puts "$tModeReadErr Exc=$reason"
+
+    exit 
+}
+
+if {[string compare PARENT_LAST $reqmode]==0} {
+
+    if {[catch {$AdminConfig modify $classloader {{mode PARENT_LAST}}} reason]} {
+
+        set tModeSetErr [getNLSText ErrMsgDeployModeSetErr]
+        puts "$tModeSetErr newmode=$reqmode, Exc=$reason"
+
+        exit 
+    }
+} else {
+
+    if {[catch {$AdminConfig modify $classloader {{mode PARENT_FIRST}}} reason]} {
+
+        set tModeSetErr [getNLSText ErrMsgDeployModeSetErr]
+        puts "$tModeSetErr newmode=$reqmode, Exc=$reason"
+
+        exit 
+    }
+}
+
+if {[catch {set newmod [$AdminConfig showAttribute $classloader mode]} reason]} {
+
+    set tModeReadNewErr [getNLSText ErrMsgDeployModeReadNewErr]
+    puts "$tModeReadNewErr Exc=$reason"
+
+    exit 
+}
+
+set tModeDone [getNLSText MsgDeployModeDone]
+puts "$tModeDone appname=$deployedAppName, oldmode=$oldmod, newmode=$newmod"
+puts ""
+
+
+#-------------------------------------------------------------------------------
+#--- Set the Application modules classloaders to the requested mode.
+#--- Retrieve the list of modules within the app, and set each with a uri ending in .war
+#--- to requested mode.
+#-------------------------------------------------------------------------------
+set tSetModuleMode [getNLSText MsgDeploySetModuleMode]
+puts ""
+puts "$tSetModuleMode"
+
+if {[catch {set modules [lindex [$AdminConfig showAttribute [$AdminConfig showAttribute [$AdminConfig getid /Deployment:$deployedAppName/] deployedObject] modules] 0]} reason]} {
+
+    set tModListErr [getNLSText ErrMsgDeployModListErr]
+    puts "$tModListErr Exc=$reason"
+
+    exit 
+}
+
+for {set n 0} {$n <[llength $modules]} {incr n} {
+
+    if {[catch {set iswar [$AdminConfig showAttribute [lindex $modules $n] uri]} reason]} {
+
+        set tModUriErr [getNLSText ErrMsgDeployModUriErr]
+        puts "$tModUriErr Exc=$reason"
+
+        exit 
+    }
+
+    if {[regexp ".*\\.war$" $iswar]} {
+
+        if {[catch {set mode [$AdminConfig showAttribute [lindex $modules $n] classloaderMode]} reason]} {
+
+            set tModModeReadErr [getNLSText ErrMsgDeployModModeReadErr]
+            puts "$tModModeReadErr Exc=$reason"
+
+            exit 
+        }
+
+        if {[string compare PARENT_LAST $reqmode]==0} {
+
+            if {[catch {$AdminConfig modify [lindex $modules $n] {{classloaderMode PARENT_LAST}}} reason]} {
+
+                set tModModeSetErr [getNLSText ErrMsgDeployModModeSetErr]
+                puts "$tModModeSetErr newmode=$reqmode, Exc=$reason"
+
+                exit 
+            }
+        } else {
+
+            if {[catch {$AdminConfig modify [lindex $modules $n] {{classloaderMode PARENT_FIRST}}} reason]} {
+
+                set tModModeSetErr [getNLSText ErrMsgDeployModModeSetErr]
+                puts "$tModModeSetErr newmode=$reqmode, Exc=$reason"
+
+                exit 
+            }
+        }
+
+        if {[catch {set newmode [$AdminConfig showAttribute [lindex $modules $n] classloaderMode]} reason]} {
+
+            set tModNewModeErr [getNLSText ErrMsgDeployModNewModeErr]
+
+            puts "$tModNewModeErr Exc=$reason"
+
+            exit 
+        }
+
+        set tModModeDone [getNLSText MsgDeployModModeDone]
+        puts "$tModModeDone modname=$iswar, appname=$deployedAppName, oldmode=$mode, newmode=$newmode"
+    }
+}
+
+puts ""
+
+#-------------------------------------------------------------------------------
+#--- Set the WAR classloader policy to 'Single'.
+#-------------------------------------------------------------------------------
+
+if {[catch {set appDeploy [$AdminConfig showAttribute [$AdminConfig getid /Deployment:$deployedAppName/] deployedObject]} reason]} {
+
+    set tAppInstallExc [getNLSText ErrMsgDeployAppInstallExc]
+    puts "$tAppInstallExc Exc=$reason"
+
+    exit 
+}
+
+if {[catch {$AdminConfig modify $appDeploy {{warClassLoaderPolicy SINGLE}}} reason]} {
+
+    set tAppInstallExc [getNLSText ErrMsgDeployAppInstallExc]
+    puts "$tAppInstallExc Exc=$reason"
+
+    exit 
+}
+
+#-------------------------------------------------------------------------------
+#--- Save the configuration changes.
+#-------------------------------------------------------------------------------
+set tAttemptSave [getNLSText MsgDeployAttemptSave3]
+puts "$tAttemptSave"
+
+if {[catch {$AdminConfig save} reason]} {
+
+    set tSaveErr [getNLSText ErrMsgDeploySaveErr3]
+    puts "$tSaveErr Exc=$reason"
+
+    exit 
+
+} else {
+
+    set tSaveGood [getNLSText MsgDeploySaveGood3]
+    puts "$tSaveGood"
+}
+
+puts ""
+
+
+#-------------------------------------------------------------------------------
+#--- Announce that we've finished, and exit.
+#-------------------------------------------------------------------------------
+set tAllDone [getNLSText MsgDeployAllDone]
+puts "$tAllDone"
+
+exit 

@@ -1,0 +1,879 @@
+# (C) Copyright IBM Corp. 2004,2005,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you 
+# in the  use of  the product. The code is provided 'AS IS', without warranty or 
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+
+set enableSyntax "enable"
+set disableSyntax "disable"
+set disableNodeSyntax "disableNode <nodeName> | disableNode <cellName> <nodeName>"
+set disableNodeAfterReplacementSyntax "disableNodeAfterReplacement <nodeName>"
+set isNodeInUseSynax "isNodeInUse <nodeName>"
+set enableNodeSyntax "enableNode <nodeName> | enableNode <cellName> <nodeName>"
+set enableDynamicClusterSyntax "enableDynamicCluster <dynamicClusterName> | enableDynamicCluster <cellName> <dynamicClusterName> <operationMode>"
+set disableDynamicClusterSyntax "disableDynamicCluster <dynamicClusterName> | disableDynamicCluster <cellName> <dynamicClusterName>"
+set isEnabledSyntax "isEnabled"
+set isPrimarySyntax "isPrimary"
+set getNodeNameSyntax "getNodeName"
+set setMinTimeBetweenPlacementChangeSyntax "setMinTimeBetweenPlacementChange <minTimeBetweenPlacementChange\[min\]>"
+set setServerOperationTimeOutSyntax "setServerOperationTimeOut <serverOperationTimeout\[min\]>"
+set setApprovalTimeOutSyntax "setApprovalTimeOut <approvalTimeout>"
+set getMinTimeBetweenPlacementChangeSyntax "getMinTimeBetweenPlacementChange"
+set getServerOperationTimeOutSyntax "getServerOperationTimeOut"
+set getApprovalTimeOutSyntax "getApprovalTimeOut"
+set recomputePlacementSyntax "recomputePlacement"
+set getActiveControllerLocationSyntax "getActiveControllerLocation"
+set showFailedServerStartOperationsSyntax "showFailedServerStartOperations"
+set findBestLocationSyntax "findBestLocation <cell Name> <node Name> <server Name>"
+set findBestNodeToDisableSyntax "findBestNodeToDisable"
+set executeSyntax "execute <actionPlan> <token> <taskID>"
+set handleFailedServerOperationsSyntax "handleFailedServerOperations"
+set deferFailedServerOperationsSyntax "deferFailedServerOperations"
+set unlockMultiAPCGateSyntax "unlockMultiAPCGate <remoteApcID>"
+set openMultiAPCGateSyntax "openMultiAPCGate <remoteApcID>"
+set closeLockMultiAPCGateSyntax "closeLockMultiAPCGate <remoteApcID>"
+
+proc help {args} {
+	global enableSyntax
+	global disableSyntax
+	global enableSyntax
+    global disableSyntax
+    global disableNodeSyntax
+    global disableNodeAfterReplacementSyntax
+    global enableNodeSyntax 
+    global enableDynamicClusterSyntax
+    global disableDynamicClusterSyntax
+    global isEnabledSyntax
+    global isPrimarySyntax
+    global getNodeNameSyntax
+    global setMinTimeBetweenPlacementChangeSyntax
+    global setServerOperationTimeOutSyntax 
+    global setApprovalTimeOutSyntax
+    global getMinTimeBetweenPlacementChangeSyntax
+    global getServerOperationTimeOutSyntax
+    global getApprovalTimeOutSyntax 
+    global recomputePlacementSyntax
+    global isNodeInUseSynax
+    global getActiveControllerLocationSyntax    
+    global showFailedServerStartOperationsSyntax     
+    global findBestLocationSyntax           
+    global findBestNodeToDisableSyntax      
+    global executeSyntax                    
+    global handleFailedServerOperationsSyntax
+    global deferFailedServerOperationsSyntax
+    global unlockMultiAPCGateSyntax         
+    global openMultiAPCGateSyntax           
+    global closeLockMultiAPCGateSyntax
+          
+	puts "---- This profile includes the following procedures:"
+	puts $enableSyntax
+	puts $disableSyntax
+	puts $disableNodeSyntax
+        puts $disableNodeAfterReplacementSyntax
+	puts $isNodeInUseSynax 
+	puts $enableNodeSyntax
+	puts $enableDynamicClusterSyntax
+	puts $disableDynamicClusterSyntax
+	puts $isEnabledSyntax
+        puts $isPrimarySyntax
+	puts $getNodeNameSyntax
+	puts $setMinTimeBetweenPlacementChangeSyntax
+	puts $setServerOperationTimeOutSyntax
+	puts $setApprovalTimeOutSyntax
+	puts $getMinTimeBetweenPlacementChangeSyntax
+	puts $getServerOperationTimeOutSyntax
+	puts $getApprovalTimeOutSyntax
+	puts $recomputePlacementSyntax
+        puts $getActiveControllerLocationSyntax
+        puts $showFailedServerStartOperationsSyntax 
+        puts $findBestLocationSyntax
+        puts $findBestNodeToDisableSyntax
+        puts $executeSyntax
+        puts $handleFailedServerOperationsSyntax
+        puts $deferFailedServerOperationsSyntax
+        puts $unlockMultiAPCGateSyntax 
+        puts $openMultiAPCGateSyntax
+        puts $closeLockMultiAPCGateSyntax
+
+
+
+}
+
+#help
+
+proc findMBean {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set apcMBean [ $AdminControl queryNames "WebSphere:*,type=PlacementControllerMBean"]
+  if { [llength $apcMBean ] == 0 } {
+	puts "MBean WebSphere:type=PlacementControllerMBean not found"
+	return {}
+  } else {
+	set groupIdPrefix HAMItemGroup:com.ibm.apc.xd.controller.APCXDControllerImpl_com.ibm.apc.xd.controller.APC_
+	set groupName ${groupIdPrefix}Default
+        set hamitemsMbean [$AdminControl queryNames WebSphere:*,type=HAManagedItems,process=dmgr]
+        set activeServer [$AdminControl invoke $hamitemsMbean getActiveServerName $groupName]
+        # check if there is an active Placement Controller 
+        if { [llength $activeServer] > 0 } {   
+          foreach value $activeServer {
+             set temp [string first NODE_NAME $value]
+             if {$temp > -1} {
+                set nodeName [lindex [lindex $activeServer 1] 1]
+                break
+             }
+          }
+          foreach value $apcMBean {
+             set temp [string first $nodeName $value]
+             if { $temp > 0 } {
+               set apcMBean $value
+               break 
+             } 
+          }
+         } 
+         set subs [ regsub -all {\\} $apcMBean {/} apcMBean ] 
+  	 set theBean [ lindex $apcMBean 0 ]
+         if { $subs > 0 } {
+ 	   regsub -all {/} $theBean {\\} theBean
+  	 }
+
+           
+  } 
+ return $theBean
+}
+
+
+#---------------------------------------------
+# enable PlacementController
+#---------------------------------------------
+
+proc enable {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean enable
+  }
+}
+  
+#---------------------------------------------
+# disable PlacementController
+#---------------------------------------------
+
+proc disable {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean disable
+  }
+}
+
+#---------------------------------------------
+# test if PlacementController is enabled
+#---------------------------------------------
+
+proc isEnabled {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	set rsp [$AdminControl invoke $pcMBean isEnabled]
+	if { [string compare $rsp "true"] == 0} {
+		puts "isEnabled true"
+        } elseif { [string compare $rsp "false"] == 0} {
+		puts "isEnabled false"
+        } else {
+		puts "Unknown response $rsp"
+        }
+  }
+}
+
+#---------------------------------------------
+# get node name where PlacementController is running
+#---------------------------------------------
+
+proc getNodeName {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list getNodeName [$AdminControl invoke $pcMBean getNodeName]]
+  }
+}
+
+#---------------------------------------------
+# Move node out of management in node group
+#---------------------------------------------
+
+proc disableNodeAfterReplacement {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global disableNodeAfterReplacementSyntax
+
+ if {[regexp help [lindex $args 0]]} {
+     puts $disableNodeAfterReplacementSyntax
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $disableNodeAfterReplacementSyntax
+     return {}
+  }
+
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	set node [lindex $args 0]
+	$AdminControl invoke $pcMBean disableNodeAfterReplacement $node
+  }
+
+}
+ 
+#---------------------------------------------
+# Move node out of management in node group
+#---------------------------------------------
+
+proc disableNode {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global disableNodeNGSyntax
+  global disableNodeSyntax
+
+ if {[regexp help [lindex $args 0]]} {
+     puts $disableNodeSyntax
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $disableNodeSyntax
+     return {}
+  }
+
+  set cellID 12345	
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+  	if {[llength $args] < 2} {
+  		set node [lindex $args 0]
+  		$AdminControl invoke $pcMBean disableNode $node
+  	} else {
+  	 	set cellName [lindex $args 0]
+     	set node [lindex $args 1]
+		$AdminControl invoke $pcMBean disableNode "$cellID $cellName $node"
+  	}
+  }
+
+}
+ 
+#---------------------------------------------
+# Move node from maintenance
+#---------------------------------------------
+
+proc enableNode {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+
+  if {[llength $args] < 1} {
+  	 puts $enableNodeSyntax
+     return {}
+  }
+
+  
+  set pcMBean [ findMBean ]
+  set cellID 12345
+  if { [llength $pcMBean ] != 0 } {
+  	if {[llength $args] < 2} {
+  		set node [lindex $args 0]
+		$AdminControl invoke $pcMBean enableNode $node
+	} else {
+		set cellName [lindex $args 0]
+		set node [lindex $args 1]
+		$AdminControl invoke $pcMBean enableNode $node
+	}
+		
+  }
+}
+
+#---------------------------------------------
+# Is node in use?
+#---------------------------------------------
+
+proc isNodeInUse {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isNodeInUseSyntax
+
+ if {[regexp help [lindex $args 0]]} {
+     puts $isNodeInUseSyntax
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $isNodeInUseSyntax
+     return {}
+  }
+
+  set pcMBean [ findMBean ]
+  set node [lindex $args 0]
+  if { [llength $pcMBean ] != 0 } {
+	return [list isNodeInUse [$AdminControl invoke $pcMBean isNodeInUse $node]]
+  }
+}
+#---------------------------------------------
+# Move DC out of management
+#---------------------------------------------
+
+proc disableDynamicCluster {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global disableDynamicClusterSyntax
+
+ set Syntax "Syntax: $disableDynamicClusterSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  } else {
+    if {[llength $args] < 2} {
+      set pcMBean [ findMBean ]
+      set dc [lindex $args 0]
+      if { [llength $pcMBean ] != 0 } {
+        $AdminControl invoke $pcMBean disableDynamicCluster $dc
+      }
+    } else {
+      set cellName [lindex $args 0]
+      set pcMBean [ findMBean ]
+      set dc [lindex $args 1]
+      if { [llength $pcMBean ] != 0 } {
+        $AdminControl invoke $pcMBean disableDynamicCluster "$cellName $dc"
+      }
+    }
+  }
+}
+
+#---------------------------------------------
+# Move DC into management
+#---------------------------------------------
+
+proc enableDynamicCluster {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  global enableDynamicClusterSyntax
+ set Syntax "Syntax: $enableDynamicClusterSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  } else {
+    if {[llength $args] < 2} {
+      set pcMBean [ findMBean ]
+      set dc [lindex $args 0]
+      if { [llength $pcMBean ] != 0 } {
+        $AdminControl invoke $pcMBean enableDynamicCluster $dc
+      }
+    } else {
+      set cellName [lindex $args 0]
+      set pcMBean [ findMBean ]
+      set dc [lindex $args 1]
+      set opMode [lindex $args 2]
+      if { [llength $pcMBean ] != 0 } {
+        $AdminControl invoke $pcMBean enableDynamicCluster "$cellName $dc $opMode"
+      }
+    }
+  }
+}
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setMinTimeBetweenPlacementChange {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setMinTimeBetweenPlacementChangeSyntax
+
+ set Syntax "Syntax: $setMinTimeBetweenPlacementChangeSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures minTimeBetweenPlacementChange"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+
+  set pcMBean [ findMBean ]
+  set minTimeBetweenPlacementChange [lindex $args 0]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean setMinTimeBetweenPlacementChange "$minTimeBetweenPlacementChange 2"
+  }
+}
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setServerOperationTimeOut {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setServerOperationTimeOutSyntax
+
+ set Syntax "Syntax: $setServerOperationTimeOutSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures serverOperationTimeOut"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+
+  set pcMBean [ findMBean ]
+  set serverOperationTimeOut [lindex $args 0]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean setServerOperationTimeOut $serverOperationTimeOut
+  }
+}
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setApprovalTimeOut {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setApprovalTimeOutSyntax
+
+ set Syntax "Syntax: $setApprovalTimeOutSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures approvalTimeOut"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+
+  set pcMBean [ findMBean ]
+  set approvalTimeOut [lindex $args 0]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean setApprovalTimeOut $approvalTimeOut
+  }
+}
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getApprovalTimeOut {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getApprovalTimeOutSyntax
+
+ set Syntax "Syntax: $getApprovalTimeOutSyntax"
+
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list approvalTimeOut [$AdminControl invoke $pcMBean getApprovalTimeOut]]
+  }
+}
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getMinTimeBetweenPlacementChange {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getMinTimeBetweenPlacementChangeSyntax
+
+ set Syntax "Syntax: $getMinTimeBetweenPlacementChangeSyntax"
+
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list minTimeBetweenPlacementChange [$AdminControl invoke $pcMBean getMinTimeBetweenPlacementChangeInMin]]
+  }
+}
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getServerOperationTimeOut {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getServerOperationTimeOutSyntax
+
+ set Syntax "Syntax: $getServerOperationTimeOutSyntax"
+
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list serverOperationTimeOut [$AdminControl invoke $pcMBean getServerOperationTimeOut]]
+  }
+}
+
+#---------------------------------------------
+# Start placement computation
+#---------------------------------------------
+proc recomputePlacement {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global recomputePlacementSyntax
+
+ set Syntax "Syntax: $recomputePlacementSyntax"
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	$AdminControl invoke $pcMBean recomputePlacement
+  }
+}
+   
+   
+#---------------------------------------------
+# Find best location
+#---------------------------------------------
+proc findBestLocation {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Starts placement computation"
+     return {}
+  }
+  if {[llength $args] < 3} {
+     return {}
+  }
+
+
+  set pcMBean [ findMBean ]
+  set cellName [lindex $args 0]
+  set nodeName [lindex $args 1]
+  set serverName [lindex $args 2]
+  if { [llength $pcMBean ] != 0 } {
+	return [list findBestLocation [$AdminControl invoke $pcMBean findBestLocation "$cellName $nodeName $serverName"]]
+  }
+}
+
+#---------------------------------------------
+# Find best node to disable
+#---------------------------------------------
+proc findBestNodeToDisable {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global findBestNodeToDisableSyntax
+
+  if {[llength $args] < 1} {
+     return {}
+  }
+  set ngName [lindex $args 0]
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list findBestNodeToDisable [$AdminControl invoke $pcMBean findBestNodeToDisable "$ngName"]] 
+  }
+}
+
+#---------------------------------------------
+# Returns the Active Controller Location
+#---------------------------------------------
+proc getActiveControllerLocation {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getActiveControllerLocation
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [list getActiveControllerLocation [$AdminControl invoke $pcMBean getActiveControllerLocation]] 
+  }
+}
+#---------------------------------------------
+# Shows which servers APC failed to start
+#---------------------------------------------
+proc showFailedServerStartOperations {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+       return  [$AdminControl invoke $pcMBean anyFailedServerOperations]
+  }
+}
+#---------------------------------------------
+# Allow APC attempt to start a server which failed to start 
+#---------------------------------------------
+proc deferFailedServerOperations {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+       return  [$AdminControl invoke $pcMBean deferFailedServerOperations]
+  }
+}
+#---------------------------------------------
+# Put servers that failed to start in maintence mode 
+#---------------------------------------------
+proc handleFailedServerOperations {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+       return  [$AdminControl invoke $pcMBean handleFailedServerOperations]
+  }
+}
+
+#---------------------------------------------
+# Closes and locks a gate based on the remote APC ID
+#---------------------------------------------
+proc closeLockMultiAPCGate {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global closeLockMultiAPCGate
+  
+  if {[llength $args] < 1} {
+     return {}
+  }
+  set remoteApcID [lindex $args 0]      
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean closeLockMultiAPCGate "remoteApcID"]
+  }
+}
+
+#---------------------------------------------
+# Opens a gate based on the remote APC ID
+#---------------------------------------------
+proc openMultiAPCGate {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global openMultiAPCGate
+
+  if {[llength $args] < 1} {
+     return {}
+  }
+  set remoteApcID [lindex $args 0]
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean openMultiAPCGate "remoteApcID"]
+  }
+}
+
+#---------------------------------------------
+# Unlocks a gate based upon the remote APC ID
+#---------------------------------------------
+proc unlockMultiAPCGate {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global unlockMultiAPCGate
+
+  if {[llength $args] < 1} {
+     return {}
+  }
+  set remoteApcID [lindex $args 0]
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean unlockMultiAPCGate "remoteApcID"]
+  }
+}
+#---------------------------------------------
+# Returns true of false if this is the active controller location  
+#---------------------------------------------
+proc isPrimary {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isPrimary
+
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean isPrimary]
+  }
+}
+#---------------------------------------------
+# Execute an action plan  
+#---------------------------------------------
+proc execute {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isPrimary
+  
+  if {[llength $args] < 3} {
+     return {}
+  }
+  
+  set actionPlan [lindex $args 0]
+  set token [lindex $args 1]
+  set taskID [lindex $args 2]      
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean execute $actionPlan $token $taskID]
+  }
+}
+#---------------------------------------------
+# APC Elasticity MBean Calls 
+#---------------------------------------------
+
+#---------------------------------------------
+# Enable APC Elasticity 
+#---------------------------------------------
+proc enableElasticity {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isPrimary
+  
+  if {[llength $args] < 1} {
+     return {}
+  }
+  
+  set enableElasticity [lindex $args 0]    
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean enableElasticity "$enableElasticity"]
+  }
+}
+
+#---------------------------------------------
+# Enable the elasticity mode (automatic or supervised)
+#---------------------------------------------
+proc elasticityMode {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isPrimary
+  
+  if {[llength $args] < 1} {
+     return {}
+  }
+  
+  set elasticityMode [lindex $args 0]    
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean elasticityMode "$elasticityMode"]
+  }
+}
+
+#---------------------------------------------
+# Enable APC Elasticity 
+#---------------------------------------------
+proc elasticityModeTimeOut {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isPrimary
+  
+  if {[llength $args] < 2} {
+     return {}
+  }
+  
+  set elasticityModeTimeOut [lindex $args 0]    
+  set elasticityModeTimeOutUnits [lindex $args 1]
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	return [$AdminControl invoke $pcMBean elasticityModeTimeOut "$elasticityModeTimeOut $elasticityModeTimeOutUnits"]
+  }
+}
+#---------------------------------------------
+# Return if APC is in elasticity mode (true or false)
+#---------------------------------------------
+proc isElasticityModeEnabled {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global rsp
+  
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+  set rsp [$AdminControl invoke $pcMBean isElasticityModeEnabled]
+	if { [string compare $rsp "true"] == 0} {
+		puts "isElasticityModeEnabled true"
+        } elseif { [string compare $rsp "false"] == 0} {
+		puts "isElasticityModeEnabled false"
+        } else {
+		puts "Unknown response $rsp"
+        }
+	
+  }
+}
+#---------------------------------------------
+# Gets what mode elasticity is set to (automatic(0) or supervised(1))
+#---------------------------------------------
+proc getElasticityMode {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global elasticityMode
+    
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+	set rsp [$AdminControl invoke $pcMBean getElasticityMode]
+	if { [string compare $rsp "0"] == 0} {
+		puts "ElasticityMode is automatic"
+        } elseif { [string compare $rsp "1"] == 0} {
+		puts "ElasticityMode is supervised"
+        } else {
+		puts "Unknown response $rsp"
+        }
+  }
+}
+#---------------------------------------------
+# Enable the elasticity mode (automatic or supervised)
+#---------------------------------------------
+proc getElasticityTimeOutMins {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global elasticityTimeOutMins
+      
+  set pcMBean [ findMBean ]
+  if { [llength $pcMBean ] != 0 } {
+  	return [list elasticityTimeOutMins [$AdminControl invoke $pcMBean getElasticityTimeOutMins]]
+  }
+}

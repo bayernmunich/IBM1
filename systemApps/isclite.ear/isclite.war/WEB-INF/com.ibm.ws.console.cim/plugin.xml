@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+     5724-J34 (C) COPYRIGHT International Business Machines Corp. 2007
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<plugin id="com.ibm.ws.console.cim"
+        name="cim"
+        version="7.0.0"
+        provider-name="IBM Corp. - WebSphere Application Server"
+        embedded="true"
+        context-root="cim">
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+    </requires>
+
+    <!-- Menu -->
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+       <tasks>
+           <categoryDefinition id="cimroot"
+                parent="systemadmin" 
+      	        icon="images/onepix.gif" 
+      	        label="nav.cim.label" 
+      	        weight="49" /> 
+
+           <task id="cimAvailInstall"
+                 icon="images/onepix.gif"
+                 label="nav.cim.availinstall.label"
+                 view="/navigatorCmd.do?forwardName=cim.availinstall.main"
+                 external="false"
+                 weight="10">
+                 <category id="cimroot" />
+           </task>
+           <task id="cimAvailInstall"
+                 icon="images/onepix.gif"
+                 label="nav.cim.installpackage.label"
+                 view="/navigatorCmd.do?forwardName=cim.installpackage.main"
+                 external="false"
+                 weight="20">
+                 <category id="cimroot" />
+           </task>
+           <task id="cimPendingInstall"
+                 icon="images/onepix.gif"
+                 label="nav.cim.pendinginstall.label"
+                 view="/navigatorCmd.do?forwardName=cim.pendinginstall.main"
+                 external="false"
+                 weight="30">
+                 <category id="cimroot" />
+           </task>
+           <task id="cimHistory"
+                 icon="images/onepix.gif"
+                 label="nav.cim.history.label"
+                 view="/navigatorCmd.do?forwardName=cim.installhistory.main"
+                 external="false"
+                 weight="40">
+                 <category id="cimroot" />
+           </task>
+           <task id="cimInstallTarget"
+                 icon="images/onepix.gif"
+                 label="nav.cim.installtarget.label"
+                 view="/navigatorCmd.do?forwardName=cim.installtarget.main"
+                 external="false"
+                 weight="50">
+                 <category id="cimroot" />
+           </task>
+       </tasks>
+    </extension>
+
+    <!-- For Help -->
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true" />
+    </extension>
+    
+    <!-- Intall target collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installtarget.collection" contextType="InstallTarget">
+            <item
+                attributeName="hostname"
+                sortable="sort"
+                itemURI="CIMInstallTargetCollection.do?EditAction=true&#38;"
+                label="Host.name.displayName" >
+            </item>
+            <item
+              attributeName="authenticationTypeDisplayName"
+              sortable="sort"
+              itemURI=""
+              label="cimgr.installtarget.keyinstalled.displayName" >
+            </item>
+            <item
+              attributeName="username"
+              sortable="sort"
+              itemURI=""
+              label="cimgr.install.username.heading" >
+            </item>
+        </collectionItem>
+	</extension>
+
+
+	<!-- Install target details configuration tab -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="cim.installtarget.tabs.detailTab" contextType="InstallTarget">
+            <tab label="tab.configuration" contentURI="cim.installtarget.config.tab.view" />
+        </detailTab>
+    </extension>
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="cim.wasnode.tabs.detailTab" contextType="InstallTarget.wasnode">
+            <tab label="tab.configuration" contentURI="cim.wasnode.config.tab.view" />
+        </detailTab>
+    </extension>
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="cim.wasnode.tabs.detailTab" contextType="InstallTarget.add">
+            <tab label="tab.configuration" contentURI="cim.installtarget.add.tab.view" />
+        </detailTab>
+    </extension>
+
+	<!-- Install target collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.installtarget.collection.button" contextType="InstallTarget">
+            <action	enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installtarget.button.add"
+                	actionURI="CIMInstallTargetCollection.do?AddAction=true">
+            </action>
+            <action	enablesFor="Collection"
+                	role="administrator,configurator"
+                	label="cimgr.installtarget.button.remove"
+                	actionURI="CIMInstallTargetCollection.do?RemoveAction=true">
+            </action>
+            <action	enablesFor="Collection"
+                	role="administrator,configurator"
+                	label="cimgr.installtarget.button.installkey"
+                	actionURI="CIMInstallTargetCollection.do?InstallKeyAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Available install collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installtarget.collection" contextType="AvailInstall">
+            <item attributeName="hostname"
+                  sortable="sort"
+                  itemURI=""
+                  label="Host.name.displayName" >
+            </item>
+            <item attributeName="nodeNameDisplayName"
+                  sortable="sort"
+                  itemURI=""
+                  label="Node.displayName" >
+            </item>
+            <item attributeName="version"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.version.displayName" >
+            </item>
+            <item attributeName="wasInstallRoot"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.availinstall.location" >
+            </item>
+            <item attributeName="platformDisplayName"
+                  sortable="sort"
+                  itemURI=""
+                  label="Node.platform.displayName" >
+            </item>
+        </collectionItem>
+	</extension>
+
+
+
+	<!-- Available install collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.availinstall.collection.button" contextType="AvailInstall">
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="cimgr.availinstall.button.install"
+              	actionURI="CIMAvailInstallCollection.do?InstallAction=true">
+            </action>
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="cimgr.availinstall.button.install.responsefile"
+              	actionURI="CIMAvailInstallCollection.do?InstallAction=true">
+            </action>
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="cimgr.availinstall.button.uninstall"
+              	actionURI="CIMAvailInstallCollection.do?UninstallAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Intall history collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installhistory.collection" contextType="InstallHistory">
+            <item attributeName="installTarget"
+                  sortable="sort"
+                  itemURI=""
+                  label="Host.name.displayName" >
+            </item>
+            <item attributeName="operation"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.operation.displayName" >
+            </item>
+            <item attributeName="displayFeature"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.package.feature.displayName" >
+            </item>
+            <item attributeName="creationDisplayTime"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.creation.time.displayName" >
+            </item>
+            <item attributeName="completionDisplayTime"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.completion.time.displayName" >
+            </item>
+            <item attributeName="completionStatus"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.completion.status.displayName" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Install history collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.installhistory.collection.button" contextType="InstallHistory">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installhistory.button.remove"
+                 	actionURI="CIMInstallHistoryCollection.do?RemoveAction=true">
+            </action>
+        </actionSet>
+    </extension>
+	
+    <!-- Pending install collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.pendinginstall.collection" contextType="PendingInstall">
+            <item attributeName="installTarget"
+                  sortable="sort"
+                  itemURI=""
+                  label="Host.name.displayName" >
+            </item>
+            <item attributeName="operation"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.operation.displayName" >
+            </item>
+            <item attributeName="displayFeature"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.package.feature.displayName" >
+            </item>
+            <item attributeName="creationDisplayTime"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installhistory.creation.time.displayName" >
+            </item>
+            <item attributeName="status"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.status.displayName" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Pending install collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.pendinginstall.collection.button" contextType="PendingInstall">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.pendinginstall.button.cancel"
+                 	actionURI="CIMPendingInstallCollection.do?CancelAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+
+    <!-- Install Package collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installpackage.collection" contextType="InstallPackage">
+            <item attributeName="packageLongName"
+                  sortable="sort"
+                  itemURI="CIMInstallPackageCollection.do?EditAction=true&#38;"
+                  label="cimgr.installpackage.package.displayName" >
+            </item>
+            <item attributeName="version"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installpackage.version.displayName" >
+            </item>
+            <item attributeName="packageType"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installpackage.descriptor.type.displayName" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Install package collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.installpackage.collection.button" contextType="InstallPackage">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installpackage.button.add"
+                 	actionURI="CIMInstallPackageCollection.do?AddAction=true">
+            </action>
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installpackage.button.remove"
+                 	actionURI="CIMInstallPackageCollection.do?CancelAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Install package details collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installpackage.details.collection" contextType="PackageDetails">
+            <item attributeName="fileDisplayName"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installpackage.details.filename" >
+            </item>
+            <item attributeName="fileSize"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installpackage.details.fileSize" >
+            </item>
+            <item attributeName="fileStatus"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installpackage.details.fileStatus" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Install package details collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.installpackage.details.collection.button" contextType="PackageDetails">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installpackage.button.add.file"
+                 	actionURI="CIMPackageDetailsCollection.do?AddAction=true">
+            </action>
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installpackage.button.remove.file"
+                 	actionURI="CIMPackageDetailsCollection.do?CancelAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Download collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.download.collection" contextType="Download">
+            <item attributeName="filename"
+                  sortable="sort"
+                  itemURI="CIMDownloadCollection.do?EditAction=true&#38;"
+                  label="cimgr.download.filename" >
+            </item>
+            <item attributeName="type"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.download.type" >
+            </item>
+            <item attributeName="fileSize"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.download.fileSize" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Download collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.download.collection.button" contextType="Download">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.download.button.download"
+                 	actionURI="CIMDownloadCollection.do?DownloadAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Download descriptor collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.download.descriptor.collection" contextType="Download.descriptor">
+            <item attributeName="filename"
+                  sortable="sort"
+                  itemURI="CIMDownloadDescriptorCollection.do?EditAction=true&#38;"
+                  label="cimgr.download.filename" >
+            </item>
+            <item attributeName="type"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.download.type" >
+            </item>
+            <item attributeName="fileSize"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.download.fileSize" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Download descriptor collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.download.descriptor.collection.button" contextType="Download.descriptor">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.download.button.download"
+                 	actionURI="CIMDownloadDescriptorCollection.do?DownloadAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Install platform collection columns -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="cim.installplatform.collection" contextType="InstallPlatform">
+            <item attributeName="featureDisplayName"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installplatform.feature" >
+            </item>
+            <item attributeName="platformDisplayName"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installplatform.platform" >
+            </item>
+            <item attributeName="packageStatus"
+                  sortable="sort"
+                  itemURI=""
+                  label="cimgr.installplatform.packageStatus" >
+            </item>
+        </collectionItem>
+	</extension>
+
+	<!-- Install platform collection buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="cim.installplatform.collection.button" contextType="InstallPlatform">
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installplatform.button.download"
+                 	actionURI="CIMInstallPlatformCollection.do?DownloadAction=true">
+            </action>
+            <action enablesFor="Collection"
+                 	role="administrator,configurator"
+                 	label="cimgr.installplatform.button.remove"
+                 	actionURI="CIMInstallPlatformCollection.do?CancelAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+
+
+</plugin>

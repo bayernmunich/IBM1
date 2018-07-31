@@ -1,0 +1,96 @@
+# This program may be used, executed, copied, modified and distributed
+# without royalty for the purpose of developing, using, marketing, or
+# distribution
+#
+#------------------------------------------------------------------------
+# redeployFileTransfer - used to re-install the FileTransfer application.
+#------------------------------------------------------------------------
+# fileTransferAuthenticationOn
+#------------------------------------------------------------------------
+# This procedure is used redeploy the FileTransfer application to run
+# FileTransferServlet with authentication.  It will attempt to uninstall
+# the filetransfer.ear and then install the filetransferSecured.ear.  For
+# 6.0 there is no API to see if the systemapp is already installed.
+#
+# Invoke this script using the following syntax:
+#    wsadmin -profile redeployFileTransfer.jacl
+#            -c "fileTransferAuthenticationOn cellName nodeName serverName"
+# For example:
+#    wsadmin -profile redeployFileTransfer.jacl
+#            -c "fileTransferAuthenticationOn node01Cell node01 server1"
+#
+#
+#------------------------------------------------------------------------
+# fileTransferAuthenticationOff
+#------------------------------------------------------------------------
+# This procedure is used redeploy the FileTransfer application to run
+# FileTransferServlet without authentication.  It will attempt to uninstall
+# the filetransferSecured.ear and then install the filetransfer.ear.  For
+# 6.0 there is no API to see if it is already installed.
+#
+# Invoke this script using the following syntax:
+#    wsadmin -profile redeployFileTransfer.jacl
+#            -c "fileTransferAuthenticationOff cellName nodeName serverName"
+# For example:
+#    wsadmin -profile redeployFileTransfer.jacl
+#            -c "fileTransferAuthenticationOff node01Cell node01 server1"
+#
+#------------------------------------------------------------------------
+
+proc errorExit {errorString} {
+   puts "Operation FAILED!"
+   puts "   $errorString"
+   exit 1
+}
+
+proc fileTransferAuthenticationOn {args} {
+   global AdminApp env
+
+   if {[llength $args] < 3} {
+      puts "Syntax: wsadmin -profile redeployFileTransfer.jacl -c \"fileTransferAuthenticationOn cellname nodename servername\""
+      return
+   }
+
+   set cellName [lindex $args 0]
+   set nodeName [lindex $args 1]
+   set serverName [lindex $args 2]
+   set app2install "$env(was.install.root)/systemApps/filetransferSecured.ear"
+   set options1 [list -cell $cellName -node $nodeName -server $serverName]
+   set options2 [list -appname filetransfer -usedefaultbindings -nocreateMBeansForResources]
+   set installOptions [concat $options1 $options2]
+
+   puts "Uninstall filetransfer $options1"
+   if {[catch {$AdminApp uninstall filetransfer $options1} result]} {
+      errorExit $result
+   }
+   puts "Install $app2install $installOptions"
+   if {[catch {$AdminApp install $app2install $installOptions} result]} {
+      errorExit $result
+   }
+}
+
+proc fileTransferAuthenticationOff {args} {
+   global AdminApp env
+
+   if {[llength $args] < 3} {
+      puts "Syntax: wsadmin -profile redeployFileTransfer.jacl -c \"fileTransferAuthenticationOff cellname nodename servername\""
+      return
+   }
+
+   set cellName [lindex $args 0]
+   set nodeName [lindex $args 1]
+   set serverName [lindex $args 2]
+   set app2install "$env(was.install.root)/systemApps/filetransfer.ear"
+   set options1 [list -cell $cellName -node $nodeName -server $serverName]
+   set options2 [list -appname filetransfer -usedefaultbindings -nocreateMBeansForResources]
+   set installOptions [concat $options1 $options2]
+
+   puts "Uninstall filetransferSecured $options1"
+   if {[catch {$AdminApp uninstall filetransferSecured $options1} result]} {
+      errorExit $result
+   }
+   puts "Install $app2install $installOptions"
+   if {[catch {$AdminApp install $app2install $installOptions} result]} {
+      errorExit $result
+   }
+}

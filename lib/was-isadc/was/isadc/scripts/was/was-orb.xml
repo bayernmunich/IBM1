@@ -1,0 +1,637 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Object Request Broker Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Object Request Broker Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_ORB_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-orb" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2,  
+					validate_os,
+
+					was_stack_custom_init,		
+					 
+					 orb_collect_info,
+					 orb_interoperability_collect,
+					 generate_orb_trace_string,
+			         generate_orb_jvm_arguments,
+					 
+					 trace_setup_custom, 
+		
+					 execute_collector, 
+					 execute_vce_info_for_was,
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+				     collect_was_orb_recovery, 
+				     restore_user_default_trace_values,  
+				     recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<target name="orb_collect_info" description="Provide ORB collection info">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_information_for_the_orb_specific_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the ORB specific problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1123"
+		           level="info" />
+
+		<autopddelete>
+			<fileset dir="${autopdtmp}">
+				<include name="orb*" />
+			</fileset>
+		</autopddelete>
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.orb.question1"
+			           label="ORB_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.orb.question2"
+			           label="ORB_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.orb.question3"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="ORB_Q3"
+			           type="textarea" />
+			<fieldtask name="ws.orb.question4"
+	    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="ORB_Q4"
+					   type="textarea" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Where does the problem occur? Between what components?${line.separator}
+					${ws.orb.question1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What is your topology?${line.separator}
+					${ws.orb.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What are the symptoms noticed?${line.separator}
+					${ws.orb.question3}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			How do you recover from this problem?${line.separator}
+					${ws.orb.question4}${line.separator}
+		</concat>
+
+		<!-- 
+			Extra Questions:
+		-->
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt1"
+			           label="Answer_questions"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.info.app.client"
+			           label="app_client"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.info.mach.client"
+			           label="mach_client"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<fieldtask name="orb.info.app.server"
+			           label="app_server"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.info.mach.server"
+			           label="mach_server"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="firewall"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="firewall_between_apps"
+			           list="yes:no:do_not_know"
+			           listDetails="yes:no:do_not_know"
+			           type="selectlist" />
+			<fieldtask name="ping.client"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="ping_client"
+			           list="yes:no:do_not_know"
+			           listDetails="yes:no:do_not_know"
+			           type="selectlist" />
+			<fieldtask name="ping.server"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="ping_server"
+			           list="yes:no:do_not_know"
+			           listDetails="yes:no:do_not_know"
+			           type="selectlist" />
+
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Application running as client-${line.separator}
+					${orb.info.app.client}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Machine name where client is running-${line.separator}
+					${orb.info.mach.client}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Application running as client-${line.separator}
+					${orb.info.app.server}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Machine name where server is running-${line.separator}
+					${orb.info.mach.server}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Can you ping the server from the remote client-${line.separator}
+					${ping.client}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Can you ping the server from the remote server-${line.separator}
+					${ping.server}${line.separator}
+		</concat>
+
+
+		<autopdinput message="Do_you_have_ORB_interoperability_problem"
+		             validargs="Yes,No"
+		             addproperty="needORBIO"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="doInteroperability">
+			<equals arg1="Yes" arg2="${needORBIO}" />
+		</condition>
+
+	</target>
+
+	<target name="orb_interoperability_collect"
+	        description="Additional collect for ORB interoperability problems"
+	        if="doInteroperability">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_additional_information_for_the_orb_interoperability_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing additional information for the ORB interoperability problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1124"
+		           level="info" />
+		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt2"
+			           label="Answer_questions"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="problem.just.started"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="problem_just_start"
+			           list="yes:no"
+			           listDetails="yes:no"
+			           type="selectlist" />
+			<fieldtask name="orb.changes"
+			           label="If so, what changes were made?"
+			           type="textarea"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<fieldtask name="problem.consistent"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="problem_consistent_random"
+			           list="consistently:randomly"
+			           listDetails="consistently:randomly"
+			           type="selectlist" />
+			<fieldtask name="orb.reproduce.steps"
+			           label="If the problem is reproducible, please provide the steps"
+			           type="textarea"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Has this problem just started-${line.separator}
+					${problem.just.started}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			If so, what changes were made-${line.separator}
+					${orb.changes}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Does this problem occur randomly or consistently?-${line.separator}
+					${problem.consistent}${line.separator}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			If the problem is reproducible, please provide the steps-${line.separator}
+					${orb.reproduce.steps}${line.separator}
+		</concat>
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt3"
+			           label="Answer_questions"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.interop.product.name"
+			           label="prod_name"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.interop.product.ver"
+			           label="prod_version"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.interop.lang"
+			           label="orb_language"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.interop.platform"
+			           label="orb_platform"
+			           type="plaintext"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="orb.interop.was"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="was_thirdparty"
+			           list="as_server:as_client"
+			           listDetails="as_server:as_client"
+			           type="selectlist" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Product name-${line.separator}
+					${orb.interop.product.name}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Product version-${line.separator}
+					${orb.interop.product.ver}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Language of third-party ORB-${line.separator}
+					${orb.interop.lang}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Platform of third-party ORB-${line.separator}
+					${orb.interop.platform}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			WebSphere being used as a server or client to the ORB-${line.separator}
+				${orb.interop.was}${line.separator}${line.separator}
+		</concat>
+		
+	</target>
+
+
+	<target name="enable_client_orb_trace" description="Enable ORB trace for Java client">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_enabling_ORB_trace_for_Java_Client"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Enabling ORB trace for Java Client"
+		           replace="${autopdts};;${step.count}"
+		           id="1125"
+		           level="info" />
+		<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+		                            key="WAS_orb_5"
+		                            propertyName="orbtrc.directory"
+		                            message="4. Place the file in the following directory: {0}."
+		                            replace="${autopdtmp}/autopd" />
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt4"
+			           label="WebSphere_Java_Client_ORB_Trace_Instructions"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb.0"
+			           label="Enable_trace"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb1"
+			           label="1_Start_the_client_program_with_the_-D_arguments_to_specify_the_trace_settings"
+			           type="label"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb2"
+			           label="-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"
+			           type="label"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb3"
+			           label="2_The_ORB_trace_output_is_captured_in_a_unique_trace_file_named_orbtrc.timestamp.txt_in_the_current_directory_of_execution"
+			           type="label"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb5"
+			           label="${orbtrc.directory}"
+			           type="label"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb6"
+			           label="WAS_orb_6"
+			           type="label"
+			           accessibilityName="was_orb_problem"
+			           accessibilityDesc="was_orb_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+	</target>
+
+	<target name="generate_orb_trace_string" description="generate orb trace string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+		
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="ORBRas=all" />
+		</if>
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="ORBRas=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_orb_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		<property name="jvm_arguments" value="true" />
+		<property name="generic.jvm.arguments"
+		          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+		<autopdlog message="Generic JVM arguments: ${generic.jvm.arguments}"
+		           id="1184"
+		           level="info" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_orb_jvm_arguments_with_condition"
+	        description="generate generic JVM arguments"
+	        if="orb.generate.jvm.arguments.needed">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		<property name="generic.jvm.arguments"
+		          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+					
+	</target>
+
+	<target name="obtain_orb_version">
+
+		<!-- 
+			Run for jdk 1.3.1
+			install_root/java/bin/java -Xbootclasspath/p:install_root/java/jre/lib/ext/ibmorb.jar com.ibm.CORBA.iiop.Version
+			(1.3.1)
+		-->
+
+
+		<!-- WAS 5.0/5.1 use java jdk 1.3.1 -->
+		<if isNotTrue="${isWASVersion6}">
+			<echo message="Obtaining ORB version (Only if running JDK 1.3.x)" />
+
+			<stepcount />
+			<wsnlsecho key="Step_obtainining_orb_version"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="[{0}] Step {1}: Providing information for the ORB specific problem"
+			           replace="${autopdts};;${step.count}"
+			           id="1123"
+			           level="info" />
+
+			<exec executable="java"
+			      dir="${was.root}/java/bin/"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="-Xbootclasspath/p:${was.enhanced.root}/bin/java/jre/lib/ext/ibmorb.jar com.ibm.CORBA.iiop.Version" />
+			</exec>
+
+		</if>
+
+	</target>
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_orb"
+	        description="Collect log tracing and other config information from Application Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for ORB Problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1126"
+		           level="info" />
+<!--
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+				<include name="orbtrc*" />
+			</zipfileset>
+		</zip>
+-->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${autopdtmp}/autopd/RequiredInfoFile.txt" 
+				prefix="autopdzip/autopd" />
+		</zip>
+
+	</target>
+
+	<!-- This target controls the collection activities for this script's recovery. 
+	-->
+	<target name="collect_was_orb_recovery"
+	        description="Collect log tracing and other config information from Application Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for {2}"
+		           replace="${autopdts};;${step.count};;${autopdProblem}"
+		           id="1126"
+		           level="info" />
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+			<zipfileset file="${orb.info.file}" prefix="autopdzip/autopd" />
+			<zipfileset file="${orbio.file}" prefix="autopdzip/autopd" />
+		</zip>
+	</target>
+
+	<!-- This target is used to set the path for how to proceed-->
+	<target name="set_jvm_orb_properties_for_how_to_proceed"
+	        description="set the path for how to proceed">
+
+		<if isTrue="${restart.server}">
+			<property name="enable.was.jvm.arguments" value="true" />
+			<property name="restore.was.jvm.arguments" value="true" />
+			<property name="orb.generate.jvm.arguments.needed" value="true" />
+		</if>
+	</target>
+
+	<!-- Provide an overview of script actions  -->
+	<target name="was_orb_information">
+		<inputdialogtask>
+			<fieldtask name="prompt5"
+			           label="Summary_of_ORB_collection"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb1"
+			           label="1The_tool_will_now_begin_collecting_logs_and_other_property_files_related_to_the_ORB_components"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb2"
+			           label="2In_addition_the_WebSphere_Application_Server_and_Java_Virtual_Machine_trace_level_settings_are_set_to_values_to_help_provide_more_information"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb3"
+			           label="3This_script_will_start/restart_your_server"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.orb4"
+			           label="4Traces_reset"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Object Request Broker Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the ORB problem. The trace
+					is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+					configuration, and trace files are collected and made available for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1157005" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the ORB 
+problem. The trace is set, the JVM properties are set, and the problem can then be reproduced. The 
+logs, configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Object Request Broker Problem =>
+This problem category is run on the managed node experiencing the ORB problem. The trace
+is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

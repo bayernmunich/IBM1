@@ -1,0 +1,116 @@
+# (C) Copyright IBM Corp. 2004,2005,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you 
+# in the  use of  the product. The code is provided 'AS IS', without warranty or 
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+
+proc setDynamicClusterAttribute { dcName attribute value } {
+     setAttributeTyped DynamicCluster ${dcName} ${attribute} ${value}
+}
+
+proc getDynamicClusterAttribute { dcName attribute } {
+     return [list ${attribute} [getAttributeTyped DynamicCluster ${dcName} ${attribute}]]
+}
+
+proc setDynamicClusterCustomProperty { dcName property value description } {
+     setCustomPropertyTyped DynamicCluster ${dcName} ${property} ${value} $description
+}
+
+proc getDynamicClusterCustomProperty { dcName property } {
+     return [list ${property} [getCustomPropertyTyped DynamicCluster ${dcName} ${property}]]
+}
+
+proc setAPCAttribute { attribute value } {
+     setAttributeTyped AppPlacementController "" ${attribute} ${value}
+}
+
+proc getAPCAttribute { attribute } {
+     return [list ${attribute} [getAttributeTyped AppPlacementController "" ${attribute}]]
+}
+
+proc setAPCCustomProperty { property value description } {
+     setCustomPropertyTyped AppPlacementController "" ${property} ${value} ${description}
+}
+
+proc getAPCCustomProperty { property } {
+     return [list ${property} [getCustomPropertyTyped AppPlacementController "" ${property}]]
+}
+
+
+proc setAttributeTyped { objectType objectName attribute value } {
+     global AdminConfig
+     set object [$AdminConfig getid "/${objectType}:${objectName}/"]
+     setAttribute ${object} ${attribute} ${value}
+}
+
+proc setCustomPropertyTyped { objectType objectName name value description } {
+     global AdminConfig
+     set object [$AdminConfig getid "/${objectType}:${objectName}/"]
+     setCustomProperty ${object} ${name} ${value} ${description}
+}
+
+proc getAttributeTyped { objectType objectName attribute } {
+     global AdminConfig
+     set object [$AdminConfig getid "/${objectType}:${objectName}/"]
+     return [getAttribute ${object} ${attribute}] 
+}
+
+proc getCustomPropertyTyped { objectType objectName name } {
+     global AdminConfig
+     set object [$AdminConfig getid "/${objectType}:${objectName}/"]
+     return [getCustomProperty ${object} ${name}]
+}
+
+proc setAttribute { object attribute value } {
+     global AdminConfig
+     $AdminConfig modify ${object} [list [list ${attribute} ${value} ] ]
+     $AdminConfig save
+}
+
+proc setCustomProperty { object name value description } {
+     global AdminConfig
+     set properties [lindex [$AdminConfig showAttribute ${object} properties] 0]
+     
+     set alreadyModified "false"
+     set newProps [list]
+     foreach { prop } ${properties} {
+	     set n [$AdminConfig showAttribute ${prop} name]
+	     puts ${prop}
+	     if { $n == ${name} } {
+			lappend newProps [list [list name ${name}] [list value ${value}] [list description ${description}] [list required [$AdminConfig showAttribute ${prop} required]]]
+			set alreadyModified "true" 
+         } else {
+			lappend newProps [list [list name [$AdminConfig showAttribute ${prop} name]] [list value [$AdminConfig showAttribute ${prop} value]] [list description [$AdminConfig showAttribute ${prop} description]] [list required [$AdminConfig showAttribute ${prop} required]]]
+	     }
+     }
+
+     if { ${alreadyModified} == "false" } {
+		lappend newProps [list [list name ${name}] [list value ${value}] [list description ${description}] [list required false]]
+     }
+
+	 setAttribute ${object} properties {}
+     setAttribute ${object} properties ${newProps}
+     $AdminConfig save
+}
+
+proc getAttribute { object attribute } {
+     global AdminConfig
+     return [$AdminConfig showAttribute ${object} ${attribute}]
+}
+
+proc getCustomProperty { object name } {
+     global AdminConfig
+     set properties [lindex [$AdminConfig showAttribute ${object} properties] 0]
+     
+     foreach { prop } ${properties} {
+	     set n [$AdminConfig showAttribute ${prop} name]
+	     if { $n == ${name} } {
+		return [$AdminConfig showAttribute ${prop} value]
+             }
+     }
+
+     return [list]
+}

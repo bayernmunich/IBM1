@@ -1,0 +1,169 @@
+###############################################################################
+#
+# Licensed Materials - Property of IBM
+# (C) Copyright IBM Corp. 2004, 2010.  ALL RIGHTS RESERVED 
+# 5724-I63, 5724-H88, 5655-N02, 5733-W70
+# US Government Users Restricted Rights - Use, duplication, or disclosure
+# restricted by GSA ADP Schedule Contract with IBM Corp.
+#
+###############################################################################
+#
+# This JACL script queries the Event Infrastructue enterprise 
+# application for events. 
+#
+# Usage:
+# Invoke wsadmin and supply the name of this script on the -f parameter.
+# wsadmin -conntype rmi -port <port> -f eventquery.jacl
+#                           help |
+#                           -globalinstanceid global_instance_id |
+#                           -group event_group [-severity severity]
+#                                              [-extensionname  extension_name]
+#                                              [-start start_time]
+#                                              [-end end_time]
+#                                              [-number number]
+#                                              [-ascending | -descending]
+#                                              [-serverName server_name]
+#
+#Where   "event_group" is the name of the event group used to query events.
+#                This field must be specified if a global instance ID is not specified;
+#        "global_instance_id" is the global instance ID of the event to query.
+#                This field must be specified if an event group is not specified;
+#        "severity" is the severity number used in the query to restrict which
+#                events are returned.
+#                This field is ignored if a global instance ID is specified;
+#        "extension_name" is the extension name that is used in the query
+#                to restrict which events are returned.
+#                This field is ignored if a global instance ID is specified;
+#        "start_time" is a time stamp used to return only events that occurred
+#                after a specified time. The start_time parameter must be a date
+#                in the format: CCYY-MM-DDThh:mm:ss. The time is in UTC unless timezone 
+#                has been specified with -/+ as in the following format
+#                CCYY-MM-DDThh:mm:ss-05:00 in which the -05:00 signifies 5 hours 
+#                behind UTC time. This field is ignored if a global instance ID is 
+#                specified;
+#        "end_time" is a time stamp used to return only events that occurred
+#                before a specified time. The end_time parameter must be a date
+#                in the format: CCYY-MM-DDThh:mm:ss. The time is in UTC unless timezone 
+#                has been specified with -/+ as in the following format
+#                CCYY-MM-DDThh:mm:ss-05:00 in which the -05:00 signifies 5 hours 
+#                behind UTC time. This field is ignored if a global instance ID is specified;
+#        "number" specifies the maximum number of events to record in the
+#                report.
+#                This field is ignored if a global instance ID is specified;
+#        "ascending" lists the oldest event first. This is the default value.
+#                This field is ignored if a global instance ID is specified;
+#        "descending" lists the most recent event first.
+#                This field is ignored if a global instance ID is specified;
+#        "server_name" is the name of an application server to which the Event Service
+#               is deployed. This field should only be specified if the Event Service
+#               is deployed to multiple application servers on the local WebSphere node.
+#                
+#       Example for querying events:
+#               wsadmin
+#         -f eventquery.jacl
+#         -group "All events"
+#
+#               wsadmin -f eventquery.jacl -clusterName cluster1 -group "All events"
+#
+#               wsadmin -f eventquery.jacl -nodeName mynode -serverName server1 -group "All events"
+#-----------------------------------------------------------------------------
+
+
+#First init the cli helper
+set cliHelperObject [java::new com.ibm.events.cli.util.EventAccessCliHelper]
+
+#Add each argument to an array for processing
+set argArray [java::new {String[]} [llength $argv]]
+
+set counter 0
+foreach {argOpt} $argv  \
+{
+   $argArray set $counter $argOpt
+   set counter [expr $counter+1]
+}
+        
+# Pass the argument array to the CLI helper to be validated.
+# If all arguments are valid, the helper returns an array of two objects.
+# The first object is a string naming the MBean operation 
+# to be called.
+# The second object is an array of objects containing arguments to be
+# passed to the MBean.
+# If any argument is invalid, the helper displays a message and returns null.
+set argObjects [$cliHelperObject processQueryArguments $argArray]
+
+# Do nothing if the CLI helper returned null, otherwise call the indicated
+# operation on the  MBean
+if { [java::isnull $argObjects] == 0 } \
+{
+    #get the object name for the mbean
+    #set node $env(local.node)
+    set node [[$argObjects get 3] toString]
+    if { [string compare $node ""] == 0 } {
+    	set node $env(local.node)
+    }
+
+    
+    #get the server process if specified
+    set process [[$argObjects get 4] toString]
+    
+    #get the cluster name if specified
+    set clusterName [[$argObjects get 5] toString]
+
+
+	if {[string compare $clusterName ""] != 0} {
+	
+	    set clusterid [$AdminConfig getid /ServerCluster:$clusterName]
+        set members [$AdminConfig list ClusterMember $clusterid]
+		set clname [$AdminConfig showAttribute $clusterid name]
+
+
+		foreach member $members {
+			set mname [$AdminConfig showAttribute $member memberName]
+			set nodename [$AdminConfig showAttribute $member nodeName]
+
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=EventAccess,node=$nodename,process=$mname,*]]
+			if [expr [string compare $objectName ""] != 0] then \
+			{
+
+				break
+			}
+		}
+	} else {
+	    if {[string compare $process ""] == 0} {
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=EventAccess,node=$node,*]]
+	    } else {
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=EventAccess,node=$node,process=$process,*]]
+	    }
+	}
+    
+    if [expr [string compare $objectName ""] == 0] then \
+    {
+        set mBeanName EventAccessMBean
+        $cliHelperObject reportMBeanNotFound $mBeanName
+        exit
+    }
+
+    # Call the MBean and invoke the CLI helper to display the result
+    
+    set operation [java::cast {String} [$argObjects get 0]]
+    set arguments [java::cast {Object[]} [$argObjects get 1]]
+    set argumentSignatures [java::cast {String[]} [$argObjects get 2]]
+    
+   
+    java::try \
+    {
+        #call the mbean and assign thee return value
+        set result [$AdminControl invoke_jmx $objectName $operation $arguments $argumentSignatures]
+        
+        #print out the return value
+        $cliHelperObject processQueryResults [java::cast {java.lang.Object} $result]
+    } \
+    catch {Throwable t} \
+    {
+       set rc 1
+       java::throw t
+    }
+} \
+else {
+  set rc 1
+}

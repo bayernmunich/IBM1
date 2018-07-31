@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+
+<project name="fixAddNodeScript" default="install" basedir=".">
+
+
+        <target name="install"
+                description=""
+                depends="detectCurrentOSFamily,
+                    setOSFileSeparator,
+                    setOSScriptExtension,
+                                fileExist,
+                                replaceLineUnix,
+                                replaceLineWin,
+									modifyPermissions"/>
+
+        <target name="uninstall" description="No uninstall action necessary but this target is required."/>
+
+<!-- Detect Operating System on WAS Installation-->
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        <property name="unixBased" value="true"/>
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+<!-- If not Unix-based, set OS as Windows-based -->
+        <condition property="unixBased" value="false">
+                <os family="windows"/>
+        </condition>
+
+<!-- If Unix-based, set OS to be Unix-based(non-OS/400) -->
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                        <not>
+                                <equals arg1="${os.name}" arg2="OS/400"/>
+                        </not>
+            </and>
+        </condition>
+
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+    </target>
+ <!-- Output detected OS Family -->
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+<!-- Specify file separator, based on currently detected OS -->
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+<!-- Specify file extension for script on currently detected OS -->
+        <target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+<!-- Verifies existence of file in WAS install -->
+    <target name="fileExist">
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}addNode${OSext}" property="addNodeExist"/>
+    </target>
+
+        <target name="checkScriptUpdated" if="addNodeExist">
+                <loadfile property="scriptUpdated" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}addNode${OSext}">
+                        <filterchain>
+                            <linecontains>
+                                        <contains value="-Declipse.bundle.setTCCL=false"/>
+                            </linecontains>
+                        </filterchain>
+                </loadfile>
+        <echo>Check script updated: ${scriptUpdated}</echo>
+        </target>
+
+<!-- Replace all instances of a token with given value -->
+        <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+<!-- Replace all instances of a token with given value for given directory -->
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+        <replace dir="${dir}"
+            token="${token}"
+            value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>
+
+<!-- Replace token on Unix -->
+    <target name="replaceLineUnix" depends="checkScriptUpdated"
+            description=""
+            unless="scriptUpdated">
+
+                        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}addNode${OSext}"
+                           token="-Djava.util.logging.manager=com.ibm.ws.bootstrap.WsLogManager \"
+                           value="-Declipse.bundle.setTCCL=false  \&#10;&#x20;-Djava.util.logging.manager=com.ibm.ws.bootstrap.WsLogManager \"/>
+        </target>
+
+<!-- Replace token on Windows -->
+    <target name="replaceLineWin" depends="checkScriptUpdated"
+            description=""
+                        unless="scriptUpdated">
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}addNode${OSext}"
+                           token="&quot;com.ibm.wsspi.bootstrap.WSPreLauncher&quot;"
+                           value="-Declipse.bundle.setTCCL=false &quot;com.ibm.wsspi.bootstrap.WSPreLauncher&quot;"/>
+    </target>
+
+	<target name="modifyPermissions"
+		if="unixBased">
+			<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}addNode${OSext}" perm="a+x"/>
+	</target>
+	
+</project>

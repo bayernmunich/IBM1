@@ -1,0 +1,132 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createTemplateProject" default="main" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;    
+ 
+    <condition property="isZOS" value="true">
+       <os family="z/os"/>
+    </condition>
+	        
+    <target name="init">
+        <!-- WASHV -->
+        <available file="${WAS_HOME}/properties/version/WASHV.product" type="file" property="isWASHV"/>
+        <wscmtlog message="WAS_HOME=${WAS_HOME}"/>
+        <wscmtlog message="profilePath=${profilePath}"/>
+        <wscmtlog message="isWASHV=${isWASHV}"/>
+    
+        <loadproperties srcFile="${profilePath}/properties/profileKey.metadata"/> 
+        <wscmtlog> serverType = ${com.ibm.ws.profile.type}</wscmtlog>
+        <condition property="isDmgr" value="true">
+             <equals arg1="${com.ibm.ws.profile.type}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <wscmtlog message="isDmgr=${isDmgr}"/> 	
+        
+        <condition property="updateJvmHaAttrib">
+            <and>
+                 <equals arg1="${isDmgr}" arg2="true"/>
+                 <equals arg1="${isWASHV}" arg2="true"/>
+            </and>
+        </condition>
+        <wscmtlog message="updateJvmHaAttrib=${updateJvmHaAttrib}"/> 	
+    </target>
+        
+	<!-- if the OS is z/OS set the 64BitJvm property to true so -agentlib:HeapDetect64 generic JVM property. 
+	     It will be updated depending on whether 31/64 bit server is created by the user. -->
+
+	<target name="set64BitJvmProperty" unless="isZOS">
+	  <available file="${WAS_HOME}/properties/version/IBM_Java_SE_Runtime_Environment_64bit.1.6.0.cmptag" property="is64BitJvm"/>
+	  <available file="${WAS_HOME}/properties/version/IBM_Java_SE_Runtime_Environment_64bit.1.7.0.cmptag" property="is64BitJvm"/>
+          <wscmtlog>is64BitJvm = ${is64BitJvm}</wscmtlog>
+	</target>
+        
+	<target name="setUpdateFlag" unless="isZOS">
+              <condition property="updateJvmEntry">
+                  <and>
+                    <equals arg1="${isDmgr}" arg2="true"/>
+                    <not>
+                       <equals arg1="${is64BitJvm}" arg2="true"/>
+                    </not>
+                 </and>
+               </condition>
+               <wscmtlog>UpdateJvmEntry flag is = ${updateJvmEntry}</wscmtlog>	
+	</target>
+ 
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+       	
+    <target name="updateTemplate" description="updateTemplate" if="updateJvmEntry">
+        <wscmtlog>Change agentLib HeapDetect64 to HeapDetect sine the 32bit JVM is used. </wscmtlog>    
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultXD/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>   
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultXDZOS/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>  
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>     
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr_zos/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>  
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/http_sip_odr_server/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>   
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/sip_odr_server/server.xml"/>
+            <param name="token" value="HeapDetect64"/>
+            <param name="tokenValue" value="HeapDetect"/>
+        </antcall>                 
+    </target>
+    
+    <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->
+    <target name="updateJvmHaAttribute" description="updateTemplate" if="updateJvmHaAttrib">
+        <wscmtlog>Change HAManagedItemPreferred_apc=true in the JVM is entry when it is dmgr and HA. </wscmtlog> 
+        <wsadmin conntype="none"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  lang="jython"
+                  script="${templatePath}/actions/scripts/createTemplate.py"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/createTemplate.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+        </wsadmin>        
+        <antcall target="importLogsToMain" >
+		<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createAffinityDescriptors.log" />
+		<param name="description" value="Create WVE Affinity Descriptors" />
+		<param name="precondition" value="foetrue" />
+	</antcall>  
+    </target>    
+    
+    <target name="main" depends="init, set64BitJvmProperty, setUpdateFlag" description="main target of createTemplate">
+        <antcall target="updateTemplate"></antcall>
+        <antcall target="updateJvmHaAttribute"></antcall>    
+    </target>    
+</project>

@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<project name="adjustGenPluginClasspath" default="install" basedir=".">
+                                          
+    <target name="install"
+            description=""
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+                                         
+                     checkGenPluginScriptUpdated,
+                     replaceGenPluginLine"/>
+                                         
+                                         
+    <target name="uninstall" 
+            description="No uninstall action necessary but this target is required."
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+                                         
+                     checkGenPluginScriptUpdated,
+                     removeGenPluginLine"/>
+                                         
+                                         
+    <!-- Detect Operating System on WAS Installation-->
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+                        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>                            
+                
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                <not>
+                    <equals arg1="${os.name}" arg2="OS/400"/>
+                </not>
+            </and>
+        </condition>          
+
+        <condition property="isWindows" value="true">
+            <os family="windows"/>
+        </condition>
+                
+        <condition property="isUnix" value="false">
+            <not>
+                <os family="windows"/>
+            </not>
+        </condition>                
+
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>               
+    </target>
+    <!-- Output detected OS Family -->
+
+    <!-- Specify file separator, based on currently detected OS -->
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <!-- Specify file extension for script on currently detected OS -->
+    <target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+                
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+                
+    </target>
+                      
+
+    <!-- Verifies existence of files in WAS install -->
+    <target name="filesExists">
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" property="isGenPluginCfgExist"/>
+    </target>      
+
+    <target name="checkGenPluginScriptUpdated" 
+            if="isGenPluginCfgExist">
+        
+        <loadfile property="GenPluginScriptUpdated" 
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" />
+                                  
+        <condition property="applyGenPluginUpdate" value="true">                     
+            <and>
+                <not>
+                    <contains string="${GenPluginScriptUpdated}" substring="&quot;%JAVA_HOME%\bin\java&quot; -Dws.ext.search.plugins.reverse=&quot;true&quot;" />
+                </not>
+                <not>
+                    <contains string="${GenPluginScriptUpdated}" substring="&quot;$JAVA_HOME/bin/java&quot; -Dws.ext.search.plugins.reverse=&quot;true&quot;" />
+                </not>
+            </and>
+        </condition>        
+    </target>
+        
+
+    <!-- GenPluginCfg.sh/.bat updates -->           
+    <target name="replaceGenPluginLine" 
+            depends=""
+            description=""
+            if="applyGenPluginUpdate">
+                                                        
+        <antcall target="updateGenPluginWindows" />
+        <antcall target="updateGenPluginUnix"    />                      
+    </target>
+        
+    <target name="updateGenPluginWindows" 
+            depends=""
+            description=""
+            if="isWindows">
+                                                                                
+        <echo>Updating GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="&quot;%JAVA_HOME%\bin\java&quot;"
+                 value="&quot;%JAVA_HOME%\bin\java&quot; -Dws.ext.search.plugins.reverse=&quot;true&quot;"/>                
+    </target>
+                
+    <target name="updateGenPluginUnix" 
+            depends=""
+            description=""
+            if="isUnix">
+                                                                                
+        <echo>Updating GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot;"
+                 value="&quot;$JAVA_HOME/bin/java&quot; -Dws.ext.search.plugins.reverse=&quot;true&quot;"/>                    
+        <antcall target="modifyGenPluginPermissions"/>                            
+    </target>
+
+	<target name="modifyGenPluginPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" perm="a+x"/>                       
+    </target>
+
+	<target name="removeGenPluginLine" 
+            depends=""
+            description=""
+            if="GenPluginScriptUpdated">
+                                
+        <echo>Reverting GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="-Dws.ext.search.plugins.reverse=&quot;true&quot;"
+                 value=""/>  
+        <antcall target="modifyGenPluginPermissions"/>                            
+    </target>                   
+    
+</project>

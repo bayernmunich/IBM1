@@ -1,0 +1,47 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="importConfigArchive" default="importConfigArchive" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+  	&importExternalLogs;     
+    <property name="configArchiveName" value="secureProxy.car"/>
+    
+    <target name="doImportConfigArchive"
+            description="Import a Config Archive into a profile">
+
+  		<wscmtlog>Importing Config Archive: ${configArchiveName} into profile</wscmtlog>
+   		<wscmtlog>Additional information will be logged in file ${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log</wscmtlog>
+         <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->    
+			<wsadmin conntype="none"
+                 		lang="jacl"
+    				failonerror="false"
+					returnproperty="rcProperty"
+				tracefile="${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log"
+				wasHome="${WAS_HOME}"
+				wasInstallRoot="${WAS_HOME}"
+				wasRepositoryRoot="${profilePath}/config"
+				userInstallRoot="${profilePath}"
+				localCell="${cellName}"
+				localNode="${nodeName}"
+				wsadminProps="${profilePath}/properties/wsadmin.properties"
+				command="$AdminTask importWasprofile { -archive  ../configArchives/${configArchiveName} }"
+				ipcFilename="${profilePath}/temp/wsadmin"
+			>
+    	</wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log" />
+            <param name="description" value="Importing Config Archive: ${configArchiveName} into profile" />
+            <param name="precondition" value="foetrue" />
+        </antcall>
+		
+			<wscmtlog>Import of Config Archive finished</wscmtlog>
+
+    </target>
+                            
+    <target name="importConfigArchive"
+            description="Import a Config Archive into a profile"
+            depends="doImportConfigArchive"/>
+
+</project>

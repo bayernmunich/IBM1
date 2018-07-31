@@ -1,0 +1,53 @@
+<project name="bootstrapODRTemplate" default="bootstrapODRTemplate" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllNecessaryTokensWithRightValuesForOdrFiles"
+            description="update node name for the ODR template files">
+            
+        <wscmtlog>The node name is : ${WS_CMT_NODE_NAME}</wscmtlog>
+        
+        <!-- LIDB2369-16  Begin -->
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${WS_CMT_NODE_NAME}"/>
+        </antcall>    
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr_zos/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${WS_CMT_NODE_NAME}"/>
+        </antcall>  
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/http_sip_odr_server/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${WS_CMT_NODE_NAME}"/>
+        </antcall>  
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/sip_odr_server/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${WS_CMT_NODE_NAME}"/>
+        </antcall>  
+        
+    </target>
+    
+    <target name="bootstrapODRTemplate"
+        description="update odr related template Files"
+        depends="replaceAllNecessaryTokensWithRightValuesForOdrFiles">
+    </target>
+    
+</project>

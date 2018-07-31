@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Licensed Material - Property of IBM                               -->
+<!--                                                                   -->
+<!-- 5724-J37 Copyright IBM Corp. 2007                                 -->
+<!-- All Rights Reserved.                                              -->
+<!-- U.S. Government users - RESTRICTED RIGHTS - Use, Duplication, or  -->
+<!-- Disclosure restricted by GSA-ADP schedule contract with IBM Corp. -->
+<!-- Status = JEJO610                                                  -->
+
+<project name='Copy ServiceClasses' default='CopyServiceClasses' basedir='.'>
+
+  <target name="detectDmgrProfile">
+
+      <condition property="isDmgrProfile" value="true">
+          <equals arg1="${XD_MIGRATION_IS_DMGR_PROFILE}" arg2="${XD_MIGRATION_TRUE}"/>
+      </condition>
+
+  </target>
+
+  <target name="CheckServiceClasses"
+	   if="isDmgrProfile">
+      <available file="${XD_MIGRATION_SOURCE_PROFILE_PATH}/config/cells/${XD_MIGRATION_TARGET_CELL_NAME}/serviceclasses" type="dir" property="serviceclasses.present"/>
+   </target>
+
+   <target name="CopyServiceClasses"
+           description="Copy old XD ServiceClasses to new XD Profile"
+           depends="detectDmgrProfile, CheckServiceClasses"
+	   if="serviceclasses.present">
+
+      <echo message="===== Copy ServiceClasses from ${XD_MIGRATION_SOURCE_PROFILE_PATH}/config/cells/${XD_MIGRATION_TARGET_CELL_NAME} to ${XD_MIGRATION_TARGET_PROFILE_PATH}/config/cells/${XD_MIGRATION_TARGET_CELL_NAME}"/>
+
+      <copy todir="${XD_MIGRATION_TARGET_PROFILE_PATH}/config/cells/${XD_MIGRATION_TARGET_CELL_NAME}/serviceclasses" failonerror="false" overwrite="true">
+        <fileset dir="${XD_MIGRATION_SOURCE_PROFILE_PATH}/config/cells/${XD_MIGRATION_TARGET_CELL_NAME}/serviceclasses"/>
+      </copy>
+
+   </target>
+
+</project>

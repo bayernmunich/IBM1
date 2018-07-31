@@ -1,0 +1,609 @@
+<!-- file name: build.xml                          -->
+<!-- purpose: Convert a SIP application's archive  -->
+<!-- 		file to a Web Application's war file   -->
+<!-- 		so it can be deployed on WebSphere     -->
+<!-- first created January 22, 2005                -->
+<!-- by Yaron Reinharts, yaronr@il.ibm.com         -->
+
+<project name="sar2war" default="all" basedir=".">
+	
+	<!--
+	<property name="archive" value="d:\Downloads\App2\sip-app1.sar" />
+	<property name="compatibility.mode" value="true" />
+	
+	<property name="archive" value="d:\Downloads\App2\ar_continue.sar" />
+	<property name="out_file" value="d:\Downloads\App2\output.ear" />
+	<property name="buildDir" value="d:\Downloads\App2" />
+	<property name="displayName" value="d:\Downloads\App2" />
+	<property name="schemaValidate" value="false" />
+	-->
+
+		
+    <target name="usage" description="Print usage ">
+		<echo message="Usage:"/>
+		<echo message="   ant -Darchive=archive_location -Dxsl_file=xsl_location -Dout_file=output_location -DbuildDir=build_location"/>
+		<echo message="     archive_location: location of archive file."/>
+		<echo message="     xsl_file: (shipped with this build file)."/>		
+		<echo message="     out_file: location of output directory."/>		
+		<echo message="     buildDir: location of build directory."/>			
+	</target>	
+
+	<target name="check_archive" unless="archive"
+			description="Print usage if archive_file was not defined ">
+		
+		<antcall target="usage" />
+		<fail message="archive_file was not defined" />
+
+	</target>
+
+	<target name="check_outfile" unless="out_file"
+			description="Print usage if out_file was not defined ">
+		
+		<antcall target="usage" />
+		<fail message="out_file was not defined" />
+
+	</target>
+
+	<target name="check_build1" unless="buildDir"
+			description="If build directory was not defined, $(basedir)/build is used. ">
+		
+		<property name="build" value="${basedir}/build" />
+		<echo message="Build directory is ${build}." level="info"/>
+	</target>
+
+	<target name="check_build2" if="buildDir"
+			description="If build directory was not defined, $(basedir)/build is used. ">
+		
+		<property name="build" value="${buildDir}/build" />
+		<echo message="Build directory is ${build}." level="info"/>
+	</target>
+	
+	
+	<target name="init116" if="compatibility.mode"
+			description="Init 116 app variables">
+		
+		<property name="xsl_file" value="./sar2war.xsl" />
+		<property name="merge.xsl.file" value="./mergeWebXML.xsl" />
+	</target>	
+	
+	<target name="init289" unless="compatibility.mode"
+			description="If build directory was not defined, $(basedir)/build is used. ">
+		
+		<property name="xsl_file" value="./sar2war289.xsl" />
+		<property name="merge.xsl.file" value="./mergeWebXML289.xsl" />
+	</target>	
+
+    <target name="init" depends="check_archive, check_outfile, check_build1, check_build2, init116, init289"
+			description="setup the properties">
+		<basename property="archive_name" file="${archive}" />	
+		<property name="app_dir" value="${build}/${archive_name}" />
+		<property name="webxml_template_file" value="./web.xml.template" />
+			
+    	<echo message="sip.xml transformer set to ${xsl_file}." level="info"/>
+    </target>
+
+	<target name="clean" depends="init"
+			description="clean up the output directories ">
+		
+		<delete failonerror="false" dir="${build}" />
+	</target>
+
+	<target name="prepare" depends="clean"
+		description="prepare the output directories">
+
+		<mkdir dir="${build}" />
+		<mkdir dir="${app_dir}" />
+
+	</target>
+	
+	<target name="openArchiveFile" depends="prepare"
+		description="Unzip the application archive file">
+
+		<unzip src="${archive}" dest="${app_dir}" />
+		
+		<unzip dest="${app_dir}">
+		    <fileset dir="${app_dir}">
+		        <include name="**/*.sar"/>
+		        <include name="**/*.war"/>
+		    </fileset>
+		</unzip>
+		
+		<delete>
+			<fileset dir="${app_dir}" includes="**/*.sar"/>
+			<fileset dir="${app_dir}" includes="**/*.war"/>
+		</delete>
+	</target>
+	
+	<target name="checkExistingXmlFiles" depends="openArchiveFile"
+		description="check if there is a sip.xml">
+		
+		<available file="${app_dir}/WEB-INF/sip.xml" type="file" property="sip.xml.exist"/>
+		<available file="${app_dir}/WEB-INF/web.xml" type="file" property="web.xml.exist"/>
+
+        <condition property="sip.xml.not.exist">
+            <not>
+                <available file="${app_dir}/WEB-INF/sip.xml" type="file" />
+            </not>
+        </condition>
+
+        <condition property="web.xml.not.exist">
+            <not>
+                <available file="${app_dir}/WEB-INF/web.xml" type="file" />
+            </not>
+        </condition>		
+		
+        <condition property="converged.application">
+			<and>
+				<available file="${app_dir}/WEB-INF/sip.xml" type="file" />
+				<available file="${app_dir}/WEB-INF/web.xml" type="file" />
+			</and>
+		</condition>
+		
+		<condition property="annotations.only">
+			<and>
+				<not>
+					<available file="${app_dir}/WEB-INF/sip.xml" type="file" />
+				</not>
+				<not>
+					<available file="${app_dir}/WEB-INF/web.xml" type="file" />
+				</not>
+			</and>
+		</condition>
+		
+	</target>
+
+	<target name="validateSipDotXml289"
+            depends="checkExistingXmlFiles"
+            unless="compatibility.mode" if="sip.xml.exist"
+			description="Validate sip.xml">
+		
+
+		
+		<pathconvert property="schema.xsd.file">
+		<path>
+		   <pathelement location="./XMLSchema.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="xml.xsd.file">
+		<path>
+		   <pathelement location="./xml.xsd"/>
+		</path>
+		</pathconvert>		
+		
+		<pathconvert property="xsd.file">
+		<path>
+		   <pathelement location="./sip-app_1_1.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="javaee.xsd.file">
+		<path>
+		   <pathelement location="./javaee_5.xsd"/>
+		</path>
+		</pathconvert>		
+		
+		<pathconvert property="jsp21.xsd.file">
+		<path>
+		   <pathelement location="./jsp_2_1.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="webapp.xsd.file">
+		<path>
+		   <pathelement location="./web-app_2_5.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="javaeews.xsd.file">
+		<path>
+		   <pathelement location="./javaee_web_services_client_1_2.xsd"/>
+		</path>
+		</pathconvert>	 
+
+		<xmlvalidate file="${app_dir}/WEB-INF/sip.xml" lenient="false" failonerror="${schemaValidate}" >
+			<attribute name="http://xml.org/sax/features/validation" value="true"/>
+			<attribute name="http://apache.org/xml/features/validation/schema" value="true"/>
+		  	<attribute name="http://xml.org/sax/features/namespaces" value="true"/>
+
+			<property 
+				name="http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://www.jcp.org/xml/ns/sipservlet ${xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file}" />
+			
+			<property 
+				name="http://apache.org/xml/properties/schema/external-schemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://www.jcp.org/xml/ns/sipservlet ${xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file}" />
+
+			
+		</xmlvalidate>
+		
+		<echo message="sip.xml 289 validation passeed" />
+    </target>
+
+    <target name="validateSipDotXml116"
+            depends="checkExistingXmlFiles"
+            if="compatibility.mode" unless="sip.xml.not.exist"
+			description="Validate sip.xml">
+    	
+    	<echo message="sip.xml 116 validation passeed" />
+    	
+		<pathconvert property="sipapp.dtd.file">
+		<path>
+		   <pathelement location="./sip-app_1_0.dtd"/>
+		</path>
+		</pathconvert>    	
+
+        <xmlvalidate failonerror="${schemaValidate}" file="${app_dir}/WEB-INF/sip.xml">
+        	<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xmlvalidate>
+
+	</target>
+
+	<target name="validateSipDotXml"
+            depends="validateSipDotXml116, validateSipDotXml289"
+			description="Validate sip.xml">
+
+		<echo message="sip.xml validation passeed" />
+
+	</target>
+
+	<target name="generateWebDotXml" depends="validateSipDotXml" if="sip.xml.exist"
+		description="generate a web.xml based on the sip.xml deployment descriptor.">
+
+		<xslt 	in="${app_dir}/WEB-INF/sip.xml" 
+				out="${app_dir}/WEB-INF/webTemp.xml" 
+				style="${xsl_file}" >
+			<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xslt>
+		
+<!-- 
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[<web-app]]></replacetoken>	
+		  <replacevalue><![CDATA[<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:javaee="http://java.sun.com/xml/ns/javaee" version="2.5"]]></replacevalue>
+		</replace>
+-->
+		<!-- strip some redundant text from web.xml --> 
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  	<replacetoken><![CDATA[xmlns="http://www.jcp.org/xml/ns/sipservlet"]]></replacetoken>
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<!-- strip some redundant text from web.xml --> 
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  	<replacetoken><![CDATA[xsi:schemaLocation="http://www.jcp.org/xml/ns/sipservlet http://www.jcp.org/xml/ns/sipservlet/sip-app_1_1.xsd    http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"]]></replacetoken>
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  	<replacetoken><![CDATA[xmlns:sip="http://www.jcp.org/xml/ns/sipservlet"]]></replacetoken>
+		  	<replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[xmlns:javaee="http://java.sun.com/xml/ns/javaee"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+		
+		<!--replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[<web-app]]></replacetoken>	
+		  <replacevalue><![CDATA[<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5"]]></replacevalue>
+		</replace-->
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[xmlns=""]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+				
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[  >]]></replacetoken>	
+		  <replacevalue><![CDATA[>]]></replacevalue>
+		</replace>		
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[  />]]></replacetoken>	
+		  <replacevalue><![CDATA[/>]]></replacevalue>
+		</replace>		
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[javaee:]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+	</target>
+	
+
+	<target name="validateWebDotXml116"
+		depends="generateWebDotXml"
+		if="compatibility.mode" unless="web.xml.not.exist"
+		description="Validate web.xml">
+		
+		<xmlvalidate file="${app_dir}/WEB-INF/webTemp.xml" >
+			<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xmlvalidate>
+
+		<echo message="web.xml 2.3 validation passeed" />
+		
+	</target>
+	
+	<target name="validateWebDotXml289"
+		unless="compatibility.mode" if="web.xml.exist"
+		depends="generateWebDotXml"
+		description="Validate web.xml">
+		
+		<pathconvert property="schema.xsd.file">
+		<path>
+		   <pathelement location="./XMLSchema.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="xml.xsd.file">
+		<path>
+		   <pathelement location="./xml.xsd"/>
+		</path>
+		</pathconvert>		
+		
+		<pathconvert property="javaee.xsd.file">
+		<path>
+		   <pathelement location="./javaee_5.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="jsp21.xsd.file">
+		<path>
+		   <pathelement location="./jsp_2_1.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="webapp.xsd.file">
+		<path>
+		   <pathelement location="./web-app_2_5.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="javaeews.xsd.file">
+		<path>
+		   <pathelement location="./javaee_web_services_client_1_2.xsd"/>
+		</path>
+		</pathconvert>	 
+
+		<xmlvalidate file="${app_dir}/WEB-INF/web.xml" lenient="false" failonerror="${schemaValidate}" >
+			<attribute name="http://xml.org/sax/features/validation" value="true"/>
+			<attribute name="http://apache.org/xml/features/validation/schema" value="true"/>
+		  	<attribute name="http://xml.org/sax/features/namespaces" value="true"/>
+
+			<property 
+				name="http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file} http://java.sun.com/xml/ns/javaee ${javaeews.xsd.file} http://java.sun.com/xml/ns/javaee ${jsp21.xsd.file}" />
+			
+			<property 
+				name="http://apache.org/xml/properties/schema/external-schemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file} http://java.sun.com/xml/ns/javaee ${javaeews.xsd.file} http://java.sun.com/xml/ns/javaee ${jsp21.xsd.file}" />
+		</xmlvalidate>
+
+		<echo message="web.xml 2.5 validation passeed" />
+	</target>
+	
+
+	<target name="validateWebDotXml" depends="generateWebDotXml, validateWebDotXml116, validateWebDotXml289"
+			description="Validate sip.xml">
+
+		<echo message="web.xml validation passeed" />
+	
+	</target>
+	
+	<target name="renameTempWebXML" depends="validateWebDotXml" 
+		unless="converged.application" if="sip.xml.exist"
+		description="rename webTemp.xml to web.xml if not convergeApp">
+		
+		<move file="${app_dir}/WEB-INF/webTemp.xml" tofile="${app_dir}/WEB-INF/web.xml"/>
+	</target>
+	
+	
+	<target name="mergeWebXMLs116" depends="renameTempWebXML" 
+		if="compatibility.mode" unless="web.xml.not.exist"
+		description="merge webTemp.xml and web.xml to web.xml">
+
+		<!-- move web.xml to web1.xml, tmp -->
+		<move file="${app_dir}/WEB-INF/web.xml" tofile="${app_dir}/WEB-INF/webOrig.xml"/>
+		
+		<!-- merge the files -->
+		<xslt in="${app_dir}/WEB-INF/webOrig.xml" out="${app_dir}/WEB-INF/web.xml" style="${merge.xsl.file}" >
+			<param name="with" expression="webTemp.xml"/> 
+			<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xslt>		
+	</target>
+
+		
+	<target name="mergeWebXMLs289" depends="renameTempWebXML" 
+		if="converged.application" unless="compatibility.mode"
+		description="merge webTemp.xml and web.xml to web.xml">
+		
+		<!-- move web.xml to web1.xml, tmp -->
+		<move file="${app_dir}/WEB-INF/web.xml" tofile="${app_dir}/WEB-INF/webOrig.xml"/>
+		
+		<!-- strip namespaces from xml files -->
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[xmlns:javaee="http://java.sun.com/xml/ns/javaee"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[xmlns="http://java.sun.com/xml/ns/javaee"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+
+		<replace file="${app_dir}/WEB-INF/webTemp.xml">
+		  <replacetoken><![CDATA[javaee:]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<replace file="${app_dir}/WEB-INF/webOrig.xml">
+		  <replacetoken><![CDATA[xmlns:javaee="http://java.sun.com/xml/ns/javaee"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<replace file="${app_dir}/WEB-INF/webOrig.xml">
+		  <replacetoken><![CDATA[xmlns="http://java.sun.com/xml/ns/javaee"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+
+		<replace file="${app_dir}/WEB-INF/webOrig.xml">
+		  <replacetoken><![CDATA[javaee:]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+					
+		
+		<!-- merge the files -->
+		<xslt in="${app_dir}/WEB-INF/webOrig.xml" out="${app_dir}/WEB-INF/web.xml" style="${merge.xsl.file}" >
+			<param name="with" expression="webTemp.xml"/> 
+			<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xslt>
+		
+		<replace file="${app_dir}/WEB-INF/web.xml">
+		  <replacetoken><![CDATA[xmlns=""]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+
+		<replace file="${app_dir}/WEB-INF/web.xml">
+		  <replacetoken><![CDATA[xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>
+		
+		<replace file="${app_dir}/WEB-INF/web.xml">
+		  <replacetoken><![CDATA[xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"]]></replacetoken>	
+		  <replacevalue><![CDATA[]]></replacevalue>
+		</replace>		
+	
+	</target>
+	
+	
+	<target name="mergeWebXMLs" depends="mergeWebXMLs116, mergeWebXMLs289" if="converged.application"
+		description="merge webTemp.xml and web.xml to web.xml">
+
+		<!-- delete tmp files --> 
+		<delete file="${app_dir}/WEB-INF/webOrig.xml"/>
+		<delete file="${app_dir}/WEB-INF/webTemp.xml"/>
+		  		
+	</target>
+	
+	
+	<target name="validateWebDotXmlAfterMerge116" depends="mergeWebXMLs" 
+		if="compatibility.mode" unless="web.xml.not.exist"
+			description="Validate web.xml">
+
+		<xmlvalidate file="${app_dir}/WEB-INF/web.xml" >
+			<xmlcatalog>
+			       <dtd  publicId="-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"    location="web-app_2_3.dtd"/>
+			       <dtd  publicId="-//Java Community Process//DTD SIP Application 1.0//EN"    location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xmlvalidate>
+	
+	</target>
+	
+	<target name="validateWebDotXmlAfterMerge289" 
+		depends="mergeWebXMLs" 
+		unless="compatibility.mode" if="converged.application"
+		description="Validate web.xml">
+
+		<pathconvert property="schema.xsd.file">
+		<path>
+		   <pathelement location="./XMLSchema.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="xml.xsd.file">
+		<path>
+		   <pathelement location="./xml.xsd"/>
+		</path>
+		</pathconvert>		
+		
+		<pathconvert property="javaee.xsd.file">
+		<path>
+		   <pathelement location="./javaee_5.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="jsp21.xsd.file">
+		<path>
+		   <pathelement location="./jsp_2_1.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="webapp.xsd.file">
+		<path>
+		   <pathelement location="./web-app_2_5.xsd"/>
+		</path>
+		</pathconvert>
+		
+		<pathconvert property="javaeews.xsd.file">
+		<path>
+		   <pathelement location="./javaee_web_services_client_1_2.xsd"/>
+		</path>
+		</pathconvert>	 
+
+		<xmlvalidate file="${app_dir}/WEB-INF/web.xml" lenient="false" failonerror="${schemaValidate}" >
+			<attribute name="http://xml.org/sax/features/validation" value="true"/>
+			<attribute name="http://apache.org/xml/features/validation/schema" value="true"/>
+		  	<attribute name="http://xml.org/sax/features/namespaces" value="true"/>
+
+			<property 
+				name="http://apache.org/xml/properties/schema/external-noNamespaceSchemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file} http://java.sun.com/xml/ns/javaee ${javaeews.xsd.file} http://java.sun.com/xml/ns/javaee ${jsp21.xsd.file}" />
+			
+			<property 
+				name="http://apache.org/xml/properties/schema/external-schemaLocation" 
+				value="http://www.w3.org/XML/1998/namespace ${xml.xsd.file} http://www.w3.org/2001/XMLSchema ${schema.xsd.file} http://java.sun.com/xml/ns/javaee ${webapp.xsd.file} http://java.sun.com/xml/ns/javaee ${javaee.xsd.file} http://java.sun.com/xml/ns/javaee ${javaeews.xsd.file} http://java.sun.com/xml/ns/javaee ${jsp21.xsd.file}" />
+		</xmlvalidate>
+		
+		<echo message="web.xml 289 validation passeed" />
+	</target>	
+		
+
+	<target name="validateWebDotXmlAfterMerge" depends="validateWebDotXmlAfterMerge116, validateWebDotXmlAfterMerge289" if="converged.application"
+			description="Validate web.xml">
+		
+		<echo message="web.xml validation passeed" />
+
+	</target>
+	
+	<target name="generateWebXml" depends="validateWebDotXmlAfterMerge" if="annotations.only">
+		<copy 
+			tofile="${app_dir}/WEB-INF/web.xml" 
+			file="${webxml_template_file}"/>
+		<replace file="${app_dir}/WEB-INF/web.xml" 
+			token="{displayName}"
+			value="${displayName}"
+		/>
+	</target>
+
+	<target name="createWar" depends="generateWebXml"
+		description="package the whole thing into a jar.">
+	
+		<zip destfile="${out_file}" 
+			basedir="${app_dir}" />
+
+		<antcall target="clean" />
+	</target>
+
+	<target name="all" depends="clean, createWar"
+		description="perform all targets."/>
+</project>

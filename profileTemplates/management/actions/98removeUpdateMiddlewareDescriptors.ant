@@ -1,0 +1,219 @@
+<project name="98removeUpdateMiddlewareDescriptors" default="main" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="foreach"  classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ForEachAntTask"/>
+
+    <target name="main" depends="init,listProfiles"/>
+    <target name="updateProfiles" depends="checkBackUp" />
+
+    <target name="init">
+        <tstamp/>
+        <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+        <echo message="WAS_HOME = ${WAS_HOME}"/>
+        <loadproperties srcFile="${WAS_HOME}/properties/wasprofile.properties"/> 
+        <wscmtlog>WS_PROFILE_REGISTRY=${WS_PROFILE_REGISTRY}</wscmtlog>
+        <wscmtlog message="WS_PROFILE_REGISTRY=${WS_PROFILE_REGISTRY}"/>
+    </target>
+  		 		  		 		
+    <target name="detectCurrentOSFamily"
+                description="Detecs the current OS family (UNIX or Windows)">
+
+            <condition property="currentOSFamily" value="windows">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="currentOSFamily" value="unix">
+                <os family="unix"/>
+            </condition>
+
+            <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+        </target>
+
+        <target name="convertWASHomeToUNIXStylePath">
+            <path id="id.was.home">
+                <pathelement location="${WAS_HOME}"/>
+            </path>
+
+            <pathconvert targetos="unix"
+                property="WAS_HOME_UNIX_STYLE"
+                refid="id.was.home"/>
+        </target>
+
+        <target name="setScriptExtension"
+                description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+            <condition property="scriptExtension" value="sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="scriptExtension" value="bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+        </target>
+
+        <target name="resolveMANAGEPROFILESExecutableForTheCurrentPlatform"
+                description="Sets MANAGEPROFILES_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${MANAGEPROFILES_EXECUTABLE}</wscmtlog>
+
+        </target>
+
+        <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+                description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+        </target>
+
+  
+     <target name="restoreServerTemplates"  description="restore the WASCE_SERVER server directory"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+        <wscmtlog message ="restore the back up the WASCE_SERVER" />
+        <wscmtlog message ="profileName = ${profileName}" />
+        <wscmtlog message ="profilePath = ${profilePath}" />
+        <delete dir="${profilePath}/config/templates/servertypes/WASCE_SERVER"/>
+        <mkdir dir= "${profilePath}/config/templates/servertypes/WASCE_SERVER"/>
+        <copy toDir="${profilePath}/config/templates/servertypes/WASCE_SERVER">
+           <fileset dir="${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/WASCE_SERVER"/>
+        </copy>
+        
+        <wscmtlog message = "wsadmin to get the cell name"/>
+        <property name="singlequote" value="'$AdminConfig list Cell'"/>
+        <wscmtlog message = "singlequote = ${singlequote}"/>
+
+        <exec executable="${WSADMIN_EXECUTABLE}"
+               output="${profilePath}/logs/cellName.log">
+               <arg value="-conntype"/>
+               <arg value="NONE"/>
+               <arg value="-lang"/>
+               <arg value="jython"/>
+               <arg value="-c"/>
+               <arg value="AdminConfig.list('Cell').split('(')[0].split('[')[0]"/>
+		 		  		 		
+        </exec>
+
+        <wscmtlog message = "load  the cell name" />
+        <loadfile
+              property="cellName"
+              srcFile="${profilePath}/logs/cellName.log"
+              failonerror="false">
+              <filterchain>
+                 <tailfilter lines="1"/>
+                 <trim/>
+                 <ignoreblank/>
+                 <striplinebreaks/>
+                 <filterreader classname="org.apache.tools.ant.filters.StripLineBreaks">
+                         <param name="linebreaks" value="''"/>
+                 </filterreader>
+              </filterchain>
+        </loadfile>
+
+        <wscmtlog message = "the cellName = ${cellName}"/>
+        <wscmtlog message ="back up the MiddlewareDescriptor" />
+        <wscmtlog message ="profileName = ${profileName}" />
+        <wscmtlog message ="profilePath = ${profilePath}" />
+        <delete dir="${profilePath}/config/templates/servertypes/WASAPP_SERVER"/>
+        <delete dir="${profilePath}/config/cells/${cellName}/middlewaredescriptors/wasceRuntime"/>
+        <wscmtlog message ="Completed restore middlewaredescriptors:" />
+
+    </target>
+
+       
+
+    <target name="listProfiles" description="list the Profiles currently on the box">
+
+           <wscmtlog message = "listProfiles" />
+           <wscmtlog>list Profiles ...</wscmtlog>
+           <xmlproperty file="${WS_PROFILE_REGISTRY}" validate="false" collapseAttributes="true"/>
+           <wscmtlog message="profile name found=${profiles.profile.name}"/>
+           <antcall target="processEachProfile"/>
+
+    </target>
+
+   <target name="processEachProfile" if="profiles.profile.name" description="process each profile if profile exists">
+           <wscmtlog message = "in processEachProfile, profiles.profile.name is ${profiles.profile.name}"/>
+           <foreach target="getProfilePath" list="${profiles.profile.name}" propertyName="profileName"/>
+   </target>
+
+   <target name="getProfilePath" description="get the Profiles path"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveMANAGEPROFILESExecutableForTheCurrentPlatform">
+          <wscmtlog message = "get the ProfilePath" />
+
+    <exec executable="${MANAGEPROFILES_EXECUTABLE}"
+                 failonerror="false"
+                 output="${WAS_HOME}/logs/ProfilesPath.log">
+                 <arg value="-getPath"/>
+                 <arg value="-profileName"/>
+                 <arg value="${profileName}"/>
+           </exec>
+           <loadfile
+                 property="allProfilePath"
+                 srcFile="${WAS_HOME}/logs/ProfilesPath.log"
+                 failonerror="false">
+           </loadfile>
+
+            <wscmtlog message = "${allProfilePath}" />
+            <foreach target="checkProfileAugment"
+                list="${allProfilePath}"
+                propertyName="profilePath">
+            </foreach>
+
+    </target>
+
+    <target name="checkProfileAugment" depends="checkProfileAugment.check" if="isAugmented">
+             <wscmtlog message = "checkProfileAugment: profilePath = ${profilePath}" />
+            <antcall target="updateProfiles">
+                  <param name="PROFILE_PATH" value="${profilePath}"/>
+            </antcall>
+    </target>
+
+    <target name="checkProfileAugment.check" description="Check to see if profile augment">
+        <wscmtlog message ="checkProfileAugment" />
+              <condition property="isAugmented">
+                  <and>
+                    <available file="${profilePath}/properties/version/wxdop.augment"/>
+                 </and>
+               </condition>
+    </target>
+
+
+<target name="checkBackUp" depends="checkBackUp.check" if="isBackedUped">
+             <wscmtlog message = "checkBackUp: profilePath = ${profilePath}" />
+            <antcall target="restoreServerTemplates">
+                  <param name="PROFILE_PATH" value="${profilePath}"/>
+            </antcall>
+    </target>
+  
+ <target name="checkBackUp.check" description="Check to see if servertemplate were backed up">
+    <wscmtlog message ="checkBackUp.check for ${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}"/>
+    <condition property="isBackedUped">
+       <and>
+           <available file="${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}" 
+               type="dir"/>
+       </and>
+     </condition>
+    <wscmtlog message = "isBackedUped = ${isBackedUped}"/>
+</target>
+
+
+</project>

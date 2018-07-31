@@ -1,0 +1,585 @@
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>SessionManager</title>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h2>SessionManager</h2>
+
+<p>This type is a class for model objects.</p>
+
+<p>Configuration for session support in the Web container. When configuring the Session Manager, you can specify:  ?Whether to enable sessions  ?How to convey session IDs to servlets (cookies or URL rewriting)  ?AE: Whether to save session data in a database during execution (persistent sessions)  ?Whether to add session IDs to URLs in transition from HTTP to HTTPS and back (protocol switch rewriting)<BR><BR>.</p>
+Package:&nbsp;<A HREF="../webcontainer/classes-frame.html" target="packageFrame">webcontainer</A><BR>
+Supertype:&nbsp;<A HREF="../process/Service.html">Service</A><BR>
+<BR>
+Classifier ID:&nbsp;&nbsp;-1
+<BR>
+Instance class name:&nbsp;&nbsp;* Unspecified *
+<BR>
+Instance class:&nbsp;&nbsp;* Unspecified *
+<BR>
+<BR>
+
+Reference attributes having this type:
+<BR>
+&nbsp;&nbsp;<B><A HREF="../appcfg/ApplicationConfig.html#sessionManagement">ApplicationConfig.sessionManagement</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../appcfg/WebModuleConfig.html#sessionManagement">WebModuleConfig.sessionManagement</A></B><BR>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attributes Summary</B></FONT></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableUrlRewriting">enableUrlRewriting</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Specifies whether the Session Manager uses rewritten URLs to carry the session IDs. If URL rewriting is enabled, the Session Manager recognizes session IDs that arrive in the URL and, if necessary, rewrites the URL to send the session IDs.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableCookies">enableCookies</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Whether session tracking will use cookies to carry session IDs. If cookies are enabled, session tracking will recognize session IDs that arrive as cookies and try to use cookies for sending session IDs. If cookies are not enabled, session tracking will use URL rewriting instead of cookies (if URL rewriting is enabled). Enabling cookies takes precedence over URL rewriting.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableSSLTracking">enableSSLTracking</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Whether session tracking uses SSL to carry session IDs. Enabling SSL tracking takes precedence over cookie-based session tracking.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableProtocolSwitchRewriting">enableProtocolSwitchRewriting</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Whether the session ID is added to a URL when the URL requires a switch from HTTP to HTTPS or from HTTPS to HTTP. If rewriting is enabled, the session ID is required in order to go between HTTP and HTTPS.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#sessionPersistenceMode">sessionPersistenceMode</A></B></FONT>&nbsp;:&nbsp;<A HREF="../webcontainer/SessionPersistenceKind.html">SessionPersistenceKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+When enabled, the session manager will persist session information into the datasource specified by the datasourceConnection settings.  Specifies whether to save session data in a database, or discard the session data when the server shuts down. 
+
+True - The session data is stored in a database 
+False - The session data is kept in memory for a single instance of the servlet engine 
+
+For changes to take effect, this property requires stopping and restarting the application server with which the session manager is associated.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableSecurityIntegration">enableSecurityIntegration</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+When security integration is enabled, the Session Manager will associate the identity of users with their HTTP sessions.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#allowSerializedSessionAccess">allowSerializedSessionAccess</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+By default, access to session is concurrent.  When true, this option forces all session access by an application to be serialized, so that the web container can manage conconcurrency control to session data; rather than forcing customers to code access control logic in their applications.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maxWaitTime">maxWaitTime</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+When allow serialized session access is enabled, this value specifies the maximum amount of time (in milliseconds) that a request thread which is waiting to access the session will be blocked.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#accessSessionOnTimeout">accessSessionOnTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+When allow serialized session access is enabled, this option specifies what happens if max wait time has been reached for a request thread.  If true, the thread is allowed to access the session; if false, an exception is thrown to the web application.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#defaultCookieSettings">defaultCookieSettings</A></B></FONT>&nbsp;:&nbsp;<A HREF="../webcontainer/Cookie.html">Cookie</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+Session tracking through HTTP cookies is the most used session tracking mechanism and is required to be supported by all servlet containers. The container sends a cookie to the client. The client will then return the cookie on each subsequent request to the server unambiguously associating the request with a session. The name of the session tracking cookie must be JSESSIONID.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#sessionDatabasePersistence">sessionDatabasePersistence</A></B></FONT>&nbsp;:&nbsp;<A HREF="../webcontainer/SessionDatabasePersistence.html">SessionDatabasePersistence</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+Specifies information about the data source that the session manager will use to obtain database connections.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#tuningParams">tuningParams</A></B></FONT>&nbsp;:&nbsp;<A HREF="../webcontainer/TuningParams.html">TuningParams</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+Tuning parameters for session management.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#sessionDRSPersistence">sessionDRSPersistence</A></B></FONT>&nbsp;:&nbsp;<A HREF="../webcontainer/DRSSettings.html">DRSSettings</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+Specifies information required for memory-to-memory replication of session objects.  Identifies the Replication Domain and the Replication Mode, one of "Client only", "Server only", or "Both client and server", to be used for memory-to-memory replication of session objects.
+</TD>
+</TR>
+
+</TABLE>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attribute Details</B></FONT></TD>
+</TR>
+</TABLE>
+
+
+<BR>
+<B><A name="enableUrlRewriting">enableUrlRewriting</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Specifies whether the Session Manager uses rewritten URLs to carry the session IDs. If URL rewriting is enabled, the Session Manager recognizes session IDs that arrive in the URL and, if necessary, rewrites the URL to send the session IDs.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableCookies">enableCookies</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Whether session tracking will use cookies to carry session IDs. If cookies are enabled, session tracking will recognize session IDs that arrive as cookies and try to use cookies for sending session IDs. If cookies are not enabled, session tracking will use URL rewriting instead of cookies (if URL rewriting is enabled). Enabling cookies takes precedence over URL rewriting.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableSSLTracking">enableSSLTracking</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Whether session tracking uses SSL to carry session IDs. Enabling SSL tracking takes precedence over cookie-based session tracking.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableProtocolSwitchRewriting">enableProtocolSwitchRewriting</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Whether the session ID is added to a URL when the URL requires a switch from HTTP to HTTPS or from HTTPS to HTTP. If rewriting is enabled, the session ID is required in order to go between HTTP and HTTPS.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="sessionPersistenceMode">sessionPersistenceMode</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;When enabled, the session manager will persist session information into the datasource specified by the datasourceConnection settings.  Specifies whether to save session data in a database, or discard the session data when the server shuts down. 
+
+True - The session data is stored in a database 
+False - The session data is kept in memory for a single instance of the servlet engine 
+
+For changes to take effect, this property requires stopping and restarting the application server with which the session manager is associated.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../webcontainer/SessionPersistenceKind.html">SessionPersistenceKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;NONE
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;DATABASE
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;DATA_REPLICATION
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableSecurityIntegration">enableSecurityIntegration</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;When security integration is enabled, the Session Manager will associate the identity of users with their HTTP sessions.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="allowSerializedSessionAccess">allowSerializedSessionAccess</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;By default, access to session is concurrent.  When true, this option forces all session access by an application to be serialized, so that the web container can manage conconcurrency control to session data; rather than forcing customers to code access control logic in their applications.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="maxWaitTime">maxWaitTime</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;When allow serialized session access is enabled, this value specifies the maximum amount of time (in milliseconds) that a request thread which is waiting to access the session will be blocked.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="accessSessionOnTimeout">accessSessionOnTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;When allow serialized session access is enabled, this option specifies what happens if max wait time has been reached for a request thread.  If true, the thread is allowed to access the session; if false, an exception is thrown to the web application.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+<BR>
+<B><A name="defaultCookieSettings">defaultCookieSettings</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Session tracking through HTTP cookies is the most used session tracking mechanism and is required to be supported by all servlet containers. The container sends a cookie to the client. The client will then return the cookie on each subsequent request to the server unambiguously associating the request with a session. The name of the session tracking cookie must be JSESSIONID.
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../webcontainer/Cookie.html">Cookie</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+<BR>
+<B><A name="sessionDatabasePersistence">sessionDatabasePersistence</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Specifies information about the data source that the session manager will use to obtain database connections.
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../webcontainer/SessionDatabasePersistence.html">SessionDatabasePersistence</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+<BR>
+<B><A name="tuningParams">tuningParams</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Tuning parameters for session management.
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../webcontainer/TuningParams.html">TuningParams</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+<BR>
+<B><A name="sessionDRSPersistence">sessionDRSPersistence</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Specifies information required for memory-to-memory replication of session objects.  Identifies the Replication Domain and the Replication Mode, one of "Client only", "Server only", or "Both client and server", to be used for memory-to-memory replication of session objects.
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../webcontainer/DRSSettings.html">DRSSettings</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+<CENTER>
+<h4>(C) COPYRIGHT International Business Machines Corp. 1996-2006</h4>
+</CENTER>
+
+</body>
+
+</html>

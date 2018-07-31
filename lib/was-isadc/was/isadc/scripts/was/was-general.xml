@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere General Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere General Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	
+
+	<property name="autopdProblem" value="WAS_General_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-general" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="problem.type.script" value="was/was-general.xml.html" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="main target for general collection"
+	  	     depends="load_sharedelements_tasks,
+				set_problem_type_with_nls_bundle,
+				setup_autopd_v2, 
+				validate_os, 
+
+		 		was_stack_custom_init,		 
+				general_generate_trace_string,			         
+				trace_setup_custom,	
+				
+				execute_collector, 
+				execute_vce_info_for_was,
+				common_postamble_general_with_ftp">
+
+	</target>
+
+
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="general_generate_trace_string"
+	        description="generate trace strings for different versions, or conditions"
+			unless="do.collection.only">
+
+		<if isTrue="${isWindows}">
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="Paste_instructions_windows"
+			                            propertyName="paste.instructions"
+			                            message="To paste a string into the text area, use ctrl-v" />
+			<echo message="paste.instructions: ${paste.instructions}" />
+		</if>
+		<if isNotTrue="${isWindows}">
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="Paste_instructions_unix"
+			                            propertyName="paste.instructions"
+			                            message="To copy and paste a string into the text area, select the text with your mouse and right click in the text area below." />
+		</if>
+
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask doSkip="true">
+				<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label"
+				           label="${paste.instructions}"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.trace.string" label="Answer" type="textarea" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${useGuiConsole }">
+			<inputdialogtask doSkip="true">
+				<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.trace.string" label="Answer" type="textarea" />
+			</inputdialogtask>
+		</if>
+		<!-- Allow user to place strings on different lines for readablity -->
+		<if isTrue="${useGuiConsole }">
+			<condition property="no.trace.string">
+				<or>
+					<equals arg1="${was.trace.string}" arg2="" />
+					<not>
+						<isset property="was.trace.string" />
+					</not>
+				</or>
+			</condition>
+		</if>
+		<if isNotTrue="${useGuiConsole }">
+			<condition property="no.trace.string">
+				<or>
+					<equals arg1="${was.trace.string}" arg2="" />
+					<not>
+						<isset property="was.trace.string" />
+					</not>
+				</or>
+			</condition>
+		</if>
+		<echo message="no.trace.string: ${no.trace.string}" />
+
+		<if isNotTrue="${no.trace.string}">
+
+			<autopdreplace property="was.trace.string" token="\n" value=":" />
+
+			<echo message="New trace specification string: ${was.trace.string}" />
+		</if>
+
+		<if isTrue="${no.trace.string}">
+			<if isTrue="${isWASVersion6}">
+				<autopdproperty name="was.trace.string" value="*=info" />
+			</if>
+			<if isNotTrue="${isWASVersion6}">
+				<autopdproperty name="was.trace.string" value="com.ibm.*=info=enabled" />
+			</if>
+
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="jms_generate_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		<property name="generic.jvm.arguments" value="-DMQJMS_TRACE_LEVEL=base" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;General Problem&lt;/h2&gt;&lt;p&gt;
+			This problem category can be run for any problem. During the data collection, any trace string
+			can be entered, the application server will pick up this trace, and the problem can be reproduced
+			based on that trace string. After the problem has been reproduced the configuration, log, and trace
+				files are collected and the application server is restored to its initial state.&lt;/p&gt;">
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1145599" /> 
+
+		<condition property="remote.collector.only">
+					<equals arg1="NO_GUI" arg2="${console}"/>
+				</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category can be run for any problem. During the data collection, 
+any trace string can be entered, the application server will pick up this trace, and the problem can be reproduced 
+based on that trace string. After the problem has been reproduced the configuration, log, and trace 
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="General Problem =>
+This problem category can be run for any problem. During the data collection, any trace string can be entered,
+the application server will pick up this trace, and the problem can be reproduced
+based on that trace string. After the problem has been reproduced the configuration, log, and trace
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

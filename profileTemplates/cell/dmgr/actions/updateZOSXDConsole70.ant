@@ -1,0 +1,56 @@
+<project name="Update z/OS XD Console on WAS 7.0" default="all">
+
+  <!-- This is for z/OS only.  -->
+
+  <target name="all" depends="init, main"/>
+
+  <taskdef name="wscmtlog"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+  <!-- Document startup -->
+  <target name="init">
+    <tstamp/>
+    <wscmtlog>Updating z/OS XD Console on WAS 7.0</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+    <wscmtlog>profilePath = ${profilePath}</wscmtlog>
+    <wscmtlog>WS_CMT_CELL_NAME = ${WS_CMT_CELL_NAME}</wscmtlog>
+
+    <!-- Determine OS family -->
+    <condition property="isZOS" value="true">
+    	<os family="z/os"/>
+    </condition>
+
+    <wscmtlog>Detected isZOS to be: ${isZOS}</wscmtlog>
+
+  </target>
+
+  <!-- Call iscdeploy on z/OS  -->
+  <target name="main" if="isZOS">
+  	
+	<!-- antcall target="new64bitmode8x"></antcall -->   
+        <wscmtlog> complete </wscmtlog>
+  </target>   
+    
+  <target name="new64bitmode8x" description="Add 64bit Parameters">
+     <wscmtlog message="Add private_Enable_zWAS_for_64bit and set it to true"/>
+  	 <replace encoding="ISO8859-1" dir="${profilePath}/config/cells">
+  		<include name="**/nodes/**/servers/**/variables.xml"/>
+  		 <replacetoken><![CDATA[</variables:VariableMap>]]></replacetoken>
+  		 <replacevalue><![CDATA[<entries xmi:id="VariableSubstitutionEntry_1923795764627" symbolicName="JAVA_HOME" value="${WAS_HOME}/java64"/>
+ <entries xmi:id="VariableSubstitutionEntry_1923795764629" symbolicName="private_Enable_zWAS_for_64bit" value="true"/>
+ </variables:VariableMap>]]></replacevalue>
+  	 </replace>
+  	
+     <wscmtlog message="Add was.com.ibm.websphere.zos.jvmmode parameter of 64 to server.xml"/>
+  	 <replace encoding="ISO8859-1" dir="${profilePath}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+  		 <replacetoken><![CDATA[runAsGroup=""/>
+ <monitoringPolicy]]></replacetoken>
+  		 <replacevalue><![CDATA[ runAsGroup=""/>
+    <environment xmi:id="Property_1234795764642" name="was.com.ibm.websphere.zos.jvmmode" value="64bit"/>
+ <monitoringPolicy]]></replacevalue>
+  	 </replace>
+  </target>
+ 
+</project>

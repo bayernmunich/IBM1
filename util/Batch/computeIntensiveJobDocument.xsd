@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+ <xsd:element name="classname" type="xsd:string" />
+ <xsd:element name="jndi-name" type="xsd:string" />
+
+ <xsd:element name="required-capability">
+    <xsd:complexType>
+        <xsd:attribute name="expression" type="xsd:string" use="required" />
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="substitution-props">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element ref="prop" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+ </xsd:element>
+ 
+ <xsd:element name="job-scheduling-criteria">
+   <xsd:complexType>
+       <xsd:sequence>
+           <xsd:element maxOccurs="unbounded" minOccurs="1" ref="required-capability" />
+       </xsd:sequence>
+   </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="job">
+    <xsd:complexType>
+      <xsd:sequence>
+          <xsd:element ref="jndi-name" minOccurs="1" maxOccurs="1"/>
+          <xsd:element ref="job-scheduling-criteria" minOccurs="0" maxOccurs="1"/>
+          <xsd:element ref="substitution-props" minOccurs="0" maxOccurs="1"/>
+          <xsd:element ref="job-step" maxOccurs="unbounded" minOccurs="1" />
+      </xsd:sequence>
+      <xsd:attribute name="name" type="xsd:string" use="required" />
+      <xsd:attribute name="class" type="xsd:string" use="optional" />
+      <xsd:attribute name="accounting" type="xsd:string" use="optional" />
+      <xsd:attribute name="default-application-name" type="xsd:string" use="optional" />
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="job-step">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element ref="classname" minOccurs="1" maxOccurs="1"/>
+            <xsd:element ref="props" minOccurs="0" maxOccurs="1"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="optional" />
+        <xsd:attribute name="application-name" type="xsd:string" use="optional" />
+    </xsd:complexType>
+ </xsd:element>
+
+
+ <xsd:element name="prop">
+    <xsd:complexType>
+        <xsd:attribute name="name" type="xsd:string" use="required" />
+        <xsd:attribute name="value" type="xsd:string" use="required" />
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="props">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element ref="prop" maxOccurs="unbounded" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+ </xsd:element>
+
+</xsd:schema>
+

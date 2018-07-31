@@ -1,0 +1,38 @@
+	<target name="importLogsToMain" >
+		<condition property="foefalse">
+			<equals arg1="${precondition}" arg2="foefalse" />
+		</condition>
+		
+		<condition property="foetrue">
+			<equals arg1="${precondition}" arg2="foetrue" />
+		</condition>
+
+		<antcall target="foewasfalse"></antcall>
+		<antcall target="foewastrue"></antcall>
+	</target>
+	
+	<target name="foewasfalse" if="foefalse">
+		<antcall target="movetheLogs"></antcall>
+	</target>
+	
+	<target name="foewastrue" if="foetrue">
+		<antcall target="movetheLogs"></antcall>
+		<antcall target="failIfError"></antcall>
+	</target>
+	
+	<target name="failIfError" >
+			<condition property="successproperty">
+			<or>
+				<equals arg1="${rcProperty}" arg2="0"/>
+				<equals arg1="${rcProperty}" arg2="101"/>
+			</or>
+		</condition>
+		<fail message="Failure occured while attempting to ${description}." unless="successproperty"/>
+	</target>
+	
+	<target name="movetheLogs" >
+		<loadfile property="message"
+			srcfile="${logfile}"
+			failonerror="false"/>
+			<wscmtlog>The following output is the output of ${description}. The following is taken from the log file found at ${logfile} : ${message}</wscmtlog>
+	</target>

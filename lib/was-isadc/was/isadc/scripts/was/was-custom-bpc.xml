@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="BPC Custom" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS Custom}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/websphere-customized-targets.xml" />
+
+	<property name="autopdProblem" value="BPC_Custom_Collector" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+<property name="was.trace.string" value="SSL=all"/> 
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="load_sharedelements_tasks,
+				 set_problem_type_with_nls_bundle,
+				 setup_autopd_v2,
+				 validate_os,
+				 was_stack_custom2_init,	
+				 trace_setup_custom,
+				 execute_vce_info_for_was,
+				 common_postamble_general_with_ftp">
+		
+	</target>
+
+	<target name="prompt_classloader_configuration" > 
+		
+		<inputdialogtask > 
+			<fieldtask name="prompt"
+					   label="Input_Required"
+					   type="prompt"
+					   bundle="autopdtoolstrings" />
+			<fieldtask name="ws.classcastexception"
+			           label="Classloader_1"
+			           type="selectlist"
+		           	   list="Yes:No"
+		           	   listDetails="Yes:No"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask> 
+		<condition property="classcastexception.debug">
+			<or>
+				<equals arg1="Yes" arg2="${ws.classcastexception}" />
+			</or>
+		</condition>
+		<if isTrue="${classcastexception.debug}"> 
+			<inputdialogtask >
+				<fieldtask name="prompt"
+						   label="Information_Message"
+						   type="prompt"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label1"
+				           label="Classloader_2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label1"
+				           label="Classloader_21"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+				           label="Classloader_3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_4"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_5"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_6"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_7"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_8"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label2"
+				           label="Classloader_9"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+				           label="Classloader_10"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				
+			</inputdialogtask>
+		</if> 
+			
+			
+		
+	</target> 
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;ClassLoader Problem&lt;/h2&gt;&lt;p&gt;
+			This problem category can be run for any problem. During the data collection, any trace string
+			can be entered, the application server will pick up this trace, and the problem can be reproduced
+			based on that trace string. After the problem has been reproduced the configuration, log, and trace
+				files are collected and the application server is restored to its initial state.&lt;/p&gt;">
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1196187" /> 
+
+		<condition property="remote.collector.only">
+					<equals arg1="NO_GUI" arg2="${console}"/>
+				</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category can be run for Classloader problem. During the data collection, 
+classloader specific trace string will be set, the application server will pick up this trace, and the problem can be reproduced 
+based on that trace string. After the problem has been reproduced the configuration, log, and trace 
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Classloader Problem =>
+This problem category can be run for Classloader problem. During the data collection,
+classloader specific trace string will be set, the application server will pick up this trace, and the problem can be reproduced
+based on that trace string. After the problem has been reproduced the configuration, log, and trace
+files are collected and the application server is restored to its initial state." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+		           	
+	<target name="generate_classloader_trace_string" description="Enable classloader tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="com.ibm.ws.classloader.*=all" />
+		</if>
+
+		<!-- WAS v5 -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="com.ibm.ws.classloader.*=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_classloader_jvm_arguments" description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating generic JVM arguments" replace="${autopdts};;${step.count}" id="1120" level="info" />
+		
+		<property name="jvm_arguments" value="true" />
+		<property name="jvm_verboseClass_enable" value="true" />
+		<property name="generic.jvm.arguments" value=" -Dws.ext.debug=true" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+</project>

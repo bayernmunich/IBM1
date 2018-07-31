@@ -1,0 +1,835 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console, Web Services -->
+<!--
+Licensed Materials - Property of IBM
+
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70
+
+Copyright IBM Corp. 2006, 2011 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
+
+
+<tiles-definitions>
+
+<!-- LIDB 4474-2 begin navigator Web services collection, cell view  -->
+
+    <definition name="WebservicesAdmin.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.webservices.wsadmin.WebservicesAdminController">
+        <put name="contextType" value="WebservicesAdminCell"/>
+        <put name="descTitle" value="WebservicesAdmin.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="descText" value="WebservicesAdmin.description"/>
+        <putList name="contentList">
+        <add value="WebservicesAdmin.paging.extend"/>
+        <add value="WebservicesAdmin.quicksearch.extend"/>
+        <add value="WebservicesAdmin.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="webservicesAdminCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <putList name="searchList">
+            <add value="WSAdmin.Webservice.column.displayName:name"/>
+            <add value="WSAdmin.Type.column.displayName:type"/>
+            <add value="WSAdmin.DeployedAsset.column.displayName:deployedAsset"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="WebservicesAdmin.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+    </definition>
+
+
+    <definition name="WebservicesAdmin.collection.table.extends" path="/com.ibm.ws.console.webservices.wsadmin/collectionTableLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="buttons" value="WebservicesAdmin.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WebservicesAdmin.content.main"/>
+        <put name="showCheckBoxes" value="true" />
+        <put name="idColumn" value="uniqueId"/>
+        <put name="statusType" value="unknown"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/WebservicesAdmin/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/WebservicesAdmin/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="list:UI/Collections/VirtualHost/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator" link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="4"/>
+        <put name="definitionName" value="WebservicesAdmin.collection.buttons.panel"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"></putList>
+    </definition>
+
+    
+<!-- LIDB 4474-2 end Web services collection, cell view  -->
+
+<!-- LIDB 4474-2 begin Web services collection application detail view, regular and SOA FP -->
+
+    <!-- Web services JavaEE 9J2EE) Application Detail tile -->
+
+    <definition name="WebservicesAdmin.ApplicationDetail.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.appdeployment.ApplicationConfigureController">
+        <put name="contextType" value="ApplicationDeployment"/>
+        <putList name="list">
+            <add value="ApplicationDeployment.title"/>
+            <add value="ApplicationDeployment.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <!-- Web services BLA Application Detail tile TBD needed later?
+
+    <definition name="WebservicesAdmin.BLApplicationDetail.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.webservices.wsadmin.BLApplicationDetailController">
+        <put name="contextType" value="BLApplicationDeployment"/>
+        <putList name="list">
+            <add value="BLApplicationDeployment.title"/>
+            <add value="BLApplicationDeployment.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    -->
+
+<!-- LIDB 4474-2 end Web services collection application detail view -->
+
+<!-- LIDB 4474-2 begin Module Detail tile -->
+
+    <definition name="WebservicesAdmin.ModuleDetail.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.appmanagement.controller.AppBindingsController">
+        <put name="contextType" value="appconfigure.modules.toappservers"/>
+        <putList name="list">
+            <add value="appconfigure.modules.toappservers.detail.title"/>
+            <add value="appconfigure.modules.toappservers.configStep"/>
+        </putList>
+    </definition>
+
+<!-- LIDB 4474-2 end Module Detail tile -->
+
+<!-- LIDB 4474-2 begin Web services collection, application view  -->
+
+    <definition name="WebservicesAdminApp.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.webservices.wsadmin.WebservicesAdminController">
+        <put name="contextType" value="WebservicesAdminApp"/>
+        <put name="descTitle" value="WebservicesAdminApp.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="descText" value="WebservicesAdminApp.description"/>
+        <put name="helpTopic" value="WebservicesAdminApp.collection"/>
+        <putList name="contentList">
+        <add value="WebservicesAdminApp.paging.extend"/>
+        <add value="WebservicesAdminApp.quicksearch.extend"/>
+        <add value="WebservicesAdminApp.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdminApp.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="webservicesAdminCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <putList name="searchList">
+            <add value="WSAdmin.Webservice.column.displayName:name"/>
+            <add value="WSAdmin.Type.column.displayName:type"/>
+            <add value="WSAdmin.Module.column.displayName:module"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdminApp.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="WebservicesAdminApp.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+    </definition>
+
+
+    <definition name="WebservicesAdminApp.collection.table.extends" path="/com.ibm.ws.console.webservices.wsadmin/collectionTableLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="buttons" value="WebservicesAdminApp.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WebservicesAdminApp.content.main"/>
+        <put name="showCheckBoxes" value="true" />
+        <put name="idColumn" value="uniqueId"/>
+        <put name="statusType" value="unknown"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/WebservicesAdminApp/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/WebservicesAdminApp/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="list:UI/Collections/VirtualHost/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator" link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>            
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdminApp.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="4"/>
+        <put name="definitionName" value="WebservicesAdminApp.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <putList name="actionList"></putList>
+    </definition>
+
+<!-- LIDB 4474-2 end Web services collection, application view  -->
+
+
+
+<!-- The detail portion of a hybrid WS Collection - WebservicesAdmin.config.view -->
+
+    <definition name="WebservicesAdmin.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="WebservicesAdminDetail"/>
+        <putList name="list">
+            <add value="WebservicesAdmin.detail.title"/>
+            <add value="WebservicesAdmin.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="titleKey" value="WebservicesAdmin.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=WebservicesAdmin.content.main&#38;noChange=true"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="WebservicesAdmin.detail.description"/>
+        <put name="displayName" value="WebservicesAdmin.displayName"/>
+        <put name="helpTopic" value="WebservicesAdmin.detail"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+    </definition>
+
+    <definition name="WebservicesAdmin.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="webservicesAdminDetailPath.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+
+    <definition name="WebservicesAdmin.config.tab.view" path="/com.ibm.ws.console.webservices.policyset/configTabLayout.jsp">
+        <put name="formAction" value="webservicesAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="editable" value="true"/>
+        <put name="showButtons" value="no"/>
+        <put name="showApplyButton" value="no"/>
+        <put name="showCancelButton" value="no"/>
+        <put name="showOKButton" value="no"/>
+        <put name="showResetButton" value="no"/>
+        <put name="showButtonForNonAdmin" value="no"/>
+        <putList name="list">
+            <add value="WebservicesAdmin.detail.buttons.panel"/>
+            <add value="WebservicesAdmin.config.general.properties"/>
+            <add value="WebservicesAdmin.config.additional.properties"/>
+            <add value="WSAdminContainedPolicySetAttachment.content.main"/>
+        </putList>
+    </definition>
+
+    <definition name="WSAdminContainedPolicySetAttachment.content.main" extends="ContainedPolicySetAttachment.content.main">
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WebservicesAdmin.config.view"/>
+        <put name="descText" value="WebservicesAdmin.sub.detail.description"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/WebservicesAdmin.config.view/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/WebservicesAdmin.config.view/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="WebservicesAdmin.detail.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="webservicesAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formFocus" value=""/>
+        <put name="readOnlyView" value="no"/>
+        <put name="showButtons" value="no"/>
+        <put name="showBackButton" value="no"/>
+        <putList name="attributeList">
+            <item  value="servicename.label.name:webserviceName:no:URL:servicename.label.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="WebservicesAdmin.config.additional.properties" path="/com.ibm.ws.console.webservices.wsadmin/addPropLayoutDynamicLabel.jsp">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="list">
+        </putList>
+    </definition>
+
+<!-- end - hybrid Service Provider detail and collection -->
+
+
+<!-- begin WSPolicySetAttachment collection view : Service provider policy sets and bindings -->
+
+    <definition name="WSPolicySetAttachment.content.main" 
+                extends="PolicySetAttachment.content.main" 
+                controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="PolicySetAttachment"/>
+        <put name="descTitle"   value="PolicySetBindings.provider.displayName"/>
+        <put name="descText"    value="PolicySetBindings.provider.description"/>
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="helpTopic"   value="WSPolicySetAttachment.collection"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+        <put name="parent"  
+             value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WSPolicySetAttachment.content.main"/>
+        <put name="selectUri"   value="wsPolicySetAttachmentCollection.do?ToggleViewAction=true"/>
+        <put name="formAction"  value="wsPolicySetAttachmentCollection.do"/>
+        <putList name="collectionPreferenceList">
+                <item value="text:UI/Collections/WSPolicySetAttachment/Preferences#maximumRows:25" 
+            link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+                <item value="checkbox:UI/Collections/WSPolicySetAttachment/Preferences#retainSearchCriteria:32"             
+            link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+         </putList>
+         <putList name="contentList">
+                <add value="WSPolicySetAttachment.paging.extend"/>
+        <add value="GenericContained.quicksearch.extend"/>
+                <add value="PSAttachmentContained.collection.table.extends"/>
+         </putList>
+    </definition>
+
+    <definition name="WSPolicySetAttachment.paging.extend" extends="PolicySetAttachment.paging.extend">
+         <put name="formAction" value="wsPolicySetAttachmentCollection.do"/>
+    </definition>
+
+<!-- end WSPolicySetAttachment collection view : Service provider policy sets and bindings -->
+
+<!-- View WSDL detail view -->
+
+    <definition name="ViewWSDL.config.view" extends="detail.config.view">
+        <put name="contextType" value="viewwsdl.config.view"/>
+        <putList name="list">
+            <add value="ViewWSDL.detail.title" />
+            <add value="ViewWSDL.output" />  
+        </putList>
+    </definition>
+
+    <definition name="ViewWSDL.detail.title" path="/secure/layouts/descLayout.jsp">
+        <put name="descTitle" value="view.wsdl.title" />
+        <put name="descText" value="view.wsdl.description" /> 
+        <put name="descImage" value=" " />
+        <!--  
+              1) The '?' help link is not supported 
+                    <put name="helpTopic" value="ViewWSDL.detail"/>       
+              2) The breadcrumb handler not used
+                    <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.ViewWSDLBreadcrumbHandler"/>
+        -->
+    </definition>
+
+    <definition name="ViewWSDL.output" path="/com.ibm.ws.console.deploymentdescriptor/displayDD.jsp">
+    </definition>
+
+
+<!-- LIDB 4474-2 begin cell-level service client collection  -->
+
+    <definition name="ClientWSAdmin.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.webservices.wsadmin.WebservicesAdminController">
+        <put name="contextType" value="ClientWSAdminCell"/>
+        <put name="descTitle" value="client.Admin.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="descText" value="client.Admin.description"/>
+        <put name="helpTopic" value="ClientWSAdmin.collection"/>
+        <putList name="contentList">
+        <add value="ClientWSAdmin.paging.extend"/>
+        <add value="ClientWSAdmin.quicksearch.extend"/>
+        <add value="ClientWSAdmin.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="webservicesAdminCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <putList name="searchList">
+            <add value="WSAdmin.Webservice.column.displayName:name"/>
+            <add value="WSAdmin.Type.column.displayName:type"/>
+            <add value="WSAdmin.DeployedAsset.column.displayName:deployedAsset"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="client.Admin.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+    </definition>
+
+
+    <definition name="ClientWSAdmin.collection.table.extends" path="/com.ibm.ws.console.webservices.wsadmin/collectionTableLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="buttons" value="ClientWSAdmin.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientWSAdmin.content.main"/>
+        <put name="showCheckBoxes" value="false" />
+        <put name="idColumn" value="uniqueId"/>
+        <put name="statusType" value="unknown"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/ClientWSAdmin/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/ClientWSAdmin/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="list:UI/Collections/VirtualHost/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator" link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="ClientWSAdmin.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"></putList>
+    </definition>
+
+<!-- LIDB 4474-2 end cell-level service client collection  -->
+
+
+<!-- The detail portion of a hybrid Service Client Collection - ClientWSAdmin.config.view -->
+
+    <definition name="ClientWSAdmin.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="ClientWSAdminDetail"/>
+        <putList name="list">
+            <add value="ClientWSAdmin.detail.title"/>
+            <add value="ClientWSAdmin.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="titleKey" value="client.Admin.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=ClientWSAdmin.content.main&#38;noChange=true"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="WebservicesAdmin.detail.client.description"/>
+        <put name="displayName" value="client.Admin.displayName"/>
+        <put name="helpTopic" value="ClientWSAdmin.detail"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+    </definition>
+
+    <definition name="ClientWSAdmin.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="clientWSAdminDetailPath.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+
+    <definition name="ClientWSAdmin.config.tab.view" path="/com.ibm.ws.console.webservices.policyset/configTabLayout.jsp">
+        <put name="formAction" value="clientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="editable" value="true"/>
+        <put name="showButtons" value="no"/>
+        <put name="showApplyButton" value="no"/>
+        <put name="showCancelButton" value="no"/>
+        <put name="showOKButton" value="no"/>
+        <put name="showResetButton" value="no"/>
+        <put name="showButtonForNonAdmin" value="no"/>
+        <putList name="list">
+            <add value="ClientWSAdmin.detail.buttons.panel"/>
+            <add value="ClientWSAdmin.config.general.properties"/>
+            <add value="ClientWSAdmin.config.additional.properties"/>
+            <add value="ClientWSAdminContainedPolicySetAttachment.content.main"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdminContainedPolicySetAttachment.content.main" extends="ContainedClientPolicySetAttachment.content.main">
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientWSAdmin.config.view"/>
+        <put name="descText" value="WebservicesAdmin.sub.detail.client.description"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ClientWSAdmin.config.view/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ClientWSAdmin.config.view/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="3"/>
+        <put name="definitionName" value="ClientWSAdmin.detail.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="clientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formFocus" value=""/>
+        <put name="readOnlyView" value="no"/>
+        <put name="showButtons" value="no"/>
+        <put name="showBackButton" value="no"/>
+        <putList name="attributeList">
+            <item  value="client.servicename.label.name:webserviceName:no:URL:servicename.label.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdmin.config.additional.properties" path="/com.ibm.ws.console.webservices.wsadmin/addPropLayoutDynamicLabel.jsp">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="list">
+        </putList>
+    </definition>
+<!-- end - hybrid Service Client detail and collection -->
+
+<!-- The detail portion of a hybrid Service Reference Client Collection - SrvRefClientWSAdmin.config.view -->
+
+    <definition name="SrvRefClientWSAdmin.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="SrvRefClientWSAdminDetail"/>
+        <putList name="list">
+            <add value="SrvRefClientWSAdmin.detail.title"/>
+            <add value="SrvRefClientWSAdmin.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="titleKey" value="srvRefClient.Admin.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=ClientWSAdmin.content.main&#38;noChange=true"/>
+        <put name="instanceDetails" value="serviceRef"/>
+        <put name="instanceDescription" value="WebservicesAdmin.detail.client.description"/>
+        <put name="displayName" value="srvRefClient.Admin.displayName"/>
+        <put name="helpTopic" value="SrvRefClientWSAdmin.detail"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="srvRefClientWSAdminDetailPath.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.config.tab.view" path="/com.ibm.ws.console.webservices.policyset/configTabLayout.jsp">
+        <put name="formAction" value="srvRefClientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="editable" value="true"/>
+        <put name="showButtons" value="no"/>
+        <put name="showApplyButton" value="no"/>
+        <put name="showCancelButton" value="no"/>
+        <put name="showOKButton" value="no"/>
+        <put name="showResetButton" value="no"/>
+        <put name="showButtonForNonAdmin" value="no"/>
+        <putList name="list">
+            <add value="SrvRefClientWSAdmin.detail.buttons.panel"/>
+            <add value="SrvRefClientWSAdmin.config.general.properties"/>
+            <add value="SrvRefClientWSAdmin.config.additional.properties"/>
+            <add value="SrvRefClientWSAdminContainedPolicySetAttachment.content.main"/>
+        </putList>
+    </definition>
+                      
+    <definition name="SrvRefClientWSAdminContainedPolicySetAttachment.content.main" extends="SrvRefContainedClientPolicySetAttachment.content.main">
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SrvRefClientWSAdmin.config.view"/>
+        <put name="descText" value="PolicySetBindings.SrvRefClient.description"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/SrvRefClientWSAdmin.config.view/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/SrvRefClientWSAdmin.config.view/Preferences#retainSearchCriteria:32"/>
+            <item value="checkbox:UI/Collections/PSServiceReference/Preferences#showConfirmation:32" link="collection.pref.PSserviceReference.showConfirmLabel: :collection.pref.PSserviceReference.showConfirmDesc:true" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="5"/>
+        <put name="definitionName" value="SrvRefClientWSAdmin.detail.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="srvRefClientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formFocus" value=""/>
+        <put name="readOnlyView" value="no"/>
+        <put name="showButtons" value="no"/>
+        <put name="showBackButton" value="no"/>
+        <putList name="attributeList">
+            <item  value="client.servicerefname.label.name:serviceRef:no:Text:servicerefname.label.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="SrvRefClientWSAdmin.config.additional.properties" path="/com.ibm.ws.console.webservices.wsadmin/addPropLayoutDynamicLabel.jsp">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="list">
+        </putList>
+    </definition>
+<!-- end - hybrid Service Reference Client detail and collection -->
+
+
+<!-- The detail portion of a WSN hybrid Service Client Collection - WSNClientWSAdmin.config.view -->
+
+
+    <definition name="WSNClientWSAdmin.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="WSNClientWSAdminDetail"/>
+        <putList name="list">
+            <add value="WSNClientWSAdmin.detail.title"/>
+            <add value="WSNClientWSAdmin.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="titleKey" value="wsnclient.Admin.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=ClientWSAdmin.content.main&#38;noChange=true"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="WebservicesAdmin.detail.wsnclient.description"/>
+        <put name="displayName" value="wsnclient.Admin.displayName"/>
+        <put name="helpTopic" value="WSNClientWSAdmin.detail"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="wsnclientWSAdminDetailPath.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.config.tab.view" path="/com.ibm.ws.console.webservices.policyset/configTabLayout.jsp">
+        <put name="formAction" value="wsnclientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="editable" value="true"/>
+        <put name="showButtons" value="no"/>
+        <put name="showApplyButton" value="no"/>
+        <put name="showCancelButton" value="no"/>
+        <put name="showOKButton" value="no"/>
+        <put name="showResetButton" value="no"/>
+        <put name="showButtonForNonAdmin" value="no"/>
+        <putList name="list">
+            <add value="WSNClientWSAdmin.detail.buttons.panel"/>
+            <add value="WSNClientWSAdmin.config.general.properties"/>
+            <add value="WSNClientWSAdmin.config.additional.properties"/>
+            <add value="WSNClientWSAdminContainedPolicySetAttachment.content.main"/>
+        </putList>
+    </definition>
+
+    <definition name="WSNClientWSAdminContainedPolicySetAttachment.content.main" extends="ContainedClientPolicySetAttachment.content.main">
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=WSNClientWSAdmin.config.view"/>
+        <put name="descText" value="WebservicesAdmin.sub.detail.wsnclient.description"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ClientWSAdmin.config.view/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ClientWSAdmin.config.view/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="WSNClientWSAdmin.detail.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="wsnclientWSAdminDetailPath.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <put name="formFocus" value=""/>
+        <put name="readOnlyView" value="no"/>
+        <put name="showButtons" value="no"/>
+        <put name="showBackButton" value="no"/>
+        <putList name="attributeList">
+            <item  value="client.servicename.label.name:webserviceName:no:URL:servicename.label.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="WSNClientWSAdmin.config.additional.properties" path="/com.ibm.ws.console.webservices.wsadmin/addPropLayoutDynamicLabel.jsp">
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"/>
+        <putList name="list">
+        </putList>
+    </definition>
+<!-- end - hybrid WSN Service Client detail and collection -->
+
+
+<!-- LIDB 4474-2 begin application-level service client collection  -->
+
+    <definition name="ClientWSAdminApp.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.webservices.wsadmin.WebservicesAdminController">
+        <put name="contextType" value="ClientWSAdminApp"/>
+        <put name="descTitle" value="client.AdminApp.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="descText" value="client.AdminApp.description"/>
+        <put name="helpTopic" value="ClientWSAdminApp.collection"/>
+        <putList name="contentList">
+        <add value="ClientWSAdminApp.paging.extend"/>
+        <add value="ClientWSAdminApp.quicksearch.extend"/>
+        <add value="ClientWSAdminApp.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdminApp.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="webservicesAdminCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <putList name="searchList">
+            <add value="WSAdmin.Webservice.column.displayName:name"/>
+            <add value="WSAdmin.Type.column.displayName:type"/>
+            <add value="WSAdmin.Module.column.displayName:module"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdminApp.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="client.AdminApp.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+    </definition>
+
+
+    <definition name="ClientWSAdminApp.collection.table.extends" path="/com.ibm.ws.console.webservices.wsadmin/collectionTableLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="formAction" value="webservicesAdminCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminCollectionForm"/>
+        <put name="buttons" value="ClientWSAdminApp.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientWSAdminApp.content.main"/>
+        <put name="showCheckBoxes" value="false" />
+        <put name="idColumn" value="uniqueId"/>
+        <put name="statusType" value="unknown"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/ClientWSAdminApp/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/ClientWSAdminApp/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="list:UI/Collections/VirtualHost/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator" link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="ClientWSAdminApp.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="ClientWSAdminApp.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"></putList>
+    </definition>
+
+<!-- LIDB 4474-2 end application-level service client collection  -->
+
+
+<!-- Begin : Service Client Policy Sets and Bindings -->
+
+    <definition name="ClientPolicySetAttachment.content.main" 
+                extends="GenericClientPolicySetAttachment.content.main" 
+                controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="ClientPolicySetAttachment"/>
+        <put name="descTitle"   value="client.PolicySetBindings.client.displayName"/>
+        <put name="descText"    value="PolicySetBindings.client.description"/>
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="helpTopic"   value="ClientPolicySetAttachment.collection"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+        <put name="parent"  
+             value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=ClientPolicySetAttachment.content.main"/>
+        <put name="selectUri"   value="wsPolicySetAttachmentCollection.do?ToggleViewAction=true"/>
+        <put name="formAction"  value="wsPolicySetAttachmentCollection.do"/>
+        <putList name="collectionPreferenceList">
+                <item value="text:UI/Collections/ClientPolicySetAttachment/Preferences#maximumRows:25" 
+            link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+                <item value="checkbox:UI/Collections/ClientPolicySetAttachment/Preferences#retainSearchCriteria:32"             
+            link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+         </putList>
+         <putList name="contentList">
+                <add value="ClientPolicySetAttachment.paging.extend"/>
+        <add value="GenericContained.quicksearch.extend"/>
+                <add value="PSAttachmentContained.collection.table.extends"/>
+         </putList>
+    </definition>
+
+    <definition name="ClientPolicySetAttachment.paging.extend" extends="PolicySetAttachment.paging.extend">
+         <put name="formAction" value="wsPolicySetAttachmentCollection.do"/>
+    </definition>
+
+<!-- End : Service Client Policy Sets and Bindings -->
+
+<!-- Begin : Service Client Policy Sets and Bindings -->
+
+   <definition name="SrvRefClientPolicySetAttachment.content.main" 
+                extends="GenericClientPolicySetAttachment.content.main" 
+                controllerClass="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentController">
+        <put name="contextType" value="SrvRefClientPolicySetAttachment"/>
+        <put name="descTitle"   value="client.PolicySetBindings.client.displayName"/>
+        <put name="descText"    value="PolicySetBindings.SrvRefClient.description"/>
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.webservices.wsadmin"/>
+        <put name="helpTopic"   value="ClientPolicySetAttachment.collection"/>
+        <put name="bcHandler" value="com.ibm.ws.console.webservices.wsadmin.WebservicesDetailBreadcrumbHandler"/>
+        <put name="parent"  
+             value="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SrvRefClientPolicySetAttachment.content.main"/>
+        <put name="selectUri"   value="wsPolicySetAttachmentCollection.do?ToggleViewAction=true"/>
+        <put name="formAction"  value="wsPolicySetAttachmentCollection.do"/>
+        <putList name="collectionPreferenceList">
+                <item value="text:UI/Collections/SrvRefClientPolicySetAttachment/Preferences#maximumRows:25" 
+            link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+                <item value="checkbox:UI/Collections/SrvRefClientPolicySetAttachment/Preferences#retainSearchCriteria:32"             
+            link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+            classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+         </putList>
+         <putList name="contentList">
+                <add value="SrvRefClientPolicySetAttachment.paging.extend"/>
+        <add value="GenericContained.quicksearch.extend"/>
+                <add value="PSAttachmentContained.collection.table.extends"/>
+         </putList>
+    </definition>
+
+    <definition name="ClientPolicySetAttachment.paging.extend" extends="PolicySetAttachment.paging.extend">
+         <put name="formAction" value="wsPolicySetAttachmentCollection.do"/>
+    </definition>      
+
+<!-- End : Service Client Policy Sets and Bindings -->
+
+</tiles-definitions>

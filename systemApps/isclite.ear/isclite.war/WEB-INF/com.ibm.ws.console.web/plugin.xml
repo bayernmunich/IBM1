@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp., 1997, 2011
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.--> 
+
+<plugin id="com.ibm.ws.console.web" 
+        name="web" 
+        version="1.0.0" 
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="web">  
+   
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <!-- start  - Navigation item-->
+        <task id="webserver" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" label="nav.view.WebServer" view="/navigatorCmd.do?forwardName=WebServer.content.main" external="false" weight="50">
+            <category id="servertypes"/>
+        </task>
+	  <categoryDefinition id="guidedactivities" parent="root" icon="" label="nav.GuidedActivity.displayName" weight="5"/>
+        <task id="webcheatsheet" icon="" label="cheatsheets.web.server.connection" view="/navigatorCmd.do?forwardName=guidedactivity.web" external="false" weight="60">
+            <category id="guidedactivities"/>
+        </task>
+
+        <!-- end - Navigation item -->
+</tasks>    
+</extension>
+<extension point="com.ibm.websphere.wsc.servers">
+    <linkSet contextType="servers">
+        <link
+              label="WebServer.label"
+              forward="webServerCollection.do">
+        </link>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="plugin.services.1" contextType="ApplicationServer">
+        <link
+              categoryId="additional.properties"
+              label="WebServer.serverPluginProps.displayName"
+              description="WebServer.serverPluginProps.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ServerPluginProps.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view&amp;resourceUri=server.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([^5])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin LIDB3726-2 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="clustermember.plugin.services.1" contextType="ClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="WebServer.serverPluginProps.displayName"
+              description="WebServer.serverPluginProps.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ServerPluginProps.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view&amp;resourceUri=server.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([^5])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- End LIDB3726-2 -->
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="plugin.services.1" contextType="AdminService">
+        <link
+              categoryId="additional.properties"
+              label="WebServer.pluginService.displayName"
+              description="WebServer.pluginService.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginService.config.view&amp;sfname=pluginConfigService&amp;lastPage=AdminService.config.view&amp;resourceUri=server.xml">
+              <compatibility>
+                  <match key="showWebServerPluginService" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin F42460 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="cluster.plugin.services.1" contextType="ServerCluster">
+        <link
+              categoryId="additional.properties"
+              label="WebServer.clusterPluginProps.displayName"
+              description="WebServer.clusterPluginProps.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ClusterPluginProps.config.view&amp;sfname=services&amp;lastPage=ServerCluster.config.view&amp;resourceUri=cluster.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([^5])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- End F42460 -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.detailTab1" contextType="ProcessDef.webserver.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>       
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="PluginService_Link.PluginConfigurationService1" contextType="PluginService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="web.WebServer.collectionItem1" contextType="WebServer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webServerCollection.do?EditAction=true"
+              label="WebServer.name.displayName">
+        </item>
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.type.displayName">
+        </item>
+        <item
+              attributeName="node"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName">
+        </item>
+        <item
+          attributeName="version"
+          sortable="sort"
+          itemURI=""
+          label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- start of additional properties for ND links -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="web.WebServer1" contextType="WebServer">
+	  <categoryDefinition weight="90" id="webserver.configuration" parent="root" label="webserver.configuration.displayName">
+             <compatibility>
+                <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+             </compatibility>
+	  </categoryDefinition>
+        <link
+              categoryId="additional.properties"
+              weight="10"
+              label="WebServer.logFileLink.displayName"
+              description="WebServer.logFileLink.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServer.log.view&amp;sfname=logFilename&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="WebServer.configFileLink.displayName"
+              description="WebServer.configFileLink.description"
+              role="administrator,configurator,monitor"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServer.edit.config.view&amp;sfname=configFileName&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="40"
+              label="WebServer.pluginProperties.displayName"
+              description="WebServer.pluginProperties.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginProps.content.main&amp;sfname=pluginProperties&amp;lastPage=WebServer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="50"
+              label="WebServer.remoteManagement.displayName"
+              description="WebServer.remoteManagement.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServerRemoteManagement.content.main&amp;sfname=remoteWebServer&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.showRemote" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="60"
+              label="WebServer.property.link.displayName"
+              description="WebServer.property.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=WebServer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="70"
+              label="NamedEndPoint.displayName"
+              description="NamedEndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=WebServer.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+        </link>
+                <link
+              categoryId="webserver.configuration"
+              weight="40"
+              label="WebServer.vhosts.link.displayName"
+              description="WebServer.vhosts.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=VHost.content.main&amp;sfname=keyStoreFiles&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+                 <!-- 525421 Only show this link on 6.1+ webservers -->
+                 <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="webserver.configuration"
+              weight="60"
+              label="WebServer.globalsettings.link.displayName"
+              description="WebServer.globalsettings.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServerGlobalSettings.content.main&amp;sfname=globalSettings&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+                 <!-- 525421 Only show this link on 6.1+ webservers -->
+                 <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+              </compatibility>
+        </link>
+  </linkSet>
+</extension>
+<!-- start of additional properties for Express links -->
+<extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="web.WebServer2" contextType="WebServerExp">
+        <categoryDefinition weight="90" id="webserver.configuration" parent="root" label="webserver.configuration.displayName">
+           <compatibility>
+                <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+           </compatibility>
+        </categoryDefinition>
+        <link
+              categoryId="additional.properties"
+              weight="10"
+              label="WebServer.logFileLink.displayName"
+              description="WebServer.logFileLink.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServer.log.view&amp;sfname=logFilename&amp;lastPage=WebServer.configExp.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="WebServer.configFileLink.displayName"
+              description="WebServer.configFileLink.description"
+              role="administrator,configurator"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServer.edit.config.view&amp;sfname=configFileName&amp;lastPage=WebServer.configExp.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="40"
+              label="WebServer.pluginProperties.displayName"
+              description="WebServer.pluginProperties.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginProps.content.main&amp;sfname=pluginProperties&amp;lastPage=WebServer.configExp.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="50"
+              label="WebServer.remoteManagement.displayName"
+              description="WebServer.remoteManagement.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServerRemoteManagement.content.main&amp;sfname=remoteWebServer&amp;lastPage=WebServer.configExp.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.showRemote" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="60"
+              label="WebServer.property.link.displayName"
+              description="WebServer.property.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=WebServer.configExp.view">
+       </link>
+        <link
+              categoryId="additional.properties"
+              weight="70"
+              label="NamedEndPoint.displayName"
+              description="NamedEndPoint.description"
+              role="administrator,configurator"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=WebServer.configExp.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+        </link>
+       <link
+              categoryId="webserver.configuration"
+              weight="40"
+              label="WebServer.vhosts.link.displayName"
+              description="WebServer.vhosts.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=VHost.content.main&amp;sfname=keyStoreFiles&amp;lastPage=WebServer.configExp.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+                 <!-- 525421 Only show this link on 6.1+ webservers -->
+                 <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="webserver.configuration"
+              weight="60"
+              label="WebServer.globalsettings.link.displayName"
+              description="WebServer.globalsettings.link.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=WebServerGlobalSettings.content.main&amp;sfname=globalSettings&amp;lastPage=WebServer.configExp.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isIHS" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.ihsAdmin" value="true"/>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isOS400" value="false"/>
+                 <!-- 525421 Only show this link on 6.1+ webservers -->
+                 <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="web.PluginProps1" contextType="WebServerPlugin">
+        <link
+              categoryId="additional.properties"                
+              weight="10"
+              label="WebServer.plugin.link.optimization.displayName"
+              description="WebServer.plugin.link.optimization.displayName.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginProps.optimization.main&amp;sfname=pluginProperties&amp;lastPage=PluginProps.content.main">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="WebServer.plugin.link.caching.displayName"
+              description="WebServer.plugin.link.caching.displayName.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginProps.caching.main&amp;sfname=pluginProperties&amp;lastPage=PluginProps.content.main">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="30"
+              label="WebServer.plugin.link.servercluster.displayName"
+              description="WebServer.plugin.link.servercluster.displayName.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=PluginProps.cluster.main&amp;sfname=pluginProperties&amp;lastPage=PluginProps.content.main">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="40"
+              label="WebServer.plugin.link.customprops.displayName"
+              description="WebServer.plugin.link.customprops.displayName.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=PluginProps.content.main">
+        </link>
+    </linkSet>
+</extension>
+<!-- end of additional items link -->
+
+
+
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- Buttons for the Collection panels for all of the web server-->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="web.WebServer.collection1" contextType="WebServer">
+        <action
+              enablesFor="Collection"
+              label="button.genplugin"
+              actionURI="webServerCollection.do">
+              <compatibility>
+                  <match key="showGenPropButton" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.propplugin"
+              actionURI="webServerCollection.do">
+              <compatibility>
+                  <match key="showGenPropButton" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="webServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="webServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.templates"
+              role="administrator,configurator,monitor"
+              actionURI="webServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="webServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="webServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="webServerCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- start of virtual hosts-->
+<extension point="com.ibm.websphere.wsc.actionSet">
+	<actionSet id="web.VHost.action1" contextType="VHost">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="vHostCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="vHostCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+	<collectionItem id="web.VHost.collectionItem1" contextType="VHost">
+        <item
+              attributeName="displayVHostInfo"
+              sortable="sort"
+              itemURI="vHostCollection.do?EditAction=true"
+	      label="WebServer.vhost.displayinfo.displayName">
+        </item>
+        <item
+              attributeName="serverName"
+              sortable="sort"
+              itemURI=""
+	      label="WebServer.vhost.servername.displayName">
+        </item>
+        <item
+              attributeName="securityEnabled"
+              sortable="sort"
+              itemURI=""
+	      label="WebServer.vhost.securityenabled.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+	<detailTab id="web.VHost.detailTab1" contextType="VHost">
+        <tab
+              label="tab.configuration"
+	      contentURI="VHost.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+
+<!-- start of custom properties -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="web.Property.action1" contextType="WebServerProperty">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="webServerPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="webServerPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="web.Property.collectionItem1" contextType="WebServerProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="webServerPropertyCollection.do?EditAction=true"
+              label="WebServer.property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.property.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.property.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="web.Property.detailTab1" contextType="WebServerProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="WebServerProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- start of plugin custom properties -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="web.Plugin.Property.action1" contextType="PluginProperty">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="pluginCustomPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="pluginCustomPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="web.Plugin.Property.collectionItem1" contextType="PluginProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="pluginCustomPropertyCollection.do?EditAction=true"
+              label="WebServer.plugin.properties.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.plugin.properties.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="WebServer.plugin.properties.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="web.Plugin.Property.detailTab1" contextType="PluginProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="PluginCustomProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- end of custom properties -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="web.ViewLog1" contextType="WebServerLog">
+        <tab
+              label="tab.configuration"
+              contentURI="WebServer.log.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="WebServer.log.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.WebServer1" contextType="GenericServer">
+    <link
+              categoryId="additional.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ProcessDef.webserver.config.view&amp;sfname=processDefinitions&amp;lastPage=WebServer.config.view">
+    </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.processDef.WebServer1" contextType="ProcessDef.genericserver.config.view">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=ProcessDef.genericserver.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ProcessDef.genericserver.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=environment&amp;lastPage=ProcessDef.genericserver.config.view">
+        </link>
+     </linkSet>
+</extension>  -->
+</plugin>
+

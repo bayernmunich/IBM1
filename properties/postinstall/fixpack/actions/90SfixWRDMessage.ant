@@ -1,0 +1,243 @@
+<project name="fixWRDScripts" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+	<target name="install" depends="fixWRDScripts"/>
+	<target name="uninstall" description="No uninstall action necessary but this target is required."/>
+	
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        <property name="unixBased" value="true"/>
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+		
+	<condition property="unixBased" value="false">
+        	<os family="windows"/>
+	</condition>
+		
+	<condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <and>
+		<os family="unix"/>
+			<not>
+				<equals arg1="${os.name}" arg2="OS/400"/>
+			</not>
+	    </and>
+        </condition>
+        
+		<condition property="currentOSFamily" value="zos">
+            <os family="z/os"/>
+        </condition>
+		
+       
+	
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+		
+		<condition property="configzos" value="true">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+		
+		<condition property="configos400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+	
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+		
+		<condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+		
+		<condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+	<target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+		<condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="zos"/>
+        </condition>
+		
+		<condition property="OSext" value="">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+		
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="fileExist">
+    	<available file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}" property="wrdFilesExist"/>
+	
+    </target>
+	
+	<target name="previouslyInstalled" if="wrdFilesExist">
+		<loadfile property="installed" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}">
+			<filterchain>         
+			    <linecontains>
+					<contains value="workspace root"/>
+			    </linecontains>
+			</filterchain>
+		</loadfile>
+	
+	</target>
+	
+	<target name="notInstalledAndOS" if="wrdFilesExist">
+		<condition property="notInstalledWin" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="windows"/>
+			</and>
+		</condition>
+		<condition property="notInstalledUnix" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+			</and>
+		</condition>
+		<condition property="notInstalledos400" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="os/400"/>
+			</and>
+		</condition>
+		<condition property="notInstalledzos" value="true">
+			<and>
+				<not>
+					<isset property="installed"/>
+				</not>
+				<equals arg1="${currentOSFamily}" arg2="zos"/>
+			</and>
+		</condition>
+	
+	</target>
+	
+	<target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+        <replace dir="${dir}"           
+            token="${token}"
+            value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>
+	
+    <target name="replaceLineUnix"
+            description=""
+            if="notInstalledUnix">
+
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;"
+                           value="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;	echo &quot;Unix: export WORKSPACE=&lt;workspace root&gt; &quot;"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="failedFeature&#10;&#10;if"
+                           value="	failedFeature&#10;fi&#10;&#10;if"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;"
+                           value="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;	echo &quot;Unix: export WORKSPACE=&lt;workspace root&gt; &quot;"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="failedFeature&#10;&#10;if"
+                           value="	failedFeature&#10;fi&#10;&#10;if"/>	
+    </target>
+	
+	<target name="replaceLinezos"
+            description=""
+            if="notInstalledzos">
+
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;"
+                           value="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;	echo &quot;Unix: export WORKSPACE=&lt;workspace root&gt; &quot;"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="failedFeature&#10;&#10;if"
+                           value="	failedFeature&#10;fi&#10;&#10;if"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;"
+                           value="echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;	echo &quot;Unix: export WORKSPACE=&lt;workspace root&gt; &quot;"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="failedFeature&#10;&#10;if"
+                           value="	failedFeature&#10;fi&#10;&#10;if"/>
+			
+    </target>
+	
+
+	<target name="replaceLineWin"
+            description=""
+            if="notInstalledWin">
+
+            <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="if &quot;%WORKSPACE%&quot; == &quot;&quot; Echo Set WORKSPACE to the rapid deployment workspace directory&amp; goto End" 
+                           value="if &quot;%WORKSPACE%&quot; == &quot;&quot; goto workspaceMessage"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}"
+                           token="GOTO :EOF" 
+                           value="GOTO :EOF&#10;&#10;:workspaceMessage &#10;echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;  echo Windows: &quot;set WORKSPACE=&lt;workspace root&gt;&quot;&#10;GOTO :EOF&#10;"/>			
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="if &quot;%WORKSPACE%&quot; == &quot;&quot; Echo Set WORKSPACE to the rapid deployment workspace directory&amp; goto End" 
+                           value="if &quot;%WORKSPACE%&quot; == &quot;&quot; goto workspaceMessage"/>
+			<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}"
+                           token="GOTO :EOF" 
+                           value="GOTO :EOF&#10;&#10;:workspaceMessage &#10;echo &quot;Set WORKSPACE to the rapid deployment workspace directory&quot;&#10;  echo Windows: &quot;set WORKSPACE=&lt;workspace root&gt;&quot;&#10;GOTO :EOF&#10;"/>
+    </target>
+	
+	<target name="modifyPermissions"
+	if="unixBased">
+		<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd${OSext}" perm="a+x"/>
+		<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}wrd-config${OSext}" perm="a+x"/>
+	</target>
+                      
+    <target name="fixWRDScripts"
+        description=""
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+			setOSScriptExtension,
+			fileExist,
+			previouslyInstalled,
+			notInstalledAndOS,
+            replaceLineUnix,
+			replaceLineWin,
+			replaceLinezos,
+			modifyPermissions"/>
+</project>
+

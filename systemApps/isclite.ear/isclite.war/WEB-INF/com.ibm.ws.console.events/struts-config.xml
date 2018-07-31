@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<struts-config>
+    <form-beans>
+        <form-bean name="com.ibm.ws.console.events.EventCollectionForm" type="com.ibm.ws.console.events.EventCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.events.EventDetailForm" type="com.ibm.ws.console.events.EventDetailForm"/>
+    </form-beans>
+    <action-mappings>
+
+        <action path="/eventNavigatorCmd" type="com.ibm.ws.console.core.action.NavigatorAction">
+            <forward name="events.content.main" path="events.content.main"/>
+        </action>
+
+        <action name="com.ibm.ws.console.events.EventCollectionForm"
+                path="/eventCollection" type="com.ibm.ws.console.events.EventCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="events.content.main"/>
+            <forward name="detail" path="events.content.detail"/>
+            <forward name="eventCollection" path="events.content.main"/>
+        </action>
+
+        <action name="com.ibm.ws.console.events.EventCollectionForm"
+            path="/eventSelection" type="com.ibm.ws.console.events.EventSelectionAction">
+            <forward name="success" path="events.content.main"/>
+     </action> 
+
+        <action path="/com.ibm.ws.console.events.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="events.content.main" path="events.content.main"/>
+        </action>
+
+        <!-- Forwards from the Runtime Messages panel for the DP quicklinks -->
+        <!-- defect 318254, schleus -->
+        <action name="com.ibm.ws.console.events.EventDetailForm"
+                path="/dPRuntimeMessageForwards"
+                type="com.ibm.ws.console.events.DPRuntimeMessageAction">
+            <!-- defect 318254.1, schleus -->
+            <forward name="DPTestCollection" path="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.tests.content.main"/>
+            <forward name="DPConfigDumpCollection" path="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.config.dump.content.main"/>
+            <forward name="DPStateDumpCollection" path="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.state.dump.content.main"/>
+            <forward name="failure" path="events.content.main"/>
+        </action>
+    </action-mappings>
+</struts-config>

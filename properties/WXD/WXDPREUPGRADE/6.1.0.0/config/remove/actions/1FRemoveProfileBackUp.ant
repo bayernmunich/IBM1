@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- IBM Confidential OCO Source Material                                         -->
+<!-- 5724-J34 COPYRIGHT International Business Machines Corp. 2006,2007           -->
+<!-- The source code for this program is not published or otherwise divested      -->
+<!-- of its trade secrets, irrespective of what has been deposited with the       -->
+<!-- U.S. Copyright Office.                                                       -->
+
+<project name='Back Up POriginal Config' default='NoRemove' basedir='.'>
+
+
+    <property name="was.home"                    value="${WAS_HOME}" />
+    <property name="profile.name"                value="${PROFILE_NAME}" />
+    <property name="backups.dir"                 value="${BACKUPS_DIRECTORY}" />
+    <property name="target.backup.directory"     value="${TARGET_BACKUP_DIRECTORY}" />
+
+    <target name="EchoPassedVariables">
+        <echo message="=====1 was.home is ${was.home}"/>
+        <echo message="=====2 profile.name is ${profile.name}"/>
+        <echo message="=====3 backups.dir is ${backups.dir}"/>
+        <echo message="=====4 target.backup.dir is ${target.backup.dir}"/>
+    </target>  
+
+    <target name="CheckTargetBackup" depends="EchoPassedVariables">
+        <available file="${target.backup.directory}" type="dir" property="target.backup.dir.present"/>
+    </target>
+
+    <target name="RemoveBackup" depends="CheckTargetBackup" if="target.backup.dir.present">
+        <echo message="===== Remove backup configuration"/>
+        <delete includeemptydirs="true">
+            <fileset dir="${target.backup.directory}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <target name="NoRemove" depends="RemoveBackup" unless="target.backup.dir.present">
+        <fail message="===== ${target.backup.directory} does not exist or is empty."/>
+    </target>
+
+
+
+</project>

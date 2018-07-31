@@ -1,0 +1,723 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 (C) COPYRIGHT International Business Machines Corp. 1997, 2007
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+author schleus
+-->
+
+
+<tiles-definitions>
+    <!--  -->
+    <!--  Configuration Data JSP  -->
+    <!--  -->
+    <definition name="rasdiag.topology.config.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPTestConfigController">
+        <put name="contextType" value="rasdiag.process.selection"/>
+        <put name="descTitle" value="rasdiag.dptestconfig.topology.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dptestconfig.topology.description"/>
+        <put name="helpTopic" value="rasdiag.topology.config.collection"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.rasdiag/dpConfig.jsp"/>
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  State Data JSP  -->
+    <!--  -->
+    <definition name="rasdiag.topology.state.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPTestConfigController">
+        <put name="contextType" value="rasdiag.process.selection.state"/>
+        <put name="descTitle" value="rasdiag.state.topology.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.state.topology.description"/>
+        <put name="helpTopic" value="rasdiag.topology.state.collection"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.rasdiag/dpState.jsp"/>
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  Tests JSP  -->
+    <!--  -->
+    <definition name="rasdiag.topology.tests.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPTestConfigController">
+        <put name="contextType" value="rasdiag.process.selection.tests"/>
+        <put name="descTitle" value="rasdiag.tests.topology.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.tests.topology.description"/>
+        <put name="helpTopic" value="rasdiag.topology.tests.collection"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.rasdiag/dpTests.jsp"/>
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  DiagnosticProvidersCollection  -->
+    <!--  -->
+    <definition name="rasdiag.diagnostic.providers.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DiagnosticProvidersController">
+        <put name="contextType" value="rasdiag.DiagnosticProviders"/>
+        <put name="descTitle" value="rasdiag.diagnostic.providers.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.diagnostic.providers.description"/>
+        <put name="helpTopic" value="rasdiag.diagnostic.providers.collection"/>
+
+        <putList name="contentList">
+            <add value="diagnostic.providers.quicksearch.extend"/>
+            <add value="diagnostic.collection.table.extends"/>
+            <add value="diagnostic.providers.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="diagnostic.collection.table.extends" extends="rasdiag.single.collection.table" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formAction" value="diagnosticProvidersCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="buttons" value="diagnostic.providers.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DiagnosticProviders/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DiagnosticProviders/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DiagnosticProviders/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.single.collection.table" extends="collection.table.main">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="100%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+    </definition>
+
+    <definition name="diagnostic.providers.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formAction" value="diagnosticProvidersCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+    </definition>
+
+    <definition name="diagnostic.providers.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="diagnosticProvidersCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formAction" value="diagnosticProvidersCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DiagnosticProvidersCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.diagnostic.providers.name:diagnosticProviderName"/>
+        </putList>
+    </definition>
+
+    <definition name="diagnostic.providers.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="0"/>
+        <put name="definitionName" value="diagnostic.providers.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  DPTestsCollection -->
+    <!--  -->
+    <definition name="rasdiag.dp.tests.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPTestsCollectionController">
+        <put name="contextType" value="rasdiag.DPTests"/>
+        <put name="descTitle" value="rasdiag.dptests.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dptests.description"/>
+        <put name="helpTopic" value="rasdiag.dp.tests.collection"/>
+        <putList name="contentList">
+            <add value="dp.tests.quicksearch.extend"/>
+            <add value="dp.tests.collection.table.extends"/>
+            <add value="dp.tests.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.tests.collection.table.extends" extends="rasdiag.double.collection.table" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formAction" value="dPTestsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="buttons" value="dp.tests.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.tests.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPTests/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPTests/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPTests/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.double.collection.table" extends="collection.table.main">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="30%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+    </definition>
+
+    <definition name="dp.tests.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dpTestsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formAction" value="dPTestsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dptests.collection.title1:dPTestName"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.tests.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formAction" value="dPTestsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestsCollectionForm"/>
+    </definition>
+    
+    <definition name="dp.tests.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="0"/>
+        <put name="definitionName" value="dp.tests.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!-- -->
+    <!--  DPTestResultsCollection -->
+    <!-- -->
+    <definition name="rasdiag.dp.test.results.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPTestResultsCollectionController">
+        <put name="contextType" value="rasdiag.DPTestResults"/>
+        <put name="descTitle" value="rasdiag.dptestresults.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dptestresults.description"/>
+        <put name="helpTopic" value="rasdiag.dp.test.results.collection"/>
+        <putList name="contentList">
+            <add value="dp.testresults.quicksearch.extend"/>
+            <add value="dp.testresults.collection.table.extends"/>
+            <add value="dp.testresults.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.testresults.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formAction" value="dPTestResultsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="buttons" value="rasdiag.DPTestResults.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.test.results.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="20%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPTestsResults/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPTestResults/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPTestResults/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.testresults.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPTestResultsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formAction" value="dpTestResultsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dptestresults.server:dPTestResultServer"/>
+            <add value="rasdiag.dptestrestuls.node:dPTestResultNode"/>
+            <add value="rasdiag.dptestresults.severity:dPTestResultSeverity"/>
+            <add value="rasdiag.dptestresults.message:dPTestResultDescription"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.testresults.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formAction" value="dPTestResultsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPTestResultsCollectionForm"/>
+    </definition>
+
+    <definition name="rasdiag.DPTestResults.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="1"/>
+        <put name="definitionName" value="rasdiag.DPTestResults.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+
+    <!-- -->
+    <!--  DPSingleTestResultCollection -->
+    <!-- -->
+    <definition name="rasdiag.dp.single.test.result.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPSingleTestResultCollectionController">
+        <put name="contextType" value="rasdiag.DPSingleTestResult"/>
+        <put name="descTitle" value="rasdiag.dpsingleresult.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dpsingleresult.description.info"/>
+        <put name="helpTopic" value="rasdiag.dp.single.test.result.collection"/>
+        <putList name="contentList">
+            <add value="dp.single.test.result.quicksearch.extend"/>
+            <add value="dp.single.test.result.collection.table.extends"/>
+            <add value="dp.single.test.result.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.single.test.result.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formAction" value="dPSingleTestResultCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="buttons" value="rasdiag.DPSingleTestResult.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.single.test.result.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="33%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPSingleTestResult/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPSingleTestResult/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPSingleTestResult/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.single.test.result.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPSingleTestResultCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formAction" value="dPSingleTestResultCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dpsingleresult.name:dPTestName"/>
+            <add value="rasdiag.dpsingleresult.value:dPTestValue"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.single.test.result.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formAction" value="dPSingleTestResultCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPSingleTestResultCollectionForm"/>
+    </definition>
+
+    <definition name="rasdiag.DPSingleTestResult.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="rasdiag.DPSingleTestResult.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!-- -->
+    <!--  DPConfigDumpCollection -->
+    <!-- -->
+    <definition name="rasdiag.dp.config.dump.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPConfigDumpCollectionController">
+        <put name="contextType" value="rasdiag.DPConfigDump"/>
+        <put name="descTitle" value="rasdiag.dpconfigdump.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dpconfigdump.description.info"/>
+        <put name="helpTopic" value="rasdiag.dp.config.dump.collection"/>
+        <putList name="contentList">
+            <add value="dp.config.dump.quicksearch.extend"/>
+            <add value="dp.config.dump.collection.table.extends"/>
+            <add value="dp.config.dump.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.config.dump.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formAction" value="dPConfigDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPCondigDumpCollectionForm"/>
+        <put name="buttons" value="rasdiag.DPConfigDump.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.config.dump.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="20%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPConfigDump/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPConfigDump/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPConfigDump/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.config.dump.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPConfigDumpCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formAction" value="dPConfigDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dpconfigdump.server:dPServerName"/>
+            <add value="rasdiag.dpconfigdump.node:dPNodeName"/>
+            <add value="rasdiag.dpconfigdump.name:dPConfigPropertyName"/>
+            <add value="rasdiag.dpconfigdump.value:dPConfigPropertyValue"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.config.dump.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formAction" value="dPConfigDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPConfigDumpCollectionForm"/>
+    </definition>
+
+    <definition name="rasdiag.DPConfigDump.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="rasdiag.DPConfigDump.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!-- -->
+    <!--  DPStateDumpCollection -->
+    <!-- -->
+    <definition name="rasdiag.dp.state.dump.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateDumpCollectionController">
+        <put name="contextType" value="rasdiag.DPStateDump"/>
+        <put name="descTitle" value="rasdiag.dpstatedump.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dpstatedump.description.info"/>
+        <put name="helpTopic" value="rasdiag.dp.state.dump.collection"/>
+        <putList name="contentList">
+            <add value="dp.state.dump.quicksearch.extend"/>
+            <add value="dp.state.dump.collection.table.extends"/>
+            <add value="dp.state.dump.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.dump.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formAction" value="dPStateDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="buttons" value="rasdiag.DPStateDump.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.dp.state.dump.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="20%"/>
+        <put name="idColumn" value=""/>
+        <put name="statusType" value="unknown"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPStateDump/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPStateDump/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPStateDump/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.state.dump.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPStateDumpCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formAction" value="dPStateDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dpstatedump.server:dPServerName"/>
+            <add value="rasdiag.dpstatedump.node:dPNodeName"/>
+            <add value="rasdiag.dpstatedump.name:dPStatePropertyName"/>
+            <add value="rasdiag.dpstatedump.value:dPStatePropertyValue"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.dump.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dptestconfig.topology.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formAction" value="dPStateDumpCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateDumpCollectionForm"/>
+    </definition>
+
+    <definition name="rasdiag.DPStateDump.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="3"/>
+        <put name="definitionName" value="rasdiag.DPStateDump.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  DPStateSpecCollectionPanel panel -->
+    <!--  -->
+    <definition name="rasdiag.dp.state.spec.content.main" path="/com.ibm.ws.console.rasdiag/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecCollectionController">
+        <put name="contextType" value="rasdiag.DPStateSpec"/>
+        <put name="descTitle" value="rasdiag.dpstatespec.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dpstatespec.description"/>
+        <put name="helpTopic" value="rasdiag.dpstatespec.description"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.rasdiag/dpStateSpec.jsp"/>
+            <add value="dp.state.spec.quicksearch.extend"/>
+            <add value="dp.state.spec.collection.table.extends"/>
+            <add value="dp.state.spec.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formAction" value="dPStateSpecCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="buttons" value="dp.state.spec.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.DPStateSpec.config.view"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPStateSpec/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPStateSpec/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPStateSpec/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dpstatespec.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formAction" value="dPStateSpecCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+    </definition>
+
+    <definition name="dp.state.spec.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPStateSpecCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formAction" value="dPStateSpecCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.diagnostic.providers.name:diagnosticProviderName"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="dp.state.spec.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpec.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecCollectionController">
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="contextType" value="rasdiag.DPStateSpec"/>
+        <putList name="list">
+        <add value="rasdiag.DPStateSpec.detail.title"/>
+        <add value="rasdiag.DPStateSpec.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpec.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecDetailForm"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="titleKey" value="rasdiag.dpstatespec.breadcrumb"/>
+        <put name="instanceDetails" value="title"/>
+        <put name="helpTopic" value="rasdiag.dp.state.spec.collection"/>
+        <put name="instanceDescription" value="rasdiag.dpstatespec.description"/>
+        <put name="displayName" value="rasdiag.dpstatespec.breadcrumb"/>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpec.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="dPStateSpecCollection.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <!-- The following two definition's are what defines what is laid out on the tab form -->
+    <definition name="rasdiag.DPStateSpec.config.tab.view" path="/com.ibm.ws.console.rasdiag/configTabLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecCollectionController">
+        <put name="formAction" value="dPStateSpecCollection.do"/>
+        <putList name="list">
+            <add value="rasdiag.dp.state.spec.content.main"/>
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpec.runtime.tab.view" path="/com.ibm.ws.console.rasdiag/configTabLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecCollectionController">
+        <put name="formAction" value="dPStateSpecCollection.do"/>
+        <putList name="list">
+            <add value="rasdiag.dp.state.spec.content.main"/>
+        </putList>
+    </definition>
+
+    <!--  -->
+    <!--  DPStateSpecAttributesCollectionPanel panel -->
+    <!--  -->
+    <definition name="rasdiag.dp.state.spec.attributes.content.main" path="/com.ibm.ws.console.rasdiag/contentLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecAttributesCollectionController">
+        <put name="contextType" value="rasdiag.DPStateSpecAttribute"/>
+        <put name="descTitle" value="rasdiag.dpstatespec.attributes.breadcrumb"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="rasdiag.dpstatespec.attributes.description"/>
+        <put name="helpTopic" value="rasdiag.dpstatespec.attributes.description"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.rasdiag/dpStateSpecAttributes.jsp"/>
+            <add value="dp.state.spec.attributes.quicksearch.extend"/>
+            <add value="dp.state.spec.attributes.collection.table.extends"/>
+            <add value="dp.state.spec.attributes.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.attributes.collection.table.extends" extends="collection.table.main" >
+        <put name="iterationName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formAction" value="dPStateSpecAttributesCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="buttons" value="dp.state.spec.attributes.collection.buttons.panel"/>
+        <put name="parent" value="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.DPStateSpecAttribute.config.view"/>
+        <putList name="collectionPreferenceList">
+            <item value="list:UI/Collections/rasdiag.DPStateSpecAttribute/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator:role.all.label,role.administrator,role.operator,role.monitor,role.configurator"
+                  link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="text:UI/Collections/rasdiag.DPStateSpecAttribute/Preferences#maximumRows:25"
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/rasdiag.DPStateSpecAttribute/Preferences#retainSearchCriteria:32"
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+        <putList name="collectionList">
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.attributes.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="rasdiag.dpstatespec.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formAction" value="dPStateSpecAttributesCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+    </definition>
+
+    <definition name="dp.state.spec.attributes.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="dPStateSpecAttributesCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formAction" value="dPStateSpecAttributesCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesCollectionForm"/>
+        <putList name="searchList">
+            <add value="rasdiag.dpstatespec.attributes.attribute:dPAttributeId"/>
+        </putList>
+    </definition>
+
+    <definition name="dp.state.spec.attributes.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="3"/>
+        <put name="definitionName" value="dp.state.spec.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpecAttribute.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecAttributesCollectionController">
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="contextType" value="rasdiag.DPStateSpecAttribute"/>
+        <putList name="list">
+        <add value="rasdiag.DPStateSpecAttribute.detail.title"/>
+        <add value="rasdiag.DPStateSpecAttribute.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpecAttribute.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesDetailForm"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="helpTopic" value="rasdiag.dp.state.spec.attributes.collection"/>
+        <put name="titleKey" value="rasdiag.dpstatespec.attributes.breadcrumb"/>
+        <put name="instanceDetails" value="title"/>
+        <put name="instanceDescription" value="rasdiag.dpstatespec.attributes.description"/>
+        <put name="displayName" value="rasdiag.dpstatespec.attributes.breadcrumb"/>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpecAttribute.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="dPStateSpecAttributesCollection.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.rasdiag.forms.DPStateSpecAttributesDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpecAttribute.config.tab.view" path="/com.ibm.ws.console.rasdiag/configTabLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecAttributesCollectionController">
+        <put name="formAction" value="dPStateSpecAttributesCollection.do"/>
+        <putList name="list">
+            <add value="rasdiag.dp.state.spec.attributes.content.main"/>
+        </putList>
+    </definition>
+
+    <definition name="rasdiag.DPStateSpecAttribute.runtime.tab.view" path="/com.ibm.ws.console.rasdiag/configTabLayout.jsp" controllerClass="com.ibm.ws.console.rasdiag.DPStateSpecAttributesCollectionController">
+        <put name="formAction" value="dPStateSpecAttributesCollection.do"/>
+        <putList name="list">
+            <add value="rasdiag.dp.state.spec.attributes.content.main"/>
+        </putList>
+    </definition>
+</tiles-definitions>

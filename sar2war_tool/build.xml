@@ -1,0 +1,143 @@
+<!-- file name: build.xml 				-->
+<!-- purpose: Convert a SIP application's archive 		-->
+<!-- 		file to a Web Application's war file	-->
+<!-- 		so it can be deployed on WebSphere	-->
+<!-- first created January 22, 2005 			-->
+<!-- by Yaron Reinharts, yaronr@il.ibm.com		-->
+
+<project name="sar2war" default="all" >
+
+	<target name="usage" description="Print usage ">
+		<echo message="Usage:"/>
+		<echo message="   ant -Darchive=archive_location -Dxsl_file=xsl_location"/>
+		<echo message="     archive_location: location of archive file."/>
+		<echo message="                (shipped with this build file)."/>
+	</target>	
+
+	<target name="check_archive" unless="archive"
+			description="Print usage is archive_file was not difined ">
+		
+		<antcall target="usage" />
+		<fail message="archive_file was not defined" />
+
+	</target>
+	
+	<target name="init" depends="check_archive"  
+			description="setup the properties">
+
+		<property name="xsl_file" value="./sar2war.xsl" />
+		<property name="outdir" value="." />
+		<property name="build" value="${outdir}/build" />
+		<basename property="archive_name" file="${archive}" />
+		<property name="app_dir" value="${build}/${archive_name}" />
+
+
+	</target>
+
+	<target name="clean" depends="init"
+			description="clean up the output directories ">
+
+		<delete dir="${build}" />
+
+	</target>
+
+	<target name="prepare" depends="clean"
+		description="prepare the output directories">
+
+		<mkdir dir="${build}" />
+		<mkdir dir="${app_dir}" />
+
+	</target>
+	
+	<target name="openArchiveFile" depends="prepare"
+		description="Unzip the application archive file">
+
+		<unzip src="${archive}" dest="${app_dir}" />
+
+	</target>
+
+	<target name="validateSipDotXml" depends="openArchiveFile"
+			description="Validate sip.xml">
+
+		<xmlvalidate file="${app_dir}/WEB-INF/sip.xml" >
+			<dtd publicId="-//Java Community Process//DTD SIP Application 1.0//EN"
+			       location="sip-app_1_0.dtd"/>
+		</xmlvalidate>
+	
+	</target>
+
+
+
+		
+	<target name="generateWebDotXml" depends="validateSipDotXml"
+		description="generate a web.xml based on the sip.xml deployment descriptor.">
+
+		<xslt in="${app_dir}/WEB-INF/sip.xml" out="${app_dir}/WEB-INF/webTemp.xml" style="${xsl_file}" > 
+			<xmlcatalog>
+			       <dtd publicId="-//Java Community Process//DTD SIP Application 1.0//EN"
+	         						location="sip-app_1_0.dtd"/>
+			</xmlcatalog>
+		</xslt>	
+
+	</target>
+
+	<target name="validateWebDotXml" depends="generateWebDotXml"
+			description="Validate sip.xml">
+
+		<xmlvalidate file="${app_dir}/WEB-INF/webTemp.xml" >
+			<dtd publicId="--//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+			       location="./../optionalLibraries/Apache/Struts/1.2.7/web-app_2_3.dtd"/>
+		</xmlvalidate>
+	
+	</target>
+	
+	<target name="checkIfConvergeApplication" depends="generateWebDotXml"
+		description="check if there is already a web.xml">
+		
+		<available file="${app_dir}/WEB-INF/web.xml" type="file" property="web.xml.exist"/>		
+	</target>
+
+	<target name="renameTempWebXML" depends="checkIfConvergeApplication" unless="web.xml.exist"
+		description="rename webTemp.xml to web.xml if not convergeApp">
+		<move file="${app_dir}/WEB-INF/webTemp.xml" tofile="${app_dir}/WEB-INF/web.xml"/>
+	</target>
+
+	
+	<target name="mergeWebXMLs" depends="renameTempWebXML" if="web.xml.exist"
+		description="merge webTemp.xml and web.xml to web.xml">
+
+		<!-- move web.xml to web1.xml, tmp -->
+		<move file="${app_dir}/WEB-INF/web.xml" tofile="${app_dir}/WEB-INF/webOrig.xml"/>
+		
+		<!-- merge the files -->
+		<xslt in="${app_dir}/WEB-INF/webOrig.xml" out="${app_dir}/WEB-INF/web.xml" style="mergeWebXML.xsl" >
+			<param name="with" expression="webTemp.xml"/> 
+		</xslt>
+
+		<!-- delete tmp files -->
+		<delete file="${app_dir}/WEB-INF/webOrig.xml"/>
+		<delete file="${app_dir}/WEB-INF/webTemp.xml"/>
+	</target>
+
+	<target name="validateWebDotXmlAfterMerge" depends="mergeWebXMLs"
+			description="Validate web.xml">
+
+		<xmlvalidate file="${app_dir}/WEB-INF/web.xml" >
+			<dtd publicId="--//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+			       location="./../optionalLibraries/Apache/Struts/1.2.7/web-app_2_3.dtd"/>
+		</xmlvalidate>
+	
+	</target>
+
+	<target name="createWar" depends="validateWebDotXmlAfterMerge"
+		description="package the whole thing into a jar.">
+	
+		<zip destfile="${archive_name}.war" 
+			basedir="${app_dir}" />
+
+		<antcall target="clean" />
+	</target>
+
+	<target name="all" depends="clean, createWar"
+		description="perform all targets."/>
+</project>

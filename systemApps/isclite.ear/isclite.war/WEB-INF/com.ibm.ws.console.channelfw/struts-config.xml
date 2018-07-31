@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2003, 2011 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+<struts-config>
+
+  <form-beans>
+    <form-bean name="com.ibm.ws.console.channelfw.ChainCollectionForm" type="com.ibm.ws.console.channelfw.ChainCollectionForm"/>
+    <form-bean name="com.ibm.ws.console.channelfw.ChainDetailForm"     type="com.ibm.ws.console.channelfw.ChainDetailForm"/>
+
+    <!-- New chain wizard -->
+    <form-bean name="SelectChainTemplateForm" type="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+    <form-bean name="SelectEndPointForm"      type="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+    <form-bean name="ConfirmCreateChainForm"  type="com.ibm.ws.console.channelfw.chainwizard.CreateNewChainForm"/>
+  </form-beans>
+
+  <global-forwards>
+    <forward name="chain.new.step1" path="chain.new.step1"/>
+    <forward name="chain.new.step2" path="chain.new.step2"/>
+    <forward name="chain.new.step3" path="chain.new.step3"/>
+  </global-forwards>
+
+  <action-mappings>
+    <action name="com.ibm.ws.console.channelfw.ChainCollectionForm"
+            path="/chainCollection" 
+            type="com.ibm.ws.console.channelfw.ChainCollectionAction">
+      <forward name="failure"         path="/error.jsp"/>
+      <forward name="success"         path="Chain.config.view"/>
+      <forward name="chainCollection" path="Chain.content.main"/>
+      <forward name="epchainCollection" path="Chain.ep.content.main"/>
+      <forward name="orbchainCollection" path="ORBChain.content.main"/>
+    </action>
+    
+    <action name="com.ibm.ws.console.channelfw.ChainDetailForm"
+            path="/chainDetail" 
+            type="com.ibm.ws.console.channelfw.ChainDetailAction"
+            input="Chain.config.view">
+      <forward name="error"   path="Chain.config.view"/>
+      <forward name="success" path="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main"/>
+    </action>
+
+    <action name="SelectChainTemplateForm"
+            path="/selectChainTemplate"
+            type="com.ibm.ws.console.channelfw.chainwizard.SelectChainTemplateAction"
+            input="chain.new.step1">
+      <forward name="cancel" path="Chain.content.main"/>
+      <forward name="epchainCollection" path="Chain.ep.content.main"/>
+      <forward name="orbchainCollection" path="ORBChain.content.main"/>
+    </action>
+
+    <action name="SelectEndPointForm"
+            path="/selectEndPoint"
+            type="com.ibm.ws.console.channelfw.chainwizard.SelectEndPointAction"
+            input="chain.new.step2">
+      <forward name="cancel" path="Chain.content.main"/>
+      <forward name="epchainCollection" path="Chain.ep.content.main"/>
+      <forward name="orbchainCollection" path="ORBChain.content.main"/>
+    </action>
+
+    <action name="ConfirmCreateChainForm"
+            path="/confirmCreateChain"
+            type="com.ibm.ws.console.channelfw.chainwizard.ConfirmCreateChainAction">
+      <forward name="Chain.content.main" path="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main"/>
+      <forward name="Chain.ep.content.main" path="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.ep.content.main"/>
+      <forward name="ORBChain.content.main" path="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=ORBChain.content.main"/>
+      <forward name="Chain.config.view"  path="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.config.view"/>
+      <forward name="cancel"             path="Chain.content.main"/>
+      <forward name="epchainCollection" path="Chain.ep.content.main"/>
+      <forward name="orbchainCollection" path="ORBChain.content.main"/>
+    </action>
+
+    <action name="com.ibm.ws.console.channelfw.forwardCmd"
+            path="/com.ibm.ws.console.channelfw.forwardCmd" 
+            type="com.ibm.ws.console.core.action.ForwardAction">
+
+      <forward name="Chain.content.main"    path="Chain.content.main"/>
+      <forward name="Chain.ep.content.main" path="Chain.ep.content.main"/>
+      <forward name="Chain.config.view"     path="Chain.config.view"/>
+      <forward name="Property.content.main" path="Property.content.main"/>
+      <forward name="Property.config.view"  path="Property.config.view"/>
+      <!-- 371964 begin -->
+      <forward name="ORBChain.content.main" path="ORBChain.content.main"/>
+      <!-- 371964 end -->
+    </action>
+  </action-mappings>
+
+</struts-config>

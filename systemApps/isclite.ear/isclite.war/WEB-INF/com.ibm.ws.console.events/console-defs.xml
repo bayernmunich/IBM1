@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <definition name="events.message" path="/com.ibm.ws.console.events/RuntimeError.jsp">
+        <put name="formAction" value="eventSelection.do"/>
+        <put name="formName" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.events.EventCollectionForm"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.events.EventController"
+        name="events.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="events"/>
+        <put name="descTitle" value="events.runtime.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="events.description"/>
+        <putList name="contentList">
+            <add value="events.paging.extend"/>
+            <add value="events.message"/>
+            <add value="events.quicksearch.extend"/>
+            <add value="events.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="events.quicksearch.extend">
+        <put name="selectUri" value="eventCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formAction" value="eventCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <putList name="searchList">
+            <add value="events.messageTimeStamp.label:timeStamp"/>
+            <add value="events.origin.label:originator"/>
+            <add value="events.message.label:messageNameTrunc"/>
+        </putList>
+    </definition>
+    <definition extends="collection.table.main" name="events.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formAction" value="eventCollection.do"/>
+        <put name="buttons" value="events.collection.buttons.panel"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="formName" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="parent" value="com.ibm.ws.console.events.forwardCmd.do?forwardName=events.content.main"/>
+        <put name="htmlFilter" value="false"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/Events/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/Events/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="events.collection.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="events.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="paging.main" name="events.paging.extend">
+        <put name="displayLabelKey" value="events.runtime.title"/>
+        <put name="collectionForm" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formAction" value="eventCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.events.EventCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.events.EventCollectionForm"/>
+    </definition>
+    <definition name="events.content.detail" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="eventsDetail"/>
+        <put name="descTitle" value="events.detail.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.events"/>
+        <put name="descText" value="events.description"/>
+        <put name="helpTopic" value="Event.detail"/>
+        <putList name="contentList">
+            <add value="events.detail.properties"/>
+            <add value="/com.ibm.ws.console.events/diagnosticProvider.jsp"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="events.detail.properties">
+        <put name="formAction" value="eventCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.events.EventDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.events.EventDetailForm"/>
+        <put name="formFocus" value="messageName"/>
+        <put name="readOnlyView" value="yes"/>
+        <!-- defect 318254, schleus -->
+        <put name="showBackButton" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.messageText:messageName:no:Text:events.message.messageDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.typeText:type:no:Text:events.message.typeDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.explanationText:explanation:no:Text:events.message.explanationDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.recommendationText:recommendation:no:Text:events.message.recommendationDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.originatorText:originator:no:Text:events.message.originatorDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.sourceTypeText:sourceType:no:Text:events.message.sourceTypeDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.timeStampText:timeStamp:no:Text:events.message.timeStampDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.threadText:threadId:no:Text:events.message.threadDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.nodeText:nodeName:no:Text:events.message.nodeDesc:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="events.message.serverText:serverName:no:Text:events.message.serverDesc:no:yes"/>
+        </putList>
+    </definition>
+</tiles-definitions>

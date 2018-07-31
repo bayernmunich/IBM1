@@ -1,0 +1,1 @@
+({"CALL_NOTIFICATION":"Hívásértesítés","COLLABORATION_WINDOW":"Együttműködés ablak","SHOW_COLLABORATION_WINDOW":"Együttműködés ablak megjelenítése"})

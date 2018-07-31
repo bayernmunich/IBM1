@@ -1,0 +1,403 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE project [
+    <!ENTITY update.server.xml SYSTEM "file:./portsUpdate/update.server.xml">
+    <!ENTITY update.server-component-template.xml SYSTEM "file:./portsUpdate/update.server-component-template.xml">
+    <!ENTITY update.serverentry-template.xml SYSTEM "file:./portsUpdate/update.serverentry-template.xml">
+    <!ENTITY update.serverindex.xml SYSTEM "file:./portsUpdate/update.serverindex.xml">
+    <!ENTITY update.virtualhosts.xml SYSTEM "file:./portsUpdate/update.virtualhosts.xml">
+    <!ENTITY update.wsadmin.properties SYSTEM "file:./portsUpdate/update.wsadmin.properties">    
+    <!ENTITY update.startmenu.xml SYSTEM "file:./portsUpdate/update.startmenu.xml">
+]>
+
+<project name="portsUpdate" default="default" basedir=".">
+    <description>
+        transforms the port numbers in the necessary config files.
+    </description>  
+    
+    &update.server.xml;
+    &update.server-component-template.xml;
+    &update.serverentry-template.xml;
+    &update.serverindex.xml;
+    &update.virtualhosts.xml;
+    &update.wsadmin.properties;    
+    &update.startmenu.xml;
+    
+    <target name="test">
+    </target>
+    
+    <target name="default" depends="initializeVariables, updateFiles">
+    </target>
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles">
+    </taskdef>
+
+    <target name="setCurrentOSFamily"
+            description="Sets the current OS family">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+    
+    <target name="initializeVariables" 
+        depends="test,                  
+                initialize.common.variables, 
+                initialize.default.portsFile,
+                initialize.protdef.props.from.default.portsFile,
+                initialize.protdef.props.from.portsFile, 
+                initialize.protdef.props.from.startingPort.Dmgr,
+                initialize.protdef.props.from.startingPort.AdminAgent,
+                initialize.protdef.props.from.startingPort.JobManager,
+                initialize.protdef.props.from.recommendedValues">
+                
+        
+        <property name="config.home"    value="${profilePath}/config"/>         
+        <property file="${portdefPath}"/>
+    </target>
+    
+    <target name="initialize.common.variables">
+        
+        <property name="wasHome"    value="${WAS_HOME}"/>
+        <property name="profilePath"    value="${WS_CMT_PROFILE_LOCATION}"/>
+        <property name="cellName"    value="${WS_CMT_CELL_NAME}"/>
+        <property name="nodeName"    value="${WS_CMT_NODE_NAME}"/>
+        
+        <property name="config.home"    value="${profilePath}/config"/>
+        <property name="portdefPath"    value="${profilePath}/properties/portdef.props"/>                       
+        
+        <wscmtlog>wasHome=${wasHome}</wscmtlog>
+        <wscmtlog>profilePath=${profilePath}</wscmtlog>
+        <wscmtlog>cellName=${cellName}</wscmtlog>
+        <wscmtlog>nodeName=${nodeName}</wscmtlog>
+        <wscmtlog>startingPort=${startingPort}</wscmtlog>
+        <wscmtlog>portsFile=${portsFile}</wscmtlog>
+        <wscmtlog>portdefPath=${portdefPath}</wscmtlog>
+        <wscmtlog>templatePath=${templatePath}</wscmtlog>
+        <wscmtlog>defaultPorts=${defaultPorts}</wscmtlog>
+        
+
+        <echo message="wasHome=${wasHome}"/>
+        <echo message="profilePath=${profilePath}"/>
+        <echo message="cellName=${cellName}"/>
+        <echo message="nodeName=${nodeName}"/>
+        <echo message="startingPort=${startingPort}"/>
+        <echo message="portsFile=${portsFile}"/>
+        <echo message="portdefPath=${portdefPath}"/>
+        <echo message="defaultPorts=${defaultPorts}"/>
+        <echo message="templatePath=${templatePath}"/>
+    
+
+        <condition property="callingWithPortsFile">
+                <isset property="portsFile"/>
+        </condition>    
+        <echo message="callingWithPortsFile=${callingWithPortsFile}"/>
+        <wscmtlog>callingWithPortsFile=${callingWithPortsFile}</wscmtlog>
+                
+        
+        <condition property="portsFileSpecifiedAsAbsolutePath">
+            <and>
+                <isset property="portsFile"/>
+                <available file="${portsFile}"/>
+            </and>
+        </condition>    
+        <echo message="portsFileSpecifiedAsAbsolutePath=${portsFileSpecifiedAsAbsolutePath}"/>
+        <wscmtlog>portsFileSpecifiedAsAbsolutePath=${portsFileSpecifiedAsAbsolutePath}</wscmtlog>
+        
+        <condition property="portsFileSpecifiedAsRelativePath">
+            <and>
+                <isset property="portsFile"/>
+                <not><available file="${portsFile}"/></not>
+            </and>
+        </condition>    
+        <echo message="portsFileSpecifiedAsRelativePath=${portsFileSpecifiedAsRelativePath}"/>
+        <wscmtlog>portsFileSpecifiedAsRelativePath=${portsFileSpecifiedAsRelativePath}</wscmtlog>
+        
+        <condition property="callingWithStartingPortDmgr">
+                <and>
+                <not><isset property="portsFile"/></not>
+                <isset property="startingPort"/>
+                <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+                </and>
+        </condition>
+        <echo message="callingWithStartingPortDmgr=${callingWithStartingPortDmgr}"/>
+        <wscmtlog>callingWithStartingPortDmgr=${callingWithStartingPortDmgr}</wscmtlog>
+
+        <condition property="callingWithStartingPortAdminAgent">
+                <and>
+                <not><isset property="portsFile"/></not>
+                <isset property="startingPort"/>
+                <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+                </and>
+        </condition>
+        <echo message="callingWithStartingPortAdminAgent=${callingWithStartingPortAdminAgent}"/>
+        <wscmtlog>callingWithStartingPortAdminAgent=${callingWithStartingPortAdminAgent}</wscmtlog>
+	
+        <condition property="callingWithStartingPortJobManager">
+                <and>
+                <not><isset property="portsFile"/></not>
+                <isset property="startingPort"/>
+                <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+                </and>
+        </condition>
+        <echo message="callingWithStartingPortJobManager=${callingWithStartingPortJobManager}"/>
+        <wscmtlog>callingWithStartingPortJobManager=${callingWithStartingPortJobManager}</wscmtlog>
+	
+	
+        <condition property="callingWithDefaultPortsFile">
+                <isset property="defaultPorts"/>
+        </condition>
+        <echo message="callingWithDefaultPortsFile=${callingWithDefaultPortsFile}"/>
+        <wscmtlog>callingWithDefaultPortsFile=${callingWithDefaultPortsFile}</wscmtlog>
+        
+        <condition property="callingWithRecommendedPorts">
+                <and>
+                <not><isset property="portsFile"/></not>
+                <not><isset property="startingPort"/></not>
+                <not><isset property="callingWithDefaultPortsFile"/></not>      
+                </and>
+        </condition>
+        <echo message="callingWithRecommendedPorts=${callingWithRecommendedPorts}"/>
+        <wscmtlog>callingWithRecommendedPorts=${callingWithRecommendedPorts}</wscmtlog>
+       
+        <condition property="performPortsUpdate">
+                <and>
+                <or>
+                <isset property="portsFile"/>
+                <isset property="startingPort"/>
+                <isset property="callingWithRecommendedPorts"/>
+                </or>
+                <not><isset property="defaultPorts"/></not>
+                </and>
+        </condition>
+        <echo message="performPortsUpdate=${performPortsUpdate}"/>
+        <wscmtlog>performPortsUpdate=${performPortsUpdate}</wscmtlog>
+                
+        <condition property="callingWithDefaultPortsFile">
+                <and>
+                <not><isset property="portsFile"/></not>
+                <not><isset property="startingPort"/></not>
+                <not><available file="${portdefPath}"/></not>
+                </and>
+        </condition>
+        <echo message="callingWithDefaultPortsFile=${callingWithDefaultPortsFile}"/>
+        <wscmtlog>callingWithDefaultPortsFile=${callingWithDefaultPortsFile}</wscmtlog>
+
+    </target>
+   
+    <target name="initialize.default.portsFile"
+            description="Set the default portdef.props based on the server type">
+        <condition property="defaultPortdefFile"
+                   value="${wasHome}/profileTemplates/management/actions/portsUpdate/adminagent.portdef.props">
+            <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+        </condition>
+        <condition property="defaultPortdefFile"
+                   value="${wasHome}/profileTemplates/management/actions/portsUpdate/dmgr.portdef.props">
+            <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <condition property="defaultPortdefFile"
+                   value="${wasHome}/profileTemplates/management/actions/portsUpdate/jmgr.portdef.props">
+            <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+        </condition>
+        <wscmtlog>defaultPortdefFile=${defaultPortdefFile}</wscmtlog>
+        <echo message="defaultPortdefFile=${defaultPortdefFile}"/>
+        
+        <basename property="defaultBasePortsFile" file="${defaultPortdefFile}"/>
+        <wscmtlog>defaultBasePortsFile=${defaultBasePortsFile}</wscmtlog>
+        <echo message="defaultBasePortsFile=${defaultBasePortsFile}"/>
+    </target> 
+    
+    <target name="initialize.protdef.props.from.default.portsFile" if="callingWithDefaultPortsFile">
+        <echo message="Copying file ${defaultPortdefFile} to file ${portdefPath}......"/>
+        <copy file="${defaultPortdefFile}" tofile="${portdefPath}" overwrite="true"/>
+    </target>
+
+    <target name="initialize.protdef.props.from.portsFile" if="callingWithPortsFile" 
+        depends="copyingFromAbosolutePath,copyingFromRelativePath">
+    </target>
+    <target name="copyingFromAbosolutePath" if="portsFileSpecifiedAsAbsolutePath">
+        <echo message="copyingFromAbosolutePath: Copying file ${portsFile} to file ${portdefPath}......"/>
+        <copy file="${portsFile}" tofile="${portdefPath}" overwrite="true"/>
+    </target>       
+    <target name="copyingFromRelativePath" if="portsFileSpecifiedAsRelativePath">
+        <echo message="copyFromRelativePath: Copying file ${user.dir}/${portsFile} to file ${portdefPath}......"/>
+        <copy file="${user.dir}/${portsFile}" tofile="${portdefPath}" overwrite="true"/>
+    </target>
+    
+    <target name="initialize.protdef.props.from.startingPort.Dmgr" if="callingWithStartingPortDmgr">
+        <wscmtlog>Creating file ${portdefPath} from starting port ${startingPort}</wscmtlog>  
+        <echo message="Creating file ${portdefPath} from starting port ${startingPort}"/>
+        <echo file="${portdefPath}" append="false"></echo>
+        
+        <taskdef name="resolvePort"
+           classname="com.ibm.ws.profile.anttasks.PortResolver">
+        </taskdef>
+
+        <resolvePort 
+                minimumPortNumber="${startingPort}" 
+                WAS_HOME="${wasHome}"
+                portKeys="WC_adminhost WC_adminhost_secure BOOTSTRAP_ADDRESS SOAP_CONNECTOR_ADDRESS 
+                          IPC_CONNECTOR_ADDRESS SAS_SSL_SERVERAUTH_LISTENER_ADDRESS 
+                          CSIV2_SSL_SERVERAUTH_LISTENER_ADDRESS CSIV2_SSL_MUTUALAUTH_LISTENER_ADDRESS 
+                          ORB_LISTENER_ADDRESS CELL_DISCOVERY_ADDRESS DCS_UNICAST_ADDRESS 
+                          DataPowerMgr_inbound_secure WC_defaulthost WC_defaulthost_secure SIP_DEFAULTHOST SIP_DEFAULTHOST_SECURE
+						  SIB_ENDPOINT_ADDRESS SIB_ENDPOINT_SECURE_ADDRESS SIB_MQ_ENDPOINT_ADDRESS SIB_MQ_ENDPOINT_SECURE_ADDRESS XDAGENT_PORT OVERLAY_UDP_LISTENER_ADDRESS OVERLAY_TCP_LISTENER_ADDRESS STATUS_LISTENER_ADDRESS"
+                portKeyValuePairs="resolvedKeyValuePairs" />
+        
+        <echo file="${portdefPath}" append="true">${resolvedKeyValuePairs}${line.separator}</echo>
+    </target>
+
+    <target name="initialize.protdef.props.from.startingPort.AdminAgent" if="callingWithStartingPortAdminAgent">
+        <wscmtlog>Creating file ${portdefPath} from starting port ${startingPort}</wscmtlog>  
+        <echo message="Creating file ${portdefPath} from starting port ${startingPort}"/>
+        <echo file="${portdefPath}" append="false"></echo>
+        
+        <taskdef name="resolvePort"
+           classname="com.ibm.ws.profile.anttasks.PortResolver">
+        </taskdef>
+
+        <resolvePort 
+                minimumPortNumber="${startingPort}" 
+                WAS_HOME="${wasHome}"
+                portKeys="WC_adminhost  
+                          WC_adminhost_secure  
+                          BOOTSTRAP_ADDRESS 
+                          SOAP_CONNECTOR_ADDRESS  
+                          IPC_CONNECTOR_ADDRESS 
+                          SAS_SSL_SERVERAUTH_LISTENER_ADDRESS  
+                          CSIV2_SSL_SERVERAUTH_LISTENER_ADDRESS  
+                          CSIV2_SSL_MUTUALAUTH_LISTENER_ADDRESS 
+                          ORB_LISTENER_ADDRESS"
+                portKeyValuePairs="resolvedKeyValuePairs" />
+        
+        <echo file="${portdefPath}" append="true">${resolvedKeyValuePairs}${line.separator}</echo>
+    </target>
+	
+    <target name="initialize.protdef.props.from.startingPort.JobManager" if="callingWithStartingPortJobManager">
+        <wscmtlog>Creating file ${portdefPath} from starting port ${startingPort}</wscmtlog>  
+        <echo message="Creating file ${portdefPath} from starting port ${startingPort}"/>
+        <echo file="${portdefPath}" append="false"></echo>
+        
+        <taskdef name="resolvePort"
+           classname="com.ibm.ws.profile.anttasks.PortResolver">
+        </taskdef>
+
+        <resolvePort 
+                minimumPortNumber="${startingPort}" 
+                WAS_HOME="${wasHome}"
+                portKeys="WC_adminhost 
+	                      WC_adminhost_secure 
+	                      BOOTSTRAP_ADDRESS 
+	                      SOAP_CONNECTOR_ADDRESS 
+	                      IPC_CONNECTOR_ADDRESS 
+	                      SAS_SSL_SERVERAUTH_LISTENER_ADDRESS 
+	                      CSIV2_SSL_SERVERAUTH_LISTENER_ADDRESS 
+	                      CSIV2_SSL_MUTUALAUTH_LISTENER_ADDRESS
+                            STATUS_LISTENER_ADDRESS
+	                      ORB_LISTENER_ADDRESS"
+                portKeyValuePairs="resolvedKeyValuePairs" />
+        
+        <echo file="${portdefPath}" append="true">${resolvedKeyValuePairs}${line.separator}</echo>
+    </target>
+	
+    <target name="initialize.protdef.props.from.recommendedValues" if="callingWithRecommendedPorts">
+        <wscmtlog>Creating file ${portdefPath} from recommended ports</wscmtlog>  
+        <echo message="Creating file ${portdefPath} from recommended ports"/>
+        <echo file="${portdefPath}" append="false"></echo>
+
+        <taskdef name="resolvePortsWithRecommendedValues"
+                classname="com.ibm.ws.profile.anttasks.PortResolverRecommendedValues">
+        </taskdef>
+   
+        <resolvePortsWithRecommendedValues 
+                WAS_HOME="${wasHome}" 
+                templatePath="${templatePath}"
+                basePortsFile="${defaultBasePortsFile}"
+                portKeyValuePairs="resolvedKeyValuePairs"/>
+      
+        <echo message="${resolvedKeyValuePairs}${line.separator}"/>
+      
+        <echo file="${portdefPath}" append="false">${resolvedKeyValuePairs}${line.separator}</echo>
+      
+    </target>  
+
+    <target name="doReplace" unless="isCurrentOSzOS">
+        <replaceregexp file="${file}"
+                         match="${token}"
+                         replace="${tokenValue}"/>
+    </target>
+
+    <target name="doReplaceZOS" if="isCurrentOSzOS">
+        <replaceregexp file="${file}"
+                         match="${token}"
+                         replace="${tokenValue}"
+                         encoding="UTF-8"/>
+    </target>
+
+    <target name="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile" if="${port}">        
+        <wscmtlog>File ${file}:  setting ${port} to ${portValue}</wscmtlog>    
+        <echo message="File ${file}:  setting ${port} to ${portValue}"/>
+        
+         <antcall target="doReplace"/>
+         <antcall target="doReplaceZOS"/>
+
+    </target>
+
+    <target name="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenDir" if="${port}">        
+        <wscmtlog>All ${fileType} files in directory ${dir}:  setting ${port} to ${portValue}</wscmtlog>    
+        <echo message="All ${fileType} files in directory ${dir}:  setting ${port} to ${portValue}"/>
+        
+        <replaceregexp match="${token}"
+                       replace="${tokenValue}">
+                       <fileset dir="${dir}" includes="**/*.${fileType}"/>
+        </replaceregexp>                         
+    </target>
+
+    <!-- LIDB4134-46.2: Always update ports even if defaultPorts=true. This allows the .car file to not 
+         contain the default ports.  It's error prone to assume that the ports in the .car file are always 
+         the default ports, and it does not take that much time to update the ports.  Without this, whenenver 
+         portdef.props file is changed, the ports in the .car has to be changed as well, which can be easily 
+         forgotten -->
+    <target name="updateFiles" depends="setCurrentOSFamily">
+        
+        <antcall target="update.serverindex.xml">
+            <param name="file" value="${config.home}/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+        </antcall>
+        
+        <antcall target="update.virtualhosts.xml">
+            <param name="file" value="${config.home}/cells/${cellName}/virtualhosts.xml"/>
+        </antcall> 
+        
+        <antcall target="update.serverindex.xml">
+            <param name="file" value="${config.home}/templates/servertypes/APPLICATION_SERVER/serverindex.xml"/>
+        </antcall>
+        
+        <!-- workaround for windows as the wsadmin listener locks this file -->
+        <attrib file="${profilePath}/properties/wsadmin.properties" readonly="false" />
+        <copy file="${profilePath}/properties/wsadmin.properties" tofile="${profilePath}/temp/wsadmin.properties"/>
+        <antcall target="update.wsadmin.properties">
+             <param name="file" value="${profilePath}/temp/wsadmin.properties"/>
+        </antcall>
+        <copy file="${profilePath}/temp/wsadmin.properties" tofile="${profilePath}/properties/wsadmin.properties"/>
+        <delete file="${profilePath}/temp/wsadmin.properties"/>
+        
+        <!--dir paremeter is set within this target-->
+        <antcall target="update.startmenu.xml">
+        </antcall>                                 
+    </target>
+</project>

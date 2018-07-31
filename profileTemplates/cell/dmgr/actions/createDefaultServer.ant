@@ -1,0 +1,193 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createDefaultServer" default="createDefaultServer" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+		<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>          
+		
+    <property name="appServerServerName" value="server1"/>
+      &importExternalLogs;   
+    <target name="zSetServerName"
+            description="For z/OS only, set serverName to user provided value" if="isCurrentOSzOS">
+
+         <property name="appServerServerName" value="${appServerServerName}"/>
+
+    </target>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+       <!-- z/OS setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setCurrentOSFamily"
+            description="Sets the current OS Family">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+
+    <target name="setBitMode" 
+           description="Sets the bitMode for zOS Family">
+        <condition property="bits" value="31bit">
+	    <and>
+                <isset property="isCurrentOSzOS"/>
+                <equals arg1="${bitmode}" arg2="31"/>
+	    </and>
+        </condition>
+        <condition property="bits" value="64bit">
+	    <and>
+                <isset property="isCurrentOSzOS"/>
+                <equals arg1="${bitmode}" arg2="64"/>
+	    </and>
+        </condition>
+        <condition property="bits" value="64bit">
+	    <and>
+                <isset property="isCurrentOSzOS"/>
+	        <not> <isset property="bitmode"/> </not>
+	    </and>
+        </condition>
+        <wscmtlog>Detected bitmode to be: ${bits}</wscmtlog>
+    </target>
+    
+    <target name="runCreateDefaultServerConfigJACLScript"
+	        unless="isCurrentOSzOS"
+            description="Runs the JACL script to create the default server">
+            
+        <wscmtlog>Create Default Server, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log</wscmtlog>
+
+		    <antcall target="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			    <param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/default/server.xml"/>
+    			<param name="token" value="(WCInboundAdmin&quot; )enable=&quot;true&quot;"/>
+	    		<param name="tokenValue" value="\1enable=&quot;false&quot;"/>
+	    	</antcall>
+		
+		    <antcall target="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+	    		<param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/default/server.xml"/>
+    			<param name="token" value="(WCInboundAdminSecure&quot; )enable=&quot;true&quot;"/>
+    			<param name="tokenValue" value="\1enable=&quot;false&quot;"/>
+    		</antcall>
+                 <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->                  
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log"
+                 appendTrace="true"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminTask createApplicationServer ${appServerNodeName} {-name ${appServerServerName}}"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+				 lang="jacl"
+                 >
+        </wsadmin>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log" />
+            <param name="description" value="creating default server" />
+            <param name="precondition" value="foetrue" />
+        </antcall>  
+    </target>
+
+   <target name="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">        
+        <wscmtlog>File ${file}:  setting ${token} to ${tokenValue}</wscmtlog>    
+    	<echo message="File ${file}:  setting ${token} to ${tokenValue}"/>
+
+      <replaceregexp file="${file}"
+                     match="${token}"
+                     replace="${tokenValue}"
+                     encoding="UTF-8"/>
+   </target>
+	
+	 <target name="runCreateDefaultServerConfigJACLScriptZOS"
+	        if="isCurrentOSzOS"
+            description="Runs the JACL script to create the default server">
+            
+        <wscmtlog>Create Default Server, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log</wscmtlog>
+
+		    <antcall target="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			    <param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultZOS/server.xml"/>
+    			<param name="token" value="(WCInboundAdmin&quot; )enable=&quot;true&quot;"/>
+	    		<param name="tokenValue" value="\1enable=&quot;false&quot;"/>
+	    	</antcall>
+		
+		    <antcall target="replaceRegExpAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+	    		<param name="file" value="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultZOS/server.xml"/>
+    			<param name="token" value="(WCInboundAdminSecure&quot; )enable=&quot;true&quot;"/>
+    			<param name="tokenValue" value="\1enable=&quot;false&quot;"/>
+    		</antcall>
+                 <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->
+                 <!-- PI21144 - add -genUniquePorts false -->
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+				 lang="jacl"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log"
+                 appendTrace="true"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminTask createApplicationServer ${appServerNodeName} {-name ${appServerServerName} -specificShortName ${z.appserver.server.short.name} -genericShortName ${z.appserver.cluster.transition.name} -bitmode ${bits}  -genUniquePorts false}"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createDefaultServer.log" />
+            <param name="description" value="creating default server" />
+            <param name="precondition" value="foetrue" />
+        </antcall>  
+    </target>
+    
+    <target name="createDefaultServer"
+        description="Creates the default server - ${appServerServerName}"
+        depends="detectCurrentOSFamily,
+            setCurrentOSFamily,
+            setBitMode,
+            zSetServerName,
+            runCreateDefaultServerConfigJACLScript,
+			runCreateDefaultServerConfigJACLScriptZOS"/>
+</project>
+

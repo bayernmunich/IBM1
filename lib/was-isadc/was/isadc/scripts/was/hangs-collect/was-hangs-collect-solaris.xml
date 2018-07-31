@@ -1,0 +1,234 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS hangs problem for
+     Solaris platform. It should be included in the WAS hangs collect Ant scripts. 
+-->
+
+<project name="was-hangs-collect-solaris" >
+
+	<dirname property="was.hangs.collect.solaris.basedir" file="${ant.file.was-hangs-collect-solaris}"/>
+	<dirname property="was.hangs.collect.solaris.parentdir" file="${was.hangs.collect.solaris.basedir}"/>
+	<dirname property="was.hangs.collect.solaris.grandparentdir" file="${was.hangs.collect.solaris.parentdir}"/>
+	<dirname property="was.hangs.collect.solaris.bundle.basedir" file="${was.hangs.collect.solaris.grandparentdir}"/>
+
+	<!-- This target is used ot create hangs pre-output before staring to create javacore files-->
+	<target name="create_solaris_hangs_pre_output" description="Create Solaris hangs output before starting to create javacore" if="isSunOS">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+		
+		<property name="netstat.out.path" value="${autopdtmp}/autopd/netstat.out" />
+		<property name="vmstat.log.path" value="${autopdtmp}/autopd/vmstat.log" />
+		
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path}" />
+				<filter token="vmstat.out" value="${vmstat.log.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>	
+
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_lsof_to_obtain_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running lsof to obtain output" 
+			replace="${autopdts};;${step.count}" 
+			id="1113" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+		
+		<property name="lsof.out.path" value="${autopdtmp}/autopd/lsof.out" />
+		
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/lsof-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/lsof-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pid" value="${was.java.process.id}" />
+				<filter token="lsof.out" value="${lsof.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/lsof-filled.sh" />
+		</exec>	
+
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_command_to_obtain_pstack_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running commands to obtain pstack output" 
+			replace="${autopdts};;${step.count}" 
+			id="1021" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+		
+		<property name="pstack.out.path" value="${autopdtmp}/autopd/pstack.out" />
+		
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pstack-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pstack.out" value="${pstack.out.path}" />
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh" />
+		</exec>	
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_commands_to_obtain_pfiles_pmap_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running commands to obtain pmap and pfiles output" 
+			replace="${autopdts};;${step.count}" 
+			id="1115" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+		
+		<property name="pmap.out.path" value="${autopdtmp}/autopd/pmap.out" />
+		<property name="pfiles.out.path" value="${autopdtmp}/autopd/pfiles.out" />		
+		
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pfiles-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pfiles-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pmap.out" value="${pmap.out.path}" />
+				<filter token="pfiles.out" value="${pfiles.out.path}" />
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/pfiles-filled.sh" />
+		</exec>	
+	</target>
+	
+	<!-- This target is used ot create hangs post-output after creating javacore files-->
+	<target name="create_solaris_hangs_post_output" description="Create Solaris hangs post output after creating java core files" if="isSunOS">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+
+
+		<property name="netstat.out.path2" value="${autopdtmp}/autopd/netstat2.out" />
+		<property name="vmstat.log.path2" value="${autopdtmp}/autopd/vmstat2.log" />
+		
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path2}" />
+				<filter token="vmstat.out" value="${vmstat.log.path2}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>	
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_commands_to_obtain_env_variables_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running a set of commands to obtain output for environment variables" 
+			replace="${autopdts};;${step.count}" 
+			id="1052" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+
+		<property name="env.out.path" value="${autopdtmp}/autopd/env.out" />				
+		<property name="ulimit.out.path" value="${autopdtmp}/autopd/ulimit.out" />
+		<property name="uname.out.path" value="${autopdtmp}/autopd/uname.out" />
+		<property name="showrev.out.path" value="${autopdtmp}/autopd/showrev.out" />
+		<property name="pkginfo.out.path" value="${autopdtmp}/autopd/pkginfo.out" />		
+						
+		<copy file="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/collect-env-template.sh" tofile="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/collect-env-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="env.out" value="${env.out.path}" />
+				<filter token="ulimit.out" value="${ulimit.out.path}" />
+				<filter token="uname.out" value="${uname.out.path}" />
+				<filter token="showrev.out" value="${showrev.out.path}" />
+				<filter token="pkginfo.out" value="${pkginfo.out.path}" />
+			</filterset>
+		</copy>
+				
+		<exec executable="sh" dir="${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${was.hangs.collect.solaris.bundle.basedir}/scripts/was/shell/solaris/collect-env-filled.sh" />
+		</exec>	
+
+	</target>
+
+	<!-- This target is used to collect specific information of was hangs problem for Solaris platform -->
+	
+	<target name="collect_solaris_was_hangs" description="Collect was hangs problem" if="isSunOS">
+		<echo message=" " />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1052644" />
+			
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_specific_information_of_was_hangs_problem_for_Solaris_platform" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting specific information for WebSphere Application Server hang problem on the Solaris platform" 
+			replace="${autopdts};;${step.count}" 
+			id="1111" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-solaris.xml"/>
+
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset file="${netstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path2}" prefix="autopdzip/autopd" />
+			<zipfileset file="${vmstat.out.path}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${vmstat.out.path2}" prefix="autopdzip/autopd" />						
+									
+			<zipfileset file="${pstack.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pstack.out.path2}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pstack.out.path3}" prefix="autopdzip/autopd" />
+						
+			<zipfileset file="${pmap.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${pfiles.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${env.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${ulimit.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${uname.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${showrev.out.path}" prefix="autopdzip/autopd" />
+
+			<zipfileset file="${pkginfo.out.path}" prefix="autopdzip/autopd" />
+
+		</zip>
+	</target>
+</project>	

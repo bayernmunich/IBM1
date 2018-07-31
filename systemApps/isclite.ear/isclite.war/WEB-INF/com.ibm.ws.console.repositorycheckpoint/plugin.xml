@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+     5724-J34 (C) COPYRIGHT International Business Machines Corp. 2005
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<plugin id="com.ibm.ws.console.repositorycheckpoint"
+        name="repositorycheckpoint"
+        version="6.0.0"
+        provider-name="IBM Corp. - WebSphere"
+        embedded="true"
+        context-root="repositorycheckpoint">
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+    </requires>
+
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+       <tasks>
+           <task id="repository"
+                 icon="images/onepix.gif"
+                 label="nav.repository.label"
+                 view="/navigatorCmd.do?forwardName=repository.config.view"
+                 external="false"
+                 weight="15">
+               <category id="systemadmin" />
+           </task>
+       </tasks>
+    </extension>
+
+    <!-- For Help -->
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true" />
+    </extension>
+
+	<!-- Configuration Tab -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="repository.tabs.detailTab" contextType="Repository">
+            <tab label="tab.configuration" contentURI="repository.config.tab.view" />
+        </detailTab>
+    </extension>
+
+	<!-- Additional Properties -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="repository.link.additional.properties" contextType="Repository">
+            <link
+                categoryId="additional.properties"
+        		label="repositorycheckpoint.displayName"
+                description="repositorycheckpoint.description.short"
+                actionURI="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main&#38;sfname=name">
+            </link>
+        </linkSet>
+    </extension>
+
+	<!-- Repository Checkpoint Buttons -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="repositorycheckpoint.collection" contextType="repositorycheckpoint.content.main">
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="repositorycheckpoint.button.new"
+              	actionURI="RepositoryCheckpointCollection.do?NewAction=true">
+            </action>
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="repositorycheckpoint.button.delete"
+              	actionURI="RepositoryCheckpointCollection.do?DeleteAction=true">
+            </action>
+            <action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="repositorycheckpoint.button.restore"
+              	actionURI="RepositoryCheckpointCollection.do?RestoreAction=true">
+            </action>
+            <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="repositorycheckpoint.button.export"
+                actionURI="RepositoryCheckpointCollection.do?ExportAction=true">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Repository Checkpoint Collection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="repositorycheckpoint.content.main" contextType="repositorycheckpoint.content.main">
+            <item
+            	attributeName="name"
+                sortable="sort"
+                itemURI="RepositoryCheckpointCollection.do?ViewAction=true"
+                label="repositorycheckpoint.name.displayName">
+          	</item>
+            <item
+                attributeName="docCount"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.docCount.displayName">
+          	</item>
+            <item
+                attributeName="checkpointType"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.checkpointType.displayName">
+            </item>
+            <item
+                attributeName="sequence"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.sequence.displayName">
+            </item>
+			  <item
+                attributeName="timestamp"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.timestamp.displayName">
+            </item>
+
+            <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.description.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+	<!-- Checkpoint Attributes -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="repositorycheckpoint.tabs.detailTab" contextType="repositorycheckpoint.detail.view">
+            <tab label="repositorycheckpoint.detail.tab" contentURI="repositorycheckpoint.detail.tab.view" />
+        </detailTab>
+    </extension>
+
+    <!-- Repository Checkpoint Docs Collection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="repositorycheckpoint.detail.view" contextType="repositorycheckpoint.detail.view">
+            <item
+            	attributeName="name"
+                sortable="sort"
+                itemURI="RepositoryCheckpointDocsCollection.do?ViewAction=true"
+                label="repositorycheckpoint.document.name.displayName">
+          	</item>
+            <item
+                attributeName="uri"
+                sortable="sort"
+                itemURI=""
+                label="repositorycheckpoint.document.uri.displayName">
+          	</item>
+        </collectionItem>
+    </extension>
+
+	<!-- New Checkpoint -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="repositorycheckpoint.new.tabs.detailTab" contextType="NewRepositoryCheckpoint">
+            <tab label="tab.configuration" contentURI="repositorycheckpoint.new.tab.view" />
+        </detailTab>
+    </extension>
+
+</plugin>

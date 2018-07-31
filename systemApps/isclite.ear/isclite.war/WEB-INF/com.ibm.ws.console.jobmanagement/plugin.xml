@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2007, 2011
+ * The source code for this program is not published or otherwise divested
+ * of its trade secrets, irrespective of what has been deposited with the
+ * U.S. Copyright Office.
+-->
+
+<plugin id="com.ibm.ws.console.jobmanagement"
+           name="jobmanagement"
+           version="1.0.0"
+           vendor-name="IBM Corp. - WebSphere Server Group"
+           embedded="true"
+           context-root="jobmanagement">
+
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core" />
+    </requires>
+
+
+<!-- ============================================================================================ -->
+<!-- Navigation Extensions                                                                        -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+      <tasks>
+         <categoryDefinition id="jobManagerCategoryId" parent="root" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.jobs" weight="25"/>
+
+      <task id="jmgrSubmitId" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.submit" view="/navigatorCmd.do?forwardName=SubmitJobWizard.step1" external="false" role="administrator,operator" weight="20">
+        <category id="jobManagerCategoryId"/>
+      </task>
+
+      <task id="jmgrStatusId" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.status" view="/navigatorCmd.do?forwardName=JobStatus.content.main" external="false" weight="25">
+        <category id="jobManagerCategoryId"/>
+      </task>
+
+      <task id="jmgrEndpointsId" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.endpoints" view="/navigatorCmd.do?forwardName=Endpoint.content.main" external="false" weight="30">
+        <category id="jobManagerCategoryId"/>
+      </task>
+
+      <task id="jmgrManagedResourcesId" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.managed.reources" view="/navigatorCmd.do?forwardName=Resources.content.main" external="false" weight="35">
+        <category id="jobManagerCategoryId"/>
+      </task>
+
+      <task id="jmgrEndpointGroupsId" icon="/adminconsole/images/onepix.gif" label="JMGR.endpoint.groups" view="/navigatorCmd.do?forwardName=EndpointGroup.content.main" external="false" weight="40">
+        <category id="jobManagerCategoryId"/>
+      </task>
+
+      <!-- remove payload registry
+      <task id="jmgrPayloadId" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.payload" view="/navigatorCmd.do?forwardName=PayloadRegistry.content.main" external="false" weight="45">
+        <category id="jobManagerCategoryId"/>
+      </task>
+      -->
+
+      <task id="jmgrConfigIdSysAdmin" icon="/adminconsole/images/onepix.gif" label="nav.jmgr.jobmgr.config" view="/navigatorCmd.do?forwardName=JobManager.config.view" external="false" weight="10">
+        <category id="systemadmin"/>
+      </task>
+
+
+
+
+</tasks>
+</extension>
+
+
+
+<!-- ============================================================================================ -->
+<!-- Endpoint Definitions                                                                         -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.Endpoint.collectionItem1" contextType="JMGR_Endpoint">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="endpointCollection.do?EditAction=true"
+              label="JMGR.endpoint.name.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.endpoint.version.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- F000905-31922  add filtering on New Host and Delete Host buttons -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="JMGR.Endpoint.collectionItem2" contextType="JMGR_Endpoint">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="JobManager.addHost"
+              scope="Cell"
+              actionURI="endpointCollection.do">
+              <compatibility>
+              	<match key="com.ibm.ws.console.jobmanagement.viewingTargetType" value="all|host"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="JMGR.endpointButton.DisplayResources.displayName"
+              actionURI="endpointCollection.do"
+              type="menu"
+              actionName="displayResources"
+              optionValueList="jmgr.endpoint.displayResources.values"
+              optionLabelList="jmgr.endpoint.displayResources.labels">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="JobManager.deleteHost"
+              scope="Cell"
+              actionURI="endpointCollection.do">
+              <compatibility>
+              	<match key="com.ibm.ws.console.jobmanagement.viewingTargetType" value="all|host"/>
+              </compatibility>              
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="JMGR.Endpoint.detailItem1" contextType="JMGR_Endpoint">
+        <tab
+              label="tab.configuration"
+              contentURI="Endpoint.config.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Definition for generic custom properties widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="endpoint.customProperty.collectionItem" contextType="endpoint.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="endpointEdit.customProperty.collectionItem" contextType="endpointEdit.customProperty">
+        <item
+              attributeName="name"
+              editable="false"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              editable="never"
+              label="Property.description.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Managed Resources Definitions                                                                         -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.Resources.collectionItem1" contextType="JMGR_Resources">
+        <item
+              attributeName="id"
+              sortable="sort"
+              itemURI="resourcesCollection.do?EditAction=true"
+              label="JMGR.resources.id.displayName">
+        </item>
+        <item
+              attributeName="number"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.resources.number.displayName">
+        </item>
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.resources.endpointName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.Resource.collectionItem1" contextType="JMGR_Resource">
+        <item
+              attributeName="id"
+              sortable="sort"
+              itemURI="resourceCollection.do?EditAction=true"
+              label="JMGR.resource.id.displayName">
+        </item>
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.resource.endpointName.displayName">
+        </item>
+        <item
+              attributeName="resourceStatus"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.resource.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="JMGR.Resource.detailItem1" contextType="JMGR_Resource">
+        <tab
+              label="tab.configuration"
+              contentURI="Resource.config.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="resource.customProperty.collectionItem" contextType="resource.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Endpoint Group Definitions                                                                   -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.EndpointGroup.collectionItem1" contextType="JMGR_EndpointGroup">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="endpointGroupCollection.do?EditAction=true"
+              label="JMGR.group.name">
+        </item>
+        <item
+              attributeName="memberCount"
+              sortable="sort"
+              itemURI=""
+              label="NodeGroup.memberCount.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="web.label.description">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="JMGR.EndpointGroup.collection1" contextType="JMGR_EndpointGroup">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              scope="Cell"
+              actionURI="endpointGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              scope="Cell"
+              actionURI="endpointGroupCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Payload Registry Definitions                                                                 -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.PayloadRegistry.collectionItem1" contextType="PayloadRegistry">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="payloadRegistryCollection.do?EditAction=true"
+              label="web.label.name">
+        </item>
+        <item
+              attributeName="payloadType"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.payload.type">
+        </item>
+        <item
+              attributeName="payloadURL"
+              sortable="sort"
+              itemURI=""
+              label="nav.url">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="JMGR.PayloadRegistry.collection1" contextType="PayloadRegistry">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              scope="Cell"
+              actionURI="payloadRegistryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.copy"
+              scope="Cell"
+              actionURI="payloadRegistryCollection.do">
+        </action>
+
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              scope="Cell"
+              actionURI="payloadRegistryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- Definition for generic custom properties widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="payloadRegistry.customProperty.collectionItem" contextType="payloadRegistry.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Job Status Definitions                                                                       -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="JMGR.JobStatus.collectionItem1" contextType="JMGR_JobStatus">
+        <item
+              attributeName="id"
+              sortable="sort"
+              itemURI="jobStatusCollection.do?EditAction=true"
+              label="JMGR.job.id">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="web.label.description">
+        </item>
+        <item
+              attributeName="state"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.state">
+        </item>
+        <item
+              attributeName="activationTime"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.activation.time">
+        </item>
+        <item
+              attributeName="expirationTime"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.expiration.time">
+        </item>
+        <item
+              attributeName="status"
+              sortable="nosort"
+              itemURI="jobStatusCollection.do?EditAction=true"
+              label="JMGR.status.summary">
+        </item>
+
+
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="JMGR.JobStatus.collection1" contextType="JMGR_JobStatus">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.suspend"
+              scope="Cell"
+              actionURI="jobStatusCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.resume"
+              scope="Cell"
+              actionURI="jobStatusCollection.do">
+        </action>
+
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.delete"
+              scope="Cell"
+              actionURI="jobStatusCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Endpoint Status Definitions                                                                  -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="EndpointStatus.collectionItem" contextType="JMGR_EndpointStatus">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="JMGR.endpoint.name.headline">
+        </item>
+        <item
+              attributeName="endpointStatus"
+              sortable="sort"
+              itemURI="jobStatusDetail.do?EditAction=true"
+              label="nav.jmgr.status">
+        </item>
+        <item
+              attributeName="logFiles"
+              sortable=""
+              itemURI="jobStatusDetail.do?EditAction=true&amp;logAction=view"
+              label="JMGR.endpoint.logFiles">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Job Manager Server Configuration                                                             -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="jobmanagement.JobManager1" contextType="JobManager">
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=JobManager.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+              <!-- END LIDB1891-8.6 -->
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=JobManager.config.view">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              weight="30"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=JobManager.config.view">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              weight="40"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=JobManager.config.view">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              weight="50"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=JobManager.config.view">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              weight="60"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=JobManager.config.view">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                 <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              weight="70"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              weight="80"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=JobManager.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility>        
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              weight="90"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=JobManager.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+                           <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+                           <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ZosLocationService.displayName"
+              description="ZosLocationService.description"
+              weight="99"
+              actionURI="com.ibm.ws.console.zos.forwardCmd.do?forwardName=Daemon.config.view&amp;sfname=properties&#38;lastPage=JobManager.config.view">
+		   <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(zoscell|zosbase)"/>
+             <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+           </compatibility>
+        </link>
+        
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=JobManager.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+		        <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=JobManager.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+		        <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=JobManager.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+              <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </link>
+
+        <link
+              categoryId="serverinfrastructure.properties"
+              label="InstalledSDKs.label"
+              description="InstalledSDKs.server.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.server.content.main">
+        </link>
+ 
+
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=JobManager.config.view&amp;origin=JobManager.config.view&amp;ServerDetailForm=JMGR_JobManagerDetailForm"
+              perspective="runtime">
+              <compatibility>
+              	<match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+              </compatibility> 
+        </link>        
+
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="JobManager.config.general.properties" contextType="JobManager">
+        <field
+	          attributeName="name"
+	          perspective="config">
+	          <compatibility>
+	            <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+	          </compatibility>
+        </field >
+        <field
+			  attributeName="provisionComponents"
+			  perspective="config">
+			  <compatibility>
+			    <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+			  </compatibility>
+        </field >
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+        <field
+             attributeName="runIn64bitJVMMode"
+             perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+               <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+               <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="JobManager.config.general.properties" contextType="JobManager">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 Begin -->
+        <field
+             attributeName="runIn64bitJVMMode"
+             perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+               <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+               <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 End-->
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="jobmanagement.JobManager.detail1" contextType="JobManager">
+        <action
+              enablesFor="Detail"
+              role="administrator,operator"
+              label="button.stop"
+              scope="Cell"
+              actionURI="jobManagerDetail.do">
+              <compatibility>
+			    <match key="customMatcher" value="com.ibm.ws.console.core.selector.JobManagerEnvironmentMatcher"/>
+		      </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<!-- Detail Tabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="jobmanagement.JobManager.detailTab1" contextType="JobManager">
+        <tab
+              label="tab.runtime"
+              contentURI="JobManager.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="JobManager.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+    <!--
+    *********************
+    *                   *
+    * ONLINE HELP LINKS *
+    *                   *
+    *********************
+    -->
+
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true"/>
+    </extension>
+
+</plugin>
+

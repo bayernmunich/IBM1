@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!--
+     5724-J34 (C) COPYRIGHT International Business Machines Corp. 2005
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<struts-config>
+
+    <form-beans>
+        <form-bean
+            name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"
+            type="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"
+        />
+        <form-bean
+            name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"
+            type="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"
+        />
+        <form-bean
+            name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"
+            type="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"
+        />
+        <form-bean
+            name="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"
+            type="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"
+        />
+        <form-bean
+            name="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"
+            type="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"
+        />
+    </form-beans>
+
+    <global-forwards />
+
+    <action-mappings>
+        <action path="/com.ibm.ws.console.repositorycheckpoint.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="repository.config.view" path="repository.config.view" />
+            <forward name="repositorycheckpoint.content.main" path="repositorycheckpoint.content.main" />
+            <forward name="repositorycheckpoint.detail.view" path="repositorycheckpoint.detail.view" />
+        </action>
+
+        <action name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"
+                path="/RepositoryDetail"
+                type="com.ibm.ws.console.repositorycheckpoint.action.RepositoryDetailAction"
+                input="repository.config.view">
+            <forward name="failure" path="/error.jsp"/> 
+            <forward name="error" path="repository.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repository.config.view"/>
+        </action>
+
+        <action name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"
+                path="/RepositoryCheckpointCollection"
+                type="com.ibm.ws.console.repositorycheckpoint.action.RepositoryCheckpointCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.detail.view"/>
+            <forward name="RepositoryCheckpointCollection" path="repositorycheckpoint.content.main"/>
+            <forward name="refresh" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main"/>
+            <forward name="NewRepositoryCheckpoint" path="repositorycheckpoint.new.config"/>
+            <forward name="ExportRepositoryCheckpoint" path="repositorycheckpoint.export.config.view"/>
+        </action>
+
+        <action name="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"
+                path="/RepositoryCheckpointDocsCollection"
+                type="com.ibm.ws.console.repositorycheckpoint.action.RepositoryCheckpointDocsCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="repositorycheckpoint.detail.view"/>
+            <forward name="RepositoryCheckpointDocsCollection" path="repositorycheckpoint.detail.view"/>
+            <forward name="DocumentView" path="repositorycheckpoint.document.view"/>
+        </action>
+
+        <action name="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"
+                path="/NewRepositoryCheckpoint"
+                type="com.ibm.ws.console.repositorycheckpoint.action.NewRepositoryCheckpointAction"
+                input="repositorycheckpoint.new.config">
+            <forward name="failure" path="/error.jsp"/> 
+            <forward name="error" path="repositorycheckpoint.new.config"/>
+            <forward name="success" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main"/>
+        </action>
+        
+        <action name="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"
+                path="/ExportRepositoryCheckpoint"
+                type="com.ibm.ws.console.repositorycheckpoint.action.ExportRepositoryCheckpointAction"
+                input="repositorycheckpoint.export.config.view">
+            <forward name="failure" path="/error.jsp"/> 
+            <forward name="error" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main"/>
+            <forward name="success" path="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main"/>
+        </action>
+    </action-mappings>
+
+</struts-config>

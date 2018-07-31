@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N01, 5733-W60 (C) COPYRIGHT International Business Machines Corp. 1997, 2005
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<plugin id="com.ibm.ws.console.appmanagement.pme" 
+        name="appmanagement.pme"
+        version="1.0.0" 
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true" 
+        context-root="appmanagement.pme">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core" />
+    <import plugin="com.ibm.ws.console.appmanagement"/>
+</requires>
+
+<!-- BEGIN appprofileapplicationext -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="appprofile.application.profile" contextType="ApplicationDeployment">
+        <link
+              categoryId="ApplicationDeployment.EJBModuleProperties.category"
+              label="ApplicationProfile.displayName"
+              description="ApplicationProfile.description"
+              actionURI="com.ibm.ws.console.appmanagement.pme.appprofileapplicationext.forwardCmd.do?forwardName=ApplicationProfile.content.main&amp;resourceUri=META-INF/ibm-application-ext-pme.xmi">
+              <compatibility>
+                   <match key="com.ibm.ws.console.appdeployment.hasEJBModule" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- LI2505 LinkSetProccessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="AppProfileApplicationExt_Link.ApplicationProfile1" contextType="ApplicationProfile">
+        <link
+              categoryId="additional.properties"
+              label="ApplicationProfile.tasks.displayName"
+              description="ApplicationProfile.tasks.description"
+              actionURI="com.ibm.ws.console.appmanagement.pme.appprofileapplicationext.forwardCmd.do?forwardName=Task.content.main&amp;sfname=tasks">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- LIDB3238-69.5 changes - New/Delete must be performed via tooling instead of the console
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="AppProfileApplicationExt_ActionSet.ApplicationProfile.collection1" contextType="ApplicationProfile">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="applicationProfileCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="applicationProfileCollection.do">
+        </action>
+    </actionSet>
+</extension>
+-->
+<!-- LI2505 ActionSetProccessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="AppProfileApplicationExt_ActionSet.Task.collection1" contextType="Task">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="taskCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="taskCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="AppProfileApplicationExt_CollectionItem.ApplicationProfile.collectionItem1" contextType="ApplicationProfile">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="applicationProfileCollection.do?EditAction=true&#38;lastPage=ApplicationProfile.config.view"
+              label="ApplicationProfile.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationProfile.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="AppProfileApplicationExt_CollectionItem.Task.collectionItem1" contextType="Task">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="taskCollection.do?EditAction=true"
+              label="Task.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="Task.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="AppProfileApplicationExt_DetailTab.Task.detailTab1" contextType="Task">
+        <tab
+              label="tab.configuration"
+              contentURI="Task.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="AppProfileApplicationExt_DetailTab.ApplicationProfile.detailTab1" contextType="ApplicationProfile">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationProfile.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END appprofileapplicationext -->
+
+<!-- BEGIN lpsapplicationext -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="lao.dd" contextType="ApplicationDeployment">
+        <link
+              categoryId="ApplicationDeployment.DetailProperties.category"
+              label="LastParticipantSupportExtension.displayName"
+              description="LastParticipantSupportExtension.description"
+              weight="60"
+              actionURI="com.ibm.ws.console.appmanagement.pme.lpsapplicationext.forwardCmd.do?forwardName=LastParticipantSupportExtension.config.view&amp;lastPage=ApplicationDeployment.config.view&amp;resourceUri=ibm-application-ext-pme.xmi">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="lpsApplicationExt_DetailTab.LastParticipantSupportExtension.detailTab1" contextType="LastParticipantSupportExtension">
+        <tab
+              label="tab.configuration"
+              contentURI="LastParticipantSupportExtension.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END lpsapplicationext -->
+
+</plugin>

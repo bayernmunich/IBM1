@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--
+ * @start_restricted_prolog@
+ *
+ * @end_restricted_prolog@
+-->
+ 
+<plugin id="com.ibm.ws.console.rm"
+           name="rm"
+           version="1.0.0"
+           vendor-name="IBM Corp. - WebSphere Server Group"
+           embedded="true"
+           context-root="rm">
+
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core" />
+        <import plugin="com.ibm.ws.console.appmanagement"/>
+        <import plugin="com.ibm.ws.console.servermanagement" />
+        <import plugin="com.ibm.ws.console.sib.sibresources" />
+        <import plugin="com.ibm.ws.console.webservices.wsadmin" />
+        <import plugin="com.ibm.ws.console.probdetermination" />
+    </requires>
+
+
+    <!--
+    *********************
+    *                   *
+    * ONLINE HELP LINKS *
+    *                   *
+    *********************
+    -->
+
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true"/>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.detailTab" >
+        <detailTab id="Message.detailTab" contextType="Message" >
+            <tab label="tab.runtime" contentURI="Message.config.tab.view" />
+        </detailTab>
+    </extension>
+
+
+    <!-- Add WSRM State detail link to SIBus detail panel -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSRMState.linkInSIBus" contextType="SIBus">
+            <link label="WSRMState.displayName"
+                  description="WSRMState.displayName"
+                  categoryId="SIBus.category.services"
+                  actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view&#38;lastPage=SIBus.config.view"/>
+        </linkSet>
+    </extension>
+
+    <!-- Add WSRM State detail link to SIBMessagingEngine detail panel -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSRMState.linkInME" contextType="SIBMessagingEngine">
+            <link label="WSRMState.displayName"
+                  description="WSRMState.displayName"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view&#38;MELink=true&#38;lastPage=SIBMessagingEngine.config.view"/>
+        </linkSet>
+    </extension>
+
+    <!-- Add WSRM State detail link to Application Server detail panel -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSRMState.linkInAppServer" contextType="ApplicationServer">
+            <link label="WSRMState.displayName"
+                  description="WSRMState.displayName"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view&#38;lastPage=ApplicationServer.config.view"/>
+        </linkSet>
+    </extension>
+
+    <!-- Add WSRM State detail link to Application detail panel -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSRMState.linkInApplication"  contextType="ApplicationDeployment">
+            <link label="WSRMState.displayName"
+                  description="WSRMState.displayName"
+                  categoryId="webservices.properties.category"
+                  actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view&#38;lastPage=ApplicationDeployment.config.view">
+                <compatibility>
+                  <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                         key="com.ibm.ws.console.webservices.wsadmin.jaxwsprovider" value="true"/>
+                </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link" >
+        <linkSet id="InboundSequenceToAckState.content.main" contextType="InboundSequence" >
+            <link label="WSRM.AckState.displayName" description="WSRM.AckState.description" categoryId="additional.properties" actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=AckState.content.main" weight="10" perspective="runtime" />
+        </linkSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.link" >
+        <linkSet id="InboundSequenceToInboundMessage.content.main" contextType="InboundSequence" >
+            <link label="WSRM.messages.displayName" description="WSRM.InboundMessage.description" categoryId="additional.properties" actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=InboundMessage.content.main" weight="10" perspective="runtime" />
+        </linkSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.link" >
+        <linkSet id="OutboundSequenceToOutboundMessage.content.main" contextType="OutboundSequence" >
+            <link label="WSRM.messages.displayName" description="WSRM.OutboundMessage.description" categoryId="additional.properties" actionURI="com.ibm.ws.console.rm.forwardCmd.do?forwardName=OutboundMessage.content.main" weight="10" perspective="runtime" />
+        </linkSet>
+    </extension>
+
+
+    <extension point="com.ibm.ws.console.core.navigatorTask" >
+        <tasks >
+            <task id="WSRM_from_Services" icon="/com.ibm.ws.console.rm/images/onepix.gif" label="WSRMState.displayName" view="/com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view" external="false" weight="90" perspective="runtime" >
+                <category id="wsadminCategoryId" />
+            </task>
+        </tasks>
+    </extension>
+
+    <extension point="com.ibm.ws.console.core.navigatorTask" >
+        <tasks >
+            <task id="WSRM_from_Troubleshooting" icon="/com.ibm.ws.console.rm/images/onepix.gif" label="WSRMState.displayName" view="/com.ibm.ws.console.rm.forwardCmd.do?forwardName=WSRMState.config.view" external="false" weight="90" perspective="runtime" >
+                <category id="probmanagementcategory" />
+            </task>
+        </tasks>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.detailTab" >
+        <detailTab id="WSRMState.detailTab" contextType="WSRMState" >
+            <tab label="tab.runtime" contentURI="WSRMState.config.tab.view" />
+        </detailTab>
+    </extension>
+
+
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="AckState.collectionItems" contextType="AckState" >
+            <item attributeName="lowEndOfRange" sortable="sort" itemURI="" label="WSRM.lowEndOfRange.displayName" />
+            <item attributeName="highEndOfRange" sortable="sort" itemURI="" label="WSRM.highEndOfRange.displayName" />
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="AckState.buttons" contextType="AckState" >
+            <action enablesFor="Collection" label="WSRM.refresh.displayName" role="administrator,configurator" actionURI="ackStateCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="OutboundMessage.collectionItems" contextType="OutboundMessage" >
+            <item attributeName="sequenceMessageNumber" sortable="sort" itemURI="outboundMessageCollection.do?EditAction=true" label="WSRM.MessageNumber.displayName" />
+            <item attributeName="state_description" sortable="sort" itemURI="" label="WSRM.messageState.displayName" />
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="OutboundMessage.buttons" contextType="OutboundMessage" >
+            <action enablesFor="Collection" label="WSRM.refresh.displayName" role="administrator,configurator" actionURI="outboundMessageCollection.do" />
+            <action enablesFor="Collection" label="button.delete" role="administrator,configurator" actionURI="outboundMessageCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="InboundMessage.collectionItems" contextType="InboundMessage" >
+            <item attributeName="sequenceMessageNumber" sortable="sort" itemURI="inboundMessageCollection.do?EditAction=true" label="WSRM.MessageNumber.displayName" />
+            <item attributeName="state_description" sortable="sort" itemURI="" label="WSRM.messageState.displayName" />
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="InboundMessage.buttons" contextType="InboundMessage" >
+            <action enablesFor="Collection" label="WSRM.refresh.displayName" role="administrator,configurator" actionURI="inboundMessageCollection.do" />
+            <action enablesFor="Collection" label="button.delete" role="administrator,configurator" actionURI="inboundMessageCollection.do" />
+        </actionSet>
+    </extension>
+
+
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="MEMessageStore.collectionItems" contextType="MEMessageStore" >
+            <item attributeName="messageStoreType" sortable="sort" itemURI="mEMessageStoreCollection.do?LinkAction=true" label="WSRM.messageStoreType.displayName" />
+            <item attributeName="description" sortable="sort" itemURI="" label="Property.description.displayName" />
+            <item attributeName="details" sortable="sort" itemURI="" label="WSRMOutboundSequence.details.displayName" />
+            <item attributeName="status" sortable="sort" itemURI="" label="WSRMOutboundSequence.status.displayName" statusServlet="/ibm/console/wsrmStatus" />
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="InMemoryMessageStore.buttons" contextType="InMemoryMessageStore" >
+            <action enablesFor="Collection" label="WSRMOutboundSequence.details.displayName" role="administrator,configurator" actionURI="inMemoryMessageStoreCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.detailTab" >
+        <detailTab id="InboundSequence.detailTab" contextType="InboundSequence" >
+            <tab label="tab.runtime" contentURI="InboundSequence.config.tab.view" />
+        </detailTab>
+    </extension>
+
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="InboundSequence.collectionItems" contextType="InboundSequence" >
+            <item attributeName="sequenceID" sortable="sort" itemURI="inboundSequenceCollection.do?EditAction=true" label="WSRMOutboundSequence.sequenceId.displayName" />
+            <item attributeName="applicationName" sortable="sort" itemURI="" label="WSRMOutboundSequence.associatedApp.displayName" />
+            <item attributeName="inbound_depth" sortable="sort" itemURI="" label="WSRMOutboundSequence.queueDepth.displayName" />
+            <item attributeName="highestInMsgNumber" sortable="sort" itemURI="" label="WSRM.messagesReceived.displayName" />
+            <item attributeName="details" sortable="sort" itemURI="" label="WSRMOutboundSequence.details.displayName" />
+            <item attributeName="status" sortable="sort" itemURI="" label="WSRMOutboundSequence.status.displayName" statusServlet="/ibm/console/wsrmStatus" />
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="InboundSequence.buttons" contextType="InboundSequence" >
+            <action enablesFor="Collection" label="WSRM.dispatchMessagesToApp.displayName" role="administrator,configurator" actionURI="inboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.saveUndispatchedMessages.displayName" role="administrator,configurator" actionURI="inboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.closeSequence.displayName" role="administrator,configurator" actionURI="inboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.terminateSequence.displayName" role="administrator,configurator" actionURI="inboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.deleteSequenceAndMessages.displayName" role="administrator,configurator" actionURI="inboundSequenceCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.detailTab" >
+        <detailTab id="OutboundSequence.detailTab" contextType="OutboundSequence" >
+            <tab label="tab.runtime" contentURI="OutboundSequence.config.tab.view" />
+        </detailTab>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem" >
+        <collectionItem id="OutboundSequence.collectionItems" contextType="OutboundSequence" >
+            <item attributeName="sequenceID" sortable="sort" itemURI="outboundSequenceCollection.do?EditAction=true" label="WSRMOutboundSequence.sequenceId.displayName" />
+            <item attributeName="applicationName" sortable="sort" itemURI="" label="WSRMOutboundSequence.associatedApp.displayName" />
+            <item attributeName="targetEPR" sortable="sort" itemURI="" label="WSRMOutboundSequence.targetEndpoint.displayName" />
+            <item attributeName="outbound_depth" sortable="sort" itemURI="" label="WSRMOutboundSequence.queueDepth.displayName" />
+            <item attributeName="highestOutMsgNumber" sortable="sort" itemURI="" label="WSRMOutboundSequence.messagesSent.displayName" />
+            <item attributeName="details" sortable="sort" itemURI="" label="WSRMOutboundSequence.details.displayName" />
+            <item attributeName="status" sortable="sort" itemURI="" label="WSRMOutboundSequence.status.displayName" statusServlet="/ibm/console/wsrmStatus" />
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet" >
+        <actionSet id="OutboundSequence.buttons" contextType="OutboundSequence" >
+            <action enablesFor="Collection" label="WSRM.saveUnsentMessages.displayName" role="administrator,configurator" actionURI="outboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.closeSequence.displayName" role="administrator,configurator" actionURI="outboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.terminateSequence.displayName" role="administrator,configurator" actionURI="outboundSequenceCollection.do" />
+            <action enablesFor="Collection" label="WSRM.deleteSequence.displayName" role="administrator,configurator" actionURI="outboundSequenceCollection.do" />
+        </actionSet>
+    </extension>
+
+</plugin>
+

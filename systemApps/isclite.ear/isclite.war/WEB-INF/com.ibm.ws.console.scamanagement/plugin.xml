@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                       -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N01, 5722-WE2 (C) COPYRIGHT International Business Machines Corp. 1997, 2006   -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                              -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                  -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                  -->
+<!-- ======================================================================================================= -->
+
+<plugin id="com.ibm.ws.console.scamanagement"
+        name="scamanagement"
+        version="8.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="scamanagement">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.appmanagement"/>
+    <import plugin="com.ibm.ws.console.blamanagement"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- START: Extension point to plugin into BLA install panels -->
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.ServiceBinding.step" stepName="ServiceBinding" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.AttachPolicySet.step" stepName="AttachPolicySet" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.MapVirtualHost.step" stepName="MapVirtualHost" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+<extension point="com.ibm.ws.console.core.wizardStep">
+	<step name="BLAAddCU.JeeImplementation.step" stepName="JeeImplementation" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+
+<!-- Comment out security stuff for now
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.ServicePolicySet.step" stepName="ServicePolicySet" contextType="websphere.blamanagement.addcu"/>
+</extension>
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.ReferencePolicySet.step" stepName="ReferencePolicySet" contextType="websphere.blamanagement.addcu"/>
+</extension>
+-->
+<!-- END: Extension point to plugin into BLA install panels -->
+
+<!-- START: Extension point to add collections into the ITCU panel -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SCA.composite.component" contextType="CUDetail">
+         <formDefinition bean="CompositeComponentForm" controller="com.ibm.ws.console.scamanagement.cuedit.controller.CompositeComponentController" action="com.ibm.ws.console.scamanagement.cuedit.action.CompositeDummyAction">
+             <fieldDefinition
+                attributeName="CompositeComponent"
+                label="CompositeComponent.label"
+                description="CompositeComponent.description"
+                isRequred="no"
+                type="Expandable"
+                customJsp="/com.ibm.ws.console.scamanagement/CompositeComponent.jsp"
+                isReadOnly="no"
+                optionsVar=""
+                options=""
+                optionDescriptionsVar=""
+                optionDescriptions=""
+                units=""
+                perspective="config"
+                multipleSelect="">
+                <compatibility>
+                  <match key="com.ibm.ws.console.blamanagement.CompositeComponentFormInSession" value="true"/>
+                </compatibility>
+             </fieldDefinition>
+         </formDefinition>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SCA.composite.property" contextType="CUDetail">
+         <formDefinition bean="CompositePropertyDetailForm" controller="com.ibm.ws.console.scamanagement.cuedit.controller.CompositePropertyController" action="com.ibm.ws.console.scamanagement.cuedit.action.CompositePropertyAction">
+            <fieldDefinition
+                attributeName="CompositeProperty"
+                label="CompositeProperty.label"
+                description="CompositeProperty.description"
+                isRequred="no"
+                type="Expandable"
+                customJsp="/com.ibm.ws.console.scamanagement/CompositeProperty.jsp"
+                isReadOnly="no"
+                optionsVar=""
+                options=""
+                optionDescriptionsVar=""
+                optionDescriptions=""
+                units=""
+                perspective="config"
+                multipleSelect="">
+                <compatibility>
+                  <match key="com.ibm.ws.console.scamanagement.CompositePropertyFormInSession" value="true"/>
+                </compatibility>
+            </fieldDefinition>
+         </formDefinition>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SCA.composite.wire" contextType="CUDetail">
+         <formDefinition bean="CompositeWireDetailForm" controller="com.ibm.ws.console.scamanagement.cuedit.controller.CompositeWireController" action="com.ibm.ws.console.scamanagement.cuedit.action.CompositeWireAction">
+            <fieldDefinition
+                attributeName="CompositeWire"
+                label="CompositeWire.label"
+                description="CompositeWire.description"
+                isRequred="no"
+                type="Expandable"
+                customJsp="/com.ibm.ws.console.scamanagement/CompositeWire.jsp"
+                isReadOnly="no"
+                optionsVar=""
+                options=""
+                optionDescriptionsVar=""
+                optionDescriptions=""
+                units=""
+                perspective="config"
+                multipleSelect="">
+                <compatibility>
+                  <match key="com.ibm.ws.console.scamanagement.CompositeWireFormInSession" value="true"/>
+                </compatibility>
+            </fieldDefinition>
+         </formDefinition>
+    </form>
+</extension>
+
+<!-- END: Extension point to add collections into the ITCU panel -->
+
+<!-- START: Add links to ITCU panel -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="sca.links" contextType="CUDetail">
+       <!-- Commenting out security parts for now
+       <link categoryId="additional.properties" label="scaconfigure.securityroles.tousers"
+             description="scaconfigure.securityroles.tousers"  weight="30"
+             actionURI="com.ibm.ws.console.scamanagement.forwardCmd.do?forwardName=sca.appconfigure.securityroles.tousers">
+             <compatibility>
+                  <match class="com.ibm.ws.console.scamanagement.cuedit.form.CompatabilityForm" key="com.ibm.ws.console.scamanagement.displaySecurity" value="true"/>
+             </compatibility>
+       </link>
+       <link categoryId="additional.properties" label="scaconfigure.runasroles.tousers"
+             description="scaconfigure.runasroles.tousers"  weight="30"
+             actionURI="com.ibm.ws.console.scamanagement.forwardCmd.do?forwardName=sca.appconfigure.runasroles.tousers">
+             <compatibility>
+                  <match class="com.ibm.ws.console.scamanagement.cuedit.form.CompatabilityForm" key="com.ibm.ws.console.scamanagement.displaySecurity" value="true"/>
+             </compatibility>
+       </link>
+       -->
+       <link categoryId="additional.properties" label="scaconfigure.viewscdl"
+             description="scaconfigure.viewscdl"  weight="30"
+             actionURI="com.ibm.ws.console.scamanagement.viewCmd.do?resource=default.composite">
+             <compatibility>
+                  <match class="com.ibm.ws.console.scamanagement.cuedit.form.CompatabilityForm" key="com.ibm.ws.console.scamanagement.displaySCDL" value="true"/>
+             </compatibility>
+       </link>
+       <link categoryId="additional.properties" label="scaconfigure.exportwsdl"
+             description="scaconfigure.exportwsdl.description"  weight="50"
+             actionURI="com.ibm.ws.console.scamanagement.exportWSDL.do?resource=default.composite">
+             <compatibility>
+                  <match class="com.ibm.ws.console.scamanagement.cuedit.form.CompatabilityForm" key="com.ibm.ws.console.scamanagement.displaySCDL" value="true"/>
+             </compatibility>
+       </link>
+       <link categoryId="additional.properties" label="scaconfigure.httpurlendpoint"
+             description="scaconfigure.httpurlendpoint"  weight="30"
+             actionURI="com.ibm.ws.console.getURLPrefix.forwardCmd.do?forwardName=getURLPrefix.main.view">
+             <compatibility>
+                  <match class="com.ibm.ws.console.scamanagement.cuedit.form.CompatabilityForm" key="com.ibm.ws.console.scamanagement.displayURLPrefix" value="true"/>
+             </compatibility>
+       </link>      
+       <link categoryId="additional.properties" label="view.domain"
+             description="view.domain"  weight="30"
+             actionURI="com.ibm.ws.console.scamanagement.viewDomain.do?">
+       </link>
+    </linkSet>
+</extension>
+<!-- END: Add links to ITCU panel -->
+
+<!-- START: Add links to ComponentReference detail panel -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="componentRef.links" contextType="ComponentReference.Detail.View">
+       <link categoryId="additional.properties" label="view.domain"
+             description="view.domain"  weight="30"
+             actionURI="com.ibm.ws.console.scamanagement.viewDomain.do?">
+       </link>
+    </linkSet>
+</extension>
+<!-- END: Add links to ComponentReference detail panel -->
+
+</plugin>

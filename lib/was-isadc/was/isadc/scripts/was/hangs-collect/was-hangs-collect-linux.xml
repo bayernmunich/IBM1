@@ -1,0 +1,158 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS hangs problem for
+     Linux platform. It should be included in the WAS hangs collect Ant scripts. 
+-->
+<project name="was-hangs-collect-linux" >
+
+	<dirname property="was.hangs.collect.linux.basedir" file="${ant.file.was-hangs-collect-linux}"/>
+	<dirname property="was.hangs.collect.linux.parentdir" file="${was.hangs.collect.linux.basedir}"/>
+	<dirname property="was.hangs.collect.linux.grandparentdir" file="${was.hangs.collect.linux.parentdir}"/>
+	<dirname property="was.hangs.collect.linux.bundle.basedir" file="${was.hangs.collect.linux.grandparentdir}"/>
+
+	<!-- This target is used ot create hangs pre-output before staring to create javacore files-->
+	<target name="create_linux_hangs_pre_output" description="Create linux hangs output before starting to create javacore" if="isLinux">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml" />
+		
+		<property name="netstat.out.path" value="${autopdtmp}/autopd/netstat.out" />
+		<property name="vmstat.log.path" value="${autopdtmp}/autopd/vmstat.log" />
+		
+		<copy file="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-template.sh" tofile="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path}" />
+				<filter token="vmstat.out" value="${vmstat.log.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>	
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_process_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system process status information" 
+			replace="${autopdts};;${step.count}" 
+			id="1107" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml"/>
+		
+		<property name="ps.out.path" value="${autopdtmp}/autopd/ps_sfh.txt" />
+		
+		<copy file="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/ps-out-template.sh" tofile="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/linux/ps-out-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="ps.args" value="-efH" />
+				<filter token="ps.out" value="${ps.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/linux" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/linux/ps-out-filled.sh" />
+		</exec>	
+
+	   <!-- check if you can create static .html -->
+	   
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Questionnaires" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Questionnaires" 
+			replace="${autopdts};;${step.count}" 
+			id="1099" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml"/>
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Please_check_if_you_can_serve_a_static_.html_document_from_Web_Server_and_provide_information" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="answer1" label="Answer"  type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >1. Provide information if you can serve a static .html document from Web Server${line.separator}</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >${answer1}${line.separator}</concat>
+
+	   <!-- check if you can create dynamic documents -->
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Can_you_serve_dynamic_documents_such_as_servlets_or_JSPs_when_bypassing_the_Web_server_and_WebSphere_Application_Server_plug-in?" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="answer2" label="Answer" type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >2. Can you serve dynamic documents such as servlets or JSPs when bypassing the Web server and WebSphere Application Server plug-in?${line.separator}</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true" >${answer2}${line.separator}</concat>		
+	</target>
+
+	<!-- This target is used ot create hangs post-output after creating javacore files-->
+	<target name="create_linux_hangs_post_output" description="Create linux hangs post output after creating java core files" if="isLinux">
+	
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml"/>
+
+		<property name="netstat.out.path2" value="${autopdtmp}/autopd/netstat2.out" />
+		<property name="vmstat.log.path2" value="${autopdtmp}/autopd/vmstat2.log" />
+		
+		<copy file="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-template.sh" tofile="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path2}" />
+				<filter token="vmstat.out" value="${vmstat.log.path2}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>
+	</target>
+	
+	
+	<!-- This target is used to collect specific information of was hangs problem for linux platform -->
+	
+	<target name="collect_linux_was_hangs" description="Collect was hangs problem" if="isLinux">
+		<echo message=" " />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1115785" />
+		
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_specific_information_of_was_hangs_problem_for_Linux_platform" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting specific information for WebSphere Application Server hang problem on the Linux platform" 
+			replace="${autopdts};;${step.count}" 
+			id="1110" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-linux.xml"/>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${netstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path2}" prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path3}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${vmstat.log.path}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${vmstat.log.path2}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${vmstat.log.path3}" prefix="autopdzip/autopd" />									
+			<zipfileset file="${ps.out.path}" prefix="autopdzip/autopd" />						
+		</zip>
+	</target>
+</project>

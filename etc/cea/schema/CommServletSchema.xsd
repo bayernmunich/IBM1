@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified"
+	xmlns:tns="http://jaxb.servlet.commsvc.ws.ibm.com/"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+	jxb:version="1.0"
+	targetNamespace="http://jaxb.servlet.commsvc.ws.ibm.com/">
+
+	<!-- Request object for the REST interface -->
+	<xs:element name="CommRestRequest">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="addressOfRecord" type="xs:string" />
+				<xs:element name="peerAddressOfRecord" type="xs:string" />
+				<xs:element name="collaborationData" type="xs:string" />
+				<xs:element name="enableCollaboration" type="xs:boolean" />
+				<xs:element name="peerDeviceControlled" type="xs:boolean" />
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Response object for the REST interface -->
+	<xs:element name="CommRestResponse">
+		<xs:complexType>
+			<xs:all>
+				<xs:element name="returnCode" type="tns:ReturnCode" />
+				<xs:element name="infoMsg" type="xs:string" />
+				<xs:element name="eventList" type="tns:EventList" />
+				<xs:element name="callerAddressOfRecord" type="xs:string" />
+				<xs:element name="calleeAddressOfRecord" type="xs:string" />
+				<xs:element name="callServiceUri" type="xs:string" />
+				<xs:element name="callNotifyUri" type="xs:string" />
+				<xs:element name="callId" type="xs:string" />
+				<xs:element name="callFailureReason" type="xs:string" />
+				<xs:element name="callStatus" type="xs:string" />
+				<xs:element name="collaborationId" type="xs:string" />
+				<xs:element name="collaborationStatus" type="xs:string" />
+				<xs:element name="collaborationServiceUri" type="xs:string" />
+				<xs:element name="forPeerCollaborationUri" type="xs:string" />				
+				<xs:element name="peerCollaborationUri" type="xs:string" />
+				<xs:element name="eventUri" type="xs:string" />
+				<xs:element name="ceaVersion" type="xs:string" />
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+
+	<!-- Event object used in the EventList object -->
+	<xs:complexType name="Event">
+		<xs:all>
+			<xs:element name="type" type="tns:EventType" />
+			<xs:element name="data" type="xs:string" />
+			<xs:element name="infoMsg" type="xs:string" />
+		</xs:all>
+	</xs:complexType>
+
+	<!-- Event list object embedded in REST response object -->
+	<xs:complexType name="EventList">
+		<xs:sequence>
+			<xs:element name="events" type="tns:Event" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+	
+	<xs:simpleType name="EventType">
+		<xs:annotation> 
+			<xs:appinfo> 
+				<jaxb:typesafeEnumClass name="EventType"/> 
+			</xs:appinfo> 
+		</xs:annotation> 
+		<xs:restriction base="xs:int">
+		
+			<xs:enumeration value="0">	
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="DATA_EVENT"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration> 
+      		
+			<xs:enumeration value="1">	
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="CALL_STATUS_EVENT"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration> 
+      		
+			<xs:enumeration value="2">	
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="COLLAB_STATUS_EVENT"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration> 
+      		
+			<xs:enumeration value="3">	
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="FAILOVER_EVENT"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration> 
+      		
+		</xs:restriction>
+	</xs:simpleType>
+	
+	
+	<!-- Enumeration of return codes to embed in REST responses. -->
+	<xs:simpleType name="ReturnCode">
+		<xs:annotation> 
+			<xs:appinfo> 
+				<jaxb:typesafeEnumClass name="ReturnCode"/> 
+			</xs:appinfo> 
+		</xs:annotation> 
+		<xs:restriction base="xs:int">
+		
+			<xs:enumeration value="200">	
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="OK"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration> 
+      		
+			<xs:enumeration value="201"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="NO_DATA_AVAILABLE"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="300"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="INVALID_REST_REQUEST"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+
+			<xs:enumeration value="301"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="NO_SESSION_STATE"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="302"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="PARSE_ERROR"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="303"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="INVALID_USER_NAME"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		 
+			<xs:enumeration value="304"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="REDUNDANT_REQUEST"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="305"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="MISSING_PARAMETERS"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="306"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="UNEXPECTED_ERROR"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="307"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="CALL_NOT_EXIST"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		
+			<xs:enumeration value="308"> 
+	  	    	<xs:annotation> 
+		          <xs:appinfo> 
+		            <jaxb:typesafeEnumMember name="COLLAB_NOT_ENABLED"/> 
+		          </xs:appinfo> 
+		        </xs:annotation> 
+      		</xs:enumeration>
+      		 
+		</xs:restriction>
+	</xs:simpleType>
+	
+</xs:schema>

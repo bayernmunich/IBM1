@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<struts-config>
+    <form-beans>
+        <form-bean name="PlacementPropertyDetailForm"
+                   type="com.ibm.ws.console.nodegroups.form.PlacementPropertyDetailForm"/>
+        <form-bean name="PlacementPropertyCollectionForm"
+                   type="com.ibm.ws.console.nodegroups.form.PlacementPropertyCollectionForm"/>
+        <form-bean name="PlacementDetailForm"
+                   type="com.ibm.ws.console.nodegroups.form.PlacementDetailForm"/>
+        <form-bean name="AutonomicRequestFlowManagerDetailForm"
+                   type="com.ibm.ws.console.nodegroups.form.AutonomicRequestFlowManagerDetailForm"/>
+		<form-bean name="ElasticityCustomActionCollectionForm"  type="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionCollectionForm" />
+		<form-bean name="ElasticityCustomActionDetailForm"      type="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm" />
+		<form-bean name="CreateElasticityCustomActionForm"		type="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+		<form-bean name="DefineElasticityCustomActionForm"		type="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+		<form-bean name="ConfirmElasticityCustomActionForm"		type="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+		<form-bean name="CreateElasticityActionPlanTypeForm"    type="com.ibm.ws.console.nodegroups.form.CreateElasticityActionPlanWizardForm" />
+		<form-bean name="ConfirmElasticityActionPlanForm"       type="com.ibm.ws.console.nodegroups.form.CreateElasticityActionPlanWizardForm" />
+		<form-bean name="ElasticityClassCollectionForm" 	    type="com.ibm.ws.console.nodegroups.form.ElasticityClassCollectionForm" />
+		<form-bean name="ElasticityClassDetailForm"			    type="com.ibm.ws.console.nodegroups.form.ElasticityClassDetailForm" />
+		 
+    </form-beans>
+
+    <global-forwards>
+	<!-- Custom Action wizard -->
+		<forward name="elasticity.customAction.wizard.steps.actionType" path="elasticity.customAction.wizard.steps.actionType" />
+		<forward name="elasticity.customAction.wizard.steps.customAction" path="elasticity.customAction.wizard.steps.customAction" />
+		<forward name="elasticity.customAction.wizard.steps.confirm" path="elasticity.customAction.wizard.steps.confirm" />
+		<forward name="elasticity.customAction.JavaProcDef.config.view" path="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticity.customAction.JavaProcDef.config.view"/>
+        <forward name="elasticity.customAction.ProcDef.config.view" path="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticity.customAction.ProcDef.config.view"/>
+        <forward name="elasticityclass.actionPlan.wizard.steps.confirm" path="elasticityclass.actionPlan.wizard.steps.confirm" />
+        <forward name="elasticityclass.actionPlan.wizard.steps.selectType" path="elasticityclass.actionPlan.wizard.steps.selectType" />
+    </global-forwards>
+
+    <action-mappings>
+        <action path="/com.ibm.ws.console.nodegroups.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="AutonomicRequestFlowManager.detail.main" path="AutonomicRequestFlowManager.detail.main"/>
+            <forward name="Property.placement.content.main" path="Property.placement.content.main"/>
+            <forward name="Property.content.main" path="Property.content.main"/>      	
+            <forward name="elasticity.customaction.content.main" path="elasticity.customaction.content.main" />	
+            <forward name="elasticityclass.content.main" path="elasticityclass.content.main" />
+        </action>
+    	<action name="com.ibm.ws.console.environment.NodeCollectionForm"
+            path="/nodeMaintenanceMode" type="com.ibm.ws.console.nodegroups.action.NodeMaintenanceModeAction">
+            <forward name="complete" path="Node.content.main" />
+        </action>
+        <action
+            path="/DisplayPlacementDetails"
+            name="PlacementDetailForm"
+            scope="session"
+            input="nodegroups.detail.main"
+            type="com.ibm.ws.console.nodegroups.action.DisplayPlacementDetailAction">
+	        <forward name="success" path="nodegroups.placementconfig.main"/>
+        </action>
+        <action
+            path="/PlacementDetail"
+            name="PlacementDetailForm"
+            scope="session"
+            input="nodegroups.placementconfig.main"
+            type="com.ibm.ws.console.nodegroups.action.PlacementDetailAction">
+            <forward name="success" path="nodegroups.placementconfig.main"/>
+	        <forward name="edit" path="nodegroups.placementconfig.main"/>
+	        <forward name="input" path="nodegroups.placementconfig.main"/>
+        </action>
+        <action
+            path="/PlacementPropertyDetail"
+            name="PlacementPropertyDetailForm"
+            scope="session"
+            input="Property.placement.detail.create"
+            type="com.ibm.ws.console.nodegroups.action.PlacementPropertyDetailAction">
+	        <forward name="success" path="Property.placement.content.main"/>
+	        <forward name="edit" path="Property.placement.detail.edit"/>
+	        <forward name="input" path="Property.placement.detail.create"/>
+        </action>
+         <action
+            path="/PlacementPropertyCollection"
+            name="PlacementPropertyCollectionForm"
+            scope="session"
+            input="Property.placement.content.main"
+            type="com.ibm.ws.console.nodegroups.action.PlacementPropertyCollectionAction">
+            <forward name="create" path="Property.placement.detail.create"/>
+	        <forward name="success" path="Property.placement.content.main"/>
+	        <forward name="input" path="Property.placement.content.main"/>
+        </action>
+
+        <action path="/DisplayAutonomicRequestFlowManagerDetails"
+            name="AutonomicRequestFlowManagerDetailForm"
+            scope="session"
+            type="com.ibm.ws.console.nodegroups.action.DisplayAutonomicRequestFlowManagerDetailAction"
+            validate="false">
+            <forward name="complete" path="AutonomicRequestFlowManager.detail.main"/>
+        </action>
+
+        <action path="/SubmitAutonomicRequestFlowManagerDetails"
+            name="AutonomicRequestFlowManagerDetailForm"
+            scope="session"
+            input="AutonomicRequestFlowManager.detail.main"
+            type="com.ibm.ws.console.nodegroups.action.AutonomicRequestFlowManagerAction">
+            <forward name="success" path="AutonomicRequestFlowManager.detail.main"/>
+            <forward name="create" path="DisplayAutonomicRequestFlowManagerDetails.do"/>
+            <forward name="cancel" path="AutonomicRequestFlowManager.detail.main"/>
+	        <forward name="edit" path="DisplayAutonomicRequestFlowManagerDetails.do"/>
+        </action>
+
+        <action path="/nodeMaintenanceMode"
+        	name="com.ibm.ws.console.environment.NodeCollectionForm" type="com.ibm.ws.console.nodegroups.action.NodeMaintenanceModeAction">
+        	<forward name="complete" path="Node.content.main"/>
+ 	        <forward name="success" path="Node.content.main"/>
+	        <forward name="input" path="Node.content.main"/>
+	        <forward name="confirmMaintMode" path="Node.main.confirmMaintMode"/>	
+            <forward name="confirmAllMaintMode" path="Node.main.confirmAllMaintMode"/>		
+		</action>
+		
+		<action path="/middlewareNodeMaintenanceMode"
+        	name="com.ibm.ws.console.middlewarenodes.MiddlewareNodeCollectionForm" type="com.ibm.ws.console.nodegroups.action.MiddlewareNodeMaintenanceModeAction">
+        	<forward name="complete" path="MiddlewareNode.content.main"/>
+ 	        <forward name="success" path="MiddlewareNode.content.main"/>
+	        <forward name="input" path="MiddlewareNode.content.main"/>
+	        <forward name="confirmMaintMode" path="MiddlewareNode.main.confirmMaintMode"/>	
+            <forward name="confirmAllMaintMode" path="MiddlewareNode.main.confirmAllMaintMode"/>		
+		</action>
+		
+		
+		<!-- Custom Action -->
+			<action path="/ElasticityCustomActionCollection" name="ElasticityCustomActionCollectionForm" scope="session" type="com.ibm.ws.console.nodegroups.action.ElasticityCustomActionCollectionAction">
+			<forward name="elasticity.customAction.ProcDef.config.view" path="elasticity.customAction.ProcDef.config.view"/>
+            <forward name="elasticity.customAction.JavaProcDef.config.view" path="elasticity.customAction.JavaProcDef.config.view"/>
+    		<forward name="editnew" path="elasticity.customAction.wizard.steps.actionType" />
+			<forward name="edit" path="elasticity.customAction.detail.main" />
+			<forward name="success" path="elasticity.customaction.content.main" />
+            <forward name="updatedCollection" path="com.ibm.ws.console..nodegroups.forwardCmd.do?forwardName=elasticity.customaction.content.main"/>
+            <forward name="ElasticityCustomActionCollection" path="elasticity.customaction.content.main" />
+		</action>
+		
+		<action path="/ElasticityCustomActionDetail" name="ElasticityCustomActionDetailForm" input="elasticity.customAction.detail.main" validate="true" scope="session" type="com.ibm.ws.console.nodegroups.action.ElasticityCustomActionDetailAction">
+			<forward name="success" path="elasticity.customaction.content.main" />
+			<forward name="edit" path="elasticity.customAction.detail.main" />
+		</action>
+		
+		<action path="/ElasticityClassCollection" 
+		name="ElasticityClassCollectionForm" 
+		scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.ElasticityClassCollectionAction">
+			<forward name="editnew" path="elasticityclass.wizard.steps.properties" />
+			<forward name="edit" path="elasticityclass.detail.main" />
+			<forward name="success" path="elasticityclass.content.main" />
+		</action>
+
+		<action path="/ElasticityClassDetail" 
+		name="ElasticityClassDetailForm" 
+		input="elasticityclass.detail.main" 
+		validate="true" scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.ElasticityClassDetailAction">
+			<forward name="success" path="elasticityclass.content.main" />
+			<forward name="edit" path="elasticityclass.detail.main" />
+		</action>
+
+		<action path="/DisplayElasticityClassDetails" 
+		name="ElasticityClassDetailForm" 
+		input="elasticityclass.detail.main" 
+		scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.DisplayElasticityClassDetailAction">
+			<forward name="complete" path="elasticityclass.detail.main" />
+		</action>
+		<action path="/ElasticityClassCollection" 
+		name="ElasticityClassCollectionForm" 
+		scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.ElasticityClassCollectionAction">
+			<forward name="editnew" path="elasticityclass.wizard.steps.properties" />
+			<forward name="edit" path="elasticityclass.detail.main" />
+			<forward name="success" path="elasticityclass.content.main" />
+		</action>
+
+		<action path="/ElasticityClassDetail" name="ElasticityClassDetailForm" 
+		input="elasticityclass.detail.main" 
+		validate="true" 
+		scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.ElasticityClassDetailAction">
+			<forward name="success" path="elasticityclass.content.main" />
+			<forward name="edit" path="elasticityclass.detail.main" />
+		</action>
+
+		<action path="/DisplayElasticityClassDetails" 
+		name="ElasticityClassDetailForm" 
+		input="elasticityclass.detail.main" 
+		scope="session" 
+		type="com.ibm.ws.console.nodegroups.action.DisplayElasticityClassDetailAction">
+			<forward name="complete" path="elasticityclass.detail.main" />
+		</action>
+		
+			<!-- Detail Views -->
+		<action input="elasticity.customAction.ProcDef.config.view"
+            name="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"
+            path="/ElasticityCustomActionDetail" type="com.ibm.ws.console.nodegroups.action.ElasticityCustomActionDetailAction">
+            <forward name="success" path="elasticity.customAction.ProcDef.config.view"/>
+            <forward name="previous" path="elasticity.customaction.content.main"/>
+            <forward name="error" path="elasticity.customAction.ProcDef.config.view"/>
+        </action>
+        <action input="elasticity.customAction.JavaProcDef.config.view"
+            name="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"
+            path="/ElasticityCustomActionDetail" type="com.ibm.ws.console.nodegroups.action.ElasticityCustomActionDetailAction">
+            <forward name="success" path="elasticity.customAction.JavaProcDef.config.view"/>
+            <forward name="previous" path="elasticity.customaction.content.main"/>
+             <forward name="error" path="elasticity.customAction.JavaProcDef.config.view"/>
+        </action>
+		<!-- Custom Action Wizard -->
+		<!-- Step 1: Select the type of Custom Action that you want to create-->
+		
+		<action path="/CreateElasticityCustomAction" name="CreateElasticityCustomActionForm" scope="session" type="com.ibm.ws.console.nodegroups.action.CreateElasticityCustomAction">
+			<forward name="cancel" path="elasticity.customaction.content.main" />
+			<forward name="next" path="elasticity.customAction.wizard.steps.customAction" />
+		</action>
+		<action path="/DefineElasticityCustomAction" name="DefineElasticityCustomActionForm" scope="session" type="com.ibm.ws.console.nodegroups.action.DefineElasticityCustomAction">
+			<forward name="cancel" path="elasticity.customaction.content.main" />
+			<forward name="next" path="elasticity.customAction.wizard.steps.confirm" />
+			<forward name="previous" path="elasticity.customAction.wizard.steps.actionType" />
+		</action>
+
+		<action path="/ConfirmElasticityCustomAction" name="ConfirmElasticityCustomActionForm" scope="session" type="com.ibm.ws.console.nodegroups.action.ConfirmElasticityCustomAction">
+			<forward name="cancel" path="elasticity.customaction.content.main" />
+			<forward name="previous" path="elasticity.customAction.wizard.steps.customAction" />
+			<forward name="success" path="elasticity.customaction.content.main" />
+		</action>
+
+  <!-- Action Plan Wizard -->
+                <action path="/CreateElasticityActionPlanType" name="CreateElasticityActionPlanTypeForm" scope="session" type="com.ibm.ws.console.nodegroups.action.CreateElasticityActionPlanTypeAction">
+                        <forward name="cancelnew" path="elasticityclass.detail.main"/>
+                        <forward name="cancel" path="elasticityclass.detail.main"/>
+                        <forward name="next" path="elasticityclass.actionPlan.wizard.steps.confirm" />
+                        <forward name="nextPredefined" path="elasticityclass.actionPlan.wizard.steps.confirm" />
+                        <forward name="customAction" path="elasticityclass.customAction.wizard.steps.actionType" />
+                </action>
+          
+                <action path="/ConfirmElasticityActionPlan" name="ConfirmElasticityActionPlanForm" scope="session" type="com.ibm.ws.console.nodegroups.action.ConfirmElasticityActionPlanAction">
+                        <forward name="previous" path="elasticityclass.actionPlan.wizard.steps.selectType" />
+                        <forward name="cancel" path="elasticityclass.detail.main"/>
+                    	<forward name="success" path="elasticityclass.detail.main"/>
+                    	<forward name="successnew" path="elasticityclass.detail.main"/>
+                        <forward name="previousPredefined" path="elasticityclass.actionPlan.wizard.steps.selectType" />
+                    
+                </action>
+
+
+		
+    </action-mappings>
+</struts-config>

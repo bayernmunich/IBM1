@@ -1,0 +1,429 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<tiles-definitions>
+
+<!-- main panel for service class & transaction class -->
+	<definition name="serviceclass.content.main" path="/secure/layouts/contentLayout.jsp"
+	controllerClass="com.ibm.ws.console.policyconfiguration.controller.ServiceClassCollectionController">
+		<put name="contextType" value="ServicePolicy"/>
+        <put name="descTitle" value="desc.showServiceClass.title" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="descText" value="desc.serviceclass.text" />
+		<putList name="contentList">
+			<add value="serviceclass.collection.paging.extend" />
+			<add value="serviceclass.collection.quicksearch.extend" />
+			<add value="serviceclass.collection.table.main" />
+		</putList>
+	</definition>
+
+
+<!-- main panel for service class topology -->
+	<definition name="serviceclasstopology.content.main" path="/secure/layouts/contentLayout.jsp">	
+		<put name="contextType" value="ServicePolicy"/>
+        <put name="descTitle" value="desc.showServiceClassTopology.title" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="descText" value="desc.serviceClassTopology.text" />
+		<put name="helpTopic" value="SevicePolicyTopologyForm.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+		<putList name="contentList">
+			<add value="serviceclasstopology.table.main" />
+		</putList>
+	</definition>
+	
+<!-- the topology table main contains the table of the current objects -->
+	<definition name="serviceclasstopology.table.main" path="/secure/layouts/topologyLayout.jsp">
+		<put name="treeView" value="serviceclass.topology.tree.view"/>
+	</definition>
+					
+<!-- paging is the page # at the top of the filter  -->
+	<definition name="serviceclass.collection.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="ServiceClassCollectionForm" />
+		<put name="formAction" value="ServiceClassCollection.do" />
+		<put name="formName" value="ServiceClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.ServiceClassCollectionForm" />
+	</definition>
+	
+	
+<!-- quicksearch is the filter panel -->
+	<definition name="serviceclass.collection.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="ServiceClassCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ServiceClassCollectionForm" />
+		<put name="formAction" value="ServiceClassCollection.do" />
+		<put name="formName" value="ServiceClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.ServiceClassCollectionForm" />
+		<putList name="searchList">
+			<add value="serviceclass.detail.displayname:name" />
+		</putList>
+	</definition>
+
+<!-- the table main contains the table of the current objects -->
+	<definition name="serviceclass.collection.table.main" path="/com.ibm.ws.console.policyconfiguration/ServiceClassCollectionTableLayout.jsp">
+		<put name="iterationName" value="ServiceClassCollectionForm" />
+		<put name="formName" value="ServiceClassCollectionForm" />
+		<put name="formAction" value="ServiceClassCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.ServiceClassCollectionForm" />
+		<put name="buttons" value="serviceclass.collection.buttons.panel" />
+		<put name="parent" value="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<putList name="collectionList">
+			<item value="name:sort" link="DisplayServiceClassDetails.do?" icon="" tooltip="serviceclass.detail.displayname" classtype="com.ibm.ws.console.core.item.CollectionItem" />
+			<item value="importance" link="" icon="" tooltip="serviceclass.detail.importance" classtype="com.ibm.ws.console.core.item.CollectionItem" />
+			<item value="goalString" link="" icon="" tooltip="serviceclass.detail.goalString" classtype="com.ibm.ws.console.core.item.CollectionItem" />
+			<item value="description" link="" icon="" tooltip="serviceclass.detail.descname" classtype="com.ibm.ws.console.core.item.CollectionItem" />
+			
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ServiceClass/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ServiceClass/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+
+<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->		
+	<definition name="serviceclass.collection.buttons.panel" path="/com.ibm.ws.console.policyconfiguration/buttonLayout.jsp">
+		<put name="buttonCount" value="2" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="serviceclass.collection.buttons.panel" />
+		<putList name="actionList">
+			<item value="button.new:ServiceClassCollection.do" link="" icon="" tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem" />
+			<item value="button.delete:ServiceClassCollection.do" link="" icon="" tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem" />
+		</putList>
+	</definition>
+		
+<!-- The detail main panels are shown when you select an existing to display, or new -->	
+	<definition name="serviceclass.detail.main" extends="detail.config.view">
+		<put name="contextType" value="ServicePolicy"/>
+		<putList name="list">
+			<add value="serviceclass.detail.title" />
+			<add value="serviceclass.detail.tabs" />
+		</putList>
+	</definition>
+	<definition name="transactionclass.detail.main" extends="detail.config.view">
+		<put name="contextType" value="TransactionClass"/>
+		<putList name="list">
+			<add value="transactionclass.detail.title" />
+			<add value="transactionclass.detail.tabs" />
+		</putList>
+	</definition>	
+	<definition name="transactionclass.move.main" extends="detail.config.view">
+	    <put name="contextType" value="TransactionClassMove"/>
+		<putList name="list">
+			<add value="transactionclass.move.title" />
+			<add value="transactionclass.move.properties" />
+		</putList>
+	</definition>
+
+	
+<!-- The detail.title includes the title information at the top of the detail page -->	
+	<definition name="serviceclass.detail.title" extends="detail.title">
+		<put name="formName" value="ServiceClassDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="titleKey" value="serviceclass.detail.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.content.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="refId" />
+		<put name="instanceDescription" value="serviceclass.detail.description" />
+		<put name="displayName" value="serviceclass.detail.displayname" />
+	</definition>
+	<definition name="transactionclass.move.title" extends="detail.title">
+		<put name="formName" value="ServiceClassDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="helpTopic" value="TransactionClassMoveForm.detail" />
+		<!-- <put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />-->
+		<put name="titleKey" value="serviceclass.detail.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.detail.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="refId" />
+		<put name="instanceDescription" value="serviceclass.move.description" />
+		<put name="displayName" value="serviceclass.detail.displayname" />
+	</definition>
+	<definition name="transactionclass.detail.title" extends="detail.title">
+		<put name="formName" value="TransactionClassDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="titleKey" value="transactionclass.detail.title" />
+		<put name="collectionLink"
+		value="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.content.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="refId" />
+		<put name="instanceDescription" value="transactionclass.detail.description" />
+		<put name="displayName" value="transactionclass.detail.displayname" />
+	</definition>
+	
+	
+<!-- the detail.tabs goes below the detail.title in the detail panel.  It has config and runtime tabs -->
+	<definition name="serviceclass.detail.tabs" path="/secure/layouts/tabsLayout.jsp">
+		<put name="selectUri" value="DisplayServiceClassDetails.do" />
+        <put name="formName" value="ServiceClassDetailForm"/>		
+        <put name="selectedIndex" value="1"/>
+        <put name="parameterName" value="tabIndex"/>
+		<putList name="tabList">
+		</putList>
+	</definition>
+	<definition name="transactionclass.detail.tabs" path="/secure/layouts/tabsLayout.jsp">
+		<put name="selectUri" value="TransactionClassDetail.do" />
+		<put name="selectedIndex" value="1"/>
+        <put name="parameterName" value="tabIndex"/>
+        <put name="formName" value="TransactionClassDetailForm"/>		
+		<putList name="tabList">
+		</putList>
+	</definition>
+	
+	<definition name="serviceclass.topology.tab.view" path="/secure/layouts/topologyLayout.jsp">
+        <put name="treeView" value="serviceclass.topology.tree.view"/>
+    </definition>
+
+    <definition name="serviceclass.topology.tree.view" path="/secure/layouts/treeLayout.jsp" controllerClass="com.ibm.ws.console.policyconfiguration.controller.ServiceClassTopologyController">
+        <put name="rootName" value="serviceclass.topology.root"/>
+        <put name="rootImage" value="images/onepix.gif"/>
+        <putList name="treeList">
+        </putList>
+    </definition>
+	<definition name="transactionclass.topology.tab.view" path="/secure/layouts/topologyLayout.jsp">
+        <put name="treeView" value="transactionclass.topology.tree.view"/>
+    </definition>
+
+    <definition name="transactionclass.topology.tree.view" path="/secure/layouts/treeLayout.jsp" controllerClass="com.ibm.ws.console.policyconfiguration.controller.TransactionClassTopologyController">
+        <put name="rootName" value="transactionclass.topology.root"/>
+        <put name="rootImage" value="images/onepix.gif"/>
+        <putList name="treeList">
+        </putList>
+    </definition>
+    	
+<!--The detail.config is the panel that shows the General and Additional properties -->	
+	<definition name="serviceclass.detail.config" extends="detail.config.tab.view">
+		<put name="contextType" value="ServicePolicy"/>
+		<putList name="list">
+			<add value="serviceclass.general.properties" />
+		</putList>
+	</definition>
+	<definition name="transactionclass.detail.config" extends="detail.config.tab.view">
+		<put name="contextType" value="TransactionClass"/>
+		<putList name="list">
+			<add value="transactionclass.general.properties" />
+		</putList>
+	</definition>		
+
+<!-- This defines all the general properties -->	
+	<definition name="serviceclass.general.properties" extends="detail.config.general.properties" ><!-- path="/com.ibm.ws.console.policyconfiguration/ServiceClassCustomPropsLayout.jsp"> -->
+		<put name="contextType" value="ServicePolicy"/>
+		<put name="formAction" value="ServiceClassDetail.do" />
+		<put name="formName" value="ServiceClassDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.ServiceClassDetailForm" />
+		<put name="formFocus" value="description" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+			<item value="serviceclass.detail.displayname:name:yes:Text:serviceclass.detail.name.description:yes:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="serviceclass.detail.descriptionfield:description:no:Textarea:serviceclass.detail.description.description:no:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+    		<item value="serviceclass.attributes.label:scAttrs:no:Custom:serviceclass.attributes.description2:no:yes: : :/com.ibm.ws.console.policyconfiguration/goalAttrs.jsp"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="serviceclass.membership:membership:no:Custom:serviceclass.membershipdescription:no:yes: : :/com.ibm.ws.console.policyconfiguration/membershipLayout.jsp"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />	
+		</putList>
+	</definition>
+	
+	<definition name="transactionclass.general.properties" extends="detail.config.general.properties"> <!-- path="/com.ibm.ws.console.policyconfiguration/TransactionClassCustomPropsLayout.jsp">-->
+		<put name="formAction" value="TransactionClassDetail.do" />
+		<put name="formName" value="TransactionClassDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+		<put name="formFocus" value="description" />
+		<put name="readOnlyView" value="no" />
+		<put name="contextType" value="TransactionClass"/>
+		<putList name="attributeList">
+			<item value="transactionclass.label.name:name:yes:Text:transactionclass.desc.name:yes:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="transactionclass.detail.descriptionfield:description:no:Textarea:transactionclass.detail.description.description:no:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />		
+<!--					
+			<item value="transactionclass.membership:membership:no:Custom:transactionclass.membership.description:no:yes: : :/com.ibm.ws.console.policyconfiguration/tcMembershipLayout.jsp"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />		
+-->					
+		</putList>
+	</definition>
+		
+	<definition name="transactionclass.move.properties" path="/com.ibm.ws.console.policyconfiguration/SelectServiceClass.jsp">
+		<put name="formAction" value="ServiceClassDetail.do" />
+		<put name="formName" value="ServiceClassDetailForm" />
+		<put name="helpTopic" value="TransactionClassMoveForm.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.ServiceClassDetailForm" />
+        <put name="contextType" value="TransactionClassMove"/>
+		<put name="readOnlyView" value="no" />
+	</definition>
+	
+	<definition name="serviceclass.wizard" path="/com.ibm.ws.console.policyconfiguration/showMeStepsLayout.jsp">
+		<put name="titleKey" value="serviceclass.wizard.title" />
+		<put name="descKey" value="serviceclass.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="serviceclass.wizard.steps" extends="serviceclass.wizard">
+		<put name="contextType" value="serviceclass.wizard.steps" />
+		<put name="stepArraySessionKey" value="SERVICECLASS_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<putList name="stepsList">
+			<item value="serviceclass.wizard.steps.properties" link="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep1" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="serviceclass.wizard.steps.goalproperties" link="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep2" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="serviceclass.wizard.steps.members" link="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep3" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="serviceclass.wizard.steps.confirm" link="/com.ibm.ws.console.policyconfiguration/ConfirmServiceClassCreate" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+	</definition>
+
+	<definition name="serviceclass.wizard.steps.properties" extends="serviceclass.wizard.steps">
+		<put name="actionHandler" value="CreateServiceClassStep1" />
+		<put name="actionForm" value="CreateServiceClassStep1Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="helpTopic" value="CreateServiceClassStep1Form.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+	</definition>
+
+	<definition name="serviceclass.wizard.steps.goalproperties" extends="serviceclass.wizard.steps">
+		<put name="actionHandler" value="CreateServiceClassStep2" />
+		<put name="actionForm" value="CreateServiceClassStep2Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="helpTopic" value="CreateServiceClassStep2Form.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+
+	<definition name="serviceclass.wizard.steps.goalproperties.attributes" path="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep2a.jsp" >
+		<put name="actionHandler" value="CreateServiceClassStep2" />
+		<put name="actionForm" value="CreateServiceClassStep2Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />				
+		<putList name="attributeList">
+			<item value="serviceclass.detail.goalpercent:goalPercent:yes:Text:serviceclass.detail.goalpercent.description:no:yes::percent.sign"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />						
+			<item value="serviceclass.detail.goalvalue:goalValue:yes:Text:serviceclass.wizard.goalvalue.description:no:yes:UNITS_MILLISECONDS,UNITS_SECONDS:UNITS_MILLISECONDS,UNITS_SECONDS"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />	
+			<item value="serviceclass.detail.importance:importance:no:Select:serviceclass.wizard.importance.description:no:yes:IMPORTANCE_HIGHEST,IMPORTANCE_HIGHER,IMPORTANCE_HIGH,IMPORTANCE_MEDIUM,IMPORTANCE_LOW,IMPORTANCE_LOWER,IMPORTANCE_LOWEST:IMPORTANCE_HIGHEST,IMPORTANCE_HIGHER,IMPORTANCE_HIGH,IMPORTANCE_MEDIUM,IMPORTANCE_LOW,IMPORTANCE_LOWER,IMPORTANCE_LOWEST"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />	
+		</putList>
+	</definition>
+
+	<definition name="serviceclass.wizard.steps.properties.attributes" path="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep1a.jsp" >
+		<put name="actionHandler" value="CreateServiceClassStep1" />
+		<put name="actionForm" value="CreateServiceClassStep1Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />
+		
+		<putList name="attributeList">
+			<item value="serviceclass.detail.displayname:name:yes:Text:serviceclass.wizard.name.description:no:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="serviceclass.detail.descriptionfield:description:no:Textarea:serviceclass.wizard.description.description:no:yes"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="serviceclass.detail.goaltype:goalType:no:Select:serviceclass.wizard.goaltype.description:no:yes:GOAL_TYPE_AVG_RESPONSE_TIME,GOAL_TYPE_PCT_RESPONSE_TIME,GOAL_TYPE_DISCRETIONARY,GOAL_TYPE_COMPLETIONTIME:GOAL_TYPE_AVG_RESPONSE_TIME,GOAL_TYPE_PCT_RESPONSE_TIME,GOAL_TYPE_DISCRETIONARY,GOAL_TYPE_COMPLETIONTIME"
+					link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<definition name="serviceclass.wizard.steps.members" extends="serviceclass.wizard.steps">
+		<put name="actionHandler" value="CreateServiceClassStep3" />
+		<put name="actionForm" value="CreateServiceClassStep3Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="helpTopic" value="CreateServiceClassStep3Form.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+	</definition>
+	<definition name="serviceclass.wizard.steps.members.attributes" path="/com.ibm.ws.console.policyconfiguration/CreateServiceClassStep3a.jsp" >
+		<put name="actionHandler" value="CreateServiceClassStep3" />
+		<put name="actionForm" value="CreateServiceClassStep3Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+	
+	<definition name="serviceclass.wizard.steps.confirm" extends="serviceclass.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="actionHandler" value="ConfirmServiceClassCreate" />
+		<put name="actionForm" value="ConfirmServiceClassCreateForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+	</definition>
+	
+	<definition name="transactionclass.wizard" path="/secure/layouts/stepsLayout.jsp">
+		<put name="titleKey" value="transactionclass.wizard.title" />
+		<put name="descKey" value="transactionclass.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="transactionclass.wizard.steps" extends="transactionclass.wizard">
+		<put name="contextType" value="transactionclass.wizard.steps" />
+		<put name="stepArraySessionKey" value="TRANSACTIONCLASS_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<putList name="stepsList">
+			<item value="transactionclass.wizard.steps.properties" link="/com.ibm.ws.console.policyconfiguration/CreateTransactionClassStep1" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+<!--			
+			<item value="transactionclass.wizard.steps.members" link="/com.ibm.ws.console.policyconfiguration/CreateTransactionClassStep2" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+-->			
+			<item value="transactionclass.wizard.steps.confirm" link="/com.ibm.ws.console.policyconfiguration/ConfirmTransactionClassCreate" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+	</definition>
+
+	<definition name="transactionclass.wizard.steps.properties" extends="transactionclass.wizard.steps">
+		<put name="actionHandler" value="CreateTransactionClassStep1" />
+		<put name="actionForm" value="CreateTransactionClassStep1Form" />
+		<put name="helpTopic" value="CreateTransactionClassStep1Form.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.policyconfiguration" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateTransactionClassStep1Form" />
+	</definition>
+
+<!--	
+	<definition name="transactionclass.wizard.steps.members" extends="transactionclass.wizard.steps">
+		<put name="actionHandler" value="CreateTransactionClassStep2" />
+		<put name="actionForm" value="CreateTransactionClassStep2Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateTransactionClassStep1Form" />
+	</definition>
+-->
+
+	<definition name="transactionclass.wizard.steps.confirm" extends="transactionclass.wizard.steps">
+		<put name="actionHandler" value="ConfirmTransactionClassCreate" />
+		<put name="actionForm" value="ConfirmTransactionClassCreateForm" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateTransactionClassStep1Form" />
+	</definition>
+
+	<definition name="transactionclass.wizard.steps.properties.attributes" path="/com.ibm.ws.console.policyconfiguration/CreateTransactionClassStep1a.jsp" >
+		<put name="actionHandler" value="CreateTransactionClassStep1" />
+		<put name="actionForm" value="CreateTransactionClassStep1Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateTransactionClassStep1Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+	
+<!--	
+	<definition name="transactionclass.wizard.steps.members.attributes" path="/com.ibm.ws.console.policyconfiguration/CreateTransactionClassStep2a.jsp" >
+		<put name="actionHandler" value="CreateTransactionClassStep2" />
+		<put name="actionForm" value="CreateTransactionClassStep2Form" />
+		<put name="formType" value="com.ibm.ws.console.policyconfiguration.form.CreateTransactionClassStep1Form" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.policyconfiguration" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+-->
+
+</tiles-definitions>

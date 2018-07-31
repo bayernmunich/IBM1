@@ -1,0 +1,177 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="defaultAppDeployAndConfig" default="defaultAppDeployAndConfig" basedir=".">
+
+    
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+		<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>   
+       &importExternalLogs;  		
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setCurrentOSFamily"
+            description="Sets the current OS Family">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="configZOS" value="true">
+            <equals arg1="${currentOSFamily}" arg2="z/os"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+
+    <!--  LI 4405 - addition of config archives to profile creation - eWAS logic   -->
+    <!--         eWAS requires that the default app be installed from this action  -->
+    <!--         set the isEmbed property if the following file does not exist     -->
+
+    <target name="detectProductLevel">
+      <!-- The existance of the WAS.product file tells us we are on a full WAS Base install.
+           Otherwise we are on the Embed product.  EWAS.product should exist instead. -->
+      <condition property="isEmbed">
+        <not>
+            <available file="${WAS_HOME}/properties/version/WAS.product"/>
+         </not>
+      </condition>
+      
+   </target>
+
+    <!--  LI 4405  config archives                                   eWAS end     -->
+
+    <target name="deployDefaultApp"
+            description="Deploys Default Enterprise Application"
+            if="isEmbed">
+       
+         <echo>  isEmbed indicates WAS Embedded </echo>
+            
+        <wscmtlog>Deploying DefaultApp EAR, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/defaultapp_deploy.log</wscmtlog>
+          <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/defaultapp_deploy.log"
+                 appendTrace="true"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminApp install &quot;${WAS_HOME_UNIX_STYLE}/installableApps/DefaultApplication.ear&quot; {-node ${nodeName} -server ${serverName} -nocreateMBeansForResources -appname DefaultApplication -installed.ear.destination &quot;$(APP_INSTALL_ROOT)/$(CELL)&quot;}"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/defaultapp_deploy.log" />
+            <param name="description" value="Deploying DefaultApp EAR" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target>      
+      
+    <target name="configDefaultApp"
+            description="Configures Default Enterprise Application"
+	    if="isEmbed">
+            
+        <wscmtlog>Configuring DefaultApp datasource, the output will be recorded in: ${profilePath}/logs/defaultapp_config.log</wscmtlog>
+          <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/defaultapp_config.log"
+                 appendTrace="true"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/configureDefaultApplication.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="${nodeName}"/>
+                 <arg value="${serverName}"/>
+        </wsadmin> 
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/defaultapp_config.log" />
+            <param name="description" value="Configuring DefaultApp datasource" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target>
+
+    <target name="defaultAppDeployAndConfig"
+        description="Configures Cloudscape"
+        depends="detectCurrentOSFamily,
+            detectProductLevel,
+            setCurrentOSFamily,
+            defineOSSpecificConfigFlag,
+            convertWASHomeToUNIXStylePath,
+            deployDefaultApp,
+            configDefaultApp"/>
+</project>

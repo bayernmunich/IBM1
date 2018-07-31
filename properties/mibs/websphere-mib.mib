@@ -1,0 +1,293 @@
+WEBSPHERE-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+    OBJECT-TYPE, MODULE-IDENTITY, Integer32
+        FROM SNMPv2-SMI
+
+    RowStatus, DisplayString
+        FROM SNMPv2-TC
+
+    OwnerString
+        FROM RMON-MIB
+
+    networkharmoni
+        FROM NH-SMI;
+
+applications OBJECT IDENTIFIER ::= { networkharmoni 22 }
+
+webSphere MODULE-IDENTITY
+    LAST-UPDATED "0609080000Z"   -- 8 September 2006
+    ORGANIZATION "IBM Corporation"
+    CONTACT-INFO
+        "http://www.ibm.com/software/support/"
+    DESCRIPTION
+        "Reports performance data for IBM WebSphere Application Server."
+    ::= { applications 10 }
+
+
+wsServer OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "DNS address of the web server to query."
+    ::= { webSphere 1 }
+
+wsPort OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Port number of the web server to query."
+    ::= { webSphere 2 }
+
+wsSampleInterval OBJECT-TYPE
+    SYNTAX      Integer32 (1..3600)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Sample interval in seconds."
+    ::= { webSphere 3 }
+
+wsUsername OBJECT-TYPE 
+    SYNTAX      DisplayString 
+    MAX-ACCESS  read-write 
+    STATUS      current
+    DESCRIPTION "Username to use to connect to websphere."
+    ::= { webSphere 4 }
+
+wsPassword OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Password to use to connect to websphere."
+    ::= { webSphere 5 } 
+--
+-- Collection table
+--
+
+wsCollectionTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF WsCollectionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of currently available collections, for reference when
+        constructing a control row."
+    ::= { webSphere 10 }
+
+WsCollectionEntry ::= SEQUENCE
+{
+    wsCollectionIndex Integer32,
+    wsCollectionName  DisplayString
+}
+
+wsCollectionEntry OBJECT-TYPE
+    SYNTAX      WsCollectionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row representing a single collection available on the server."
+    INDEX { wsCollectionIndex }
+    ::= { wsCollectionTable 1 }
+
+wsCollectionIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Uniquely identifies this row in the wsCollectionTable."
+    ::= { wsCollectionEntry 1 }
+
+wsCollectionName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The full name of the collection, as required for wsControlCollection."
+    ::= { wsCollectionEntry 2 }
+
+
+--
+-- Control table
+--
+
+wsControlTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF WsControlEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a list of control information for selecting statistics to
+        monitor."
+    ::= { webSphere 11 }
+
+WsControlEntry ::= SEQUENCE
+{
+    wsControlIndex       Integer32,
+    wsControlStatus      RowStatus,
+    wsControlOwner       OwnerString,
+    wsControlCollection  DisplayString,
+    wsControlCounterMode INTEGER
+}
+
+wsControlEntry OBJECT-TYPE
+    SYNTAX      WsControlEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A single websphere monitoring row, capable of monitoring one or more
+        counters for a single collection."
+    INDEX { wsControlIndex }
+    ::= { wsControlTable 1 }
+
+wsControlIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Uniquely identifies this row in the wsControlTable."
+    ::= { wsControlEntry 1 }
+
+wsControlStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "SNMPv2 Row Status. Controls creation, activation and deletion of the
+        control row."
+    ::= { wsControlEntry 2 }
+
+wsControlOwner OBJECT-TYPE
+    SYNTAX      OwnerString
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The entity that configured this entry and is therefore using the
+        resources assigned to it."
+    ::= { wsControlEntry 3 }
+
+wsControlCollection OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "A regular expression specifying the name(s) of collections to
+        monitor. This expression need only match a substring in a collection
+        name."
+    ::= { wsControlEntry 4 }
+
+wsControlCounterMode OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    manual(1),
+                    automatic(2)
+                }
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "Controls how counter names are specified in wsCounterTable. When
+        counterMode is manual, counter rows must be created manually by
+        performing SNMP sets on wsCounterName. When counterMode is automatic,
+        all available counter names are created for you in wsCounterTable and
+        cannot be changed without setting countermode back to manual."
+    DEFVAL      { manual }
+    ::= { wsControlEntry 5 }
+
+--
+-- Counter table
+--
+
+wsCounterTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF WsCounterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of counters to be monitored."
+    ::= { webSphere 12 }
+
+WsCounterEntry ::= SEQUENCE
+{
+    wsCounterIndex     Integer32,
+    wsCounterName      DisplayString
+}
+
+wsCounterEntry OBJECT-TYPE
+    SYNTAX      WsCounterEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row representing a single counter to be monitored."
+    INDEX { wsControlIndex, wsCounterIndex }
+    ::= { wsCounterTable 1 }
+
+wsCounterIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..65535)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Uniquely identifies this row in wsCounterTable, relative to
+        wsControlIndex."
+    ::= { wsCounterEntry 1 }
+
+wsCounterName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The name of the counter to monitor. To find out the names of all
+        available counters for a collection, set wsControlCounterMode to
+        automatic. When counterMode is manual you may create counter rows by
+        setting this object to a non-empty string. Manual counter rows may be
+        removed by setting this object to an empty (zero length) string."
+    ::= { wsCounterEntry 2 }
+
+--
+-- Data table
+--
+
+wsDataTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF WsDataEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of data values for counters and collections configured in
+        the preceding tables."
+    ::= { webSphere 13 }
+
+WsDataEntry ::= SEQUENCE
+{
+    wsDataType      INTEGER,
+    wsDataValue     Integer32
+}
+
+wsDataEntry OBJECT-TYPE
+    SYNTAX      WsDataEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A row representing a single counter to be monitored and it's data
+        value."
+    INDEX { wsControlIndex, wsCounterIndex, wsCollectionIndex}
+    ::= { wsDataTable 1 }
+
+wsDataType OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    long(1),
+                    load(2),
+                    stat(3)
+                }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the data type of this counter. When the associated control
+        row is inactive, the type will be reported as 'inactive'. In the time
+        before the first sample completes, the type will be reported as
+        'pending'. After the first sample, the type will be one of 'long',
+        'load', 'stat' or 'notfound'. Notfound simply means that a counter
+        by name wsDataName for collection wsControlCollection could not be
+        found."
+    ::= { wsDataEntry 1 }
+
+wsDataValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current data value for this counter."
+    ::= { wsDataEntry 2 }
+
+END

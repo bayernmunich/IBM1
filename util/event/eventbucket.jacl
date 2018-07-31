@@ -1,0 +1,162 @@
+###############################################################################
+#
+# Licensed Materials - Property of IBM
+# (C) Copyright IBM Corp. 2004, 2010.  ALL RIGHTS RESERVED 
+# 5724-I63, 5724-H88, 5655-N02, 5733-W70
+# US Government Users Restricted Rights - Use, duplication, or disclosure
+# restricted by GSA ADP Schedule Contract with IBM Corp.
+#
+###############################################################################
+#
+# JACL script that manages event buckets. It can display the current bucket 
+# status or change the current active bucket. A bucket may become active 
+# only if it is empty. The active bucket cannot be changed for databases that 
+# are configured to use one event bucket, such as Cloudscape.
+#
+# Usage:
+# Invoke wsadmin and supply the name of this script on the -f parameter.
+# wsadmin -conntype rmi -port <port> -f eventbucket.jacl
+#                           help |
+#                           -status [Default | XML]
+#                           -change [Default | XML]
+#							[-nodeName node_name -serverName server_name | -clusterName cluster_name]
+#
+# Where:   "status" displays the current event bucket information
+#          "change" changes the current active bucket
+#		   "node_name" The name of the node where the Event Service is deployed. 
+#               If this parameter is specified, then the serverName parameter must be specified.
+#               You must not specify this parameter if the clusterName parameter is specified.
+#          "server_name" is the name of an application server to which the Event Service
+#               is deployed. This field should only be specified if the Event Service
+#               is deployed to multiple application servers on the local WebSphere node.
+#          "cluster_name" The name of the cluster where the Event Service is deployed.
+#         		You must not specify this parameter if the nodeName or serverName parameter are specified.
+#
+# The status and change options take an optional parameter that identifies
+# which data stores are affected. If this option is not specified, only the
+# default data store is affected. The valid values are:
+# No value specified - only the default data store is affected
+# Default            - only the default data store is affected
+# XML                - only the XML data store is affected
+#                                           
+# Examples: 
+#  Get information about the active bucket in the default data store:
+#         wsadmin -f eventbucket.jacl -status
+#		  wsadmin -f eventbucket.jacl -status -nodeName mynode -serverName server1
+#		  wsadmin -f eventbucket.jacl -status -clusterName cluster1
+#  This can also be specified as:
+#         wsadmin -f eventbucket.jacl -status Default
+#		  wsadmin -f eventbucket.jacl -status Default -nodeName mynode -serverName server1
+#		  wsadmin -f eventbucket.jacl -status Default -clusterName cluster1
+#
+#  Change the active bucket in the default data store:
+#         wsadmin -f eventbucket.jacl -change
+#		  wsadmin -f eventbucket.jacl -change -nodeName mynode -serverName server1
+#		  wsadmin -f eventbucket.jacl -change -clusterName cluster1
+#-----------------------------------------------------------------------------
+
+set rc 0
+
+#First init the cli helper
+set cliHelperObject [java::new com.ibm.events.cli.util.DatastoreUtilCliHelper]
+
+#Add each argument to an array for processing
+set argArray [java::new {String[]} [llength $argv]]
+
+set counter 0
+foreach {argOpt} $argv  \
+{
+   $argArray set $counter $argOpt
+   set counter [expr $counter+1]
+}
+        
+# Pass the argument array to the CLI helper to be validated.
+# If all arguments are valid, the helper returns an array of two objects.
+# The first object is a string naming the MBean operation 
+# to be called.
+# The second object is an array of objects containing arguments to be
+# passed to the MBean.
+# If any argument is invalid, the helper displays a message and returns null.
+set argObjects [$cliHelperObject processEventBucketArguments $argArray]
+
+# Do nothing if the CLI helper returned null, otherwise call the indicated
+# operation on the  MBean
+if { [java::isnull $argObjects] == 0 } \
+{
+    #get the object name for the mbean
+    #set node $env(local.node)
+    set node [[$argObjects get 4] toString]
+    if { [string compare $node ""] == 0 } {
+    	set node $env(local.node)
+    }
+    
+    #get the server process if specified
+    set process [[$argObjects get 5] toString]
+
+	#get the cluster name if specified
+    set clusterName [[$argObjects get 6] toString]
+
+	if {[string compare $clusterName ""] != 0} {
+		set clusterid [$AdminConfig getid /ServerCluster:$clusterName]
+        set members [$AdminConfig list ClusterMember $clusterid]
+	    set clname [$AdminConfig showAttribute $clusterid name]
+	
+	    if { [llength $members] > 0 } {
+	        # Get first cluster member
+	        set member [lindex $members 0]
+	
+	        # get nodename of cluster member
+	        set nodename [$AdminConfig showAttribute $member nodeName]
+	
+			# get the member name
+			set mname [$AdminConfig showAttribute $member memberName]
+	
+	        #puts stdout "Using Node $nodename of cluster member $mname"
+				
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=DataStoreUtil,node=$nodename,process=$mname,*]]
+		} else {
+	         # No cluster member found
+	         puts stdout "No cluster member found in cluster $clname"
+	         exit
+	    }
+    } else {
+		if {[string compare $process ""] == 0} {
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=DataStoreUtil,node=$node,*]]
+		} else {
+			set objectName [java::new javax.management.ObjectName [$AdminControl completeObjectName WebSphere:type=DataStoreUtil,node=$node,process=$process,*]]
+		}
+
+		if [expr [string compare $objectName ""] == 0] then \
+		{
+		    set mBeanName DataStoreUtilMBean
+		    $cliHelperObject reportMBeanNotFound $mBeanName
+		    exit 1
+		}
+	}
+
+    # Call the MBean and invoke the CLI helper to display the result
+    
+    set operation [java::cast {String} [$argObjects get 0]]
+    set resultsOperation [java::cast {String} [$argObjects get 1]]
+    set arguments [java::cast {Object[]} [$argObjects get 2]]
+    set argumentSignatures [java::cast {String[]} [$argObjects get 3]]
+    
+    java::try \
+    {
+        #call the mbean and assign the return value
+        set result [$AdminControl invoke_jmx $objectName $operation $arguments $argumentSignatures]
+        
+        #print out the return value
+        $cliHelperObject [$resultsOperation toString] [java::cast {java.lang.Object} $result]
+    } \
+    catch {Throwable t} \
+    {
+       set rc 1
+       java::throw t
+    }
+} \
+else {
+  set rc 1
+}
+
+exit $rc

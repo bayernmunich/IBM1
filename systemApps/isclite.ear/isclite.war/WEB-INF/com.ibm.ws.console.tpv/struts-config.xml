@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    <form-beans>
+    	<!-- This bean is used by the show data action which shows data based on tpv tree selections -->
+	    <form-bean name="tpvTreeSelectForm" 
+		           type="com.ibm.ws.console.tpv.form.TpvTreeSelectForm"/>
+		
+		<!-- This is the bean used by the start/stop logging action -->
+        <form-bean name="tpvLoggingCommandForm" 
+				   type="com.ibm.ws.console.tpv.form.LoggingCommandForm"/>
+
+        <!-- This is the bean used by the tpa.display view -->
+        <form-bean name="tpaOutputForm" 
+		           type="com.ibm.ws.console.tpv.advisor.form.TpaOutputForm"/>
+
+        <!-- This is the bean used by the tpa.rule.detail view -->
+		<form-bean name="tpaRuleOutputForm" 
+			       type="com.ibm.ws.console.tpv.advisor.form.TpaRuleOutputForm"/>
+		
+		<form-bean name="tpaResourceCollectionForm"
+				   type="com.ibm.ws.console.tpv.advisor.form.TpaGenericCollectionForm"/>
+		
+		<form-bean name="tpaResourceForm"
+				   type="com.ibm.ws.console.tpv.advisor.form.TpaResourceForm"/>
+				   
+	   	<form-bean name="tpvUploadForm" 
+	   			   type="com.ibm.ws.console.tpv.form.UploadForm"/>
+	   			   
+	    <form-bean name="com.ibm.ws.console.tpv.form.ServerListCollectionForm"
+	               type="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+	    
+	    <form-bean name="com.ibm.ws.console.tpv.form.StatisticCollectionForm"
+	               type="com.ibm.ws.console.tpv.form.StatisticCollectionForm"/>
+    </form-beans>
+    
+    <global-forwards>
+    	<forward name="tpvTableSummary" path="/com.ibm.ws.console.tpv/tableSummary.jsp"/>
+    	<forward name="tpv.remote.node.browse" path="tpv.remote.node.browse"/>
+    	<forward name="tpvPmiDataView" path="tpv.stat.data.view"/>
+		<forward name="tpvPmiDataDojoView" path="tpv.stat.data.dojo.view"/> <!-- F001146.1 -->
+    	<forward name="tpvNavTreeFrames" path="tpv.data.main"/>
+    	<forward name="tpvServerError" path="TPVServerError.content.main"/>
+    	<forward name="tpvStatsError" path="TPVStatsError.content.main"/>
+    	<forward name="tpvServerList" path="TPVServerList.content.main"/>
+    	<forward name="tpvViewLog" path="TPVLogViewer.content.main"/>
+    </global-forwards>
+    
+    <action-mappings>
+    	<action
+    		path="/jsXmlAction"
+    		scope="session"
+    		type="com.ibm.ws.console.tpv.action.JsXmlAction">
+    		<forward name="tpvJsRegister" path="tpv.js.register"/>
+    		<forward name="tpvJsDataFetch" path="tpv.js.dataFetch"/>
+    		<forward name="tpvPointDetails" path="tpv.point.details"/>
+    	</action>
+    	
+    	<action
+			path="/tpvPoolSummaryGraph"
+			scope="session"
+			type="com.ibm.ws.console.tpv.action.PoolSummaryGraphAction">
+			<forward name="PoolSummary" path="/com.ibm.ws.console.tpv/tpvSummaryChart.jsp"/>			
+		</action>
+		
+    	<action
+    		path="/tpvSummary"
+    		scope="session"
+    		type="com.ibm.ws.console.tpv.action.SummaryAction">
+    		<forward name="ejbSummary" path="tpv.summary.ejb"/>
+    		<forward name="ejbMethodsSummary" path="tpv.summary.ejbMethods"/>
+    		<forward name="servletSummary" path="tpv.summary.servlet"/>
+    		<forward name="poolSummary" path="tpv.summary.pool"/>
+			<forward name="dojoPoolSummary" path="tpv.summary.pool.dojo"/>   <!--  F001146.1 -->		
+    	</action>
+        <action
+    		name="tpaOutputForm"
+			path="/tpaOutput"
+			scope="session"
+			type="com.ibm.ws.console.tpv.advisor.action.TpaOutputAction">
+			<forward name="tpaOutput" path="tpa.output" />
+			<forward name="tpaRuleOutput" path="tpa.rule.output" />
+			<forward name="tpaUnavailable" path="/tpvServerSelect.do" />
+		</action>
+
+		<action
+    		name="tpaRuleOutputForm"
+			path="/tpaRuleOutput"
+			scope="session"
+			type="com.ibm.ws.console.tpv.advisor.action.TpaRuleOutputAction">
+			<forward name="tpaRuleOutput" path="tpa.rule.output" />
+			<forward name="tpaOutput" path="tpa.output" />
+		</action>
+	<action
+    		name="tpaChart"
+    		path="/tpaChart"
+    		scope="session"
+    		type="com.ibm.ws.console.tpv.advisor.action.TpaChartAction">
+            <forward name="tpaCpuSummary" path="/com.ibm.ws.console.tpv/tpaCpuChart.jsp"/>			    		
+    	</action>
+    	<action path="/tpvServerSelect"
+    		type="com.ibm.ws.console.tpv.action.ServerSelectAction">
+    	</action>
+		<action path="/tpvNavigatorCmd"
+			type="com.ibm.ws.console.core.action.ForwardAction">
+        	<forward name="tpvNavTree" path="tpv.navTree.view"/>
+        	<forward name="tpvUserSettings" path="tpv.user.settings"/>
+			<forward name="tpvRemoteBrowse" path="tpv.remote.node.browse"/>
+    	</action>
+    	<action 
+    		path="/tpvShowData"
+    		name="tpvTreeSelectForm"
+    		scope="session"
+    		type="com.ibm.ws.console.tpv.action.ShowDataAction">
+    		<forward name="tpvSummary" path="/tpvSummary.do" />
+    	</action>
+		<action 
+    		name="tpvUploadForm" path="/tpvUpload" scope="session" type="com.ibm.ws.console.tpv.action.UploadAction">
+    		<forward name="tpvLogViewer" path="TPVLogViewer.content.main"/>
+    	</action>
+    	<action
+    		path="/tpvChartGenerator"
+    		type="com.ibm.ws.console.tpv.action.ChartGenerator">
+    		<forward name="tpvPmiTable" path="/com.ibm.ws.console.tpv/statisticListLayout.jsp"/>
+    	</action>
+ 		<action 
+			path="/tpvLogViewer"
+			name="tpvUploadForm"
+			scope="session"
+			type="com.ibm.ws.console.tpv.action.LogViewerAction">
+			<forward name="tpvLogViewer" path="/com.ibm.ws.console.tpv/logViewer.jsp"/>
+		</action>
+		<action 
+		 	name="tpvLoggingCommandForm"
+			path="/tpvLoggingCommand"
+			type="com.ibm.ws.console.tpv.action.LoggingCommandAction">
+			<forward name="force" path="/com.ibm.ws.console.tpv/tpvStopLogging.jsp"/>
+		</action>
+		<action name="com.ibm.ws.console.tpv.form.ServerListCollectionForm"
+            path="/tpvServerListCollection" type="com.ibm.ws.console.tpv.action.ServerListCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="TPVServerList.content.main"/>
+            <forward name="tpvServerListCollection" path="TPVServerList.content.main"/>
+        </action>
+        <action name="com.ibm.ws.console.tpv.form.StatisticCollectionForm"
+            path="/tpvUpdateData" type="com.ibm.ws.console.tpv.action.StatisticCollectionAction">
+        </action>
+    </action-mappings>
+</struts-config>

@@ -1,0 +1,97 @@
+<!-- ***************************************************************************
+Licensed Materials - Property of IBM
+
+5724-I63, 5724-H88, 5724-H89, 5655-N02, 5724-J08
+ 
+Copyright IBM Corp. 2013 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or
+disclosure restricted by GSA ADP Schedule Contract with
+IBM Corp.
+***************************************************************************  -->
+<project name="modifyLaunchClient" default="install" basedir=".">
+ 
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles" />
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask"
+			classpath="${WAS_HOME}/plugins/com.ibm.ws.runtime.client.jar;${WAS_HOME}/plugins/com.ibm.ws.runtime.jar" />
+	
+	<property name="before" value="-Djava.endorsed.dirs"/>
+	<property name="after" value="-DMQ_USE_BUNDLE_REFERENCE_INSTALL=true -Djava.endorsed.dirs"/>
+
+	<target name="updateLaunchClient" description="Set OSGi configuration area read-only in WAS_HOME/bin/launchClient.bat(.sh)" unless="file.already.contains.string">
+		<wscmtlog>*** Setting OSGi parameter -DMQ_USE_BUNDLE_REFERENCE_INSTALL=true ***</wscmtlog>
+		<replaceTokenInFile path="${fullFilePath}" token="${before}" value="${after}" property="isReplaced" ignorecase="false" />
+		<wscmtlog>*** Was OSGi parameter in ${fullFilePath} added?: ${isReplaced} ***</wscmtlog>
+	</target>
+
+	<target name="isWindows" description="Determines whether the current OS is Windows">
+		<condition property="windowsOSFound" value="true">
+			<os family="windows"/>
+		</condition>
+	</target>
+
+	<!-- 
+   ***************************************************************************
+   TARGET: logStartupProperties
+   Log startup properties
+   ***************************************************************************
+   -->
+	<target name="logStartupPropertiesWindows" description="Log properties passed to script" depends="isWindows" if="windowsOSFound">
+		<tstamp>
+			<format property="timestamp" pattern="MM/dd/yyyy hh:mm aa" />
+		</tstamp>
+		<wscmtlog>*** Task to perform: Set OSGi config area read-only in ${fullFilePath} ***</wscmtlog>
+	<!--Load the entire contents of launchClient script into file.contents.property -->
+	<property name="fullFilePath" value="${WAS_HOME}/bin/launchClient.bat"/>
+	<loadfile property="file.contents.property" srcfile="${fullFilePath}"/>
+
+	<!--Set file.already.contains.string to true if launchClient script contains the OSGi config area read-only argument -->
+ 	<condition property="file.already.contains.string">
+            	 <contains string="${file.contents.property}" substring="-DMQ_USE_BUNDLE_REFERENCE_INSTALL=true"/>
+ 	</condition>
+	</target>
+
+	<target name="logStartupPropertiesNonWindows" description="Log properties passed to script" depends="isWindows" unless="windowsOSFound">
+		<tstamp>
+			<format property="timestamp" pattern="MM/dd/yyyy hh:mm aa" />
+		</tstamp>
+		<wscmtlog>*** Task to perform: Set OSGi config area read-only in ${fullFilePath} ***</wscmtlog>
+	<!--Load the entire contents of launchClient script into file.contents.property -->
+	<property name="fullFilePath" value="${WAS_HOME}/bin/launchClient.sh"/>
+	<loadfile property="file.contents.property" srcfile="${fullFilePath}"/>
+
+	<!--Set file.already.contains.string to true if launchClient script contains the OSGi config area read-only argument -->
+ 	<condition property="file.already.contains.string">
+            	 <contains string="${file.contents.property}" substring="-DMQ_USE_BUNDLE_REFERENCE_INSTALL=true"/>
+ 	</condition>
+	</target>
+
+
+	<!-- 
+   ***************************************************************************
+   TARGET: callPostinst
+   ***************************************************************************
+   -->
+	<target name="install" description="Calls postinst with various parameters" depends="logStartupPropertiesWindows, logStartupPropertiesNonWindows, updateLaunchClient" />
+
+	<!-- 
+   ***************************************************************************
+   TARGET: logStartupUninstallProperties
+   Log startup properties
+   ***************************************************************************
+   -->
+	<target name="logStartupUninstallProperties" description="Log uninstall" depends="isWindows" if="windowsOSFound">
+		<tstamp>
+			<format property="timestamp" pattern="MM/dd/yyyy hh:mm aa" />
+		</tstamp>
+		<wscmtlog>*** Task to perform: Leave the update unchanged in ${fullFilePath} ***</wscmtlog>
+	</target>
+
+	<!-- 
+   ***************************************************************************
+   TARGET: callPostinstUninstall
+   ***************************************************************************
+   -->
+	<target name="uninstall" description="Calls postinst with various parameters" depends="logStartupUninstallProperties" />
+</project>
+

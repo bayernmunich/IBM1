@@ -1,0 +1,671 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Synchronization Problem Node Agent" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir"
+	         file="${ant.file.Synchronization Problem Node Agent}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	
+	<property name="autopdProblem" value="WAS_Synchronization_Problem_on_Node_Agent" />
+	<property name="need.nodeagent.properties" value="true" />
+	<property name="infocollectProblemType" value="was-synchronization" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="query.secure.type.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="set_was_problem_type,
+		 				setup_autopd, 
+		 				validate_os,
+		 				usage,
+		 				was_na_general_init,	    		  
+		    		 recovery_needed,
+					 select_sync_method,
+					 sync_with_wsadmin,
+					 sync_with_commandline,
+					 sync_check1,
+					 sync_with_trace,
+					 sync_check2,
+					 sync_with_more_trace,
+					 gen_history_report,  
+					 collect_was_synchronization,
+		    		 was_restore_server.xml,					 
+			         recovery_completed,  
+			         was_collect_from_ND,
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 collect_was_synchronization_recovery, 
+					 was_recovery_server.xml, 
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed" />
+	</target>
+
+	<target name="rename_was_nodeagent_properties" description="">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_renaming_properties_of_node_agent"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Renaming properties of Node Agent"
+		           replace="${autopdts};;${step.count}" />
+		<autopdproperty name="CellName" value="${nodeagent.CellName}" />
+		<autopdproperty name="NodeName" value="${nodeagent.NodeName}" />
+		<autopdproperty name="ServerName" value="${nodeagent.ServerName}" />
+		<echo message="CellName: ${CellName}" />
+		<echo message="NodeName: ${NodeName}" />
+		<echo message="ServerName: ${ServerName}" />
+	</target>
+
+	<!-- Determine the synchronization method of your problem-->
+	<target name="select_sync_method" description="Select a full synchronization method">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Selecting_an_approach_for_a_full_synchroniztion_approach"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Selecting a synchronization approach"
+		           replace="${autopdts};;${step.count}" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Select_an_approach_for_a_full_synchronization"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sync.method"
+			           label="Approach"
+			           list="command.line:admin.console:wsadmin"
+			           listDetails="Command line:Admin console:wsadmin"
+			           type="selectlist"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<condition property="isCommandLine">
+			<equals arg1="command.line" arg2="${sync.method}" />
+		</condition>
+		<echo message="isCommandLine: ${isCommandLine}" />
+
+		<condition property="sync.with.commandline">
+			<istrue value="${isCommandLine}" />
+		</condition>
+
+		<echo message="sync.with.commandline: ${sync.with.commandline}" />
+
+		<condition property="isAdminConsole">
+			<equals arg1="admin.console" arg2="${sync.method}" />
+		</condition>
+		<echo message="isAdminConsole: ${isAdminConsole}" />
+
+
+		<condition property="isWsadmin">
+			<equals arg1="wsadmin" arg2="${sync.method}" />
+		</condition>
+		<echo message="isAdminConsole: ${isWsadmin}" />
+
+	</target>
+
+	<target name="sync_with_wsadmin"
+	        description="A full synchronization with wsadmin approach"
+	        if="isWsadmin">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_issuing_full_synchronization_via_wsadmin"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Issuing a full synchronization command via wsadmin"
+		           replace="${autopdts};;${step.count}" />
+
+		<copy file="${bundle.basedir}/scripts/jacl/wsadmin-sync-template.jacl"
+		      tofile="${bundle.basedir}/scripts/jacl/wsadmin-sync-filled.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="NodeName" value="${NodeName}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${bundle.basedir}/scripts/jacl/wsadmin-sync-filled.jacl" ${was.admin.info}' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/wsadmin-sync-filled.jacl ${was.admin.info} " />
+		</exec>
+
+	</target>
+
+	<target name="sync_with_adminconsole"
+	        description="A full synchronization with admin console approach"
+	        if="isAdminConsole">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_issuing_full_synchronization_via_admin_console"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Issuing a full synchronization command via the administrator console"
+		           replace="${autopdts};;${step.count}" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Instructions_to_do_full_synchronization_using_administrative_console"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent1"
+			           label="Expand_the_System_Administration_section_and_select_Nodes"
+			           type="label"
+			           accessibilityName="was_sync_trace"
+			           accessibilityDesc="was_sync_trace"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent2"
+			           label="Check_the_box_Next_to_the_nodes_that_are_not_synchronized"
+			           type="label"
+			           accessibilityName="was_sync_trace"
+			           accessibilityDesc="was_sync_trace"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent3"
+			           label="Click_Full_Resynchronize"
+			           type="label"
+			           accessibilityName="was_set_trace"
+			           accessibilityDesc="was_sync_trace"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+	</target>
+
+	<target name="sync_with_commandline"
+	        description="A full synchronization with commandline approach"
+	        if="sync.with.commandline">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_issuing_full_synchronization_via_command_line"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Issuing a full synchronization command via command line"
+		           replace="${autopdts};;${step.count}" />
+
+		<wsnlsecho key="Issuing_stopNode_command"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Issuing stopNode command" />
+		<exec executable="${was.enhanced.root}/bin/stopNode.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${was.admin.info}" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopNode.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${was.admin.info}" />
+		</exec>
+
+		<wsnlsecho key="Executing_syncNode_script"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Executing syncNode script" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Instructions_to_execute_syncNode_script_manually"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent4"
+			           label="1_Execute_syncNode_script_located_in_wsasroot-bin_directory"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent5"
+			           label="2_If_command_with_security_is_Disabled"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent6"
+			           label="syncNode.bat/sh cell_hostname dmgr_SOAP_port -trace"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent7"
+			           label="3_If_command_with_security_is_Enabled"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent8"
+			           label="syncNode.bat/sh cell_hostname dmgr_SOAP_port -username uid -password pwd -trace"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<!--
+		<autopdinput message="I_have_finished_syncNode_script"
+		             validargs="OK,Skip"
+		             addproperty="do.syncnode"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+-->
+		<wsnlsecho key="Issuing_startNode_command"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Issuing startNode command" />
+
+		<exec executable="${was.enhanced.root}/bin/startNode.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startNode.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+		</exec>
+
+	</target>
+
+	<target name="sync_check1"
+	        description="A first approach to check if you still have the synchronization problem">
+		<autopdinput message="Do_you_still_have_the_synchronization_problem"
+		             validargs="Yes,No"
+		             addproperty="needSync1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="doSync1">
+			<equals arg1="Yes" arg2="${needSync1}" />
+		</condition>
+
+		<condition property="ND.collect.needed">
+			<equals arg1="No" arg2="${needSync1}" />
+		</condition>
+
+	</target>
+
+	<!-- This target is used to set the trace for Node Agent and recycle the Node Agent -->
+	<target name="sync_with_trace"
+	        description="A full synchronization process with enabling trace"
+	        if="doSync1">
+
+		<autopdinput message="Please_click_Next_for_instructions_to_enable_trace_and_recycle_the_Deployment_Manager_server"
+		             validargs="Next"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Instructions_to_enable_trace_and_recycle_the_Deployment_Manager_server_from_Deployment_Manager_machine"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent9"
+			           label="Start_RasGUI_tool_in_Deployment_Manager_machine"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent10"
+			           label="Select_problem_type_with_WSAS_Synchronization_Problem_on_Deployment_Manager"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent11"
+			           label="Click_the_Collect_Data_button"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent12"
+			           label="Following_the_instructions_to_do_collection_until_the_dialog_window_do_you_still_have_synchronization_problem?"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent13"
+			           label="Click_Yes"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<autopdinput message="I_have_completed_the_step_to_recycle_the_Deployment_Manager_Server_in_Deployment_Manager_machine"
+		             validargs="Yes,Skip"
+		             addproperty="recycleDmgr1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<autopdinput message="Do_you_want_to_have_a_full_synchronization_now"
+		             validargs="Yes,No,Quit"
+		             addproperty="do.full.sync1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nosync">
+			<equals arg1="Quit" arg2="${do.full.sync1}" />
+		</condition>
+		<fail if="do.abort.nosync">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+		<condition property="do.full.sync">
+			<equals arg1="Yes" arg2="${do.full.sync1}" />
+		</condition>
+
+		<if isTrue="${do.full.sync}">
+			<exec executable="${was.enhanced.root}/bin/stopNode.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=" ${was.admin.info}" />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/stopNode.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" ${was.admin.info}" />
+			</exec>
+
+			<wsnlsecho key="Executing_syncNode_script"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="Executing syncNode script" />
+
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_execute_syncNode_script_manually"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent14"
+				           label="1_Execute_syncNode_script_located_in_wsasroot-bin_directory"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent15"
+				           label="2_If_command_with_security_is_Disabled"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent16"
+				           label="syncNode.bat/sh cell_hostname dmgr_SOAP_port -trace"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent17"
+				           label="3_If_command_with_security_is_Enabled"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent18"
+				           label="syncNode.bat/sh cell_hostname dmgr_SOAP_port -username uid -password pwd -trace"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+
+			<!--
+		<autopdinput message="I_have_finished_syncNode_script"
+		             validargs="OK,Skip"
+		             addproperty="do.syncnode"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<wsnlsecho key="Issuing_startNode_command"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Issuing startNode command" />
+-->
+			<exec executable="${was.enhanced.root}/bin/startNode.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/startNode.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+			</exec>
+		</if>
+	</target>
+
+	<target name="sync_check2"
+	        description="A second approach to check if you still have the synchronization problem"
+	        if="doSync1">
+		<!--
+		<autopdinput message="Do_you_still_have_the_synchronization_problem"
+		             validargs="Yes,No"
+		             addproperty="needSync2"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		
+		<condition property="doSync2">
+			<equals arg1="Yes" arg2="${needSync2}" />
+		</condition>
+
+		<if isNotTrue="${doSync2}">
+			<autopdinput message="Click No button in the dialog window of RasGUI tool: do you still have synchronization problem in Deployment Manager machine"
+			             validargs="OK,Skip"
+			             addproperty="do.syncnode"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</if>
+		-->
+	</target>
+
+	<!-- This target is used to set the trace for Node Agent and recycle the Node Agent -->
+	<target name="sync_with_more_trace"
+	        description="A full synchronization process with enabling more trace"
+	        if="doSync2">
+
+		<autopdinput message="Please_click_Next_for_instructions_to_enable_trace_and_recycle_the_Deployment_Manager_server"
+		             validargs="Next"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Instructions_to_enable_trace_and_recycle_the_Deployment_Manager_server_from_Deployment_Manager_machine"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.synch.nodeagent19"
+			           label="Click_Yes_button_in_the_dialog_window_Do_you_still_have_the_synchronization_problem"
+			           type="label"
+			           accessibilityName="was_sync_problem"
+			           accessibilityDesc="was_sync_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<autopdinput message="I_have_completed_the_step_to_recycle_the_Deployment_Manager_Server_in_Deployment_Manager_machine"
+		             validargs="OK,Skip"
+		             addproperty="recycleDmgr2"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+
+		<autopdproperty name="was.trace.string" value="com.ibm.ws.management.*=all:com.ibm.websphere.management.*=all" />
+		<copy file="${bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE " />
+		</exec>
+
+		<autopdinput message="Please_proceed_to_recycle_Node_Agent"
+		             validargs="OK,Quit"
+		             addproperty="do.recycleNodeAgent"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.recycle.nodeagent">
+			<equals arg1="OK" arg2="${do.recycleNodeAgent}" />
+		</condition>
+
+		<if isTrue="${do.recycle.nodeagent}">
+			<exec executable="${was.enhanced.root}/bin/stopNode.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=" ${was.admin.info}" />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/stopNode.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" ${was.admin.info}" />
+			</exec>
+
+			<wsnlsecho key="Issuing_startNode_command"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="Issuing startNode command" />
+			<exec executable="${was.enhanced.root}/bin/startNode.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/startNode.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+			</exec>
+		</if>
+	</target>
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_synchronization"
+	        description="Collect log tracing and other config information from Application Server">
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+
+		<if isTrue="${doSync1}">
+
+			<autopdinput message="Please_click_Next_for_instructions_to_collect_the_trace_and_config_information_from_Deployment_Manager_machine"
+			             validargs="Next"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_collect_the_trace_and_config_information_from_Deployment_Manager_machine"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.synch.nodeagent20"
+				           label="Click_OK_button_in_the_dialog_window_Waiting_for_the_directives_to_collect_trace_and_config_information_from_the_master_script"
+				           type="label"
+				           accessibilityName="was_sync_problem"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			</inputdialogtask>
+
+			<autopdinput message="I_have_completed_the_step_to_collect_the_trace_and_config_information_in_Deployment_Manager_machine"
+			             validargs="OK,Skip"
+			             addproperty="recycleDmgr1"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</if>
+
+	</target>
+
+	<!-- This target lies on the alternate path invoked when the script is entered
+		at the "autopdmainrecovery" target. 
+	-->
+	<target name="collect_was_synchronization_recovery"
+	        description="Collect log tracing and other config information for recovery from Portal Server">
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Synchronization Problem&lt;/h2&gt;&lt;p&gt;
+			This script should be run on the deployment manager or administrative console hose
+			of a standalone server. Trace is set, synchronization is attempted in several ways, 
+			and the logs, configuration, and trace file are collected for further analysis.
+			&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script should be run on the deployment manager or administrative 
+console hose of a standalone server. Trace is set, synchronization is attempted in several ways, 
+and the logs, configuration, and trace file are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Synchronization Problem =>
+				This script should be run on the deployment manager or administrative console hose
+								of a standalone server. Trace is set, synchronization is attempted in several ways, 
+								and the logs, configuration, and trace file are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

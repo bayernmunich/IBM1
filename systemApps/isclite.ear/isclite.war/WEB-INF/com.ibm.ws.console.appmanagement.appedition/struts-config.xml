@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+   <form-beans>
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationCollectionForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationCollectionForm"/>
+
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationDetailForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationDetailForm"/>
+                              
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionDeploymentCollectionForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionDeploymentCollectionForm"/>   
+                                                  
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionDeploymentDetailForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionDeploymentDetailForm"/>
+                 
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionCollectionForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionCollectionForm"/> 
+                                                    
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionDetailForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionDetailForm"/> 
+                                                                    
+      <form-bean name="com.ibm.ws.console.appmanagement.appedition.RolloutWizardForm"  
+                 type="com.ibm.ws.console.appmanagement.appedition.RolloutWizardForm"/>
+                 
+      <form-bean name="appEditionDeployTaskForm" type="com.ibm.ws.console.appmanagement.form.AppInstallForm"/> 
+   </form-beans>
+
+   <global-forwards>
+      <forward name="applicationEditionApplications"  path="ApplicationEdition.collection.main"/> 
+      <forward name="applicationEditionEditions"      path="ApplicationEdition.editions.main"/>   
+      <forward name="appEdition.edition.install"      path="appEdition.edition.install"/>                               
+   </global-forwards>
+
+   <action-mappings>
+
+      <action path="/com.ibm.ws.console.appmanagement.appedition.forwardCmd" 
+          type="com.ibm.ws.console.core.action.ForwardAction">
+         <forward name="ApplicationEdition.content.main" path="ApplicationEdition.content.main" />
+      </action>      
+
+      <action path="/com.ibm.ws.console.appmanagement.appedition.forwardCmd" 
+   	       type="com.ibm.ws.console.core.action.ForwardAction">
+         <forward name="ApplicationEdition.collection.main" 
+                  path="ApplicationEdition.collection.main"/>         
+         <forward name="ApplicationEdition.editions.main" 
+                  path="ApplicationEdition.editions.main"/>                                    
+      </action>
+
+      <action name="appEditionDeployTaskForm" 
+              path="/appEditionDeployTask"
+              type="com.ibm.ws.console.appmanagement.appedition.appEditionDeployTaskAction">
+         <forward name="this" path="appEdition.edition.install.view" />
+<!--      forward name="success" path="appEdition.edition.install.view" /  -->
+<!--      forward name="error" path="appEdition.edition.intall.view" /     -->
+      </action>
+
+      <action name="com.ibm.ws.console.appEdition.bindingChoices.forwardCmd.do" 
+              path="/com.ibm.ws.console.appEdition.bindingChoices.forwardCmd"
+              type="com.ibm.ws.console.core.action.ForwardAction">
+         <forward name="appEdition.edition.install.view" path="appEdition.edition.install.view" />
+      </action>      
+
+      <action name="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationCollectionForm"
+              path="/applicationEditionApplications"
+              scope="session"
+              type="com.ibm.ws.console.appmanagement.appedition.AppEditionApplicationAction">
+         <forward name="failure" path="/error.jsp"/>
+         <forward name="success" path="ApplicationDeployment.config.view"/>
+         <forward name="applicationEditionApplications" path="ApplicationEdition.collection.main"/>
+         <forward name="manageDeployments" path="ApplicationEdition.deployments.main"/>
+         <forward name="manageEditions" path="ApplicationEdition.editions.main"/>         
+         <forward name="nochange" path="com.ibm.ws.console.appmanagement.appedition.forwardCmd.do?forwardName=ApplicationEdition.collection.main&#38;noChange=true"/>
+      </action>  
+
+      <action name="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionCollectionForm"
+              path="/applicationEditionEditions"
+              scope="session"
+              type="com.ibm.ws.console.appmanagement.appedition.AppEditionEditionAction">
+         <forward name="editapplication" path="ApplicationDeployment.config.view"/>              
+         <forward name="success" path="ApplicationEdition.editions.main"/>
+         <forward name="deleteEdition" path="ApplicationEdition.editions.main"/>
+         <forward name="add" path="ApplicationEdition.editions.main"/>         
+         <forward name="rollout.wizard" path="rollout.wizard"/>
+         <forward name="rollout.sip.wizard" path="rollout.sip.wizard"/>
+         <forward name="nochange" path="com.ibm.ws.console.appmanagement.appedition.forwardCmd.do?forwardName=ApplicationEdition.editions.main&#38;noChange=true"/>
+      </action>   
+
+      <action name="com.ibm.ws.console.appmanagement.appedition.RolloutWizardForm"
+              path="/rolloutWizard"
+              input="rollout.wizard"
+              type="com.ibm.ws.console.appmanagement.appedition.RolloutWizardAction">
+         <forward name="success" path="ApplicationEdition.editions.main"/>
+         <forward name="cancel" path="ApplicationEdition.editions.main"/>
+         <forward name="error" path="rollout.wizard"/>
+      </action>   
+
+   </action-mappings>
+</struts-config>
+
+<!--end-->

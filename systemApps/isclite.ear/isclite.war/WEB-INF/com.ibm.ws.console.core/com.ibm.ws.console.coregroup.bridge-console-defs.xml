@@ -1,0 +1,1514 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2003, 2012 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<tiles-definitions>
+	
+	<!-- CoreGroupBridgeSettings detail panel -->
+    <definition name="CoreGroupBridgeSettings.config.view" 
+				extends="detail.config.view"		
+    			controllerClass="com.ibm.ws.console.coregroup.bridge.settings.CoreGroupBridgeSettingsController">
+    			
+    	<put name="contextType" value="CoreGroupBridgeSettings"/>
+		    	
+        <putList name="list">
+        	<add value="CoreGroupBridgeSettings.detail.title"/>        	
+        	<add value="CoreGroupBridgeSettings.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupBridgeSettings.detail.title" extends="detail.title">
+        <put name="formName" 		    value="com.ibm.ws.console.coregroup.bridge.settings.CoreGroupBridgeSettingsDetailForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" 		    value="CoreGroupBridgeSettings.displayName"/>
+        <put name="includeLink" 	    value="no"/>
+        <put name="instanceDetails"     value="dummyAttribute"/>
+        <put name="instanceDescription" value="CoreGroupBridgeSettings.description"/>
+        <put name="displayName" 		value="CoreGroupBridgeSettings.displayName"/>
+    </definition>
+
+    <definition name="CoreGroupBridgeSettings.tree.view"    	 
+				path="/com.ibm.ws.console.coregroup.bridge/TreeLayout.jsp">
+				
+        <put name="rootName"    value="AccessPointGroup.displayName"/>
+        <put name="rootImage"   value="images/onepix.gif"/>
+    </definition>
+	
+    <definition name="CoreGroupBridgeSettings.detail.tabsLayout" 
+				path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" 			value="coreGroupBridgeSettingsDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" 			value="com.ibm.ws.console.coregroup.bridge.settings.CoreGroupBridgeSettingsDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" 
+            	   link="CoreGroupBridgeSettings.config.tab.view" 
+            	   classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupBridgeSettings.config.tab.view" 
+				extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="CoreGroupBridgeSettings.tree.view"/>
+			<add value="CoreGroupBridgeSettings.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupBridgeSettings.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.CoreGroupBridgeSettingsDetailForm"/>
+        <putList name="list"/>
+    </definition>
+	<!-- CoreGroupBridgeSettings detail panel ends  -->	
+	
+	<!-- AccessPointGroup collection panel starts -->	
+    <definition name="AccessPointGroup.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupController">
+
+	    <put name="contextType" value="AccessPointGroup"/>       		
+        <put name="descTitle" value="AccessPointGroup.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="AccessPointGroup.description"/>
+        <putList name="contentList">
+			<add value="AccessPointGroup.paging.extend"/>
+			<add value="AccessPointGroup.quicksearch.extend"/>
+			<add value="AccessPointGroup.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="accessPointGroupCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formAction" value="accessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <putList name="searchList">
+            <add value="AccessPointGroup.name.displayName:name"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="AccessPointGroup.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formAction" value="accessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+    </definition>
+
+    <definition name="AccessPointGroup.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formAction" value="accessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupCollectionForm"/>
+        <put name="buttons" value="AccessPointGroup.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.AccessPointGroup.forwardCmd.do?forwardName=AccessPointGroup.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/AccessPointGroup/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/AccessPointGroup/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="AccessPointGroup.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+	<!-- AccessPointGroup collection panel ends -->		
+
+	<!-- AccessPointGroup detail panel starts -->		
+    <definition name="AccessPointGroup.config.view" 
+    			extends="detail.config.view">
+	    <put name="contextType" value="AccessPointGroup"/>       			
+        <putList name="list">
+	        <add value="AccessPointGroup.detail.title"/>
+    	    <add value="AccessPointGroup.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="AccessPointGroup.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.AccessPointGroup.forwardCmd.do?forwardName=AccessPointGroup.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="AccessPointGroup.description"/>
+        <put name="displayName" value="AccessPointGroup.displayName"/>
+    </definition>
+
+    <definition name="AccessPointGroup.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="accessPointGroupDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="AccessPointGroup.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="AccessPointGroup.detail.buttons.panel"/>
+	        <add value="AccessPointGroup.config.general.properties"/>
+	        <add value="AccessPointGroup.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="AccessPointGroup.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="accessPointGroupDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="AccessPointGroup.name.displayName:name:yes:Text:AccessPointGroup.name.description:yes:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+			<item  value="TunnelAccessPointGroup.memberCommunicationKey.displayName:memberCommunicationKey:no:Text:TunnelAccessPointGroup.memberCommunicationKey.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+			<item  value="AccessPoint.displayName: :no:Custom:AccessPoint.description:no:yes: : :/com.ibm.ws.console.coregroup.bridge/AccessPoint.jsp" 
+				   link="" 
+		  		   icon="" 
+  	  		       tooltip="" 
+	  		       classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="AccessPointGroup.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm"/>
+        <putList name="list"/>
+    </definition>
+	<!-- AccessPointGroup detail panel ends -->			
+	
+  <!-- New AccessPointGroup wizard starts -->
+  <definition name="AccessPointGroup.wizard.steps" 
+  			  path="/com.ibm.ws.console.coregroup.bridge/StepsLayout.jsp">
+
+    <put name="contextType"         value="AccessPointGroup.wizard.steps"/>
+    <put name="titleKey"            value="AccessPointGroup.create.new.title"/>
+    <put name="descKey"             value="AccessPointGroup.create.new.description"/>
+    <put name="actionHandler"       value=""/>
+    <put name="actionForm"          value=""/>
+    <put name="formType"            value=""/>
+    <put name="reqdTaskSessionKey"  value=""/>
+    <put name="stepArraySessionKey" value="ACCESS_POINT_GROUP_STEPARRAY"/>
+    <put name="disableStepsLink"    value="true"/>
+    <put name="isWizard"            value="yes"/>	        			
+    <putList name="stepsList">    	
+      <item value="AccessPointGroup.new.step1"
+			link="/com.ibm.ws.console.coregroup.bridge/ProvideAccessPointGroupName"    
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="AccessPointGroup.new.step2" 
+			link="/com.ibm.ws.console.coregroup.bridge/LookupCoreGroupAccessPoint"     
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="AccessPointGroup.new.step3" 
+			link="/com.ibm.ws.console.coregroup.bridge/LookupPeerAccessPoint" 	      
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>      
+      <item value="AccessPointGroup.new.step4" 
+			link="/com.ibm.ws.console.coregroup.bridge/ConfirmCreateAccessPointGroup"  
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>      
+    </putList>
+  </definition>
+
+  <definition name="AccessPointGroup.new.step1" extends="AccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="provideAccessPointGroupName"/>
+    <put name="actionForm"    value="ProvideAccessPointGroupNameForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+  </definition>
+
+  <definition name="AccessPointGroup.new.step2" extends="AccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="lookupCoreGroupAccessPoint"/>
+    <put name="actionForm"    value="LookupCoreGroupAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+  </definition>
+  
+  <definition name="AccessPointGroup.new.step3" extends="AccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="lookupPeerAccessPoint"/> 
+    <put name="actionForm"    value="LookupPeerAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+  </definition>
+
+  <definition name="AccessPointGroup.new.step4" extends="AccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="confirmCreateAccessPointGroup"/>
+    <put name="actionForm"    value="ConfirmCreateAccessPointGroupForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+  </definition>    
+  <!-- New AccessPointGroup wizard ends-->
+
+  <!-- New PeerAccessPoint wizard starts -->
+  <definition name="PeerAccessPoint.wizard.steps" 
+  			  path="/com.ibm.ws.console.coregroup.bridge/StepsLayout.jsp">
+
+    <put name="contextType"         value="PeerAccessPoint.wizard.steps"/>
+    <put name="titleKey"            value="PeerAccessPoint.create.new.title"/>
+    <put name="descKey"             value="PeerAccessPoint.create.new.description"/>
+    <put name="actionHandler"       value=""/>
+    <put name="actionForm"          value=""/>
+    <put name="formType"            value=""/>
+    <put name="reqdTaskSessionKey"  value=""/>
+    <put name="stepArraySessionKey" value="PEER_ACCESS_POINT_STEPARRAY"/>
+    <put name="disableStepsLink"    value="true"/>
+    <put name="label"               value="PeerAccessPoint.addressability.displayName"/>
+    <put name="units"               value="endPointRadioButton"/>	
+    <put name="isWizard"            value="yes"/>	
+    <put name="isRequired"          value="no"/>	
+    <put name="property"            value="endPointRadioButton"/>
+    <put name="desc"                value="PeerAccessPoint.description"/>	
+    <put name="bean"                value="PeerAccessPointDetailForm"/>	
+    <put name="readOnly"            value="yes"/>	
+    <put name="size"                value=""/>
+    <put name="formAction"          value=""/>			        			
+    <putList name="stepsList">    	
+      <item value="PeerAccessPoint.new.step1"
+			link="/com.ibm.ws.console.coregroup.bridge/ProvidePeerAccessPoint"    
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="PeerAccessPoint.new.step2" 
+			link="/com.ibm.ws.console.coregroup.bridge/ProvidePeerEndPoint"     
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="PeerAccessPoint.new.step3" 
+			link="/com.ibm.ws.console.coregroup.bridge/ProvidePeerCellLevelAccess"    
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>					
+      <item value="PeerAccessPoint.new.step4" 
+			link="/com.ibm.ws.console.coregroup.bridge/ConfirmCreatePeerAccessPoint"  
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>      
+    </putList>
+  </definition>
+  
+  <definition name="PeerAccessPoint.new.step1" extends="PeerAccessPoint.wizard.steps">
+    <put name="actionHandler" value="providePeerAccessPoint"/>
+    <put name="actionForm"    value="ProvidePeerAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+  </definition>
+
+  <definition name="PeerAccessPoint.new.step2" extends="PeerAccessPoint.wizard.steps">
+    <put name="actionHandler" value="providePeerEndPoint"/>
+    <put name="actionForm"    value="ProvidePeerEndPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+  </definition>
+  
+  <definition name="PeerAccessPoint.new.step3" extends="PeerAccessPoint.wizard.steps">
+    <put name="actionHandler" value="providePeerCellLevelAccess"/>
+    <put name="actionForm"    value="ProvidePeerCellLevelAccessForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+  </definition>
+  
+  <definition name="PeerAccessPoint.new.step4" extends="PeerAccessPoint.wizard.steps">
+    <put name="actionHandler" value="confirmCreatePeerAccessPoint"/>
+    <put name="actionForm"    value="ConfirmCreatePeerAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+  </definition>
+      
+  <!-- New PeerAccessPoint wizard ends-->
+
+    <!--CoreGroup Access Point lookup-collection view begins-->
+    <definition name="CoreGroupAccessPoint.content.main" 
+    			path="/secure/layouts/contentLayout.jsp" 
+    			controllerClass="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointController">
+ 		
+	    <put name="contextType" value="CoreGroupAccessPoint"/>       
+        <put name="descTitle"   value="CoreGroupAccessPoint.displayName"/>
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText"    value="CoreGroupAccessPoint.description"/>
+        
+        <putList name="contentList">
+        	<add value="CoreGroupAccessPoint.lookup.view"/>
+        </putList>
+    </definition>   
+      
+    <definition name="CoreGroupAccessPoint.lookup.view" 
+    			path="/com.ibm.ws.console.coregroup.bridge/LookupAccessPoint.jsp">
+    			
+        <put name="jspPath"       value="/com.ibm.ws.console.coregroup.bridge/LookupCoreGroupAccessPoint.jsp"/>	        			
+        <put name="isWizard"      value="no"/>	        			
+        <put name="actionHandler" value="coreGroupAccessPointCollection.do"/>
+        <put name="actionForm"    value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+        <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+    </definition>
+   <!--CoreGroup Access Point lookup/collection panel ends-->
+
+   <!-- CoreGroup Access Point Detail view begins -->
+    <definition name="CoreGroupAccessPoint.config.view" extends="detail.config.view">
+	    <put name="contextType"   value="CoreGroupAccessPoint"/>
+        <putList name="list">
+	        <add value="CoreGroupAccessPoint.detail.title"/>
+		    <add value="CoreGroupAccessPoint.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="CoreGroupAccessPoint.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.forwardCmd.do?forwardName=CoreGroupAccessPoint.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="CoreGroupAccessPoint.description"/>
+        <put name="displayName" value="CoreGroupAccessPoint.displayName"/>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="coreGroupAccessPointDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="CoreGroupAccessPoint.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+	        <add value="CoreGroupAccessPoint.detail.buttons.panel"/>
+		    <add value="CoreGroupAccessPoint.config.general.properties"/>
+			<add value="CoreGroupAccessPoint.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="CoreGroupAccessPoint.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="coreGroupAccessPointDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="CoreGroupAccessPoint.name.displayName:name:yes:Text:CoreGroupAccessPoint.name.description:no:yes" 
+				   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		    <item value="CoreGroupAccessPoint.coreGroup.displayName:coreGroup:yes:DynamicSelect:CoreGroupAccessPoint.coreGroup.description:no:yes:coreGroupValues:coreGroupDesc: :false" 
+				  link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		</putList>
+    </definition>
+
+    <definition name="CoreGroupAccessPoint.config.additional.properties" extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm"/>
+        <putList name="list"/>
+    </definition>
+   <!-- CoreGroup Access Point Detail view ends -->
+
+    <!--Peer Access Point lookup-collection view begins-->
+    <definition name="PeerAccessPointPicker.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointPickerController">
+
+	    <put name="contextType" value="PeerAccessPointPicker"/>       
+        <put name="descTitle" value="PeerAccessPoint.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText"  value="PeerAccessPoint.description"/>
+        <putList name="contentList">
+			<add value="PeerAccessPointPicker.lookup.view"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPointPicker.lookup.view" 
+    			path="/com.ibm.ws.console.coregroup.bridge/LookupAccessPoint.jsp">
+    			
+        <put name="jspPath"       value="/com.ibm.ws.console.coregroup.bridge/LookupPeerAccessPoint.jsp"/>	        			
+        <put name="isWizard"      value="no"/>	        			        
+        <put name="actionHandler" value="peerAccessPointPicker.do"/>
+        <put name="actionForm"    value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+        <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.wizard.AccessPointGroupForm"/>
+    </definition>
+    <!--Peer Access Point lookup-collection view ends-->
+	
+	<!-- PeerAccessPoint collection panel starts -->	
+    <definition name="PeerAccessPoint.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointController">
+
+	    <put name="contextType" value="PeerAccessPoint"/>       		
+        <put name="descTitle" value="PeerAccessPoint.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="PeerAccessPoint.description"/>
+        <putList name="contentList">
+			<add value="PeerAccessPoint.paging.extend"/>
+			<add value="PeerAccessPoint.quicksearch.extend"/>
+			<add value="PeerAccessPoint.collection.table.extends"/>
+        </putList>
+    </definition>
+    
+    <definition name="PeerAccessPoint.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="PeerAccessPoint.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formAction" value="peerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+    </definition>
+    
+    <definition name="PeerAccessPoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="PeerAccessPoint.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.PeerAccessPoint.forwardCmd.do?forwardName=PeerAccessPoint.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="PeerAccessPoint.description"/>
+        <put name="displayName" value="PeerAccessPoint.displayName"/>
+    </definition>
+
+    <definition name="PeerAccessPoint.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="peerAccessPointCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formAction" value="peerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <putList name="searchList">
+            <add value="PeerAccessPoint.name.displayName:name"/>
+            <add value="PeerAccessPoint.cell.displayName:cell"/>
+            <add value="PeerAccessPoint.coreGroup.displayName:coreGroup"/>
+            <add value="PeerAccessPoint.coreGroupAccessPoint.displayName:coreGroupAccessPoint"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPoint.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formAction" value="peerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointCollectionForm"/>
+        <put name="buttons" value="PeerAccessPoint.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.PeerAccessPoint.forwardCmd.do?forwardName=PeerAccessPoint.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/PeerAccessPoint/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/PeerAccessPoint/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPoint.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="PeerAccessPoint.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+	<!-- PeerAccessPoint collection panel ends -->
+	
+	<!--PeerAccessPoint Detail View panel begins -->
+    <definition name="PeerAccessPoint.config.view" extends="detail.config.view">
+		<put name="contextType" value="PeerAccessPoint"/>       
+		<putList name="list">
+			<add value="PeerAccessPoint.detail.title"/>
+	        <add value="PeerAccessPoint.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="PeerAccessPoint.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.forwardCmd.do?forwardName=PeerAccessPoint.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="PeerAccessPoint.description"/>
+        <put name="displayName" value="PeerAccessPoint.displayName"/>
+    </definition>
+
+    <definition name="PeerAccessPoint.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="peerAccessPointDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="PeerAccessPoint.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPoint.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        <add value="PeerAccessPoint.detail.buttons.panel"/>
+        <add value="PeerAccessPoint.config.general.properties"/>
+        <add value="PeerAccessPoint.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerAccessPoint.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="PeerAccessPoint.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+
+    <definition name="PeerAccessPoint.config.general.properties" extends="detail.config.general.generic.properties">
+        <put name="formAction" value="peerAccessPointDetail.do"/>
+        <put name="propertyLabel" value="PeerAccessPoint.displayName"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="customJspName" value="/com.ibm.ws.console.coregroup.bridge/traceCustom.jsp"/>
+        <putList name="attributeList">
+        	<item  value="PeerAccessPoint.name.displayName:name:yes:Text:PeerAccessPoint.name.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="PeerAccessPoint.cell.displayName:cell:yes:Text:PeerAccessPoint.cell.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="PeerAccessPoint.coreGroup.displayName:coreGroup:yes:Text:PeerAccessPoint.coreGroup.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="PeerAccessPoint.coreGroupAccessPoint.displayName:coreGroupAccessPoint:yes:Text:PeerAccessPoint.coreGroupAccessPoint.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="PeerAccessPoint.proxyPeerAccessPoint.displayName:proxyPeerAccessPointRef:no:DynamicSelect:PeerAccessPoint.proxyPeerAccessPointRef.description:no:yes:proxyPeerVal:proxyPeerDesc" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        	<item value="PeerAccessPoint.addressability.displayName:endPointRadioButton:no:Custom:PeerAccessPoint.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+       	</putList>
+    </definition>
+        
+    <definition name="PeerAccessPoint.config.additional.properties" extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.PeerAccessPointDetailForm"/>
+        <putList name="list"/>
+    </definition>
+	<!--PeerAccessPoint Detail View panel ends -->
+	
+    <!-- EndPoint Collection Panel starts here -->
+  
+    <definition name="PeerEndPoint.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointController">
+        <put name="contextType" value="PeerEndPoint"/>     
+        <put name="descTitle" value="PeerAccessPoint.peerEndPoints.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="EndPoint.description"/>
+        <putList name="contentList">
+        <add value="EndPoint.paging.extend"/>
+        <add value="EndPoint.quicksearch.extend"/>
+        <add value="EndPoint.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="EndPoint.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="peerEndPointCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formAction" value="peerEndPointCollection.do"/> 
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+	    <putList name="searchList">
+            <add value="EndPoint.host.displayName:host"/>
+            <add value="EndPoint.port.displayName:port"/>
+        </putList>
+    </definition>
+
+    <definition name="EndPoint.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="PeerAccessPoint.peerEndPoints.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formAction" value="peerEndPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+    </definition>
+
+    <definition name="EndPoint.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formAction" value="peerEndPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointCollectionForm"/>
+        <put name="buttons" value="EndPoint.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.forwardCmd.do?forwardName=PeerEndPoint.content.main"/>
+	    <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/EndPoint/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            	  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/EndPoint/Preferences#retainSearchCriteria:32" 
+            	  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+            	  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="EndPoint.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="EndPoint.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+
+<!-- EndPoint Collection Panel ends here -->
+
+<!-- EndPoint Detail Panel starts here -->
+    <definition name="PeerEndPoint.config.view" extends="detail.config.view">
+        <put name="contextType" value="PeerEndPoint"/> 
+        <putList name="list">
+		  <add value="PeerEndPoint.detail.title"/>
+		  <add value="PeerEndPoint.detail.tabsLayout"/>
+		</putList>
+    </definition>
+
+    <definition name="PeerEndPoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="PeerAccessPoint.peerEndPoints.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.forwardCmd.do?forwardName=PeerEndPoint.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="host"/>
+        <put name="instanceDescription" value="EndPoint.description"/>
+        <put name="displayName" value="EndPoint.displayName"/>
+    </definition>
+
+    <definition name="PeerEndPoint.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="peerEndPointDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointDetailForm"/>
+        <putList name="tabList">
+	        <item  value="tab.configuration" link="PeerEndPoint.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerEndPoint.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+	        <add value="PeerEndPoint.detail.buttons.panel"/>
+		    <add value="PeerEndPoint.config.general.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerEndPoint.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="PeerEndPoint.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+
+    <definition name="PeerEndPoint.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="peerEndPointDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointDetailForm"/>
+        <put name="formFocus" value="host"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="EndPoint.host.displayName:host:yes:Text:EndPoint.host.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="EndPoint.port.displayName:port:yes:Text:EndPoint.port.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+  
+<!-- EndPoint Detail Panel ends here -->
+
+<!-- Bridge Interface collection panel starts here -->
+  <definition name="BridgeInterface.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceController">
+        <put name="contextType" value="BridgeInterface"/>    
+        <put name="descTitle" value="BridgeInterface.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="BridgeInterface.description"/>
+        <putList name="contentList">
+	        <add value="BridgeInterface.paging.extend"/>
+		    <add value="BridgeInterface.quicksearch.extend"/>
+			<add value="BridgeInterface.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="bridgeInterfaceCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formAction" value="bridgeInterfaceCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <putList name="searchList">
+            <add value="BridgeInterface.node.displayName:node"/>
+            <add value="BridgeInterface.server.displayName:server"/>
+            <add value="BridgeInterface.chain.displayName:chain"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="BridgeInterface.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formAction" value="bridgeInterfaceCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+    </definition>
+
+    <definition name="BridgeInterface.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formAction" value="bridgeInterfaceCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceCollectionForm"/>
+        <put name="buttons" value="BridgeInterface.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.forwardCmd.do?forwardName=BridgeInterface.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/BridgeInterface/Preferences#maximumRows:25" 
+            	  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+            	  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/BridgeInterface/Preferences#retainSearchCriteria:32" 
+            	  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+            	  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="BridgeInterface.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+  
+<!-- Bridge Interface collection panel ends -->
+
+
+<!-- Bridge Interface Detail panel begins -->
+
+   <definition name="BridgeInterface.config.view" extends="detail.config.view">
+    	<put name="contextType" value="BridgeInterface"/>
+        <putList name="list">
+        <add value="BridgeInterface.detail.title"/>
+        <add value="BridgeInterface.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="BridgeInterface.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.forwardCmd.do?forwardName=BridgeInterface.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="node"/>
+        <put name="instanceDescription" value="BridgeInterface.description"/>
+        <put name="displayName" value="BridgeInterface.displayName"/>
+    </definition>
+
+    <definition name="BridgeInterface.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="bridgeInterfaceDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="BridgeInterface.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+        
+     </definition>
+
+    <definition name="BridgeInterface.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+			<add value="BridgeInterface.detail.buttons.panel"/>
+	        <add value="BridgeInterface.config.general.properties"/>
+		    <add value="BridgeInterface.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="BridgeInterface.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+
+    <definition name="BridgeInterface.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="bridgeInterfaceDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceDetailForm"/>
+        <put name="formFocus" value="node"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+        	<item value="BridgeInterface.displayName:nodeServerChain:yes:DynamicSelect:BridgeInterface.description:no:yes:bridgeInterfaceValues:bridgeInterfaceDesc: :false" 
+				  link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="BridgeInterface.config.additional.properties" extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.bridgeinterface.BridgeInterfaceDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    
+ <!-- Bridge Interface detail panel ends -->
+ 
+ <!-- TunnelAccessPointGroup collection panel starts -->	
+    <definition name="TunnelAccessPointGroup.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupController">
+
+	    <put name="contextType" value="TunnelAccessPointGroup"/>       		
+        <put name="descTitle" value="TunnelAccessPointGroup.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="TunnelAccessPointGroup.description"/>
+        <putList name="contentList">
+			<add value="TunnelAccessPointGroup.paging.extend"/>
+			<add value="TunnelAccessPointGroup.quicksearch.extend"/>
+			<add value="TunnelAccessPointGroup.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="tunnelAccessPointGroupCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formAction" value="tunnelAccessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <putList name="searchList">
+            <add value="TunnelAccessPointGroup.name.displayName:name"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="TunnelAccessPointGroup.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formAction" value="tunnelAccessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formAction" value="tunnelAccessPointGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupCollectionForm"/>
+        <put name="buttons" value="TunnelAccessPointGroup.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.TunnelAccessPointGroup.forwardCmd.do?forwardName=TunnelAccessPointGroup.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/TunnelAccessPointGroup/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/TunnelAccessPointGroup/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelAccessPointGroup.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+  <!-- TunnelAccessPointGroup collection panel ends -->		
+
+  <!-- TunnelAccessPointGroup detail panel starts -->		
+    <definition name="TunnelAccessPointGroup.config.view" extends="detail.config.view">
+	    <put name="contextType" value="TunnelAccessPointGroup"/>       			
+        <putList name="list">
+	        <add value="TunnelAccessPointGroup.detail.title"/>
+    	    <add value="TunnelAccessPointGroup.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="TunnelAccessPointGroup.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.TunnelAccessPointGroup.forwardCmd.do?forwardName=TunnelAccessPointGroup.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="TunnelAccessPointGroup.description"/>
+        <put name="displayName" value="TunnelAccessPointGroup.displayName"/>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="tunnelAccessPointGroupDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="TunnelAccessPointGroup.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="TunnelAccessPointGroup.detail.buttons.panel"/>
+	        <add value="TunnelAccessPointGroup.config.general.properties"/>
+	        <add value="TunnelAccessPointGroup.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelAccessPointGroup.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="tunnelAccessPointGroupDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="TunnelAccessPointGroup.name.displayName:name:yes:Text:TunnelAccessPointGroup.name.description:yes:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		     <item  value="TunnelAccessPointGroup.memberCommunicationKey.displayName:memberCommunicationKey:no:Text:TunnelAccessPointGroup.memberCommunicationKey.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+			<item  value="AccessPoint.displayName: :no:Custom:AccessPoint.description:no:yes: : :/com.ibm.ws.console.coregroup.bridge/TunnelAccessPoint.jsp" 
+				   link="" 
+		  		   icon="" 
+  	  		       tooltip="" 
+	  		       classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelAccessPointGroup.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.TunnelAccessPointGroupDetailForm"/>
+        <putList name="list"/>
+    </definition>
+  <!-- TunnelAccessPointGroup detail panel ends -->
+	
+  <!-- New TunelAccessPointGroup wizard starts -->
+    <definition name="TunnelAccessPointGroup.wizard.steps" 
+  			  path="/com.ibm.ws.console.coregroup.bridge/StepsLayout.jsp">
+
+    <put name="contextType"         value="TunnelAccessPointGroup.wizard.steps"/>
+    <put name="titleKey"            value="TunnelAccessPointGroup.create.new.title"/>
+    <put name="descKey"             value="TunnelAccessPointGroup.create.new.description"/>
+    <put name="actionHandler"       value=""/>
+    <put name="actionForm"          value=""/>
+    <put name="formType"            value=""/>
+    <put name="reqdTaskSessionKey"  value=""/>
+    <put name="stepArraySessionKey" value="TUNNEL_ACCESS_POINT_GROUP_STEPARRAY"/>
+    <put name="disableStepsLink"    value="true"/>
+    <put name="isWizard"            value="yes"/>	        			
+    <putList name="stepsList">    	
+      <item value="TunnelAccessPointGroup.new.step1"
+			link="/com.ibm.ws.console.coregroup.bridge/ProvideTunnelAccessPointGroupName"    
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="TunnelAccessPointGroup.new.step2" 
+			link="/com.ibm.ws.console.coregroup.bridge/LookupTunnelCoreGroupAccessPoint"     
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+      <item value="TunnelAccessPointGroup.new.step3" 
+			link="/com.ibm.ws.console.coregroup.bridge/LookupTunnelPeerAccessPoint" 	      
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>      
+      <item value="TunnelAccessPointGroup.new.step4" 
+			link="/com.ibm.ws.console.coregroup.bridge/ConfirmCreateTunnelAccessPointGroup"  
+			classtype="com.ibm.ws.console.core.item.AppInstallItem"/>      
+    </putList>
+   </definition>
+
+  <definition name="TunnelAccessPointGroup.new.step1" extends="TunnelAccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="provideTunnelAccessPointGroupName"/>
+    <put name="actionForm"    value="ProvideTunnelAccessPointGroupNameForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+  </definition>
+
+  <definition name="TunnelAccessPointGroup.new.step2" extends="TunnelAccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="lookupTunnelCoreGroupAccessPoint"/>
+    <put name="actionForm"    value="LookupTunnelCoreGroupAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+  </definition>
+  
+  <definition name="TunnelAccessPointGroup.new.step3" extends="TunnelAccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="lookupTunnelPeerAccessPoint"/> 
+    <put name="actionForm"    value="LookupTunnelPeerAccessPointForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+  </definition>
+
+  <definition name="TunnelAccessPointGroup.new.step4" extends="TunnelAccessPointGroup.wizard.steps">
+    <put name="actionHandler" value="confirmCreateTunnelAccessPointGroup"/>
+    <put name="actionForm"    value="ConfirmCreateTunnelAccessPointGroupForm"/>
+    <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+  </definition>    
+ <!-- New TunnelAccessPointGroup wizard ends-->
+ 
+ <!--Tunnel CoreGroup Access Point lookup-collection view begins-->
+    <definition name="TunnelCoreGroupAccessPoint.content.main" 
+    			path="/secure/layouts/contentLayout.jsp" 
+    			controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelcoregroupaccesspoint.TunnelCoreGroupAccessPointController">
+ 		
+	    <put name="contextType" value="CoreGroupAccessPoint"/>       
+        <put name="descTitle"   value="CoreGroupAccessPoint.displayName"/>
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText"    value="CoreGroupAccessPoint.description"/>
+        
+        <putList name="contentList">
+        	<add value="TunnelCoreGroupAccessPoint.lookup.view"/>
+        </putList>
+    </definition>   
+      
+    <definition name="TunnelCoreGroupAccessPoint.lookup.view" 
+    			path="/com.ibm.ws.console.coregroup.bridge/LookupAccessPoint.jsp">
+    			
+        <put name="jspPath"       value="/com.ibm.ws.console.coregroup.bridge/LookupTunnelCoreGroupAccessPoint.jsp"/>	        			
+        <put name="isWizard"      value="no"/>	        			
+        <put name="actionHandler" value="tunnelCoreGroupAccessPointPicker.do"/>
+        <put name="actionForm"    value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+        <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+    </definition>
+   <!--CoreGroup Access Point lookup/collection panel ends-->
+  
+    <!--Tunnel Peer Access Point lookup-collection view begins-->
+    <definition name="TunnelPeerAccessPointPicker.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointPickerController">
+
+	    <put name="contextType" value="TunnelPeerAccessPointPicker"/>       
+        <put name="descTitle" value="TunnelPeerAccessPoint.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText"  value="TunnelPeerAccessPointPicker.description"/>
+        <putList name="contentList">
+			<add value="TunnelPeerAccessPointPicker.lookup.view"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPointPicker.lookup.view" 
+    			path="/com.ibm.ws.console.coregroup.bridge/LookupAccessPoint.jsp">
+    			
+        <put name="jspPath"       value="/com.ibm.ws.console.coregroup.bridge/LookupTunnelPeerAccessPoint.jsp"/>	        			
+        <put name="isWizard"      value="no"/>	        			        
+        <put name="actionHandler" value="tunnelPeerAccessPointPicker.do"/>
+        <put name="actionForm"    value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+        <put name="formType"      value="com.ibm.ws.console.coregroup.bridge.settings.tunnelaccesspointgroup.wizard.TunnelAccessPointGroupForm"/>
+    </definition>
+    <!--Peer Access Point lookup-collection view ends-->
+
+ <!-- TunnelPeerAccessPoint collection panel starts -->	
+    <definition name="TunnelPeerAccessPoint.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointController">
+
+	    <put name="contextType" value="TunnelPeerAccessPoint"/>       		
+        <put name="descTitle" value="TunnelPeerAccessPoint.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="TunnelPeerAccessPoint.description"/>
+        <putList name="contentList">
+			<add value="TunnelPeerAccessPoint.paging.extend"/>
+			<add value="TunnelPeerAccessPoint.quicksearch.extend"/>
+			<add value="TunnelPeerAccessPoint.collection.table.extends"/>
+        </putList>
+    </definition>
+    
+    <definition name="TunnelPeerAccessPoint.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="TunnelPeerAccessPoint.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formAction" value="tunnelPeerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+    </definition>
+    
+    <definition name="TunnelPeerAccessPoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="TunnelPeerAccessPoint.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.TunnelPeerAccessPoint.forwardCmd.do?forwardName=TunnelPeerAccessPoint.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="TunnelPeerAccessPoint.description"/>
+        <put name="displayName" value="TunnelPeerAccessPoint.displayName"/>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="tunnelPeerAccessPointCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formAction" value="tunnelPeerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <putList name="searchList">
+            <add value="TunnelPeerAccessPoint.name.displayName:name"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formAction" value="tunnelPeerAccessPointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointCollectionForm"/>
+        <put name="buttons" value="TunnelPeerAccessPoint.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.TunnelPeerAccessPoint.forwardCmd.do?forwardName=TunnelPeerAccessPoint.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/TunnelPeerAccessPoint/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/TunnelPeerAccessPoint/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelPeerAccessPoint.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+	<!-- TunnelPeerAccessPoint collection panel ends -->		
+
+	<!-- TunnelPeerAccessPoint detail panel starts -->		
+    <definition name="TunnelPeerAccessPoint.config.view" 
+    			extends="detail.config.view">
+	    <put name="contextType" value="TunnelPeerAccessPoint"/>       			
+        <putList name="list">
+	        <add value="TunnelPeerAccessPoint.detail.title"/>
+    	    <add value="TunnelPeerAccessPoint.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="tunnelPeerAccessPointDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="TunnelPeerAccessPoint.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="TunnelPeerAccessPoint.detail.buttons.panel"/>
+	        <add value="TunnelPeerAccessPoint.config.general.properties"/>
+	        <add value="TunnelPeerAccessPoint.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelPeerAccessPoint.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="tunnelPeerAccessPointDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="TunnelPeerAccessPoint.name.displayName:name:yes:Text:TunnelPeerAccessPoint.name.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		    <item  value="TunnelPeerAccessPoint.cell.displayName:cellName:yes:Text:TunnelPeerAccessPoint.cell.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+  		    <item value="TunnelPeerAccessPoint.retryDelay.displayName:retryDelay:no:Text:TunnelPeerAccessPoint.retryDelay.description:no:yes: : :TunnelPeerAccessPoint.retryDelay.units"
+        		   link=""
+		           icon=""
+		           tooltip=""
+		           classtype="com.ibm.ws.console.core.item.PropertyItem"/>				   				
+			<item value="TunnelPeerAccessPoint.category.sslConfiguration: :no:Custom:TunnelPeerAccessPoint.sslConfig.description:no:yes: : :/com.ibm.ws.console.coregroup.bridge/SSLConfigAlias.jsp" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>		             
+			<item value="TunnelPeerAccessPoint.category.cellLevelAccess: :no:Custom:TunnelPeerAccessPoint.cellLevelAccess.description:no:yes: : :/com.ibm.ws.console.coregroup.bridge/cellLevelAccess.jsp" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>  		            		       
+<!--				   
+			<item value="PeerCoreGroup.quicksearch.extend:PeerCoreGroup.paging.extend:yes:JSP:PeerCoreGroup.collection.table.extends:no:yes: : :/secure/layouts/collectionInDetailForm.jsp" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem" />				   
+-->				   
+        </putList>
+    </definition>
+
+    <definition name="TunnelPeerAccessPoint.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm"/>
+        <putList name="list"/>       
+    </definition>        
+    
+	<!-- TunnelPointAccessPoint detail panel ends -->        
+ 
+  <!-- Tunnel template collection panel starts -->	
+    <definition name="TunnelTemplate.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateController">
+
+	    <put name="contextType" value="TunnelTemplate"/>       		
+        <put name="descTitle" value="TunnelTemplate.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="TunnelTemplate.description"/>
+        <putList name="contentList">
+			<add value="TunnelTemplate.paging.extend"/>
+			<add value="TunnelTemplate.quicksearch.extend"/>
+			<add value="TunnelTemplate.collection.table.extends"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="tunnelTemplateCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formAction" value="tunnelTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <putList name="searchList">
+            <add value="TunnelTemplate.name.displayName:name"/>
+            <add value="TunnelTemplate.tunnelTemplateAccessPointGroup.displayName:tunnelTemplateAccessPointGroup"/>
+            <add value="TunnelTemplate.useSSL.displayName:useSSL"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="TunnelTemplate.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formAction" value="tunnelTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+    </definition>
+
+    <definition name="TunnelTemplate.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formAction" value="tunnelTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateCollectionForm"/>
+        <put name="buttons" value="TunnelTemplate.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplate.forwardCmd.do?forwardName=TunnelTemplate.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/TunnelTemplate/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/TunnelTemplate/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelTemplate.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+	<!-- TunnelTemplate collection panel ends -->		
+
+	<!-- TunnelTemplate detail panel starts -->		
+    <definition name="TunnelTemplate.config.view" 
+    			extends="detail.config.view">
+	    <put name="contextType" value="TunnelTemplate"/>       			
+        <putList name="list">
+	        <add value="TunnelTemplate.detail.title"/>
+    	    <add value="TunnelTemplate.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="TunnelTemplate.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplate.forwardCmd.do?forwardName=TunnelTemplate.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="TunnelTemplate.description"/>
+        <put name="displayName" value="TunnelTemplate.displayName"/>
+    </definition>
+
+    <definition name="TunnelTemplate.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="tunnelTemplateDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="TunnelTemplate.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="TunnelTemplate.detail.buttons.panel"/>
+	        <add value="TunnelTemplate.config.general.properties"/>
+	        <add value="TunnelTemplate.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TunnelTemplate.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="tunnelTemplateDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="TunnelTemplate.name.displayName:name:yes:Text:TunnelTemplate.name.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+			 <item  value="TunnelTemplate.useSSL.displayName:useSSL:no:Checkbox:TunnelTemplate.useSSL.description:no:yes" 
+            		link="" 
+            		icon="" 
+            		tooltip="" 
+            		classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            		<!--
+			<item value="TunnelTemplate.tunnelTemplateAccessPointGroup.displayName:tunnelTemplateAccessPointGroup:yes:DynamicSelect:TunnelTemplate.tunnelTemplateAccessPointGroup.description:no:yes:tunnelTemplateAccessPointGroupVal:tunnelTemplateAccessPointGroupDesc:" 
+					link="" 
+					icon="" 
+					tooltip="" 
+					classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+					-->
+			<item  value="TunnelTemplate.tunnelTemplateAccessPointGroup.displayName: :no:Jsp:TunnelTemplate.tunnelTemplateAccessPointGroup.description:no:yes: : :/com.ibm.ws.console.coregroup.bridge/TunnelTemplateDetail.jsp" 
+				   link="" 
+		  		   icon="" 
+  	  		       tooltip="" 
+	  		       classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="TunnelTemplate.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm"/>
+        <putList name="list"/>
+    </definition>
+	<!-- Tunnel template detail panel ends -->		
+
+<!-- PeerCoreGroup collection panel starts -->	
+    <definition name="PeerCoreGroup.content.main" 
+				path="/secure/layouts/contentLayout.jsp" 
+				controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupController">
+
+	    <put name="contextType" value="PeerCoreGroup"/>       		
+        <put name="descTitle" value="PeerCoreGroup.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="descText" value="PeerCoreGroup.description"/>
+        <putList name="contentList">
+			<add value="PeerCoreGroup.paging.extend"/>
+			<add value="PeerCoreGroup.quicksearch.extend"/>
+			<add value="PeerCoreGroup.collection.table.extends"/>
+        </putList>
+    </definition>
+    
+    <definition name="PeerCoreGroup.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="PeerCoreGroup.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formAction" value="peerCoreGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+    </definition>
+    
+    <definition name="PeerCoreGroup.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.coregroup.bridge"/>
+        <put name="titleKey" value="PeerCoreGroup.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.coregroup.bridge.settings.PeerCoreGroup.forwardCmd.do?forwardName=PeerCoreGroup.content.main&#38;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="coreGroup"/>
+        <put name="instanceDescription" value="PeerCoreGroup.description"/>
+        <put name="displayName" value="PeerCoreGroup.displayName"/>
+    </definition>
+
+    <definition name="PeerCoreGroup.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="peerCoreGroupCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formAction" value="peerCoreGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <putList name="searchList">
+            <add value="PeerCoreGroup.name.displayName:coreGroup"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.collection.table.extends" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formAction" value="peerCoreGroupCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupCollectionForm"/>
+        <put name="buttons" value="PeerCoreGroup.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.coregroup.bridge.settings.PeerCoreGroup.forwardCmd.do?forwardName=PeerCoreGroup.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/PeerCoreGroup/Preferences#maximumRows:25" 
+				  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/TunnelAccessPoint/Preferences#retainSearchCriteria:32" 
+				  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+				  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="PeerCoreGroup.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+	<!-- PeerCoreGroup collection panel ends -->		        
+	
+	<!-- PeerCoreGroup detail panel starts -->		
+    <definition name="PeerCoreGroup.config.view" 
+    			extends="detail.config.view">
+    			controllerClass="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupController">
+	    <put name="contextType" value="PeerCoreGroup"/>       			
+        <putList name="list">
+	        <add value="PeerCoreGroup.detail.title"/>
+    	    <add value="PeerCoreGroup.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="tunnelPeerAccessPointDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm"/>
+        <putList name="tabList">
+            <item  value="tab.configuration" link="PeerCoreGroup.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+        	<add value="PeerCoreGroup.detail.buttons.panel"/>
+	        <add value="PeerCoreGroup.config.general.properties"/>
+	        <add value="PeerCoreGroup.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="PeerCoreGroup.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="peerCoreGroupDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm"/>
+        <put name="formFocus" value="coreGroup"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item  value="PeerCoreGroup.name.displayName:coreGroup:yes:Text:PeerCoreGroup.name.description:no:yes" 
+				   link="" 
+				   icon="" 
+				   tooltip="" 
+				   classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		   	<item value="PeerCoreGroup.endpoints.displayName:endPoints:PCGEndPoints:jsp:PeerCoreGroup.endpoints.description:no:yes: : :/secure/layouts/simpleCollectionLayout.jsp" 
+     			   link="" 
+     			   icon="" 
+     			   tooltip="" 
+     			   classtype="com.ibm.ws.console.core.item.PropertyItem"/>	            		       
+        </putList>
+    </definition>
+
+    <definition name="PeerCoreGroup.config.additional.properties" 
+				extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm"/>
+        <putList name="list"/>       
+    </definition>        
+    
+	<!-- TunnelPointAccessPoint detail panel ends -->  
+</tiles-definitions>

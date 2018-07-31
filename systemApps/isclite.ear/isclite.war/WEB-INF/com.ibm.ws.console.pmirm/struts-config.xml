@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    <form-beans>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRequestMetricsCollectionForm"   type="com.ibm.ws.console.pmirm.PMIRequestMetricsCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRequestMetricsDetailForm"       type="com.ibm.ws.console.pmirm.PMIRequestMetricsDetailForm"/>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRMFilterCollectionForm"         type="com.ibm.ws.console.pmirm.PMIRMFilterCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRMFilterDetailForm"             type="com.ibm.ws.console.pmirm.PMIRMFilterDetailForm"/>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRMFilterValueCollectionForm"    type="com.ibm.ws.console.pmirm.PMIRMFilterValueCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.pmirm.PMIRMFilterValueDetailForm"        type="com.ibm.ws.console.pmirm.PMIRMFilterValueDetailForm"/>
+    </form-beans>
+    
+    <global-forwards/>
+    
+    <action-mappings>
+        <action path="/com.ibm.ws.console.pmirm.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+           <forward name="PMIRequestMetrics.content.main" path="PMIRequestMetrics.content.main"/>
+           <forward name="PMIRMFilter.content.main" path="PMIRMFilter.content.main"/>
+           <forward name="PMIRMFilterValue.content.main" path="PMIRMFilterValue.content.main"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRequestMetricsCollectionForm"
+            path="/pMIRequestMetricsCollection" type="com.ibm.ws.console.pmirm.PMIRequestMetricsCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="PMIRequestMetrics.config.view"/>
+            <forward name="pMIRequestMetricsCollection" path="PMIRequestMetrics.content.main"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRequestMetricsDetailForm"
+            path="/pMIRequestMetricsDetail" type="com.ibm.ws.console.pmirm.PMIRequestMetricsDetailAction" input="PMIRequestMetrics.config.view">
+            <forward name="error" path="PMIRequestMetrics.config.view"/>
+            <forward name="success" path="/secure/content.jsp"/>
+        </action>        
+        
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRMFilterCollectionForm"
+            path="/pMIRMFilterCollection" type="com.ibm.ws.console.pmirm.PMIRMFilterCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="PMIRMFilter.config.view"/>
+            <forward name="pMIRMFilterCollection" path="PMIRMFilter.content.main"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRMFilterDetailForm"
+            path="/pMIRMFilterDetail" type="com.ibm.ws.console.pmirm.PMIRMFilterDetailAction" input="PMIRMFilter.config.view">
+            <forward name="error" path="PMIRMFilter.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.pmirm.forwardCmd.do?forwardName=PMIRMFilter.content.main"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRMFilterValueCollectionForm"
+            path="/pMIRMFilterValueCollection" type="com.ibm.ws.console.pmirm.PMIRMFilterValueCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="PMIRMFilterValue.config.view"/>
+            <forward name="pMIRMFilterValueCollection" path="PMIRMFilterValue.content.main"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.pmirm.PMIRMFilterValueDetailForm"
+            path="/pMIRMFilterValueDetail" type="com.ibm.ws.console.pmirm.PMIRMFilterValueDetailAction" input="PMIRMFilterValue.config.view">
+            <forward name="error" path="PMIRMFilterValue.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.pmirm.forwardCmd.do?forwardName=PMIRMFilterValue.content.main"/>
+        </action>
+    </action-mappings>
+      <plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+                <set-property property="pathnames"
+                                  value="/WEB-INF/com.ibm.ws.console.pmirm/validation.xml"/>
+    </plug-in>
+</struts-config>

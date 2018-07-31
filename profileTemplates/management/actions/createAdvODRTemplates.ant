@@ -1,0 +1,34 @@
+<project name="createAdvODRTemplatesProject" default="setODRServerType" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+
+    <target name="createAdvODRTemplates" >
+        <wsadmin conntype="none"
+                  failonerror="true"
+                  lang="jython"
+                  script="${WAS_HOME}/profileTemplates/xd_augment/actions/createAdvODRTemplates.py"
+                  tracefile="${profilePath}/logs/createAdvODRTemplates.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/xdtemp/wsadmin"
+                  >
+        </wsadmin>
+    </target>
+
+    <target name="setODRServerType"
+            depends="createAdvODRTemplates"
+            description="sets ODR Template server types">
+
+         <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/serverindex.xml">
+		<replacetoken>PROXY_SERVER</replacetoken>
+		<replacevalue>ONDEMAND_ROUTER</replacevalue>
+         </replace>
+    </target>
+
+</project>

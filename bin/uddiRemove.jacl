@@ -1,0 +1,452 @@
+#
+#===============================================================================
+# @start_source_copyright@
+# @end_source_copyright@
+#===============================================================================
+#
+# This JACL script removes the UDDI application for supplied node and server
+# and optionally removes the default Cloudscape datasource named
+# "UDDI.Default.Datasource".
+#
+#-------------------------------------------------------------------------------
+# Path, Component, Release:  UDDI/ws/code/uddi.install/src/com/ibm/uddi/install/uddiRemove.jacl, UDDI, WAS855.UDDI, cf131750.05
+# Version:                   1.2
+# Last-changed:              05/07/28 03:56:31
+#-------------------------------------------------------------------------------
+#
+#===============================================================================
+#
+# USAGE:
+#
+#   wsadmin [-conntype none] -f uddiDeploy.jacl <clusterName> 
+#   or
+#   wsadmin [-conntype none] -f uddiRemove.jacl <nodeName> <serverName> [default]
+#
+# Where:
+#
+#   '-conntype none' is optional, but is required if the server is not running.
+#   'default' is optional, but if supplied will remove the default Cloudscape
+#      UDDI data source. However this keyword is not valid in a
+#      WebSphere Application Server Network Deployment configuration.
+#
+# Also:
+#
+#   nodeName   = name of node
+#   serverName = name of server
+#   clusterName = name of cluster
+#
+# Note that either nodeName and serverName are required, or clusterName.
+#
+#===============================================================================
+#
+# PRE-CONDITIONS:
+#
+# 1. The specified node must already exist.
+# 2. The specified server must already exist on the specified node.
+# 3. the specified cluster must already exist.
+#
+#===============================================================================
+
+
+#
+#--- Constants
+#
+set DEFAULT_DS_NAME "UDDI.Default.Datasource"
+
+
+#
+#--- NLS Enablement - Get hold of the current locale and resource bundle
+#
+set thisLocale [java::call java.util.Locale getDefault]
+set bundle     [java::call java.util.ResourceBundle getBundle com.ibm.uddi.install.SetupUDDIMessages $thisLocale]
+
+
+#
+#--- getNLSText - Given a key looks up the translated text from the resource bundle
+#
+proc getNLSText { key } {
+
+  global bundle
+  return [$bundle getString $key]
+}
+
+
+#
+#--- Check that this script has been invoked correctly. If it hasn't, puts the
+#--- correct usage and then exit 
+#
+set errorFlag 0
+
+if {[llength $argv] < 1 || [llength $argv] > 3} {
+    puts ""
+    set tIncorrectNumArgs [getNLSText ErrMsgRemoveIncorrectNumArgs]
+    puts "$tIncorrectNumArgs"
+    set errorFlag 1
+}
+
+if {[llength $argv] == 3 & [string compare [lindex $argv 2] "default"] != 0} {
+    puts ""
+    set tIncorrectArgs [getNLSText ErrMsgRemoveIncorrectArgs]
+    puts "$tIncorrectArgs"
+    set errorFlag 1
+}
+
+
+#
+#--- Extract the arguments from the argument list. 
+#
+if {[llength $argv] > 0} {
+    set nodeName   [lindex $argv 0]
+    set clusterName [lindex $argv 0] 
+} 
+ 
+if {[llength $argv] > 1} {
+    set serverName [lindex $argv 1]
+}
+
+set defaultds 0
+set nd 0
+set cluster 0
+
+#
+#--- Check in which WebSphere configuration this script is being run
+#
+set cell [$AdminConfig list Cell]
+set cellType [$AdminConfig show $cell cellType]
+
+if {$cellType == "{cellType DISTRIBUTED}"} {
+    set nd 1
+}
+
+if {[llength $argv] == 1} {
+
+  set cluster 1
+}
+    
+if {[llength $argv] > 2} {
+
+    set temp [string tolower [lindex $argv 2]]
+
+    if {[string compare $temp "default"] == 0} {
+
+        set defaultds 1
+    }
+}
+
+if {$nd == 1} {
+    
+    if {$defaultds == 1} {
+      puts ""
+      set tNoDefaultInDistributed [getNLSText ErrMsgRemoveNoDefaultInDistributed]
+      puts "$tNoDefaultInDistributed"
+
+      set errorFlag 1
+    }
+    
+} else {
+
+    if {$cluster == 1} {
+      puts ""
+      set tNoClusterInBase [getNLSText ErrMsgRemoveNoClusterInBase]
+      puts "$tNoClusterInBase"
+
+      set errorFlag 1
+    }
+}
+
+
+if {$errorFlag == 1} {
+
+    puts ""
+    set tUsageSetupUddi1 [getNLSText ErrMsgRemoveUsageRemoveUddi1]
+    puts "$tUsageSetupUddi1"
+
+    puts ""
+
+    if {$nd == 0} {
+        puts {CWUDD7002E: wsadmin [-conntype none] -f uddiRemove.jacl nodeName serverName [default]}
+    } else {
+       puts {CWUDD7002E: wsadmin [-conntype none] -f uddiRemove.jacl nodeName serverName}
+       set tUsageSetupUddi21 [getNLSText ErrMsgRemoveUsageRemoveUddi21]
+       puts "$tUsageSetupUddi21"
+       puts {CWUDD7002E: wsadmin [-conntype none] -f uddiRemove.jacl clusterName}
+    }
+
+    puts ""
+    set tUsageSetupUddi2 [getNLSText ErrMsgRemoveUsageRemoveUddi2]
+    puts "$tUsageSetupUddi2"
+
+    puts ""
+    set tUsageSetupUddi3 [getNLSText ErrMsgRemoveUsageRemoveUddi3]
+    puts "$tUsageSetupUddi3"
+
+    puts ""
+    set tUsageSetupUddi4 [getNLSText ErrMsgRemoveUsageRemoveUddi4]
+    puts "$tUsageSetupUddi4"
+
+    puts ""
+    set tUsageSetupUddi5 [getNLSText ErrMsgRemoveUsageRemoveUddi5]
+    puts "$tUsageSetupUddi5"
+    
+    set tUsageSetupUddi6 [getNLSText ErrMsgRemoveUsageRemoveUddi6]
+    puts "$tUsageSetupUddi6"
+    
+    if {$nd == 1} {
+        set tUsageSetupUddi61 [getNLSText ErrMsgRemoveUsageRemoveUddi61]
+        puts "$tUsageSetupUddi61"
+    }
+
+    puts ""
+    if {$nd == 0} {
+        set tUsageSetupUddi7 [getNLSText ErrMsgRemoveUsageRemoveUddi7]
+        puts "$tUsageSetupUddi7"
+    } else {
+        set tUsageSetupUddi71 [getNLSText ErrMsgRemoveUsageRemoveUddi71]
+        puts "$tUsageSetupUddi71"
+    }
+
+    if {$nd == 0} {
+        puts ""
+        set tUsageSetupUddi8 [getNLSText ErrMsgRemoveUsageRemoveUddi8]
+        puts "$tUsageSetupUddi8"
+    }
+
+    puts ""
+
+    exit 
+}
+
+
+#
+#--- Announce the node and server, or cluster names.
+#
+if {$cluster == 1} {
+    puts "--- Cluster : $clusterName"
+} else {
+    puts "--- Node   : $nodeName"
+    puts "--- Server : $serverName"
+}
+
+puts ""
+
+
+#
+#--- Discard unsaved configuration changes so that we can work in a clean
+#--- environment. Any scripts called prior to this one should save their
+#--- configuration changes before exiting.
+#
+if [catch {$AdminConfig reset} reason] {
+
+    set tDiscardChanges [getNLSText MsgRemoveDiscardChanges]
+    puts "$tDiscardChanges Exc=$reason"
+    puts ""
+}
+
+
+#
+#--- Get the server's ID or cluster ID.
+#
+if {$cluster == 0} {
+
+    if [catch {set serverId [$AdminConfig getid /Node:$nodeName/Server:$serverName/]} reason] {
+    
+    set tServerId [getNLSText ErrMsgRemoveServerId]
+        puts "$tServerId Exc=$reason"
+    
+        exit 
+    }
+    
+    if {[string length $serverId] == 0} {
+    
+    set tServerId2 [getNLSText ErrMsgRemoveServerId2]
+        puts "$tServerId2"
+    
+        exit 
+    }
+} else {
+    if [catch {set clusterId [$AdminConfig getid /ServerCluster:$clusterName/]} reason] {
+    
+        set tClusterId [getNLSText ErrMsgRemoveClusterId]
+        puts "$tClusterId Exc=$reason"
+    
+        exit 
+    }
+    
+    if {[string length $clusterId] == 0} {
+    
+        set tClusterId2 [getNLSText ErrMsgRemoveClusterId2]
+        puts "$tClusterId2"
+    
+        exit 
+    }
+}
+
+
+#
+#--- Remove the UDDI Application
+#
+puts ""
+set tAppRemove [getNLSText MsgRemoveAppRemove]
+puts "$tAppRemove"
+puts ""
+
+
+#
+#--- Obtain the appmanager handle for stopping the app (not for clusters)
+#
+set appmgrAvailable 0
+
+if {$cluster == 0} {
+    if {[catch {set appmgr [$AdminControl queryNames type=ApplicationManager,process=$serverName,node=$nodeName,*]} reason]} {
+       
+      set tNoAppMgr [getNLSText MsgRemoveNoAppMgr]
+      puts "$tNoAppMgr Exc=$reason"
+    
+    } else {
+      set appmgrAvailable 1
+    
+      set tAppMgr [getNLSText MsgRemoveAppMgr]
+      puts "$tAppMgr"
+    }
+    puts ""
+}
+
+if {$cluster == 1} {
+    set deployAppName "UDDIRegistry.$clusterName"
+} else {
+    set deployAppName "UDDIRegistry.$nodeName.$serverName"
+}
+
+
+#
+#--- Stop & remove application with a name of UDDIRegistry."node"."server" or UDDIRegistry."cluster"
+#
+if { !$appmgrAvailable || [llength $appmgr] == 0 } {
+
+    set tAppMgrNotRunning [getNLSText MsgRemoveAppMgrNotRunning]
+    puts "$tAppMgrNotRunning"
+    puts ""
+}
+
+set removed 0
+
+foreach app [$AdminApp list] {
+
+    if {[string compare $deployAppName $app] == 0} {
+
+        set removed 1
+        
+        if { $appmgrAvailable && [llength $appmgr] != 0 } {
+
+            set tStoppingApp [getNLSText MsgRemoveStoppingApp]
+            puts "$tStoppingApp appname=$app"
+
+            if {[catch {$AdminControl invoke $appmgr stopApplication $app} reason]} {
+
+                set tAppStopExc [getNLSText MsgRemoveAppStopExc]
+                puts "$tAppStopExc appname=$app, Exc=$reason"
+
+            } else {
+
+                set tAppStopped [getNLSText MsgRemoveAppStopped]
+                puts "$tAppStopped appname=$app"
+            }
+
+            puts ""
+        }
+
+        set tRemoveApp [getNLSText MsgRemoveRemovingApp]
+        puts "$tRemoveApp appname=$app"
+        puts ""
+
+        if {[catch {$AdminApp uninstall $app} reason]} {
+
+            set tAppRemoveExc [getNLSText ErrMsgRemoveAppRemoveExc]
+            puts "$tAppRemoveExc appname=$app Exc=$reason"
+
+            exit 
+
+        } else {
+
+            set tAppRemoved [getNLSText MsgRemoveAppRemoved]
+            puts "$tAppRemoved appname=$app"
+        }
+        puts ""
+    }
+}
+
+if {$removed == 0} {
+    set tAppNotFound [getNLSText MsgRemoveAppNotFound]
+    puts "$tAppNotFound appname=$deployAppName"
+}
+
+#
+#--- Requested to remove the UDDI Cloudscape DS ?
+#
+if {$defaultds == 1} {
+
+    set tAttemptRemoveDS [getNLSText MsgRemoveAttemptRemoveDS]
+    puts "$tAttemptRemoveDS"
+
+    #
+    #--- Delete any previous datasource for the Cloudscape JDBC Provider.
+    #
+    set datasourceId [ $AdminConfig getid /DataSource:$DEFAULT_DS_NAME/ ]
+    if {[string length $datasourceId] != 0} {
+
+        if {[catch {$AdminConfig remove $datasourceId} reason]} {
+
+            set tRemoveDS [getNLSText ErrMsgRemoveRemoveDS]
+            puts "$tRemoveDS Exc=$reason"
+
+            exit 
+        }
+
+        set tRemoveDSGood [getNLSText MsgRemoveRemoveDSGood]
+        puts "$tRemoveDSGood name=$DEFAULT_DS_NAME"
+
+    } else {
+
+        set tRemoveDSGood [getNLSText MsgRemoveRemoveDSNone]
+        puts "$tRemoveDSGood name=$DEFAULT_DS_NAME"
+    }
+}
+
+
+#
+#--- Save the configuration changes.
+#
+puts ""
+set tAttemptSave [getNLSText MsgRemoveAttemptSave1]
+puts "$tAttemptSave"
+
+if {[catch {$AdminConfig save} reason]} {
+
+    set tSaveErr [getNLSText ErrMsgRemoveSaveErr1]
+    puts "$tSaveErr Exc=$reason"
+
+    exit
+
+} else {
+
+    set tSaveGood [getNLSText MsgRemoveSaveGood1]
+    puts "$tSaveGood"
+}
+
+puts ""
+
+
+#
+#--- Announce that we've finished, and exit.
+#
+if {$defaultds == 1} {
+
+    set tAllDone [getNLSText MsgRemoveAllDone]
+    puts "$tAllDone"
+} else {
+
+    set tAllDone [getNLSText MsgRemoveAllDone2]
+    puts "$tAllDone"
+}
+
+exit 

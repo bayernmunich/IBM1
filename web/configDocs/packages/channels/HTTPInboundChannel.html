@@ -1,0 +1,581 @@
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>HTTPInboundChannel</title>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h2>HTTPInboundChannel</h2>
+
+<p>This type is a class for model objects.</p>
+
+<p>This class handles inbound HTTP requests from a remote client. It handles parsing the request and using discrimination to find an application channel above that will handle the request and send a response.</p>
+Package:&nbsp;<A HREF="../channels/classes-frame.html" target="packageFrame">channels</A><BR>
+Supertype:&nbsp;<A HREF="../channelservice/InboundTransportChannel.html">InboundTransportChannel</A><BR>
+<BR>
+Classifier ID:&nbsp;&nbsp;-1
+<BR>
+Instance class name:&nbsp;&nbsp;* Unspecified *
+<BR>
+Instance class:&nbsp;&nbsp;* Unspecified *
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attributes Summary</B></FONT></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maximumPersistentRequests">maximumPersistentRequests</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Maximum requests allowed on a single HTTP connection.
+
+-1 means one request per connection only
+0 means unlimited requests per connection
+X means X requests per connection
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#keepAlive">keepAlive</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+When sending an outgoing HTTP message, this controls whether or not to default to a persistent connection (Keep-Alive) as opposed to a connection that will close after one request/response exchange.
+
+Note that if the maximum request persistence parameter is set to the unlimited value, then it will override this configuration and force a Keep-Alive scenario.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#readTimeout">readTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+This timeout value controls the allowed time (in seconds) to wait while performing a read of data on a socket.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#writeTimeout">writeTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+This timeout value controls the allowed time (in seconds) to wait while performing a write of data on a socket.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#persistentTimeout">persistentTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+This timeout value controls the allowed idle time (in seconds) on a socket between client requests. Once this timeout is passed, the connection will be closed.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableLogging">enableLogging</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maxFieldSize">maxFieldSize</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Maximum size allowed for various HTTP fields being parsed, such as header names or values, along with request URLs or request methods.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maxHeaders">maxHeaders</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Maximum number of headers that will be parsed on an inbound message before an error status code is sent to the client. It is also used for headers added to an outbound response message, throwing an exception to the user when too many headers are added.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maxRequestMessageBodySize">maxRequestMessageBodySize</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Maximum inbound request message that will be read off the network before an IOException is sent to the Proxy channel. -1 is unlimited inbound body and 0 signifies that no message body is allowed.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#useChannelAccessLoggingSettings">useChannelAccessLoggingSettings</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Flag to determine whether to use the channel specific NCSA access logging settings. If false the global NCSA access logging settings will be used.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#useChannelFRCALoggingSettings">useChannelFRCALoggingSettings</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Flag to determine whether to use the channel specific FRCA logging settings. If false the global FRCA logging settings will be used.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#useChannelErrorLoggingSettings">useChannelErrorLoggingSettings</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0.0
+Flag to determine whether to use the channel specific error logging settings. If false the global error logging settings will be used.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#httpInboundChannelLogging">httpInboundChannelLogging</A></B></FONT>&nbsp;:&nbsp;<A HREF="../channels/HTTPInboundChannelLogging.html">HTTPInboundChannelLogging</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+
+</TABLE>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attribute Details</B></FONT></TD>
+</TR>
+</TABLE>
+
+
+<BR>
+<B><A name="maximumPersistentRequests">maximumPersistentRequests</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Maximum requests allowed on a single HTTP connection.
+
+-1 means one request per connection only
+0 means unlimited requests per connection
+X means X requests per connection
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;100
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="keepAlive">keepAlive</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;When sending an outgoing HTTP message, this controls whether or not to default to a persistent connection (Keep-Alive) as opposed to a connection that will close after one request/response exchange.
+
+Note that if the maximum request persistence parameter is set to the unlimited value, then it will override this configuration and force a Keep-Alive scenario.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="readTimeout">readTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;This timeout value controls the allowed time (in seconds) to wait while performing a read of data on a socket.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;60
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="writeTimeout">writeTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;This timeout value controls the allowed time (in seconds) to wait while performing a write of data on a socket.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;60
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="persistentTimeout">persistentTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;This timeout value controls the allowed idle time (in seconds) on a socket between client requests. Once this timeout is passed, the connection will be closed.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;30
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableLogging">enableLogging</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="maxFieldSize">maxFieldSize</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Maximum size allowed for various HTTP fields being parsed, such as header names or values, along with request URLs or request methods.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;32768
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="maxHeaders">maxHeaders</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Maximum number of headers that will be parsed on an inbound message before an error status code is sent to the client. It is also used for headers added to an outbound response message, throwing an exception to the user when too many headers are added.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;500
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="maxRequestMessageBodySize">maxRequestMessageBodySize</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Maximum inbound request message that will be read off the network before an IOException is sent to the Proxy channel. -1 is unlimited inbound body and 0 signifies that no message body is allowed.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;-1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="useChannelAccessLoggingSettings">useChannelAccessLoggingSettings</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Flag to determine whether to use the channel specific NCSA access logging settings. If false the global NCSA access logging settings will be used.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="useChannelFRCALoggingSettings">useChannelFRCALoggingSettings</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Flag to determine whether to use the channel specific FRCA logging settings. If false the global FRCA logging settings will be used.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="useChannelErrorLoggingSettings">useChannelErrorLoggingSettings</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0.0
+Flag to determine whether to use the channel specific error logging settings. If false the global error logging settings will be used.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+<BR>
+<B><A name="httpInboundChannelLogging">httpInboundChannelLogging</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../channels/HTTPInboundChannelLogging.html">HTTPInboundChannelLogging</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+<CENTER>
+<h4>(C) COPYRIGHT International Business Machines Corp. 1996-2006</h4>
+</CENTER>
+
+</body>
+
+</html>

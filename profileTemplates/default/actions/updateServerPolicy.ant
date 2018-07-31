@@ -1,0 +1,173 @@
+<project name="updateServerPolicy" default="AddProperties" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+	
+    <property environment="env" />
+
+    <property name="ve.product.name" value="WebSphereVE" />
+    <property name="ve.postinstaller.properties.file.name" value="zVEPostInstaller.properties" />
+    <property name="server.policy.file.name" value="server.policy" />
+    <property name="x.was.home" value="${env.WAS_HOME}" />
+    <property name="local.cell" value="${WS_CMT_CELL_NAME}" />
+    <wscmtlog message="UpdateServerPolicy local.cell is ${local.cell}"/>
+    <property name="local.node" value="${WS_CMT_NODE_NAME}" />
+    <wscmtlog message="UpdateServerPolicy local.node is ${local.node}"/>
+    <property name="profile.path" value="${profilePath}" />
+    <property name="was.properties.dir" value="${x.was.home}/properties" />
+    <property name="was.service.dir" value="${was.properties.dir}/service" />
+    <property name="was.service.product.dir" value="${was.service.dir}/product" />
+    <property name="ve.service.dir" value="${was.service.product.dir}/${ve.product.name}" />
+    <property name="ve.postinstaller.properties.file" value="${ve.service.dir}/${ve.postinstaller.properties.file.name}" />
+    <property name="profile.properties.dir" value="${profile.path}/properties" />
+    <property name="server.policy.file" value="${profile.properties.dir}/${server.policy.file.name}" />
+
+    <target name="CheckWASHome">
+        <available file="${x.was.home}" type="dir" property="x.was.home.present"/>
+        <wscmtlog message="UpdateServerPolicy was.home is ${x.was.home}"/>
+    </target>
+
+    <target name="CheckPropertiesDir" depends="CheckWASHome" if="x.was.home.present">
+        <available file="${was.properties.dir}" type="dir" property="was.properties.dir.present"/>
+        <wscmtlog message="UpdateServerPolicy was.properties.dir is ${was.properties.dir}"/>
+    </target>
+
+    <target name="CheckServiceDir" depends="CheckPropertiesDir" if="was.properties.dir.present">
+        <available file="${was.service.dir}" type="dir" property="was.service.dir.present"/>
+        <wscmtlog message="UpdateServerPolicy was.service.dir is ${was.service.dir}"/>
+    </target>
+
+    <target name="CheckServiceProductDir" depends="CheckServiceDir" if="was.service.dir.present">
+        <available file="${was.service.product.dir}" type="dir" property="was.service.product.dir.present"/>
+        <wscmtlog message="UpdateServerPolicy was.service.product.dir is ${was.service.product.dir}"/>
+    </target>
+
+    <target name="CheckVEBaseServiceDir" depends="CheckServiceProductDir" if="was.service.product.dir.present">
+        <available file="${ve.service.dir}" type="dir" property="ve.service.dir.present"/>
+        <wscmtlog message="UpdateServerPolicy ve.service.dir is ${ve.service.dir}"/>
+    </target>
+
+    <target name="CheckVEBaseProperties" depends="CheckVEBaseServiceDir" if="ve.service.dir.present">
+        <available file="${ve.postinstaller.properties.file}" type="file" property="ve.postinstaller.properties.file.present"/>
+        <wscmtlog message="UpdateServerPolicy ve.postinstaller.properties.file is ${ve.postinstaller.properties.file}"/>
+    </target>
+
+    <target name="LoadVEBaseProperties" depends="CheckVEBaseProperties" if="ve.postinstaller.properties.file.present">
+        <property file="${ve.postinstaller.properties.file}" />
+        <wscmtlog message="VE.smpe.root=${VE.smpe.root}"/>
+    </target>
+
+    <target name="CheckProfilePath" depends="LoadVEBaseProperties" if="ve.postinstaller.properties.file.present">
+        <available file="${profile.path}" type="dir" property="profile.path.present"/>
+        <wscmtlog message="UpdateServerPolicy profile.path is ${profile.path}"/>
+    </target>
+
+    <target name="CheckProfilePropertiesPath" depends="CheckProfilePath" if="profile.path.present">
+        <available file="${profile.properties.dir}" type="dir" property="profile.properties.dir.present"/>
+        <wscmtlog message="UpdateServerPolicy profile.properties.dir is ${profile.properties.dir}"/>
+    </target>
+
+    <target name="CheckServerPolicy" depends="CheckProfilePropertiesPath" if="profile.properties.dir.present">
+        <available file="${server.policy.file}" type="file" property="server.policy.file.present"/>
+        <wscmtlog message="UpdateServerPolicy profile.properties.dir is ${profile.properties.dir}"/>
+    </target>
+
+    <target name="wscmtlogTimeStamp" depends="CheckServerPolicy" >
+        <tstamp>
+            <format property="xdstart" pattern="EEE MMM d HH:mm:ss z yyyy"/>
+        </tstamp>
+        <wscmtlog message="-------------------------------------------------------------"/>
+        <wscmtlog message="Update server.policy , ${xdstart}"/>
+        <wscmtlog message="-------------------------------------------------------------"/>
+    </target>
+
+    <target name="wscmtlogVEBaseProperties" depends="wscmtlogTimeStamp" if="server.policy.file.present">
+
+        <!-- Display Variables that are expected to be set -->
+
+        <wscmtlog message="Properties from ${ve.postinstaller.properties.file.name}:"/>
+        <wscmtlog message="-----------"/>
+        <wscmtlog message="WAS.home=${WAS.home}"/>
+        <wscmtlog message="VE.smpe.root=${VE.smpe.root}"/>
+        <wscmtlog message="VE.config.type=${VE.config.type}"/>
+        <wscmtlog message="VE.service.backup=${VE.service.backup}"/>
+        <wscmtlog message="VE.current.config.root.service.level=${VE.current.config.root.service.level}"/>
+        <wscmtlog message="VE.service.level.props=${VE.service.level.props}"/>
+        <wscmtlog message="VE.smpe.install.root.level=${VE.smpe.install.root.level}"/>
+        <wscmtlog message="VE.coldstart.level=${VE.coldstart.level}"/>
+        <wscmtlog message="-----------"/>
+
+    </target>
+
+    <target name="wscmtlogBadWASHome" depends="wscmtlogTimeStamp" unless="x.was.home.present">
+        <wscmtlog message="-------------------------------------------------------------"/>
+        <wscmtlog message="Update server.policy - WAS_HOME not found "/>
+        <wscmtlog message="-------------------------------------------------------------"/>
+    </target>
+
+    <target name="wscmtlogBadBaseProperties" depends="wscmtlogTimeStamp" unless="ve.postinstaller.properties.file.present">
+        <wscmtlog message="-------------------------------------------------------------"/>
+        <wscmtlog message="Update server.policy - ${ve.postinstaller.properties.file.name} not found "/>
+        <wscmtlog message="-------------------------------------------------------------"/>
+    </target>
+
+    <target name="wscmtlogStatus" depends="wscmtlogVEBaseProperties , wscmtlogBadWASHome , wscmtlogBadBaseProperties">
+    </target>
+
+    <target name="ClearProperties" depends="wscmtlogStatus" if="server.policy.file.present">
+        
+        <replace encoding="ISO8859-1" 
+                file="${server.policy.file}" 
+                value="VE.smpe.root">
+           <replacefilter token="${VE.smpe.root}"/> 
+        </replace>
+
+        
+        <replace encoding="ISO8859-1" file="${server.policy.file}" >
+            <replacetoken>smpe.install.root}/-" {
+  permission java.security.AllPermission;
+};
+
+grant codeBase "file:VE.smpe.root/lib/-" { permission java.security.AllPermission; };
+
+grant codeBase "file:VE.smpe.root/-" { permission java.security.AllPermission; };
+</replacetoken>
+
+            <replacevalue>smpe.install.root}/-" {
+  permission java.security.AllPermission;
+};
+</replacevalue>
+        </replace>
+
+    </target>
+
+    <target name="AddProperties" depends="ClearProperties" if="server.policy.file.present">
+        <replace encoding="ISO8859-1" file="${server.policy.file}" propertyFile="${ve.postinstaller.properties.file}">
+            <replacetoken>smpe.install.root}/-" {
+  permission java.security.AllPermission;
+};
+</replacetoken>
+            <replacevalue>smpe.install.root}/-" {
+  permission java.security.AllPermission;
+};
+
+grant codeBase "file:VE.smpe.root/lib/-" { permission java.security.AllPermission; };
+
+grant codeBase "file:VE.smpe.root/-" { permission java.security.AllPermission; };
+</replacevalue>
+
+        </replace>
+
+        <replace encoding="ISO8859-1" 
+                file="${server.policy.file}" 
+                propertyFile="${ve.postinstaller.properties.file}"
+                value="defaultvalue">
+           <replacefilter 
+                token="VE.smpe.root" 
+                property="VE.smpe.root"/>
+        </replace>
+       
+    </target>
+
+</project>
+
+
+

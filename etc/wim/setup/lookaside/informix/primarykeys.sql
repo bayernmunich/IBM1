@@ -1,0 +1,69 @@
+--------------- Begin Copyright - Do not add comments here --------------
+--
+-- Licensed Materials - Property of IBM
+--
+-- Restricted Materials of IBM
+--
+-- Virtual Member Manager
+--
+-- (C) Copyright IBM Corp. 2005, 2010
+--
+-- US Government Users Restricted Rights - Use, duplication or
+-- disclosure restricted by GSA ADP Schedule Contract with
+-- IBM Corp.
+--
+----------------------------- End Copyright -----------------------------
+ALTER TABLE @dbschema.@LAENTITY
+	ADD CONSTRAINT PRIMARY KEY (ENTITY_ID);
+	
+
+ALTER TABLE @dbschema.@LAKEYS
+	ADD CONSTRAINT PRIMARY KEY (KEYS_ID);
+
+
+ALTER TABLE @dbschema.@LAPROP
+	ADD CONSTRAINT PRIMARY KEY (PROP_ID);
+
+
+ALTER TABLE @dbschema.@LAPROPTYPE
+	ADD CONSTRAINT PRIMARY KEY (TYPE_ID);
+	
+
+ALTER TABLE @dbschema.@LAPROPENT
+	ADD CONSTRAINT PRIMARY KEY (PROP_ID, APPLICABLE_ENTTYPE);
+
+
+ALTER TABLE @dbschema.@LALONGPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+
+
+ALTER TABLE @dbschema.@LABLOBPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+
+
+ALTER TABLE @dbschema.@LADBLPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+
+
+ALTER TABLE @dbschema.@LAINTPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+	
+
+ALTER TABLE @dbschema.@LAREFPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+	
+
+ALTER TABLE @dbschema.@LASTRPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+
+
+ALTER TABLE @dbschema.@LATSPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);
+
+
+ALTER TABLE @dbschema.@LACOMPREL
+	ADD CONSTRAINT PRIMARY KEY (COMPOSITE_ID, COMPONENT_ID);
+
+
+ALTER TABLE @dbschema.@LACOMPPROP
+	ADD CONSTRAINT PRIMARY KEY (VALUE_ID);

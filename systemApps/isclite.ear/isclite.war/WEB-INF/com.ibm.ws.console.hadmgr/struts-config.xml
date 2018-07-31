@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!--
+     5724-J34 (C) COPYRIGHT International Business Machines Corp. 2005
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<struts-config>
+
+    <form-beans>
+        <form-bean
+            name="com.ibm.ws.console.hadmgr.form.DeploymentManagerDetailForm"
+            type="com.ibm.ws.console.hadmgr.form.DeploymentManagerDetailForm"
+        />
+        <form-bean
+            name="com.ibm.ws.console.hadmgr.form.DeploymentManagerCollectionForm"
+            type="com.ibm.ws.console.hadmgr.form.DeploymentManagerCollectionForm"
+        />
+        <form-bean
+        	name="com.ibm.ws.console.hadmgr.form.XDCellManagerDetailForm"
+        	type="com.ibm.ws.console.hadmgr.form.XDCellManagerDetailForm"
+        />
+    </form-beans>
+
+    <global-forwards />
+
+    <action-mappings>
+        <action path="/com.ibm.ws.console.xd.distmanagement.dmgrForwardCmd"
+                name="com.ibm.ws.console.xd.distmanagement.dmgrForwardCmd"
+                type="com.ibm.ws.console.hadmgr.action.DMgrForwardAction">
+            <forward name="dmgrCollectionView" path="com.ibm.ws.console.hadmgr.forwardCmd.do?forwardName=XDCellManager.content.main"/>
+            <forward name="dmgrDetailView" path="navigatorCmd.do?forwardName=CellManager.config.view"/>
+        </action>
+
+        <action path="/com.ibm.ws.console.hadmgr.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="XDCellManager.content.main" path="XDCellManager.content.main" />
+            <forward name="XDCellManager.config.view" path="XDCellManager.config.view" />
+        </action>
+
+        <action name="com.ibm.ws.console.hadmgr.form.DeploymentManagerCollectionForm"
+                path="/DeploymentManagerCollection"
+                type="com.ibm.ws.console.hadmgr.action.DeploymentManagerCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="com.ibm.ws.console.hadmgr.forwardCmd.do?forwardName=XDCellManager.config.view"/>
+            <forward name="DeploymentManagerCollection" path="XDCellManager.content.main"/>
+            <forward name="refresh" path="com.ibm.ws.console.hadmgr.forwardCmd.do?forwardName=XDCellManager.content.main"/>
+        </action>
+
+        <action name="com.ibm.ws.console.distmanagement.XDCellManagerDetailForm"
+                path="/XDCellManagerDetail"
+                type="com.ibm.ws.console.hadmgr.action.XDCellManagerDetailAction"
+                input="XDCellManager.config.view">
+            <forward name="error" path="XDCellManager.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.hadmgr.forwardCmd.do?forwardName=XDCellManager.config.view"/>
+            <forward name="DeploymentManagerCollection" path="com.ibm.ws.console.hadmgr.forwardCmd.do?forwardName=XDCellManager.content.main"/>
+        </action>
+    </action-mappings>
+
+</struts-config>

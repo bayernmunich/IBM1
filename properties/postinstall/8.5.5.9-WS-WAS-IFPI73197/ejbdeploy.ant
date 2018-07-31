@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<project name="EJBDeployAction" default="install" basedir=".">
+
+<property environment="env"/>
+
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->  
+<!-- Install Target                                                           --> 
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--> 
+
+<!-- Detect the OS family -->
+<target name="detectOSFamily" 
+        description="detects the current OS family">
+    <condition property="isZOS" value="true">
+        <os family="z/os" />
+    </condition>
+    <echo message="Local OS is zOS?: ${isZOS}" />
+</target>
+
+<!-- Set the script directory to point to zOS scripts with EBCDIC encoding -->
+<target name="setScriptsDirZOS" 
+        if="isZOS" 
+        description="use the EBCDIC encoded scripts for zOS systems"
+        depends="detectOSFamily">
+        <property name="scripts.dir" value="${WAS_HOME}/newdeploytool_scripts/zOS" />
+        <echo message="Using EBCDIC encoding" />
+</target>
+
+<!-- ... otherwise, set it to point to ascipts with ASCII encoding -->
+<target name="setScriptsDirOther" 
+        unless="isZOS" 
+        description="use the ASCII encoded scripts for other systems"
+        depends="detectOSFamily">
+        <property name="scripts.dir" value="${WAS_HOME}/newdeploytool_scripts/other" />
+        <echo message="Using ASCII encoding" />
+</target>
+
+<!-- Copy scripts to the new deploytool -->
+<target name="copyScripts"
+        description="copy scripts to the new deploytool"
+        depends="setScriptsDirZOS, setScriptsDirOther">
+    <move file="${scripts.dir}/itp/ejbdeploy.sh" 
+          todir="${WAS_HOME}/newdeploytool/itp/"/>
+    <move file="${scripts.dir}/itp/plugins/com.ibm.etools.ejbdeploy/binary/ejbdeploy-clear-cache.sh" 
+          todir="${WAS_HOME}/newdeploytool/itp/plugins/com.ibm.etools.ejbdeploy/binary/"/>
+    <move file="${scripts.dir}/itp/plugins/com.ibm.etools.ejbdeploy/binary/ejbdeploy-pre-uninstall.sh" 
+          todir="${WAS_HOME}/newdeploytool/itp/plugins/com.ibm.etools.ejbdeploy/binary/"/>
+    <move file="${scripts.dir}/itp/plugins/com.ibm.etools.ejbdeploy/binary/ejbdeploy.sh" 
+          todir="${WAS_HOME}/newdeploytool/itp/plugins/com.ibm.etools.ejbdeploy/binary/"/>
+    <move file="${scripts.dir}/scripts/install/ejbdeploy-clear-cache.sh" 
+          todir="${WAS_HOME}/newdeploytool/scripts/install/"/>
+    <move file="${scripts.dir}/scripts/uninstall/ejbdeploy-pre-uninstall.sh" 
+          todir="${WAS_HOME}/newdeploytool/scripts/uninstall/"/>
+</target>
+
+<!-- replace the old deploytool with the new one containg the correctly encoded scripts -->
+<target name="deployNewTool"
+        description="replace the old depoytool with the new one"
+        depends="copyScripts">
+    <move file="${WAS_HOME}/deploytool" tofile="${WAS_HOME}/deploytool.java7"/>
+    <move file="${WAS_HOME}/newdeploytool" tofile="${WAS_HOME}/deploytool"/>
+</target>
+
+<!-- Clean up -->
+<target name="clean"
+        description="remove the scripts directory">
+    <delete dir="${WAS_HOME}/newdeploytool_scripts" />
+</target>
+
+<target name="install" depends="deployNewTool, clean" />
+
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->  
+<!-- Uninstall Target                                                         --> 
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--> 
+
+<target name="rollbackdeploy" 
+        description="rollback to java 7 deploytool">
+    <delete dir="${WAS_HOME}/deploytool"/>
+    <move file="${WAS_HOME}/deploytool.java7" tofile="${WAS_HOME}/deploytool"/>
+</target>
+
+<target name="uninstall" depends="rollbackdeploy" />
+
+</project>

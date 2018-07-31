@@ -1,0 +1,89 @@
+# (C) Copyright IBM Corp. 2004,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you
+# in the  use of  the product. The code is provided 'AS IS', without warranty or
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+#---------------------------------------------------
+# Delete Dynamic Cluster
+#---------------------------------------------------
+#
+# Use this script to delete a Dynamic Cluster. You
+# must have the Node Group name that is
+# associated with the Dynamic Cluster you are deleting.
+#
+# Replace the variable NODE_GROUP_NAME with the
+# name of the Node Group that is
+# associated the Dynamic Cluster.
+#
+# Replace the variable DYNAMIC_CLUSTER_NAME with
+# the name of the Dynamic Cluster you want to delete.
+#
+#  This is a bi-modal script: it can be included in the wsadmin
+#  command invocation like this:
+#     wsadmin -profile deleteDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#     or
+#     wsadmin -f deleteDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#
+#  or the script can be sourced from the wsadmin command line:
+#     wsadmin> source deleteDynamicCluster.jacl
+#     wsadmin> deleteDynamicCluster NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#---------------------------------------------------
+set deleteDynamicClusterSyntax "deleteDynamicCluster NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME"
+proc deleteDynamicCluster {ngName dcName} {
+   set retval 1
+
+   #--------------------------------------------------------------
+   # set up globals
+   #--------------------------------------------------------------
+   global AdminControl
+   global deleteDynamicClusterSyntax
+
+   #--------------------------------------------------------------
+   # Check syntax
+   #--------------------------------------------------------------
+   set Syntax "Syntax: $deleteDynamicClusterSyntax"
+   if {([llength $ngName] == 0 || [llength $dcName] == 0)} {
+      puts ""
+      puts $Syntax
+      puts ""
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   # Delete Dynamic Cluster
+   #--------------------------------------------------------------
+   set outputString "Deleting Dynamic Cluster $dcName in Node Group $ngName"
+   puts ""
+   puts $outputString
+   set dcOName [$AdminControl queryNames WebSphere:*,process=dmgr,type=DynamicClusterConfigManager]
+   if {[catch { $AdminControl invoke "$dcOName" "deleteDynamicCluster" "$ngName $dcName" } result]} {
+       puts ""
+   	puts "WSADMIN EXCEPTION: ${result}"
+       puts ""
+       return $retval
+   } else {
+       set retval 0
+       puts ""
+       puts "deleteDynamicCluster: done."
+       puts ""
+       return $retval
+   }
+}
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+if { !($argc == 2 ) } {
+	puts ""
+	puts "Usage: wsadmin -profile deleteDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME"
+	puts ""
+} else {
+   set ngName [lindex $argv 0]
+   set dcName [lindex $argv 1]
+
+   deleteDynamicCluster $ngName $dcName
+}

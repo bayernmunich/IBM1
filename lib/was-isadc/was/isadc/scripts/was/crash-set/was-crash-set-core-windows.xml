@@ -1,0 +1,198 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used toset your system to accept fullcore   
+	 for Windows platform. It should be included in the WAS set core Ant scripts. 
+-->
+
+<project name="was-crash-set-core-windows" >
+
+	<dirname property="was.crash.set.core.windows.basedir" file="${ant.file.was-crash-set-core-windows}"/>
+	<dirname property="was.crash.set.core.windows.parentdir" file="${was.crash.set.core.windows.basedir}"/>
+	<dirname property="was.crash.set.core.windows.grandparentdir" file="${was.crash.set.core.windows.parentdir}"/>
+	<dirname property="was.crash.set.core.windows.bundle.basedir" file="${was.crash.set.core.windows.grandparentdir}"/>
+
+	<!-- This target is used to set up your system to accept a full core -->
+	<target name="set_windows_fullcore" description="Make sure system is set up to accecpt a full core" if="isWindows">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_setup_Microsoft_Windows_environment_to_generate_DrWatson_log_and_Userdump_files" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Following the instructions to setup Microsoft Windows environment to generate DrWatson log and Userdump files" 
+			replace="${autopdts};;${step.count}" 
+			id="1092"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-windows.xml"/>
+
+		<inputdialogtask noCancel="true">
+			<fieldtask name="prompt" label="To_config_Dr_Watson" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="drwtson32.prompt1" label="To_config_Dr_Watson1"  type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="drwtson32.prompt1" label="To_config_Dr_Watson2"  type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask>
+
+		<exec executable="cmd" dir="${was.crash.set.core.windows.bundle.basedir}/scripts/was/shell/windows" output="${autopd.echolog.instance}" append="true" >
+			<arg line="/c Drwtsn32" /> 
+		</exec>	
+
+		
+		<windows_registry_access propertyName="user.dmp.file.path" registryKey="SOFTWARE\Microsoft\DrWatson\CrashDumpFile" />
+		<windows_registry_access propertyName="drwtson32.log.file.path" registryKey="SOFTWARE\\Microsoft\\DrWatson\\LogFilePath" />
+
+		<echo message="user.dmp.file.path: ${user.dmp.file.path}" />
+		<echo message="drwtson32.log.file.path: ${drwtson32.log.file.path}" />
+
+
+		<available file="${user.dmp.file.path}"  
+			type="file" 
+			property="user.dmp.file.path.available" />
+		<available file="${drwtson32.log.file.path}/drwtsn32.log"  
+			type="file" 
+			property="drwtson32.log.file.path.available" />
+
+		<echo message="user.dmp.file.path.available: ${user.dmp.file.path.available}" />
+		<echo message="drwtson32.log.file.path.available: ${drwtson32.log.file.path.available}" />
+
+<!-- 
+		<if isNotTrue="${user.dmp.file.path.available}" >
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Please_provide_the_core_file_location" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+				<fieldtask name="user.dmp.file.path" label="Crash_Dump_File_Path"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>
+			
+		</if>
+		<if isNotTrue="${drwtson32.log.file.path.available}" >
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Please_provide_the_core_file_location" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="drwtson32.log.file.path" label="Dr_Watson.log_File_Path"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask>
+			
+		</if>
+
+		<echo message="user.dmp.file.path: ${user.dmp.file.path}" />
+		<echo message="drwtson32.log.file.path: ${drwtson32.log.file.path}" />
+-->
+		<if isTrue="${drwtson32.log.file.path.available}">
+			<dirname property="drwtson32.log.file.dir" file="${drwtson32.log.file.path}" />		
+			<trim_filename key="drwtson32.log.file.dir.trimmed" filename="${drwtson32.log.file.path}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>		
+		</if>
+		<if isTrue="${user.dmp.file.path.available}">
+			<dirname property="user.dmp.file.dir" file="${user.dmp.file.path}" />
+			<basename property="user.dmp.file.name" file="${user.dmp.file.path}" />
+			<trim_filename key="user.dmp.file.dir.trimmed" filename="${user.dmp.file.dir}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>		
+		</if>
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Configuring_Dr_Watson_as_default_debugger" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Configuring Dr. Watson as default debugger" 
+			replace="${autopdts};;${step.count}" 
+			id="1093"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-windows.xml"/>
+
+		<exec executable="cmd" dir="${was.crash.set.core.windows.bundle.basedir}/scripts/was/shell/windows" output="${autopd.echolog.instance}" append="true" >
+			<arg line="/c Drwtsn32 -i" /> 
+		</exec>	
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Notes_to_restart_wsas_for_crash1" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="restart.prompt1" label="Notes_to_restart_wsas_for_crash2"  type="label" accessibilityName="was_sync_problem" accessibilityDesc="was_set-core_problem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="restart.prompt1"  label="Notes_to_restart_wsas_for_crash3"  type="label" accessibilityName="was_sync_problem" accessibilityDesc="was_set-core_problem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+
+		<autopdinput message="Do_you_want_to_restart_WebSphere_Application_Server_now?" validargs="Yes,No" addproperty="needRestart"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>		
+
+		<condition property="do.restart">
+			<equals arg1="Yes" arg2="${needRestart}" />
+		</condition>
+
+		<if isTrue="${do.restart}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.bat" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.windows}">
+				<arg line=" ${ServerName}" />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/startServer.bat" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.windows}">
+				<arg line=" ${ServerName}" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		
+		<!--property name="doExit" value="true" />
+		<fail if="doExit">Automated Problem Determination Tool is completed</fail-->
+	</target>
+
+	<target name="collect_windows_was_core" description="Collect was core problem" if="isWindows">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_core_output_information_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Application Server core output information" 
+			replace="${autopdts};;${step.count}" 
+			id="1044"  
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-windows.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-windows.xml"/>
+
+		<trim_filename key="jvm.working.path.trimmed" filename="${was.jvm.workingDirectory}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>		
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset dir="${was.enhanced.root}" prefix="autopdzip/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root}/bin" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+		</zip>
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="autopdzip/${jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>
+		<if isTrue="${drwtson32.log.file.path.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">	
+				<zipfileset dir="${drwtson32.log.file.path}" prefix="autopdzip/${drwtson32.log.file.dir.trimmed}" >
+					<include name="drwtsn32.log" />
+				</zipfileset>						
+			</zip>
+		</if>
+		<if isTrue="${user.dmp.file.path.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${user.dmp.file.dir}" prefix="autopdzip/${user.dmp.file.dir.trimmed}" >
+					<include name="${user.dmp.file.name}" />
+				</zipfileset>						
+			</zip>			
+		</if>		
+	</target>
+</project>

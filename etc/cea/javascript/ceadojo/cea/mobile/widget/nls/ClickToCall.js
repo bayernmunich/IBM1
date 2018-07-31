@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"Collaboration Window","SHOW_COLLABORATION_WINDOW":"Show Collaboration Window","CLICK_TO_CALL":"Click To Call"})

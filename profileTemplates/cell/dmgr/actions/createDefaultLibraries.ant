@@ -1,0 +1,49 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createDefaultLibraries" default="createDefaultLibraries" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+      &importExternalLogs;   
+    <property name="JWLLibName" value="JWLLib"/>
+    <property name="JWLPath" value="$${WAS_HOME}/optionalLibraries/IBM/jwl/2.0/odc-jsf.jar:$${WAS_HOME}/optionalLibraries/IBM/jwl/2.0/jsf-ibm.jar"/>
+
+    <target name="createLibraries"
+            description="Runs the Jacl script to create the libraries">
+            
+        <wscmtlog>Create JWL library, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/createDefaultLibraries.log</wscmtlog>
+                <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->         
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/createDefaultLibraries.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/createDefaultLibraries.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+            <arg value="${cellName}"/>
+            <arg value="${nodeName}"/>
+        </wsadmin>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createDefaultLibraries.log" />
+            <param name="description" value="Creating JWL Library" />
+            <param name="precondition" value="foetrue" />
+        </antcall>  
+            
+    </target>
+
+    <target name="createDefaultLibraries"
+        description="Creates the default libraries"
+        depends="createLibraries"
+    />
+</project>

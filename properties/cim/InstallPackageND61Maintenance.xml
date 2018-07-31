@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<!-- ********************************************************************************************************** -->
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                          -->
+<!-- 5639-D57, 5630-A36, 5630-A37, 5724-D18 (C) COPYRIGHT International Business Machines Corp. 2007, 2008		-->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                                 -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                     -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                     -->
+<!-- ********************************************************************************************************** -->
+<!-- Change activity:                                                                                           -->
+<!-- Ver   Date   Description                                                                                   -->
+<!-- ===  ======  ============================================================================================= -->
+<!-- 1.1  052207  8010 - Add -OPT disableOSPrereqChecking="true"                                                -->
+<!-- 1.2  090607  8006 - Add an AlternatLog element                                                             -->
+<!-- 1.2  090607  9631 - Update the UPDI filename pattern String                                                -->
+<!-- 1.3  101507  10096  Add RelatedProduct elements & Base ProductShortName                                    -->
+<!--              10168  Add -OPT allowNonRootSilentInstall="true"                                              -->
+<!-- 1.4  102407  10053  Add AlternatMsg elements for non-fatal error                                           -->
+<!-- 1.5  110907  10383  Add AlternatMsg to InstallCmd                                                          -->
+<!-- 1.6  010908  11025  Change update command for UPDI for Windows                                             -->
+<!-- 1.7  022608  11364  Change update command for UPDI for Windows                                             -->
+<!-- 3.0  033108  Retrofitted for WAS v.7 CIM and included support for i5os                                     -->
+<!--      042808  Support for non-root install/uninstall of maintenance on AIX                                  -->
+<!--      050808  Update Installer Filename attribute for UPDI70                                                -->
+<!--      060508  Separate PostInstallCmd and PostUninstallCmd for i5os                                         -->
+<!--      061308  Update the UninstallCmd for i5OS and remove an extra Installer element for Linux IA64         -->
+<!--      030111  Remove the UPDI installer for windows.ia64 since which is not supported by WAS61 and WAS70 -->
+<!-- ********************************************************************************************************** -->
+<InstallPackage	 DescriptorVersion="3.0"  SelectionGroup="interimFix"  MaintenancePackage="userSelect"  PrereqPackage="UPDI70" >
+	<PackageShortName> 	ND61Maintenance 					</PackageShortName>  
+	<PackageLongName>  	Maintenance for WebSphere Application Server Network Deployment   </PackageLongName>  
+	<PackageMsgKeyPrefix>	nd.61.maintenance 				</PackageMsgKeyPrefix>  
+	
+	<ProductShortName> 		ND 								</ProductShortName>
+
+	<RelatedProduct ProductId="BASE"       	ProductShortName="Base"   	NodeMetadataKeyPrefix="com.ibm.websphere.base"                  />
+	<RelatedProduct ProductId="WEBSERVICES"	ProductShortName="WS FEP" 	NodeMetadataKeyPrefix="com.ibm.websphere.WebServicesFeaturePack"/>
+	<RelatedProduct ProductId="EJB3"		ProductShortName="EJB 3.0" 	NodeMetadataKeyPrefix="com.ibm.websphere.EJB3FeaturePack" 		/>
+	
+	<!-- PackageDir is the name of the directory that holds the package files -->
+	<PackageDir>            ND61Updates             </PackageDir>         
+	<PackageVersionString>  6.1                   	</PackageVersionString>  
+	<PackageProvider>	    IBM Corporation       	</PackageProvider>	    
+	<PackageProviderURL>	http://www.ibm.com/support    	</PackageProviderURL>	
+	
+	<PackageURL>	http://www.ibm.com/software/webservers/appserv/was/support/		</PackageURL>
+	    
+	<FileDownloadURLs>		
+			ftp://public.dhe.ibm.com/software/websphere/appserv/support/fixes/,
+			ftp://public.dhe.ibm.com/software/websphere/appserv/support/fixpacks/was61/cumulative/    	
+	</FileDownloadURLs>	    
+
+	<!-- Feature-specific License file, if present, supercedes the Package License file -->
+	<PackageLicenseZipPrefix>         ${PREREQ_PACKAGE_DIR}/7.*-WS-UPDI-.*		</PackageLicenseZipPrefix>
+	<PackageLicenseFile>     UpdateInstaller/updi.primary.pak/repository/updi.legal/lafiles/LA_${LANG}  </PackageLicenseFile>	    
+	<PackageLicenseInfoFile> UpdateInstaller/updi.primary.pak/repository/updi.legal/lafiles/LI_${LANG}  </PackageLicenseInfoFile> 
+	
+	<PackageFileList>  </PackageFileList>	    
+
+	<SpecialInstruction  Name="NodeCentric" />
+	
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.PermissionToUpdateUPDI" 
+							  MsgKeyRoot="specialParm.permission.to.update.updi" 
+							  PromptType="CheckBox"  >
+		<ParamName>		PERMISSION_TO_UPDATE_UPDI			</ParamName>
+	</SpecialInstallParameters>
+	
+	<!-- Verify that the non-root AIX user can run "sudo slibclean" -->	
+	<ParameterValidator Operation="install" HelperClass="com.ibm.ws.xd.cimgr.controller.SlibcleanByNonRootAixUser" />
+
+	<!-- Verify that UAC settings on Windows will not block install/uninstall command -->	
+	<ParameterValidator Operation="_ANY_" HelperClass="com.ibm.ws.xd.cimgr.controller.WindowsUACValidator" />
+
+	<UninstallPrepCmd	HelperClass="com.ibm.ws.xd.cimgr.controller.SlibcleanByNonRootAixUser" />
+	
+	<InstallLocation> 	${WAS_INSTALL_ROOT}		</InstallLocation>
+
+	<SummaryMessage
+		HelperClass=""
+		Operation="install"
+		Platform="_ANY_"
+		MessageKey="was.maintenance.update.warning.all"	/>
+
+	<SummaryMessage
+		HelperClass=""
+		Operation="uninstall"
+		Platform="_ANY_"
+		MessageKey="was.maintenance.update.warning.all"	/>
+
+	<!-- The normal success msg for the UPDI install is INSTCONFSUCCESS. However, there is a minor problem with 
+	     the current installer on Windows that would result in a INSTCONFPARTIALSUCCESS. We therefor test for the
+	     "SUCCESS" message as a temporary workaround. Also note that the -is:javahome switch is required for Windows. -->
+	<InstallCmd>
+		<CommandStringUnix>     install 	-silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringUnix>
+		<CommandStringWindows>  install.exe -is:javahome "${WAS_INSTALL_ROOT}/java" -silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringWindows>
+		<CommandStringQShell>   install     -silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringQShell>
+		<CommandPath>           ${WORKING_DIR}/UpdateInstaller				</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/install/log.txt    </CommandLogs>
+		<AlternateLog>          ${USER_HOME_DIR}/updilogs/log.txt           </AlternateLog>
+		<SuccessMsg>            INSTCONFSUCCESS     						</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS						</AlternateMsg>
+	</InstallCmd>
+
+	<!-- The uninstall command below uninstall the FixPaks in the reverse order -->
+	<!-- The CommandString for i5OS (QShell) does NOT require the -silent option -->
+	<UninstallCmd>
+		<CommandStringUnix>     update.sh  -silent -W backup.package="${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="uninstall" </CommandStringUnix>
+		<CommandStringWindows>  (update.bat|update.exe) -silent -W backup.package="${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="uninstall" </CommandStringWindows>
+		<CommandStringQShell>   update -W backup.package="${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="uninstall" </CommandStringQShell>
+		<OptionalCommandParms>  -OPT rootUserHasRunSlibcleanCommandSuccessfully="${SLIBCLEAN_SUCCESSFUL}"	</OptionalCommandParms>
+		<CommandPath>           ${WAS_INSTALL_ROOT}/UpdateInstaller								   </CommandPath>
+		<CommandLogs>   ${WAS_INSTALL_ROOT}/logs/update/${WAS_FIXPAK_NAME}.uninstall/updatelog.txt </CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS                				  					   </SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS											   </AlternateMsg>
+	</UninstallCmd>
+	
+	<!-- All-Platform maintenance paks (if any) are applied after the platform-specific ones -->
+	<AllPlatformMaintenancePaks> 	</AllPlatformMaintenancePaks>
+
+	<UpdateInstallerMinimumVersion> 7.0.0.0 </UpdateInstallerMinimumVersion>
+
+	<Installer  Platform="aix"      Arch="32bit"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-AixPPC32.zip"/>
+	<Installer  Platform="aix"      Arch="64bit"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-AixPPC64.zip"/>
+	
+	<Installer  Platform="windows"  Arch="32bit"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-WinIA32.zip" />
+<!--
+	<Installer  Platform="windows"  Arch="ia64"   FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-WinIA64.zip" />
+-->
+	<Installer  Platform="windows"  Arch="amd64"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-WinAMD64.zip"/>
+
+	<Installer  Platform="hpux"     Arch="32bit"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-HpuxPaRISC.zip"/>
+	<Installer  Platform="hpux"     Arch="64bit"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-HpuxIA64.zip"/>
+	
+	<Installer  Platform="linux"    Arch="i686"   FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxIA32.zip"/>
+<!--	
+	<Installer  Platform="linux"    Arch="ia64"   FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxIA64.zip"/>
+-->	
+    <Installer  Platform="linux"    Arch="amd64"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxAMD64.zip"/>
+	<Installer  Platform="linux"    Arch="s390"   FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxS390.zip"/>
+    <Installer  Platform="linux"    Arch="s390x"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxS39064.zip"/>
+	<Installer  Platform="linux"    Arch="ppc"    FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxPPC32.zip"/>
+    <Installer  Platform="linux"    Arch="ppc64"  FromPrereq="true"  Lib=""  Filename="7.?*-WS-UPDI-LinuxPPC64.zip"/>       
+    
+	<Installer  Platform="solaris"  Arch="sparc"   FromPrereq="true" Lib=""  Filename="7.?*-WS-UPDI-SolarisSparc.zip"/>
+	<Installer  Platform="solaris"  Arch="sparc64" FromPrereq="true" Lib=""  Filename="7.?*-WS-UPDI-SolarisSparc64.zip"/>
+	<Installer  Platform="solaris"  Arch="x86_64"  FromPrereq="true" Lib=""  Filename="7.?*-WS-UPDI-SolarisX64.zip"/>
+
+	<Installer  Platform="os400"  	Arch="ppc64"   FromPrereq="true" Lib=""  Filename="7.?*-WS-UPDI-i5OsPPC.zip"/>
+	
+	<!-- The package dependencies listed are OR type dependencies -->
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		   ND		</ProductName>			
+		<ProductVersionString>6.1.0.0   </ProductVersionString>	
+	</PackageDependency>	
+	
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		   Base		</ProductName>			
+		<ProductVersionString> 6.1.0.0  </ProductVersionString>	
+	</PackageDependency>	
+	
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.SlibcleanByNonRootAixUser" />
+	
+	<!-- The CommandString for i5OS (QShell) does NOT require the -silent option -->
+	<PostInstallCmd>
+		<CommandStringUnix>     update.sh  -silent -W maintenance.package="${WORKING_DIR}/${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="install"	</CommandStringUnix>
+		<CommandStringWindows>  (update.bat|update.exe) -silent -W maintenance.package="${WORKING_DIR}/${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="install" </CommandStringWindows>
+		<CommandStringQShell>   update -W maintenance.package="${WORKING_DIR}/${WAS_FIXPAK}" -W product.location="${WAS_INSTALL_ROOT}" -W update.type="install" </CommandStringQShell>
+		<OptionalCommandParms>  -OPT rootUserHasRunSlibcleanCommandSuccessfully="${SLIBCLEAN_SUCCESSFUL}"	</OptionalCommandParms>
+		<CommandPath>           ${INSTALL_LOCATION}     										 </CommandPath>
+		<CommandLogs>   ${WAS_INSTALL_ROOT}/logs/update/${WAS_FIXPAK_NAME}.install/updatelog.txt </CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS                									 </SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS										   	 </AlternateMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		TargetPlatforms="AIX,Linux,HP-UX,Solaris,Windows" >
+		<CommandStringUnix>   startNode.sh   </CommandStringUnix>
+		<CommandStringWindows>startNode.bat  </CommandStringWindows>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>         ${USER_INSTALL_ROOT}/logs/nodeagent/startServer.log	</CommandLogs>
+		<SuccessMsg>          ADMU3000I             </SuccessMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		TargetPlatforms="os400" >
+		<CommandStringQShell> startNode 	 </CommandStringQShell>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>   ${USER_INSTALL_ROOT}/logs/was_${NODEAGENT_QEJBSVR_PID}.log	</CommandLogs>
+		<SuccessMsg>          CWNATV01I             </SuccessMsg>
+	</PostInstallCmd>
+
+	<PostUninstallCmd	TargetPlatforms="AIX,Linux,HP-UX,Solaris,Windows" >
+		<CommandStringUnix>   startNode.sh   </CommandStringUnix>
+		<CommandStringWindows>startNode.bat  </CommandStringWindows>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>         ${USER_INSTALL_ROOT}/logs/nodeagent/startServer.log	</CommandLogs>
+		<SuccessMsg>          ADMU3000I             </SuccessMsg>
+	</PostUninstallCmd>
+
+	<PostUninstallCmd	TargetPlatforms="os400" >
+		<CommandStringQShell> startNode 	 </CommandStringQShell>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>   ${USER_INSTALL_ROOT}/logs/was_${NODEAGENT_QEJBSVR_PID}.log	</CommandLogs>
+		<SuccessMsg>          CWNATV01I             </SuccessMsg>
+	</PostUninstallCmd>
+
+</InstallPackage>

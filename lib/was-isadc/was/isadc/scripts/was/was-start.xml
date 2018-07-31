@@ -1,0 +1,697 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Start Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Start Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_Start_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-start" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="query.secure.type.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+		 			was_stack_custom_init,
+			
+					 query_was_cluster,
+					 generate_start_trace_string,
+					 trace_setup_custom,
+			         
+					 execute_collector,
+					 execute_vce_info_for_was,
+			         common_postamble_general_with_ftp">
+	</target>
+<!-- 
+					 start_problem_types,
+					 set_appserver_trace_from_admin_console,
+					 set_nodeagent_trace_from_admin_console,
+					 set_connection_type_properties,
+					 query_was_dmgr_properties,
+					 get_appserver_trace_values,
+					 get_nodeagent_trace_values,
+					 get_dmgr_trace_values,	
+
+					 recovery_needed_with_condition,	
+					 set_was_trace_appserver,
+					 set_was_trace_nodeagent,
+					 set_was_trace_dmgr,
+					 sync_nodeagent,
+					 get_trace_values_from_server.xml,					 
+					 verify_node_syncronization,
+					 
+					 start_standalone_server_problem,
+					 start_cluster_server_problem,
+				     start_nodeagent_problem,
+					 start_deployment_manager_problem,
+
+
+					 pause_with_condition, 
+					 gen_history_report,  
+					 rename_was_properties,
+
+					 restore_appserver_trace_values,
+					 restore_nodeagent_trace_values,
+					 restore_dmgr_trace_values,
+					 	
+			         recovery_completed_with_condition,  
+			         was_collect_from_ND,
+
+--> 
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+			         zip_collector_jarfile_recovery,
+					 restore_appserver_trace_values,
+					 restore_nodeagent_trace_values,
+					 restore_dmgr_trace_values,
+			         recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed" />
+	</target>
+
+	<!-- This target is used to determine the problem type and set some properties -->
+
+	<target name="start_problem_types"
+	        description="Select problem types for starting problem">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Selecting_problem_type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Selecting problem types"
+		           replace="${autopdts};;${step.count}"
+		           id="2605"
+		           level="info" />
+
+		<if isTrue="${isCluster}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Select_start_problem_coming_from"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="start.problem.from"
+				           label="Problem"
+				           list="command.line:admin.console"
+				           listDetails="Command line:Admin console"
+				           type="selectlist"
+				           accessibilityName="was_start_problem"
+				           accessibilityDesc="was_start_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<if isTrue="${isStandalone}">
+			<property name="start.problem.from" value="command.line" />
+		</if>
+
+		<condition property="isCommandLine">
+			<equals arg1="command.line" arg2="${start.problem.from}" />
+		</condition>
+		<echo message="isCommandLine: ${isCommandLine}" />
+
+		<if isTrue="${isCommandLine}">
+			<property name="recovery.completed.needed" value="true" />
+			<property name="recovery.needed" value="true" />
+		</if>
+
+
+		<condition property="isAdminConsole">
+			<equals arg1="admin.console" arg2="${start.problem.from}" />
+		</condition>
+
+		<echo message="isAdminConsole: ${isAdminConsole}" />
+		<if isTrue="${isAdminConsole}">
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.adminconsole.trace.needed" value="true" />
+			<condition property="nodeagent.adminconsole.trace.needed">
+				<istrue value="${isWASVersion5}" />
+			</condition>
+			<property name="ND.collect.needed" value="true" />
+			<property name="enable.pause" value="true" />
+
+
+		</if>
+		<if isTrue="${nodeagent.adminconsole.trace.needed}">
+			<property name="was.nodeagent.trace.string" value="Admin=all=enabled" />
+		</if>
+		<if isTrue="${isCluster}">
+			<if isTrue="${isCommandLine}">
+				<inputdialogtask>
+					<fieldtask name="prompt"
+					           label="Select_start_problem_type"
+					           type="prompt"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="start.problem.type"
+					           label="Problem"
+					           list="appserver:nodeagent:dmgr"
+					           listDetails="Start AppServer:Start NodeAgent:Start DeploymentManager"
+					           type="selectlist"
+					           accessibilityName="was_start_problem"
+					           accessibilityDesc="was_start_problem"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+			</if>
+		</if>
+
+		<if isTrue="isStandalone">
+			<property name="start.problem.type" value="appserver" />
+		</if>
+
+		<condition property="isClusterAppServer">
+			<and>
+				<equals arg1="appserver" arg2="${start.problem.type}" />
+				<equals arg1="command.line" arg2="${start.problem.from}" />
+				<istrue value="${isCluster}" />
+			</and>
+		</condition>
+
+		<condition property="isNodeAgent">
+			<and>
+				<equals arg1="nodeagent" arg2="${start.problem.type}" />
+				<equals arg1="command.line" arg2="${start.problem.from}" />
+			</and>
+		</condition>
+
+		<condition property="isDMGR">
+			<and>
+				<equals arg1="dmgr" arg2="${start.problem.type}" />
+				<equals arg1="command.line" arg2="${start.problem.from}" />
+			</and>
+		</condition>
+
+		<if isTrue="${isStandalone}">
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.trace.needed" value="true" />
+			<property name="isAppServerNONE" value="true" />
+			<property name="get.appserver.trace.needed" value="true" />
+			<property name="restore.appserver.trace.needed" value="true" />
+
+		</if>
+
+		<if isTrue="${isClusterAppServer}">
+
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.trace.needed" value="true" />
+			<property name="get.appserver.trace.needed" value="true" />
+			<property name="restore.appserver.trace.needed" value="true" />
+
+			<property name="detect.nodeagent.status.needed" value="true" />
+			<property name="detect.dmgr.status.needed" value="true" />
+			<property name="ND.collect.needed" value="true" />
+		</if>
+
+
+		<if isTrue="${isNodeAgent}">
+			<property name="need.nodeagent.properties" value="true" />
+			<property name="isNodeAgentNONE" value="true" />
+			<property name="nodeagent.trace.needed" value="true" />
+			<property name="get.nodeagent.trace.needed" value="true" />
+			<property name="restore.nodeagent.trace.needed" value="true" />
+			<property name="ND.collect.needed" value="true" />
+		</if>
+
+		<if isTrue="${isDMGR}">
+			<property name="need.dmgr.properties" value="true" />
+			<property name="dmgr.trace.needed" value="true" />
+			<property name="get.dmgr.trace.needed" value="true" />
+			<property name="restore.dmgr.trace.needed" value="true" />
+			<property name="isDMGRNONE" value="true" />
+
+		</if>
+
+	</target>
+
+	<target name="set_connection_type_properties"
+	        description="set connection type properties"
+	        if="isClusterAppServer">
+
+		<condition property="dmgr.nodeagent.running.status">
+			<and>
+				<istrue value="${nodeagent.server.started.status}" />
+				<istrue value="${dmgr.server.started.status}" />
+			</and>
+		</condition>
+
+
+		<if isTrue="${dmgr.nodeagent.running.status}">
+			<property name="isAppServerSOAP" value="true" />
+			<property name="isDMGRSOAP" value="true" />
+			<property name="doNodeSync" value="true" />
+			<property name="doNodeSyncVerification" value="true" />
+
+			<property name="get.dmgr.trace.needed" value="true" />
+			<property name="restore.dmgr.trace.needed" value="true" />
+
+			<property name="query.was.dmgr.properties.needed" value="true" />
+			<property name="dmgr.trace.needed" value="true" />
+			<property name="ND.collect.needed" value="true" />
+			<property name="traces.from.server.xml.needed" value="true" />
+		</if>
+
+		<if isNotTrue="${dmgr.nodeagent.running.status}">
+			<property name="isAppServerNONE" value="true" />
+		</if>
+
+		<echo message="isAppServerSOAP: ${isAppServerSOAP}" />
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="generate_start_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2606"
+		           level="info" />
+
+
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="*=info:com.ibm.ws.*=all" />
+		</if>
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="*=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+	</target>
+
+	<target name="start_standalone_server_problem"
+	        description="Start standalone server problem"
+	        if="isStandalone">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Start_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Start Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="2607"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/startServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+	</target>
+
+
+	<target name="sync_nodeagent"
+	        description="Start problem from cluster env"
+	        if="doNodeSync">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Run_syncronization_for_a_node_of_WebSphere_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Running syncronization for a node of WebSphere Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="2608"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/syncNode.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/syncNode.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+	</target>
+
+
+	<target name="verify_node_syncronization"
+	        description="Start problem from cluster env"
+	        if="doNodeSyncVerification">
+		<condition property="trace.sync.succeeded">
+			<equals arg1="${was.trace.string}"
+			        arg2="${server.xml.startupTraceSpecification}" />
+		</condition>
+		<if isNotTrue="${trace.sync.succeeded}">
+			<autopdinput message="The_node_synchronization_process_doesnt_execute_successfully"
+			             bundle="autopdtoolstrings"
+			             validargs="OK"
+			             addproperty="sync.status" />
+		</if>
+		<condition property="sync.status.failed">
+			<equals arg1="sync.status" arg2="OK" />
+		</condition>
+		<if isTrue="sync.status.failed">
+			<fail message="Script_failed_due_to_an_error" />
+		</if>
+
+	</target>
+
+	<target name="start_cluster_server_problem"
+	        description="Start problem from cluster env"
+	        if="isClusterAppServer">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Start_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Start Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="2607"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/startServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} -trace" />
+		</exec>
+
+	</target>
+
+	<target name="start_nodeagent_problem"
+	        description="Start problem from cluster env"
+	        if="isNodeAgent">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Start_Node_Agent"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Start Node Agent"
+		           replace="${autopdts};;${step.count}"
+		           id="2609"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/startNode.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startNode.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -trace" />
+		</exec>
+
+	</target>
+
+	<target name="start_deployment_manager_problem"
+	        description="Start problem from cluster env"
+	        if="isDMGR">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Start_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Start Deployment Manager"
+		           replace="${autopdts};;${step.count}"
+		           id="2610"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/startManager.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startManager.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -trace" />
+		</exec>
+
+	</target>
+
+	<!-- This target determines whether a WSAS NodeAgent is running.
+	-->
+	<target name="detect_nodeagent_status"
+	        description="Detect the running status of WebSphere NodeAgent"
+	        if="detect.nodeagent.status.needed">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Detecting_the_running_status_of_WebSphere_NodeAgent"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Detecting the running status of WebSphere NodeAgent"
+		           replace="${autopdts};;${step.count}"
+		           id="2611"
+		           level="info" />
+
+		<property name="was.status.file" value="${autopdtmp}/autopd/was-status.txt" />
+		<delete file="${was.status.file}" />
+
+		<exec executable="${was.enhanced.root}/bin/serverStatus.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="${os.windows}">
+			<arg line=" nodeagent ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/serverStatus.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="${os.unixkind.exclude.iseries}">
+			<arg line=" nodeagent ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.root}/bin/serverStatus"
+		      dir="${was.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="OS/400">
+			<arg line=" nodeagent ${was.admin.info}" />
+		</exec>
+
+		<available file="${was.status.file}"
+		           type="file"
+		           property="nodeagent.status.file.existing" />
+
+		<if isTrue="${nodeagent.status.file.existing}">
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${was.status.file}" />
+			</concat>
+			<was_status key="nodeagent.server.started.status"
+			            pattern="${ServerName}.*STARTED"
+			            filename="${was.status.file}"
+			            value="true" />
+		</if>
+		<echo message="nodeagent.server.started.status: ${nodeagent.server.started.status}" />
+	</target>
+
+	<!-- This target determines whether a WSAS Deployment Manager is running.
+	-->
+	<target name="detect_dmgr_status"
+	        description="Detect the running status of WebSphere Deployment Manager"
+	        if="detect.dmgr.status.needed">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Detecting_the_running_status_of_WebSphere_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Detecting the running status of WebSphere Deployment Manager"
+		           replace="${autopdts};;${step.count}"
+		           id="2612"
+		           level="info" />
+
+		<property name="was.status.file" value="${autopdtmp}/autopd/was-status.txt" />
+		<delete file="${was.status.file}" />
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="${os.windows}">
+			<arg line=' -f "${bundle.basedir}/scripts/jacl/wsadmin-test.jacl" ${was.admin.info}' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="${os.unixkind.exclude.iseries}">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/wsadmin-test.jacl ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.root}/bin/wsadmin"
+		      dir="${was.root}/bin"
+		      output="${was.status.file}"
+		      append="false"
+		      os="OS/400">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/wsadmin-test.jacl ${was.admin.info}" />
+		</exec>
+
+		<available file="${was.status.file}"
+		           type="file"
+		           property="dmgr.status.file.existing" />
+
+		<if isTrue="${dmgr.status.file.existing}">
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${was.status.file}" />
+			</concat>
+			<was_status key="dmgr.server.notstarted.status"
+			            pattern="Error(.*)connection"
+			            filename="${was.status.file}"
+			            value="false" />
+		</if>
+
+		<condition property="dmgr.server.started.status">
+			<not>
+				<equals arg1="false" arg2="${dmgr.server.notstarted.status}" />
+			</not>
+		</condition>
+		<echo message="dmgr.server.started.status: ${dmgr.server.started.status}" />
+	</target>
+
+	<target name="get_trace_values_from_server.xml" if="traces.from.server.xml.needed">
+
+		<available file="${was.enhanced.root}\config\cells\${CellName}\nodes\${NodeName}\servers\${ServerName}\server.xml"
+		           type="file"
+		           property="was.server.existing" />
+
+		<if isNotTrue="${was.server.existing}">
+			<autopdinput message="You_have_used_a_wrong_server_name_node_name_cell_name_please_give_correct_one_and_run_tool_for_this_problem_again"
+			             validargs="OK"
+			             addproperty="was.server.wrong" />
+			<wsnlsecho key="You_have_used_a_wrong_server_name_node_name_cell_name_please_give_correct_one_and_run_tool_for_this_problem_again"
+			           bundle="properties/autopdtoolstrings"
+			           message="You have used an incorrect server name, node name, or cell name.  Please correct the error and run the Automated Problem Determination tool again for this problem."
+			           id="2298"
+			           level="warning" />
+		</if>
+
+
+		<xmlproperty file="${was.enhanced.root}\config\cells\${CellName}\nodes\${NodeName}\servers\${ServerName}\server.xml" />
+
+		<condition property="uses.XMI.rootelement">
+			<isset property="xmi:XMI.process:Server.processDefinition(xmi:id)" />
+		</condition>
+
+		<if isTrue="${uses.XMI.rootelement}">
+			<property name="server.xml.startupTraceSpecification"
+			          value="${xmi:XMI.process:Server.services(startupTraceSpecification)}" />
+			<echo message="${xmi:XMI.process:Server.services(startupTraceSpecification)}" />
+		</if>
+
+		<!-- added to support WAS 6 Profiles -->
+		<condition property="uses.processdefinition">
+			<isset property="process:Server.processDefinition(xmi:id)" />
+		</condition>
+
+		<if isTrue="${uses.processdefinition}">
+			<property name="server.xml.startupTraceSpecification"
+			          value="${process:Server.services(startupTraceSpecification)}" />
+
+			<echo message="${process:Server.services(startupTraceSpecification)}" />
+		</if>
+
+		<condition property="uses.processdefinitions">
+			<isset property="process:Server.processDefinitions(xmi:id)" />
+		</condition>
+
+		<if isTrue="${uses.processdefinitions}">
+			<property name="server.xml.startupTraceSpecification"
+			          value="${process:Server.services(startupTraceSpecification)}" />
+			<echo message="${process:Server.services(startupTraceSpecification)}" />
+		</if>
+
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Start Problem&lt;/h2&gt;&lt;p&gt;
+				This problem category should be run on the Deployment Manager or host containing the administrative console.
+				Trace values are set for the Deployment Manager, Node Agent, and server and an application server start is
+					attempted. After the start has completed - or failed - the state of the servers is restored and the 
+					logs, configuration, and trace files are collected.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1141075" />
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category should be run on the Deployment Manager or host 
+containing the administrative console. Trace values are set for the Deployment Manager, Node Agent, 
+and server and an application server start is attempted. After the start has completed - or failed - 
+the state of the servers is restored and the logs, configuration, and trace files are collected." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Start Problem =>
+This problem category should be run on the Deployment Manager or host containing the administrative console.
+Trace values are set for the Deployment Manager, Node Agent, and server and an application server start is
+attempted. After the start has completed - or failed - the state of the servers is restored and the
+logs, configuration, and trace files are collected." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

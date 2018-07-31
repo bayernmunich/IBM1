@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<?xml-stylesheet type="text/xsl" href="cheatsheet.xsl"?>
+
+<cheatsheet title="Connecting to a database">
+
+	<intro 
+		href="database_connection_intro.htm">
+        <description>
+            This guided activity leads you through a set of steps to configure database access for an application.  
+            It is assumed that the database software is installed and configured.  
+            After completing these steps, your application will be able to access the data from a database.  
+            &lt;br/&gt;&lt;br/&gt;
+To continue, click &lt;strong&gt;Start&lt;/strong&gt;.
+         </description>
+	</intro>
+
+	<item
+        href=""
+		title="Configure credentials for secure database access">
+		<action
+			class="com.ibm.ws.console.security.forwardCmd.do?forwardName=JAASAuthData.content.main"/>
+		<description>
+In this step, configure the authentication data with an alias so that the credentials can be used in later steps when you configure the data source 
+or deploy the application.
+&lt;br/&gt;&lt;br/&gt;
+Authentication aliases are optional for certain data source types that are available on the z/OS platform. If you are using WebSphere Application Server for z/OS, see the information center article entitled, &lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=phil&amp;product=was-nd-zos&amp;topic=conthidep"&gt;
+Using thread identity support&lt;/A&gt; before making a decision about your data source security configuration.
+&lt;br/&gt;&lt;br/&gt;
+
+&lt;A HREF="javascript:showHideList('j2cconnectors')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="j2cconnectorsImg" ALIGN="left" BORDER="0"/&gt;
+&lt;/A&gt;
+Read more about JDBC and authentication aliases
+&lt;br/&gt;
+&lt;TABLE id="j2cconnectorsList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+Beginning with WebSphere Application Server Version 5.0, the JDBC technology is based on Java 2 Platform, Enterprise Edition Connector (J2C) standards.  
+J2C connectors define how application servers make and receive connections to external systems.  
+To configure secure access to external systems using J2C, you must configure the authentication data.  
+Authentication data is typically a set of credentials such as a user name and password that is used to verify your permission to access the system.
+Each piece of authentication data must be created and given a name, called an authentication alias.  
+After the authentication data is configured with an alias name, the alias name is used wherever you want to connect using that authentication data. 
+&lt;br/&gt;&lt;br/&gt;
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+
+&lt;br/&gt;
+
+
+To create a new J2C authentication alias, complete the following steps: 
+            &lt;ol&gt;
+            &lt;li&gt;Click &lt;strong&gt; Click to perform&lt;/strong&gt; to load the J2C authentication aliases panel.&lt;/li&gt;
+            &lt;li&gt;Click &lt;strong&gt;New&lt;/strong&gt; on the J2C authentication data entries panel.&lt;/li&gt;
+            &lt;li&gt;Enter the alias, user ID, password, and description. Click &lt;strong&gt;OK&lt;/strong&gt;. The updated J2C authentication alias list is displayed.&lt;/li&gt;
+            &lt;li&gt;To put the alias configuration into effect you may have to stop and start the server.  This will be performed later in the &lt;strong&gt;Test database connection&lt;/strong&gt; step of the guided activity.
+            &lt;/ol&gt;
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+            
+        </description>
+	</item>
+
+	<item
+		href="com.ibm.ws.console.resources/guidedactivity/cheatsheets/nl/lang/database_connection_jdbc.htm"
+		title="Configure a JDBC provider">
+		<action
+			class="navigatorCmd.do?forwardName=JDBCProvider.content.main"/>
+		<description>
+To access a database, you must first represent the client driver for the database vendor in WebSphere Application Server by creating a JDBC provider.  
+
+&lt;br/&gt;&lt;br/&gt;
+To create a new JDBC provider, complete the following steps:
+            &lt;ol&gt;
+            &lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the JDBC providers panel.&lt;/li&gt;
+                &lt;li&gt;Choose a valid scope from the &lt;strong&gt;Scope&lt;/strong&gt; dropdown.
+                &lt;li&gt;Click &lt;strong&gt;New&lt;/strong&gt; and the new JDBC provider wizard is displayed.&lt;/li&gt;
+                &lt;li&gt;Select the database type, provider type, implementation type, and name for the new JDBC provider.&lt;/li&gt;
+                &lt;li&gt;Click &lt;strong&gt;Next&lt;/strong&gt; to proceed to the next step.  &lt;/li&gt;
+                &lt;li&gt;Enter the database classpath information for the JDBC provider.&lt;/li&gt;
+                &lt;li&gt;Click &lt;strong&gt;Next&lt;/strong&gt; to proceed to the next step.&lt;/li&gt;
+                &lt;li&gt;Review the JDBC provider information you have entered and click &lt;strong&gt;Finish&lt;/strong&gt;.
+            &lt;/ol&gt;
+
+
+
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+</description>
+	</item>
+
+          
+          
+          
+          
+          
+          
+	<item
+		title="Configure WebSphere variables">
+		<action
+			class="navigatorCmd.do?forwardName=VariableSubstitutionEntry.content.main"/>
+		<description>
+You can define a WebSphere Application Server variable to provide a parameter for some values in the system. 
+After you define the name and value for a variable, the value is used in place of the variable name. 
+Variables most often specify file paths. However, some system components also support the use of variables.
+&lt;br/&gt;&lt;br/&gt;
+To create a new WebSphere Variable for your JDBC provider, complete the following steps:
+            &lt;ol&gt;
+                &lt;li&gt;Look for any &lt;tt&gt;${&lt;i&gt;variable name&lt;/i&gt;}&lt;/tt>used in your JDBC provider's Classpath and Native library path properties on the Details panel.&lt;/li&gt;
+                &lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the WebSphere Variables panel.&lt;/li&gt;
+                &lt;li&gt;Specify the scope of the variable. Declare the new variable for the Cell, Cluster, Node or Server and click &lt;strong&gt;Apply.&lt;/strong&gt; &lt;/li&gt;
+                &lt;li&gt;On the WebSphere Variables page, click on the &lt;i&gt;variable_name&lt;/i&gt; if it exists or click on &lt;strong&gt;New&lt;/strong&gt; to create it.&lt;/li&gt;
+                &lt;li&gt;In the &lt;strong&gt;Name&lt;/strong&gt; field, type in the &lt;i&gt;variable_name&lt;/i&gt; that you found in the Classpath or Native library path of the JDBC provider's detail panel.&lt;/li&gt;
+                &lt;li&gt;In the &lt;strong&gt;Value&lt;/strong&gt; field, type in the path for the location that the WebSphere variable should point to for the scope specified.&lt;/li&gt;
+                &lt;li&gt;Click &lt;strong&gt;OK&lt;/strong&gt;.  Verify that the variable is displayed in the list of variables. The administrative console does not pick up typing errors. The variable is ignored if it is referred to incorrectly.&lt;/li&gt; 
+                &lt;li&gt;To put the variable configuration into effect you might have to stop and start the server.  This will be performed later in the &lt;strong&gt;Test database connection&lt;/strong&gt; step of the guided activity.&lt;/li&gt;
+            &lt;/ol&gt;
+
+
+
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+</description>
+	</item>          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+	<item
+		href="com.ibm.ws.console.resources/guidedactivity/cheatsheets/nl/lang/database_connection_datasource.htm"
+		title="Configure a data source">
+		<action
+			class="navigatorCmd.do?forwardName=JDBCProvider.content.main"/>
+		<description>
+After the JDBC provider is configured, you must use a data source to access the database. 
+&lt;br/&gt;&lt;br/&gt;
+To create a new data source, complete the following steps:
+
+            &lt;ol&gt;
+            &lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the JDBC providers panel.&lt;/li&gt;
+            &lt;li&gt;Click on the name of the JDBC provider that you want to create a data source for.&lt;/li&gt;
+            &lt;li&gt;Click &lt;strong&gt;Data sources&lt;/strong&gt; under the Additional Properties of the JDBC provider details panel.&lt;/li&gt;
+            &lt;li&gt;To create a new data source, click &lt;strong&gt;New&lt;/strong&gt; and the new data source wizard will be displayed.&lt;/li&gt;
+            &lt;li&gt;When prompted, enter the data source name and JNDI name.&lt;/li&gt;
+            &lt;li&gt;Click &lt;strong&gt;Next&lt;/strong&gt; to proceed to the next step.&lt;/li&gt;
+            &lt;li&gt;Enter the required data source properties and choose whether or not the new data source should be used in container managed persistence.&lt;/li&gt;
+            &lt;li&gt;Click &lt;strong&gt;Next&lt;/strong&gt; to proceed to the next step.&lt;/li&gt;
+            &lt;li&gt;Select the authentication aliases to use. An alias is not required.&lt;/li&gt;
+            &lt;li&gt;Click &lt;strong&gt;Next&lt;/strong&gt; to proceed to the next step.&lt;/li&gt;
+            &lt;li&gt;Review the data source information you have entered and click &lt;strong&gt;Finish&lt;/strong&gt;.
+            &lt;/ol&gt;
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+		</description>
+	</item>
+
+	<item
+		href=""
+		title="Save and synchronize configuration">
+		<action
+			class=""/>
+		<description>
+Click &lt;strong&gt;Save&lt;/strong&gt; in the message at the top of the console panel to update the configuration in the master repository.
+&lt;br/&gt;&lt;br/&gt;To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+		</description>
+	</item>
+
+
+	<item
+		href="com.ibm.ws.console.resources/guidedactivity/cheatsheets/nl/lang/database_connection_testconnection.htm"
+		title="Test database connection">
+		<action
+			class="navigatorCmd.do?forwardName=DataSource.content.main"/>
+		<description>
+After you define and save a data source, click &lt;strong&gt;Click to
+perform&lt;/strong&gt; to select a data source to test.  Select the data source and click &lt;strong&gt;Test connection&lt;/strong&gt; on the data sources
+collection panel or the data source details panel to verify that the parameters
+in the data source definition are correct.
+&lt;br/&gt;
+&lt;br/&gt;
+If you have created a new J2C authentication alias or WebSphere Variable, you may need
+to stop and start your server before proceeding. 
+
+&lt;br/&gt;&lt;br/&gt;
+For more details, see the information center article entitled, 
+&lt;A target="help" HREF="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=phil&amp;product=was-base-dist&amp;topic=testcon"&gt;
+Testing a connection with the administrative console&lt;/A&gt;.
+		</description>
+	</item>
+
+</cheatsheet>

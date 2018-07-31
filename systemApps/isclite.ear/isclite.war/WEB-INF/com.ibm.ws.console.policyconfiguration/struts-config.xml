@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+	<form-beans>
+		<form-bean name="ServiceClassCollectionForm" type="com.ibm.ws.console.policyconfiguration.form.ServiceClassCollectionForm" />
+		<form-bean name="ServiceClassDetailForm" type="com.ibm.ws.console.policyconfiguration.form.ServiceClassDetailForm" />
+		<form-bean name="TransactionClassDetailForm" type="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+		<form-bean name="CreateServiceClassStep1Form" type="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<form-bean name="CreateServiceClassStep3Form" type="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<form-bean name="CreateServiceClassStep2Form" type="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<form-bean name="ConfirmServiceClassCreateForm" type="com.ibm.ws.console.policyconfiguration.form.CreateServiceClassStep1Form" />
+		<form-bean name="CreateTransactionClassStep1Form" type="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+		<form-bean name="CreateTransactionClassStep2Form" type="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+		<form-bean name="CreateTransactionClassStep3Form" type="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+		<form-bean name="ConfirmTransactionClassCreateForm" type="com.ibm.ws.console.policyconfiguration.form.TransactionClassDetailForm" />
+	</form-beans>
+
+	<global-forwards>
+		<forward name="serviceclass.wizard.steps.properties" path="serviceclass.wizard.steps.properties" />
+		<forward name="serviceclass.wizard.steps.goalproperties" path="serviceclass.wizard.steps.goalproperties" />
+		<forward name="serviceclass.wizard.steps.members" path="serviceclass.wizard.steps.members" />
+		<forward name="serviceclass.wizard.steps.confirm" path="serviceclass.wizard.steps.confirm" />
+
+		<forward name="transactionclass.wizard.steps.properties" path="transactionclass.wizard.steps.properties" />
+<!--		
+		<forward name="transactionclass.wizard.steps.members" path="transactionclass.wizard.steps.members" />
+-->		
+		<forward name="transactionclass.wizard.steps.confirm" path="transactionclass.wizard.steps.confirm" />
+	</global-forwards>
+
+
+	<action-mappings>
+		<action path="/com.ibm.ws.console.policyconfiguration.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+			<forward name="serviceclass.content.main" path="serviceclass.content.main" />
+			<forward name="serviceclasstopology.content.main" path="serviceclasstopology.content.main" />			
+		</action>
+
+		<action path="/ServiceClassCollection" name="ServiceClassCollectionForm" scope="session" type="com.ibm.ws.console.policyconfiguration.action.ServiceClassCollectionAction">
+			<forward name="editnew" path="serviceclass.wizard.steps.properties" />
+			<forward name="edit" path="serviceclass.detail.main" />
+			<forward name="success" path="serviceclass.content.main" />
+		</action>
+
+
+		<action path="/ServiceClassDetail" name="ServiceClassDetailForm" input="serviceclass.detail.main" validate="true" scope="session" type="com.ibm.ws.console.policyconfiguration.action.ServiceClassDetailAction">
+			<forward name="success" path="serviceclass.content.main" />
+			<forward name="addTransactionClass" path="transactionclass.wizard.steps.properties" />
+			<forward name="editTransactionClass" path="transactionclass.detail.main" />
+			<forward name="moveTransactionClass" path="transactionclass.move.main" />
+			<forward name="edit" path="serviceclass.detail.main" />
+		</action>
+
+		<action path="/TransactionClassDetail" name="TransactionClassDetailForm" scope="session" type="com.ibm.ws.console.policyconfiguration.action.TransactionClassDetailAction">
+			<forward name="success" path="serviceclass.detail.main"/>
+			<forward name="successnew" path="serviceclass.wizard.steps.members" />
+			<forward name="edit" path="transactionclass.detail.main" />
+		</action>
+
+		<action path="/DisplayServiceClassDetails" name="ServiceClassDetailForm" input="serviceclass.detail.main" scope="session" type="com.ibm.ws.console.policyconfiguration.action.DisplayServiceClassDetailAction">
+			<forward name="complete" path="serviceclass.detail.main" />
+		</action>
+
+
+		<action path="/CreateServiceClassStep1" name="CreateServiceClassStep1Form" scope="session" type="com.ibm.ws.console.policyconfiguration.action.CreateServiceClassStep1Action">
+			<forward name="cancel" path="serviceclass.content.main" />
+			<forward name="editdisc" path="serviceclass.wizard.steps.members" />
+			<forward name="editperf" path="serviceclass.wizard.steps.goalproperties" />
+		</action>
+		<action path="/CreateServiceClassStep2" name="CreateServiceClassStep2Form" scope="session" type="com.ibm.ws.console.policyconfiguration.action.CreateServiceClassStep2Action">
+			<forward name="cancel" path="serviceclass.content.main" />
+			<forward name="edit" path="serviceclass.wizard.steps.members" />
+			<forward name="previous" path="serviceclass.wizard.steps.properties" />
+		</action>
+		<action path="/CreateServiceClassStep3" name="CreateServiceClassStep3Form" scope="session" type="com.ibm.ws.console.policyconfiguration.action.CreateServiceClassStep3Action">
+			<forward name="cancel" path="serviceclass.content.main" />
+			<forward name="edit" path="serviceclass.wizard.steps.members" />
+			<forward name="previousdisc" path="serviceclass.wizard.steps.properties" />
+			<forward name="previousavg" path="serviceclass.wizard.steps.goalproperties" />
+			<forward name="addTransactionClass" path="transactionclass.wizard.steps.properties" />
+			<forward name="modifyTransactionClass" path="transactionclass.detail.main" />
+		</action>
+
+		<action path="/ConfirmServiceClassCreate" name="ConfirmServiceClassCreateForm" scope="session" type="com.ibm.ws.console.policyconfiguration.action.ConfirmServiceClassCreateAction">
+			<forward name="cancel" path="serviceclass.content.main" />
+			<forward name="previous" path="serviceclass.wizard.steps.members" />
+			<forward name="success" path="serviceclass.content.main" />
+		</action>
+
+		<action path="/CreateTransactionClassStep1" name="CreateTransactionClassStep1Form" scope="session" type="com.ibm.ws.console.policyconfiguration.action.CreateTransactionClassStep1Action">
+			<forward name="cancel" path="serviceclass.detail.main" />
+			<forward name="cancelnew" path="serviceclass.wizard.steps.members" />
+		</action>
+<!--		
+		<action path="/CreateTransactionClassStep2" name="CreateTransactionClassStep2Form" scope="session" type="com.ibm.ws.console.policyconfiguration.action.CreateTransactionClassStep2Action">
+			<forward name="cancel" path="serviceclass.detail.main" />
+			<forward name="cancelnew" path="serviceclass.wizard.steps.members" />
+			<forward name="edit" path="transactionclass.wizard.steps.members" />
+			<forward name="previous" path="transactionclass.wizard.steps.properties" />
+		</action>
+-->
+		<action path="/ConfirmTransactionClassCreate" name="ConfirmTransactionClassCreateForm" scope="session" type="com.ibm.ws.console.policyconfiguration.action.ConfirmTransactionClassCreateAction">
+			<forward name="cancel" path="serviceclass.detail.main" />
+			<forward name="cancelnew" path="serviceclass.wizard.steps.members" />
+			<forward name="previous" path="transactionclass.wizard.steps.properties" />
+			<forward name="success" path="serviceclass.detail.main" />
+			<forward name="successnew" path="serviceclass.wizard.steps.members" />
+		</action>
+
+	</action-mappings>
+</struts-config>

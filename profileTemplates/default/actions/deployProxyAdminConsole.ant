@@ -1,0 +1,155 @@
+<project name="proxyWebuiConfig" default="proxyWebuiConfig" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <property name="NODE_NAME" value="${WS_CMT_NODE_NAME}"/>
+    <property name="CELL_NAME" value="${WS_CMT_CELL_NAME}"/>
+    <property name="serverName" value="dmgr"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="z/OS">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+
+        <condition property="distributed" value="true">
+            <not> 
+                 <equals arg1="${currentOSFamily}" arg2="z/OS"/>
+            </not>
+        </condition>
+        
+        <condition property="isZOS" value="true">
+            <equals arg1="${currentOSFamily}" arg2="z/OS"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setOSCRLFSequence"
+            description="Sets CRLF to whatever is the appropriate CRLF sequence for this platform"
+            if="distributed">
+
+        <condition property="CRLF" value="&#10;">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        <condition property="CRLF" value="&#10;">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="CRLF" value="&#13;&#10;">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        <condition property="CRLF" value="&#10;">
+            <equals arg1="${currentOSFamily}" arg2="z/OS"/>
+        </condition>
+        
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)"
+            if="distributed">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="convertWASHomeToUNIXStylePath"
+            if="distributed">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+    
+    <target name="resolveSetupCmdLineName"
+            if="distributed">
+        <available property="setupCmdLineName"
+            value="setupCmdLine"
+            file="${WAS_HOME}/bin/setupCmdLine"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.bat"
+            file="${WAS_HOME}/bin/setupCmdLine.bat"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.sh"
+            file="${WAS_HOME}/bin/setupCmdLine.sh"/>
+
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>    
+
+	 
+    <target name="deployProxyAdminConsole"
+            description="Registers proxy console plugin" if="distributed">
+            
+        <wscmtlog>Registering proxy console plugin (distributed), the output will be recorded in: ${WAS_HOME}/logs/proxy_webui_config.log</wscmtlog>
+            
+        <replaceregexp file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml"
+			match="(.*)com.ibm.ws.console.proxy(.*)"
+			replace=""
+			byline="true"/>
+        <replaceregexp file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml"
+			match="(.*)/feature>(.*)"
+			replace=""
+			byline="true"/>
+		<echo file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" append="true">    &#60;plugin id="com.ibm.ws.console.proxy" version="6.0.0" uri="com.ibm.ws.console.proxy/plugin.xml"/&#62; ${CRLF}</echo>
+		<echo file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" append="true">&#60;/feature&#62; </echo>
+
+    </target>
+    
+    <target name="deployProxyAdminConsoleZOS"
+            description="Registers proxy console plugin" if="isZOS">
+        <taskdef name="changeFileEncoding" classname="com.ibm.ws.profile.anttasks.ChangeFileEncoding"/>
+                
+        <wscmtlog>Registering proxy console plugin (z/OS) , the output will be recorded in: ${WAS_HOME}/logs/proxy_webui_config.log</wscmtlog>
+        <changeFileEncoding verbose="false" pathname="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" currentEncoding="ISO8859_1" newEncoding="Cp1047" />
+                              
+        <replaceregexp file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml"
+			match="(.*)com.ibm.ws.console.proxy(.*)"
+			replace=""
+			byline="true"/>
+        <replaceregexp file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml"
+			match="(.*)/feature>(.*)"
+			replace=""
+			byline="true"/>
+		<echo file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" append="true">    &#60;plugin id="com.ibm.ws.console.proxy" version="6.0.0" uri="com.ibm.ws.console.proxy/plugin.xml"/&#62; &#10;</echo>
+		<echo file="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" append="true">&#60;/feature&#62; </echo>
+		<changeFileEncoding verbose="false" pathname="${WAS_HOME}/features/com.ibm.ws.nd_6.0.0.0/feature.xml" currentEncoding="Cp1047" newEncoding="ISO8859_1" />
+    </target>
+    
+    <target name="proxyWebuiConfig"
+        description="Configures proxy webui"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            setOSCRLFSequence,
+            convertWASHomeToUNIXStylePath,
+            resolveSetupCmdLineName,
+            deployProxyAdminConsole,
+            deployProxyAdminConsoleZOS"/>
+</project>

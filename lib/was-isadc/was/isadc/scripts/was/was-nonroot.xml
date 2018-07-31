@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS Non-Root Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS Non-Root Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	
+	<property name="autopdProblem" value="WAS_Non-Root_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-non-root" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+
+		
+		was_stack_custom_init,
+		
+		non-root_collect_info,
+		
+		gen_history_report,
+		execute_collector, 
+		execute_vce_info_for_was,
+		
+		common_postamble_general_with_ftp">
+	</target>
+
+	<target name="non-root_collect_info">
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.nonroot.ques1"
+			           label="NRoot_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.nonroot.ques2"
+			           label="NRoot_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.nonroot.ques3"
+			           label="NRoot_Q3"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.nonroot.process"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was"
+					   label="nonroot_process_type"
+					   list="Dmgr:Application Server from non-root and node agent from root:Dmgr, application server and node agent from non-root"
+					   listDetails="Dmgr:Application Server from non-root and node agent from root:Dmgr, application server and node agent from non-root"
+					   type="selectlist" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Are you able to start the server with the root id ? ${line.separator}
+					${ws.nonroot.ques1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			The user names used as the RUN-AS user.${line.separator}
+					${ws.nonroot.ques2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			The list of groups associated with the RUN-AS user.${line.separator}
+					${ws.nonroot.ques3}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			For Network Deployment editions only: What processes are you trying to run with a non-root user ID?${line.separator}
+					${ws.nonroot.process}${line.separator}
+		</concat>
+
+	</target>
+	
+	<target name="usage"
+	        description="&lt;h2&gt;Problem Running as Non-Root&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the Problem of Running as Non-Root.
+					It will set the appropriate trace string.
+					After the problem has been reproduced the logs, configuration,
+					and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1176003" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the Problem of running as Non-Root.
+It will prompt some questions and run the Collector Tool that you can send in to support." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Problems running as Non-root =>
+This problem category is run on the managed node experiencing the  Problem of running as Non-Root.
+It will prompt some questions and run the Collector Tool that you can send in to support." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

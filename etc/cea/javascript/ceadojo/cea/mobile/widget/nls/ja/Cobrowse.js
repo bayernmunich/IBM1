@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"コラボレーション・ウィンドウ","SHOW_COLLABORATION_WINDOW":"コラボレーション・ウィンドウの表示","COBROWSE":"コブラウズ"})

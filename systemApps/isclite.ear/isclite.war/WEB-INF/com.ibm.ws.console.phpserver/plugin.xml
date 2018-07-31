@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.--> 
+
+<plugin id="com.ibm.ws.console.phpserver" 
+        name="phpserver" 
+        version="1.0.0" 
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="phpserver">  
+   
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+<!-- Comment out PHP Servers link from the navigator task bar 
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="servermanagement" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" parent="root" label="nav.webSphere.servers" weight="10"/>
+        <task id="phpserver" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" label="nav.view.PHPServer" view="/navigatorCmd.do?forwardName=PHPServer.content.main" external="false" weight="11">
+            <category id="servermanagement"/>
+        </task>
+</tasks>    
+</extension>   
+-->   
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- begin actionSet -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.PHPServer.action1" contextType="PHPServer">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="phpServerCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="phpServerCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.templates"
+              actionURI="phpServerCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="phpServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="phpServerCollection.do">
+        </action> 
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="phpServerCollection.do">
+        </action> 
+    </actionSet>
+</extension>   
+<!-- end actionSet -->
+
+<!-- begin CollectionItems -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.PHPServer.collectionItem1" contextType="PHPServer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="phpServerCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+              attributeName="expandedVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>         
+    </collectionItem>
+</extension>
+<!-- end CollectionItems -->
+
+<!-- begin detailTabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.PHPServer.detailTab1" contextType="PHPServer">
+        <tab
+              label="tab.configuration"
+              contentURI="PHPServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.detailTab1" contextType="ProcessDef.phpserver.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.nodeOperatingSystem"
+					   value="(aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+              
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view.zOS">
+              <compatibility>
+                   <match key="com.ibm.websphere.nodeOperatingSystem"
+					   value="(os390)"/>
+              </compatibility>
+              
+        </tab>
+    </detailTab>
+</extension>       
+<!-- end detailTabs -->
+
+<!-- begin link -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="servermanagement.PHPServer1" contextType="PHPServer">
+   		<link
+              categoryId="additional.properties"
+              weight="20"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.phpserver.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=PHPServer.config.view">
+    	</link>
+    	<link
+              categoryId="additional.properties"
+              label="PHPServer.edit.httpd.conf.displayName"
+              description="PHPServer.additional.properties.description"
+              actionURI="com.ibm.ws.console.phpserver.forwardCmd.do?forwardName=PHPServer.edit.config.view">
+    	</link>
+    	<link
+              categoryId="additional.properties"
+              label="PHPServer.edit.php.ini.displayName"
+              description="PHPServer.additional.properties.description"
+              actionURI="com.ibm.ws.console.phpserver.forwardCmd.do?forwardName=PHPServer.edit.config.view">
+    	</link>
+  </linkSet>
+</extension>  
+<!-- end link -->
+
+<!-- start of custom properties -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="phpserver.Property.action1"  contextType="PHPServerProperty">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="phpServerPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="phpServerPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="phpserver.Property.collectionItem1" contextType="PHPServerProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="phpServerPropertyCollection.do?EditAction=true"
+              label="PHPServer.properties.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="PHPServer.properties.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="PHPServer.properties.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="phpserver.Plugin.Property.detailTab1" contextType="PHPServerProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="PHPServerProperty.config.tab.view">
+              				
+        </tab>
+    </detailTab>
+</extension>
+
+</plugin>
+

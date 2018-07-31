@@ -1,0 +1,2904 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2004,2011
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<plugin id="com.ibm.ws.console.wssecurity"
+        name="wssecurity"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="wssecurity">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.appmanagement"/>
+    <import plugin="com.ibm.ws.console.security"/>
+</requires>
+<!-- Web service security link on app server detail panel, hiding link using IS_TEMPLATE -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="servermanagement.ApplicationServer"
+          contextType="ApplicationServer">
+    <link label="WSServerSecurity.displayName"
+          description="WSServerSecurity.description"
+          categoryId="security.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerSecurity.config.view">
+          <compatibility>
+                  <match key="com.ibm.ws.console.wssecurity.applicationserver.ApplicationServerDetailForm.HAS_JAXWS" value="true"/>
+                  <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+          </compatibility>
+    </link>
+    <link label="WSServerSecurity.old.displayName"
+          description="WSServerSecurity.description"
+          categoryId="security.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerSecurity.config.view">
+          <compatibility>
+                      <match key="com.ibm.ws.console.wssecurity.applicationserver.ApplicationServerDetailForm.HAS_JAXWS" value="false"/>
+                      <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+          </compatibility>
+    </link>
+
+  </linkSet>
+</extension>
+
+<!-- BEGIN LIDB3726-2 -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="servermanagement.ClusterMember"
+          contextType="ClusterMember">
+    <link label="WSServerSecurity.displayName"
+          description="WSServerSecurity.description"
+          categoryId="clustermember.security.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerSecurity.config.view&amp;lastPage=ClusterMember.config.view">
+          <compatibility>
+                   <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="true"/>
+          </compatibility>
+    </link>
+    <link label="WSServerSecurity.old.displayName"
+          description="WSServerSecurity.description"
+          categoryId="clustermember.security.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerSecurity.config.view&amp;lastPage=ClusterMember.config.view">
+          <compatibility>
+                   <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="false"/>
+          </compatibility>
+    </link>
+  </linkSet>
+</extension>
+<!-- END LIDB3726-2 -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.WebModuleDeployment"
+          contextType="WebModuleDeployment">
+
+   <!-- Define section category for Webservices items -->
+   <categoryDefinition weight="42"
+       id="wssecurity.properties.category"
+       parent="root"
+       label="wssecurity.properties.category.displayName"/>
+
+       <link label="WSServerBinding.displayName"
+                description="WSServerBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerBinding.content.main">
+             <compatibility>
+                <match class="com.ibm.ws.console.wssecurity.WSServerBindingCollectionForm"
+                    key="com.ibm.ws.console.wssecurity.hasWebserviceServerModules" value="true"/>
+             </compatibility>
+          </link>
+       <link label="WSClientBinding.displayName"
+                description="WSClientBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSClientBinding.content.main">
+             <compatibility>
+                <match class="com.ibm.ws.console.wssecurity.WSClientBindingCollectionForm"
+                    key="com.ibm.ws.console.wssecurity.hasWebserviceClientModules" value="true"/>
+             </compatibility>
+          </link>
+   </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.EJBModuleDeployment"
+          contextType="EJBModuleDeployment">
+       <link label="WSServerBinding.displayName"
+                description="WSServerBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSServerBinding.content.main">
+             <compatibility>
+                 <match class="com.ibm.ws.console.wssecurity.WSServerBindingCollectionForm"
+                        key="com.ibm.ws.console.wssecurity.hasWebserviceServerModules" value="true"/>
+             </compatibility>
+          </link>
+       <link label="WSClientBinding.displayName"
+                description="WSClientBinding.description"
+                categoryId="wssecurity.properties.category"
+                actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSClientBinding.content.main">
+             <compatibility>
+                <match class="com.ibm.ws.console.wssecurity.WSClientBindingCollectionForm"
+                    key="com.ibm.ws.console.wssecurity.hasWebserviceClientModules" value="true"/>
+             </compatibility>
+          </link>
+    </linkSet>
+</extension>
+
+<!-- LDAPCertStore -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.LDAPCertStore"
+          contextType="LDAPCertStore">
+    <link label="LDAPCertStore.ldapProperties.displayName"
+          description="LDAPCertStore.ldapProperties.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=Properties.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.LDAPCertStore.collection1" contextType="LDAPCertStore">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="lDAPCertStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="lDAPCertStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="lDAPCertStoreCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.LDAPCertStore1" contextType="LDAPCertStore">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="lDAPCertStoreCollection.do?EditAction=true"
+              label="LDAPCertStore.name.displayName">
+        </item>
+        <item
+              attributeName="provider"
+              sortable="sort"
+              itemURI=""
+              label="LDAPCertStore.provider.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.LDAPCertStore1" contextType="LDAPCertStore">
+        <tab
+              label="tab.configuration"
+              contentURI="LDAPCertStore.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- CollectionCertStore -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.CollectionCertStore"
+          contextType="CollectionCertStore">
+    <link label="X509Certificate.displayName"
+          description="X509Certificate.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=X509Certificate.content.main&#38;sfname=x509Certificates"/>
+    <link label="CRL.displayName"
+          description="CRL.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CRL.content.main&#38;sfname=cRL">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.CollectionCertStore.collection1" contextType="CollectionCertStore">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="collectionCertStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="collectionCertStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="collectionCertStoreCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.CollectionCertStore1" contextType="CollectionCertStore">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="collectionCertStoreCollection.do?EditAction=true"
+              label="CollectionCertStore.name.displayName">
+        </item>
+        <item
+              attributeName="provider"
+              sortable="sort"
+              itemURI=""
+              label="CollectionCertStore.provider.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.CollectionCertStore1" contextType="CollectionCertStore">
+        <tab
+              label="tab.configuration"
+              contentURI="CollectionCertStore.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- KeyLocator -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.KeyLocator"
+          contextType="KeyLocator">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+    <link label="WSKey.displayName"
+          description="WSKey.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=Key.content.main&#38;sfname=keys"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.KeyLocator.collection1" contextType="KeyLocator">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="keyLocatorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="keyLocatorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="keyLocatorCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.KeyLocator1" contextType="KeyLocator">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="keyLocatorCollection.do?EditAction=true"
+              label="KeyLocator.name.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="KeyLocator.className.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.KeyLocator1" contextType="KeyLocator">
+        <tab
+              label="tab.configuration"
+              contentURI="KeyLocator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KeyLocatorGeneralProperties"
+          contextType="KeyLocator">
+       <!-- LIDB3919.15 Added keyStoreConfigName field -->
+       <field attributeName="keyStoreConfigName"
+             categoryId="KeyStore.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- TrustedIDEvaluator -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.TrustedIDEvaluator"
+          contextType="TrustedIDEvaluator">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.TrustedIDEvaluator.collection1" contextType="TrustedIDEvaluator">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="trustedIDEvaluatorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="trustedIDEvaluatorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="trustedIDEvaluatorCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.TrustedIDEvaluator1" contextType="TrustedIDEvaluator">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="trustedIDEvaluatorCollection.do?EditAction=true"
+              label="TrustedIDEvaluator.name.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="TrustedIDEvaluator.className.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.TrustedIDEvaluator1" contextType="TrustedIDEvaluator">
+        <tab
+              label="tab.configuration"
+              contentURI="TrustedIDEvaluator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- LoginMapping -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.LoginMapping"
+          contextType="LoginMapping">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+    <link label="LoginMapping.callbackProperties.displayName"
+          description="LoginMapping.callbackProperties.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=callbackHandlerFactory.properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.LoginMapping.collection1" contextType="LoginMapping">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="loginMappingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="loginMappingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="loginMappingCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.LoginMapping1" contextType="LoginMapping">
+        <item
+              attributeName="authMethod"
+              sortable="sort"
+              itemURI="loginMappingCollection.do?EditAction=true"
+              label="LoginMapping.authMethod.displayName">
+        </item>
+        <item
+              attributeName="configName"
+              sortable="sort"
+              itemURI=""
+              label="LoginMapping.configName.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="LoginMapping.callbackClassName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.LoginMapping1" contextType="LoginMapping">
+        <tab
+              label="tab.configuration"
+              contentURI="LoginMapping.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- LoginBinding -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.LoginBinding"
+          contextType="LoginBinding">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.LoginBinding1" contextType="LoginBinding">
+        <tab
+              label="tab.configuration"
+              contentURI="LoginBinding.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- WSServerSecurity -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.WSServerSecurity"
+          contextType="WSServerSecurity">
+        <categoryDefinition weight="20" id="generator.bindings" parent="root" label="WSSecurity.generatorBindings.displayName"/>
+        <categoryDefinition weight="30" id="consumer.bindings" parent="root" label="WSSecurity.consumerBindings.displayName"/>
+    <link label="AlgorithmMapping.displayName"
+          description="AlgorithmMapping.description"
+          categoryId="additional.properties"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=AlgorithmMapping.content.main&#38;sfname=algorithmMapping">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="TrustAnchor.displayName"
+          description="TrustAnchor.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustAnchor.content.main&#38;sfname=trustAnchors"/>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList"/>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocators"/>
+    <link label="TrustedIDEvaluator.displayName"
+          description="TrustedIDEvaluator.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustedIDEvaluator.content.main&#38;sfname=trustedIDEvaluators"/>
+    <link label="LoginMapping.displayName"
+          description="LoginMapping.description"
+          categoryId="additional.properties"
+          weight="60"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=LoginMapping.content.main&#38;sfname=loginMappings">
+    </link>
+    
+ 
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="70"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties">
+              <compatibility>
+                   <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="false"/>
+              </compatibility>
+    </link>   
+
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="generator.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenSigningInfo.content.main&#38;sfname=defaultbindings.generator.signingInfo"
+          summaryViewURI="SigningInfo.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="generator.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenEncryptionInfo.content.main&#38;sfname=defaultbindings.generator.encryptionInfo"
+          summaryViewURI="EncryptionInfo.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="generator.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=defaultbindings.generator.keyInfo">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="TokenGenerator.displayName"
+          description="TokenGenerator.description"
+          categoryId="generator.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenGenerator.content.main&#38;sfname=defaultbindings.generator.tokenGenerator"
+          summaryViewURI="TokenGenerator.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="generator.bindings"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=defaultbindings.generator.properties">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="consumer.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConSigningInfo.content.main&#38;sfname=defaultbindings.consumer.signingInfo"
+          summaryViewURI="ConSigningInfo.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="consumer.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConEncryptionInfo.content.main&#38;sfname=defaultbindings.consumer.encryptionInfo"
+          summaryViewURI="ConEncryptionInfo.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="consumer.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=defaultbindings.consumer.keyInfo">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="TokenConsumer.displayName"
+          description="TokenConsumer.description"
+          categoryId="consumer.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenConsumer.content.main&#38;sfname=defaultbindings.consumer.tokenConsumer"
+          summaryViewURI="TokenConsumer.summary.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="consumer.bindings"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=defaultbindings.consumer.properties">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.WSServerSecurity1" contextType="WSServerSecurity">
+        <tab
+              label="tab.configuration"
+              contentURI="WSServerSecurity.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WSServerSecurityGeneralProperties"
+          contextType="WSServerSecurity">
+       <field attributeName="namespace" 
+             categoryId="WSSecurity.defaultGenerator.displayName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([6-9])"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="distributeNonceCache" 
+             perspective="config">
+	    <compatibility>
+                   <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="false"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="customPropLink" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="true"/>
+ 	    </compatibility>
+       </field>
+       <!-- LIDB3919.15 Added h/w/ accel fields and categoryIDs to get boxes around nonce and h/w accel -->
+       <field attributeName="nonceCacheTimeout" 
+             categoryId="WSSecurity.box1.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="nonceMaxAge" 
+             categoryId="WSSecurity.box1.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="nonceClockSkew" 
+             categoryId="WSSecurity.box1.displayName"
+             perspective="config">
+       </field>
+       
+       <field attributeName="distributeNonceCache" 
+             categoryId="WSSecurity.box1.displayName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="false"/>
+ 	    </compatibility>
+       </field>   
+       <field attributeName="hardwareAcceleration" 
+             categoryId="WSSecurity.box2.displayName"
+             perspective="config">
+	    <compatibility>
+              <!-- 6.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(6\.[1-9].*.*)|(([7-9]|[1-9][0-9]).*.*.*)"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="hardwareAccelerationConfigName" 
+             categoryId="WSSecurity.box2.displayName"
+             perspective="config">
+	    <compatibility>
+              <!-- 6.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(6\.[1-9].*.*)|(([7-9]|[1-9][0-9]).*.*.*)"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="customPropLink" 
+       		 categoryId="WSSecurity.box3.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="true"/>
+ 	         </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- RequestReceiver -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.RequestReceiver"
+          contextType="RequestReceiver">
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=SigningInfo.content.main&#38;sfname=signingInfos"/>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=EncryptionInfo.content.main&#38;sfname=encryptionInfos"/>
+    <link label="TrustAnchor.displayName"
+          description="TrustAnchor.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustAnchor.content.main&#38;sfname=trustAnchors"/>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList"/>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="additional.properties"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocators"/>
+     <link label="TrustedIDEvaluator.displayName"
+          description="TrustedIDEvaluator.description"
+          categoryId="additional.properties"
+          weight="60"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=DedicatedTrustedIDEvaluator.config.view&#38;sfname=trustedIDEvaluator"/>
+     <link label="LoginMapping.displayName"
+          description="LoginMapping.description"
+          categoryId="additional.properties"
+          weight="70"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=LoginMapping.content.main&#38;sfname=loginMappings"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.RequestReceiver1" contextType="RequestReceiver">
+        <tab
+              label="tab.configuration"
+              contentURI="RequestReceiver.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ResponseSender -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ResponseSender"
+          contextType="ResponseSender">
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=DedicatedSigningInfo.config.view&#38;sfname=signingInfo"/>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=DedicatedEncryptionInfo.config.view&#38;sfname=encryptionInfo"/>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocators"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ResponseSender1" contextType="ResponseSender">
+        <tab
+              label="tab.configuration"
+              contentURI="ResponseSender.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- RequestSender -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.RequestSender"
+          contextType="RequestSender">
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=DedicatedSigningInfo.config.view&#38;sfname=signingInfo"/>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=DedicatedEncryptionInfo.config.view&#38;sfname=encryptionInfo"/>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocators"/>
+    <link label="LoginBinding.displayName"
+          description="LoginBinding.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=LoginBinding.config.view&#38;sfname=loginBinding"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.RequestSender1" contextType="RequestSender">
+        <tab
+              label="tab.configuration"
+              contentURI="RequestSender.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ResponseReceiver -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ResponseReceiver"
+          contextType="ResponseReceiver">
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=SigningInfo.content.main&#38;sfname=signingInfos"/>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=EncryptionInfo.content.main&#38;sfname=encryptionInfos"/>
+    <link label="TrustAnchor.displayName"
+          description="TrustAnchor.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustAnchor.content.main&#38;sfname=trustAnchors"/>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList"/>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="additional.properties"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocators"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ResponseReceiver1" contextType="ResponseReceiver">
+        <tab
+              label="tab.configuration"
+              contentURI="ResponseReceiver.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ResponseConsumer -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ResponseConsumer"
+          contextType="ResponseConsumer">
+        <categoryDefinition weight="20" id="required.bindings" parent="root" label="WSBinding.requiredProps.displayName"/>
+        <categoryDefinition weight="30" id="optional.bindings" parent="root" label="WSBinding.optionalProps.displayName"/>
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="required.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConSigningInfo.content.main&#38;sfname=signingInfo"
+          summaryViewURI="SigningInfo.summary.view">
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="required.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConEncryptionInfo.content.main&#38;sfname=encryptionInfo"
+          summaryViewURI="EncryptionInfo.summary.view">
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="required.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=keyInfo">
+    </link>
+    <link label="TokenConsumer.displayName"
+          description="TokenConsumer.description"
+          categoryId="required.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenConsumer.content.main&#38;sfname=tokenConsumer"
+          summaryViewURI="TokenConsumer.summary.view">
+    </link>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="optional.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocator">
+    </link>
+    <link label="TrustAnchor.displayName"
+          description="TrustAnchor.description"
+          categoryId="optional.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustAnchor.content.main&#38;sfname=trustAnchor">
+    </link>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="optional.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList">
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="optional.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties">
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ResponseConsumer1" contextType="ResponseConsumer">
+        <tab
+              label="tab.configuration"
+              contentURI="ResponseConsumer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- RequestGenerator -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.RequestGenerator"
+          contextType="RequestGenerator">
+        <categoryDefinition weight="20" id="required.bindings" parent="root" label="WSBinding.requiredProps.displayName"/>
+        <categoryDefinition weight="30" id="optional.bindings" parent="root" label="WSBinding.optionalProps.displayName"/>
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="required.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenSigningInfo.content.main&#38;sfname=signingInfo"
+          summaryViewURI="SigningInfo.summary.view">
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="required.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenEncryptionInfo.content.main&#38;sfname=encryptionInfo"
+          summaryViewURI="EncryptionInfo.summary.view">
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="required.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=keyInfo">
+    </link>
+    <link label="TokenGenerator.displayName"
+          description="TokenGenerator.description"
+          categoryId="required.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenGenerator.content.main&#38;sfname=tokenGenerator"
+          summaryViewURI="TokenGenerator.summary.view">
+    </link>
+    <link label="TokenGenerator.displayName"
+          description="TokenGenerator.description"
+          categoryId="optional.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenGenerator.content.main&#38;sfname=tokenGenerator"
+          summaryViewURI="TokenGenerator.summary.view">
+    </link>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="optional.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocator">
+    </link>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="optional.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList">
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="optional.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties">
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.RequestGenerator1" contextType="RequestGenerator">
+        <tab
+              label="tab.configuration"
+              contentURI="RequestGenerator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ResponseGenerator -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ResponseGenerator"
+          contextType="ResponseGenerator">
+        <categoryDefinition weight="20" id="required.bindings" parent="root" label="WSBinding.requiredProps.displayName"/>
+        <categoryDefinition weight="30" id="optional.bindings" parent="root" label="WSBinding.optionalProps.displayName"/>
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="required.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenSigningInfo.content.main&#38;sfname=signingInfo"
+          summaryViewURI="SigningInfo.summary.view">
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="required.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=GenEncryptionInfo.content.main&#38;sfname=encryptionInfo"
+          summaryViewURI="EncryptionInfo.summary.view">
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="required.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=keyInfo">
+    </link>
+    <link label="TokenGenerator.displayName"
+          description="TokenGenerator.description"
+          categoryId="required.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenGenerator.content.main&#38;sfname=tokenGenerator"
+          summaryViewURI="TokenGenerator.summary.view">
+    </link>
+    <link label="TokenGenerator.displayName"
+          description="TokenGenerator.description"
+          categoryId="optional.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenGenerator.content.main&#38;sfname=tokenGenerator"
+          summaryViewURI="TokenGenerator.summary.view">
+    </link>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="optional.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocator">
+    </link>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="optional.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList">
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="optional.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties">
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ResponseGenerator1" contextType="ResponseGenerator">
+        <tab
+              label="tab.configuration"
+              contentURI="ResponseGenerator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- RequestConsumer -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.RequestConsumer"
+          contextType="RequestConsumer">
+        <categoryDefinition weight="20" id="required.bindings" parent="root" label="WSBinding.requiredProps.displayName"/>
+        <categoryDefinition weight="30" id="optional.bindings" parent="root" label="WSBinding.optionalProps.displayName"/>
+    <link label="SigningInfo.displayName"
+          description="SigningInfo.description"
+          categoryId="required.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConSigningInfo.content.main&#38;sfname=signingInfo"
+          summaryViewURI="SigningInfo.summary.view">
+    </link>
+    <link label="EncryptionInfo.displayName"
+          description="EncryptionInfo.description"
+          categoryId="required.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ConEncryptionInfo.content.main&#38;sfname=encryptionInfo"
+          summaryViewURI="EncryptionInfo.summary.view">
+    </link>
+    <link label="KeyInfo.displayName"
+          description="KeyInfo.description"
+          categoryId="required.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfo.content.main&#38;sfname=keyInfo">
+    </link>
+    <link label="TokenConsumer.displayName"
+          description="TokenConsumer.description"
+          categoryId="required.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TokenConsumer.content.main&#38;sfname=tokenConsumer"
+          summaryViewURI="TokenConsumer.summary.view">
+    </link>
+    <link label="KeyLocator.displayName"
+          description="KeyLocator.description"
+          categoryId="optional.bindings"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyLocator.content.main&#38;sfname=keyLocator">
+    </link>
+    <link label="TrustAnchor.displayName"
+          description="TrustAnchor.description"
+          categoryId="optional.bindings"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=TrustAnchor.content.main&#38;sfname=trustAnchor">
+    </link>
+    <link label="CollectionCertStore.displayName"
+          description="CollectionCertStore.description"
+          categoryId="optional.bindings"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CollectionCertStore.content.main&#38;sfname=certStoreList">
+    </link>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="optional.bindings"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties">
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.RequestConsumer1" contextType="RequestConsumer">
+        <tab
+              label="tab.configuration"
+              contentURI="RequestConsumer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- AlgorithmMapping -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.AlgorithmMapping"
+          contextType="AlgorithmMapping">
+    <link label="AlgorithmURI.displayName"
+          description="AlgorithmURI.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=AlgorithmURI.content.main&#38;sfname=algorithmURI"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.AlgorithmMapping.collection1" contextType="AlgorithmMapping">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="algorithmMappingCollection.do">
+<!-- LIDB3110 Begin -->
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.newButtonVisible"
+                      value="true"/>
+              </compatibility>
+<!-- LIDB3110 End -->
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="algorithmMappingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="algorithmMappingCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.AlgorithmMapping1" contextType="AlgorithmMapping">
+        <item
+              attributeName="factoryname"
+              sortable="sort"
+              itemURI="algorithmMappingCollection.do?EditAction=true"
+              label="AlgorithmMapping.factoryname.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.AlgorithmMapping1" contextType="AlgorithmMapping">
+        <tab
+              label="tab.configuration"
+              contentURI="AlgorithmMapping.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="AlgorithmMappingsGeneralProperties"
+          contextType="AlgorithmMapping">
+       <field attributeName="factoryname"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmMappingDetailForm.isFactorynameReadOnly"
+                      value="false"/>
+              </compatibility>
+       </field>
+       <field attributeName="factorynameReadOnly"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmMappingDetailForm.isFactorynameReadOnly"
+                      value="true"/>
+              </compatibility>
+       </field>
+	</form>
+</extension>
+
+<!-- KeyInfo -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.KeyInfo"
+          contextType="KeyInfo">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.KeyInfo.collection1" contextType="KeyInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="keyInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="keyInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="keyInfoCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.KeyInfo1" contextType="KeyInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="keyInfoCollection.do?EditAction=true"
+              label="KeyInfo.name.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="KeyInfo.classname.displayName">
+        </item>
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI=""
+              label="KeyInfo.type.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.KeyInfo1" contextType="KeyInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="KeyInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KeyInfoGeneralProperties"
+          contextType="KeyInfo">
+       <field attributeName="custom" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="locatorRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="false"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="calcLName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="encLName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="vtURI" 
+             categoryId="KeyInfo.valueType.displayName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="vtLName"
+             categoryId="KeyInfo.valueType.displayName"
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.KeyInfo.KeyInfoDetailForm.generatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- PartReference -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.PartReference"
+          contextType="PartReference">
+    <link label="Transform.displayName"
+          description="Transform.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=Transform.content.main&#38;sfname=transform"/>
+    <link label="DigestMethod.properties.displayName"
+          description="DigestMethod.properties.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=digestMethod.properties">
+      <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.PartReference.PartReferenceDetailForm.hasDigestMethod"
+                        value="true"/>
+      </compatibility>
+    </link>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.PartReference.collection1" contextType="PartReference">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="partReferenceCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="partReferenceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.PartReference1" contextType="PartReference">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="partReferenceCollection.do?EditAction=true"
+              label="PartReference.name.displayName">
+        </item>
+        <item
+              attributeName="part"
+              sortable="sort"
+              itemURI=""
+              label="PartReference.part.displayName">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.PartReference.PartReferenceCollectionForm.partVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </item>
+        <item
+              attributeName="digestmethodAlgorithm"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="DigestMethod.algorithm.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.PartReference1" contextType="PartReference">
+        <tab
+              label="tab.configuration"
+              contentURI="PartReference.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PartReferenceGeneralProperties"
+          contextType="PartReference">
+       <field attributeName="part" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.PartReference.PartReferenceDetailForm.partVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="textPart" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.PartReference.PartReferenceDetailForm.textPartVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- TokenConsumer -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.TokenConsumer"
+          contextType="TokenConsumer">
+    <link label="JAASConfig.displayName"
+          description="JAASConfig.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=JAASConfig.config.view&#38;sfname=jAASConfig"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.TokenConsumer.collection1" contextType="TokenConsumer">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="tokenConsumerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="tokenConsumerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="tokenConsumerCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.TokenConsumer1" contextType="TokenConsumer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="tokenConsumerCollection.do?EditAction=true"
+              label="TokenConsumer.name.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="TokenConsumer.classname.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.TokenConsumer1" contextType="TokenConsumer">
+        <tab
+              label="tab.configuration"
+              contentURI="TokenConsumer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TokenConsumerGeneralProperties"
+          contextType="TokenConsumer">
+       <field attributeName="partRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.partReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="textPartRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.textPartReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="verifyNonce" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.usernameTokenVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="verifyTimestamp" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.usernameTokenVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="existingRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.trustedIDEvaluatorRefVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="dedicatedTrustedIDEvaluator" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenConsumer.TokenConsumerDetailForm.dedicatedTrustedIDEvaluatorVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="valuetypeLocalName" 
+             categoryId="ValueType.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="valuetypeURI" 
+             categoryId="ValueType.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="verifyNonce" 
+             categoryId="TokenConsumer.usernameToken.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="verifyTimestamp" 
+             categoryId="TokenConsumer.usernameToken.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- TokenGenerator -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.TokenGenerator"
+          contextType="TokenGenerator">
+    <link label="CallbackHandler.displayName"
+          description="CallbackHandler.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=CallbackHandler.config.view&#38;sfname=callbackHandler"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.TokenGenerator.collection1" contextType="TokenGenerator">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="tokenGeneratorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="tokenGeneratorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="tokenGeneratorCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.TokenGenerator1" contextType="TokenGenerator">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="tokenGeneratorCollection.do?EditAction=true"
+              label="TokenGenerator.name.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="TokenGenerator.classname.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.TokenGenerator1" contextType="TokenGenerator">
+        <tab
+              label="tab.configuration"
+              contentURI="TokenGenerator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TokenGeneratorGeneralProperties"
+          contextType="TokenGenerator">
+       <field attributeName="partRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenGenerator.TokenGeneratorDetailForm.partReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="textPartRef" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenGenerator.TokenGeneratorDetailForm.textPartReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="addNonce" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenGenerator.TokenGeneratorDetailForm.usernameTokenVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="addTimestamp" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.TokenGenerator.TokenGeneratorDetailForm.usernameTokenVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="valuetypeLocalName" 
+             categoryId="ValueType.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="valuetypeURI" 
+             categoryId="ValueType.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="addNonce" 
+             categoryId="TokenGenerator.usernameToken.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="addTimestamp" 
+             categoryId="TokenGenerator.usernameToken.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="usernameExpiration" 
+             categoryId="TokenGenerator.usernameToken.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- Transform -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.Transform"
+          contextType="Transform">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.Transform.collection1" contextType="Transform">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="transformCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="transformCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.Transform1" contextType="Transform">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="transformCollection.do?EditAction=true"
+              label="Transform.name.displayName">
+        </item>
+        <item
+              attributeName="algorithm"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="Transform.algorithm.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.Transform1" contextType="Transform">
+        <tab
+              label="tab.configuration"
+              contentURI="Transform.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- GenEncryptionInfo -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.GenEncryptionInfo"
+          contextType="GenEncryptionInfo">
+    <link label="EncryptionInfo.keyAlgorithmProperties.displayName"
+          description="EncryptionInfo.keyAlgorithmProperties.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=keyEncryptionMethod.properties">
+      <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.hasKeyAlgorithm"
+                        value="true"/>
+      </compatibility>
+    </link>
+    <link label="EncryptionInfo.dataAlgorithmProperties.displayName"
+          description="EncryptionInfo.dataAlgorithmProperties.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=encryptionMethod.properties"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.GenEncryptionInfo.collection1" contextType="GenEncryptionInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="genencryptionInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="genencryptionInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="genencryptionInfoCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.GenEncryptionInfo1" contextType="GenEncryptionInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="genencryptionInfoCollection.do?EditAction=true"
+              label="EncryptionInfo.name.displayName">
+        </item>
+        <item
+              attributeName="keyEncryption"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.keyAlgorithm.displayName">
+        </item>
+        <item
+              attributeName="dataEncryption"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.dataAlgorithm.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.GenEncryptionInfo1" contextType="GenEncryptionInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="GenEncryptionInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="GenEncryptionInfoGeneralProperties"
+          contextType="GenEncryptionInfo">
+       <field attributeName="partReference" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.partReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="textPartReference" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.textPartReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ConEncryptionInfo -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ConEncryptionInfo"
+          contextType="ConEncryptionInfo">
+    <link label="KeyInfoRef.displayName"
+          description="KeyInfoRef.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfoReference.content.main&#38;sfname=encryptionKeyInfo"/>
+    <link label="EncryptionInfo.keyAlgorithmProperties.displayName"
+          description="EncryptionInfo.keyAlgorithmProperties.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=keyEncryptionMethod.properties">
+      <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.hasKeyAlgorithm"
+                        value="true"/>
+      </compatibility>
+    </link>
+    <link label="EncryptionInfo.dataAlgorithmProperties.displayName"
+          description="EncryptionInfo.dataAlgorithmProperties.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=encryptionMethod.properties"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.ConEncryptionInfo.collection1" contextType="ConEncryptionInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="conencryptionInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="conencryptionInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="conencryptionInfoCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.ConEncryptionInfo1" contextType="ConEncryptionInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="conencryptionInfoCollection.do?EditAction=true"
+              label="EncryptionInfo.name.displayName">
+        </item>
+        <item
+              attributeName="keyEncryption"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.keyAlgorithm.displayName">
+        </item>
+        <item
+              attributeName="dataEncryption"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.dataAlgorithm.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ConEncryptionInfo1" contextType="ConEncryptionInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="ConEncryptionInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ConEncryptionInfoGeneralProperties"
+          contextType="ConEncryptionInfo">
+       <field attributeName="partReference" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.partReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+       <field attributeName="textPartReference" 
+             perspective="config">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.EncryptionInfoDetailForm.textPartReferenceVisible"
+                        value="true"/>
+ 	    </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- GenSigningInfo -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.GenSigningInfo"
+          contextType="GenSigningInfo">
+    <link label="PartReference.displayName"
+          description="PartReference.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=PartReference.content.main&#38;sfname=partReference"/>
+    <link label="SigningInfo.canonMethodProperties.displayName"
+          description="SigningInfo.canonMethodProperties.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=canonicalizationMethod.properties"/>
+    <link label="SigningInfo.methodProperties.displayName"
+          description="SigningInfo.methodProperties.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=signatureMethod.properties"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.GenSigningInfo.collection1" contextType="GenSigningInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="gensigningInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="gensigningInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="gensigningInfoCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.GenSigningInfo1" contextType="GenSigningInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="gensigningInfoCollection.do?EditAction=true"
+              label="SigningInfo.name.displayName">
+        </item>
+        <item
+              attributeName="method"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SigningInfo.method.displayName">
+        </item>
+        <item
+              attributeName="canonMethod"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SigningInfo.canonMethod.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.GenSigningInfo1" contextType="GenSigningInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="GenSigningInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ConSigningInfo -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.ConSigningInfo"
+          contextType="ConSigningInfo">
+    <link label="KeyInfoRef.displayName"
+          description="KeyInfoRef.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=KeyInfoReference.content.main&#38;sfname=signingKeyInfo"/>
+    <link label="PartReference.displayName"
+          description="PartReference.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=PartReference.content.main&#38;sfname=partReference"/>
+    <link label="SigningInfo.canonMethodProperties.displayName"
+          description="SigningInfo.canonMethodProperties.description"
+          categoryId="additional.properties"
+          weight="30"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=canonicalizationMethod.properties"/>
+    <link label="SigningInfo.methodProperties.displayName"
+          description="SigningInfo.methodProperties.description"
+          categoryId="additional.properties"
+          weight="40"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=signatureMethod.properties"/>
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="50"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.ConSigningInfo.collection1" contextType="ConSigningInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="consigningInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="consigningInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="consigningInfoCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.ConSigningInfo1" contextType="ConSigningInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="consigningInfoCollection.do?EditAction=true"
+              label="SigningInfo.name.displayName">
+        </item>
+        <item
+              attributeName="method"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SigningInfo.method.displayName">
+        </item>
+        <item
+              attributeName="canonMethod"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SigningInfo.canonMethod.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.ConSigningInfo1" contextType="ConSigningInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="ConSigningInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- CallbackHandler -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.CallbackHandler"
+          contextType="CallbackHandler">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          weight="20"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+    <link label="WSKey.displayName"
+          description="WSKey.description"
+          categoryId="additional.properties"
+          weight="10"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=Key.content.main&#38;sfname=key"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.CallbackHandler1" contextType="CallbackHandler">
+        <tab
+              label="tab.configuration"
+              contentURI="CallbackHandler.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CallbackHandlerGeneralProperties"
+          contextType="CallbackHandler">
+       <!-- LIDB3919.15 Added keyStoreConfigName field -->
+       <field attributeName="keyStoreConfigName"
+             categoryId="KeyStore.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="useIDAssertion"
+             categoryId="CallbackHandler.IDAssertion.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="useRunAs"
+             categoryId="CallbackHandler.IDAssertion.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="basicAuthID"
+             categoryId="CallbackHandler.basicAuth.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="displayBasicAuthPwd"
+             categoryId="CallbackHandler.basicAuth.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- JAASConfig -->
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.JAASConfig"
+          contextType="JAASConfig">
+    <link label="WSSecurity.property.displayName"
+          description="WSSecurity.property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=WSSecurity.Property.content.main&#38;sfname=properties"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.JAASConfig1" contextType="JAASConfig">
+        <tab
+              label="tab.configuration"
+              contentURI="JAASConfig.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- X509Certificate -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.X509Certificate.collection1" contextType="X509Certificate">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="x509CertificateCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="x509CertificateCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.X509Certificate1" contextType="X509Certificate">
+        <item
+              attributeName="href"
+              type="filepath"
+              sortable="sort"
+              itemURI="x509CertificateCollection.do?EditAction=true"
+              label="X509Certificate.reference.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.X509Certificate1" contextType="X509Certificate">
+        <tab
+              label="tab.configuration"
+              contentURI="X509Certificate.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- CRL -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.CRL.collection1" contextType="CRL">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="cRLCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="cRLCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.CRL" contextType="CRL">
+        <item
+              attributeName="path"
+              type="filepath"
+              sortable="sort"
+              itemURI="cRLCollection.do?EditAction=true"
+              label="CRL.path.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.CRL" contextType="CRL">
+        <tab
+              label="tab.configuration"
+              contentURI="CRL.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- WSSecurity.Property.content.main -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.WSSecurity.Property.collection1" contextType="WSSecurity.Property.content.main">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="wssecPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="wssecPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="wssecPropertyCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.WSSecurity.Property.content.main1" contextType="WSSecurity.Property.content.main">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="wssecPropertyCollection.do?EditAction=true"
+              label="WSSecurity.property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="WSSecurity.property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- WSSecurity.Property.config.view -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.WSSecurity.Property.config.view1" contextType="WSSecurity.Property.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="WSSecurity.Property.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- EncryptionInfo -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.EncryptionInfo.collection1" contextType="EncryptionInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="encryptionInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="encryptionInfoCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.EncryptionInfo1" contextType="EncryptionInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="encryptionInfoCollection.do?EditAction=true"
+              label="EncryptionInfo.name.displayName">
+        </item>
+        <item
+              attributeName="keyLocatorRef"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.keyReference.displayName">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([5])"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="keyEncryption"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.keyAlgorithm.displayName">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="dataEncryption"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="EncryptionInfo.dataAlgorithm.displayName">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" 
+	                    value="([6-9])"/>
+              </compatibility>
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.EncryptionInfo1" contextType="EncryptionInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="EncryptionInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- SigningInfo -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.SigningInfo.collection1" contextType="SigningInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="signingInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="signingInfoCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.SigningInfo1" contextType="SigningInfo">
+        <item
+              attributeName="method"
+              sortable="sort"
+              itemURI="signingInfoCollection.do?EditAction=true"
+              label="SigningInfo.method.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.SigningInfo1" contextType="SigningInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="SigningInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- TrustAnchor -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.TrustAnchor.collection1" contextType="TrustAnchor">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="trustAnchorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="trustAnchorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="WSSecurity.updateRuntime"
+              actionURI="trustAnchorCollection.do">
+	    <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.updateRuntimeVisible"
+                        value="true"/>
+ 	    </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.TrustAnchor1" contextType="TrustAnchor">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="trustAnchorCollection.do?EditAction=true"
+              label="TrustAnchor.name.displayName">
+        </item>
+        <item
+              attributeName="keyPath"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="TrustAnchor.keystorePath.displayName">
+        </item>
+        <item
+              attributeName="keyType"
+              sortable="sort"
+              itemURI=""
+              label="TrustAnchor.keystoreType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.TrustAnchor1" contextType="TrustAnchor">
+        <tab
+              label="tab.configuration"
+              contentURI="TrustAnchor.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TrustAnchorGeneralProperties"
+          contextType="TrustAnchor">
+       <!-- LIDB3919.15 Added keyStoreConfigName field -->
+       <field attributeName="keyStoreConfigName"
+             categoryId="KeyStore.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- Key -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.Key.collection1" contextType="Key">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="keyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="keyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.Key1" contextType="Key">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="keyCollection.do?EditAction=true"
+              label="WSKey.name.displayName">
+        </item>
+        <item
+              attributeName="alias"
+              sortable="sort"
+              itemURI=""
+              label="WSKey.alias.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.Key1" contextType="Key">
+        <tab
+              label="tab.configuration"
+              contentURI="Key.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- AlgorithmURI -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.AlgorithmURI.collection1" contextType="AlgorithmURI">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="algorithmURICollection.do">
+<!-- LIDB3110 Begin -->
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.WSSecurityCollectionForm.newButtonVisible"
+                      value="true"/>
+              </compatibility>
+<!-- LIDB3110 End -->
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="algorithmURICollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.AlgorithmURI1" contextType="AlgorithmURI">
+        <item
+              attributeName="algorithm"
+              sortable="sort"
+              itemURI="algorithmURICollection.do?EditAction=true"
+              label="AlgorithmURI.algorithm.displayName">
+        </item>
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI=""
+              label="AlgorithmURI.type.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.AlgorithmURI1" contextType="AlgorithmURI">
+        <tab
+              label="tab.configuration"
+              contentURI="AlgorithmURI.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="AlgorithmURIGeneralProperties"
+          contextType="AlgorithmURI">
+       <field attributeName="algorithm"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmURIDetailForm.isAlgorithmReadOnly"
+                      value="false"/>
+              </compatibility>
+       </field>
+       <field attributeName="algorithmReadOnly"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmURIDetailForm.isAlgorithmReadOnly"
+                      value="true"/>
+              </compatibility>
+       </field>
+       <field attributeName="type"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmURIDetailForm.isTypeReadOnly"
+                      value="false"/>
+              </compatibility>
+       </field>
+       <field attributeName="typeReadOnly"
+             perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.wssecurity.AlgorithmURIDetailForm.isTypeReadOnly"
+                      value="true"/>
+              </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- KeyInfoReference -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="wssecurity.KeyInfoReference.collection1" contextType="KeyInfoReference">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="keyInfoReferenceCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="keyInfoReferenceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.KeyInfoReference1" contextType="KeyInfoReference">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="keyInfoReferenceCollection.do?EditAction=true"
+              label="KeyInfoRef.name.displayName">
+        </item>
+        <item
+              attributeName="reference"
+              sortable="sort"
+              itemURI=""
+              label="KeyInfoRef.keyinfoRef.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.KeyInfoReference1" contextType="KeyInfoReference">
+        <tab
+              label="tab.configuration"
+              contentURI="KeyInfoReference.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- WSServerBinding -->
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.WSServerBinding1" contextType="WSServerBinding">
+        <item
+              attributeName="port"
+              sortable="sort"
+              itemURI=""
+              label="WSBinding.port.displayName">
+        </item>
+        <item
+              attributeName="webservice"
+              sortable="sort"
+              itemURI=""
+              label="WSBinding.service.displayName">
+        </item>
+        <item
+              attributeName="conEditString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=RequestReceiver.config.view&#38;sfname=securityRequestReceiverBindingConfig"
+              label="RequestReceiver.displayName">
+        </item>
+        <item
+              attributeName="genEditString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ResponseSender.config.view&#38;sfname=securityResponseSenderBindingConfig"
+              label="ResponseSender.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- WSClientBinding -->
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="wssecurity.WSClientBinding1" contextType="WSClientBinding">
+        <item
+              attributeName="component"
+              sortable="sort"
+              itemURI=""
+              label="WSBinding.component.displayName">
+        </item>
+        <item
+              attributeName="port"
+              sortable="sort"
+              itemURI=""
+              label="WSBinding.port.displayName">
+        </item>
+        <item
+              attributeName="webservice"
+              sortable="sort"
+              itemURI=""
+              label="WSBinding.service.displayName">
+        </item>
+        <item
+              attributeName="genEditString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=RequestSender.config.view&#38;sfname=securityRequestSenderBindingConfig"
+              label="RequestSender.displayName">
+        </item>
+        <item
+              attributeName="conEditString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=ResponseReceiver.config.view&#38;sfname=securityResponseReceiverBindingConfig"
+              label="ResponseReceiver.displayName">
+        </item>
+        <item
+              attributeName="editString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=wssBasicAuth.config.view&#38;sfname=basicAuth"
+              label="http.basicauth.title.displayName">
+        </item>
+        <item
+              attributeName="editString"
+              sortable="nosort"
+              itemURI="com.ibm.ws.console.wssecurity.forwardCmd.do?forwardName=sslalias.config.view&#38;sfname=sslConfig"
+              label="http.sslconfig.title.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- WSSecurity -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.WSSecurity1" contextType="WSSecurity">
+        <tab
+              label="tab.configuration"
+              contentURI="WSSecurity.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WSSecurityGeneralProperties"
+          contextType="WSSecurity">
+       <field attributeName="namespace" 
+             categoryId="WSSecurity.defaultGenerator.displayName"
+             perspective="config">
+       </field>
+   
+       <field attributeName="customPropLink" 
+             perspective="config">
+          <compatibility>
+                   <match key="com.ibm.ws.console.wssecurity.hasJAXWSFeature" value="true"/>
+          </compatibility>
+       </field>
+     </form>
+</extension>
+
+<!-- DedicatedEncryptionInfo -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.DedicatedEncryptionInfo1" contextType="DedicatedEncryptionInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="DedicatedEncryptionInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- DedicatedTrustedIDEvaluator -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.DedicatedTrustedIDEvaluator1" contextType="DedicatedTrustedIDEvaluator">
+        <tab
+              label="tab.configuration"
+              contentURI="DedicatedTrustedIDEvaluator.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- wssBasicAuth -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.wssBasicAuth1" contextType="wssBasicAuth">
+        <tab
+              label="tab.configuration"
+              contentURI="wssBasicAuth.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- sslalias -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.sslalias1" contextType="sslalias">
+        <tab
+              label="tab.configuration"
+              contentURI="sslAlias.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI3557 Add related item SSL links -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.sslalias"
+          contextType="sslalias">
+    <link label="SSLManagedTreeLink.displayName"
+          description="SSLManagedTreeLink.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecureEndpointTree.config.view">
+    </link>
+  </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="wssecurity.sslalias"
+          contextType="sslalias">
+    <link label="SSLConfigAlias.displayName"
+          description="SSLConfigAlias.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main">
+    </link>
+  </linkSet>
+</extension>
+
+<!-- DedicatedSigningInfo -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="wssecurity.DedicatedSigningInfo1" contextType="DedicatedSigningInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="DedicatedSigningInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+</plugin>
+

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<plugin id="com.ibm.ws.console.lm"
+        name="service_mapping"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="service_mapping">
+
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+    </requires>
+  
+    <!-- Plug service mapping into the navigation panel. -->
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+        <tasks>
+            <categoryDefinition id="lm-servicemapping" parent="sibresources" icon="/com.ibm.ws.console.lm/images/onepix.gif" label="nav.servicemapping" weight="60"/>
+            <task id="servicemaps" icon="/com.ibm.ws.console.lm/images/onepix.gif" label="nav.servicemapping.servicemaps" view="/navigatorCmd.do?forwardName=ServiceMapping.servicemaps.main" external="false" weight="10">
+                <category id="lm-servicemapping"/>
+            </task>
+            <task id="lmservices" icon="/com.ibm.ws.console.lm/images/onepix.gif" label="nav.servicemapping.lmservices" view="/navigatorCmd.do?forwardName=ServiceMapping.lmservices.main" external="false" weight="10">
+                <category id="lm-servicemapping"/>
+            </task>
+        </tasks>
+    </extension>
+    
+<!--***************************************************************-->
+<!--  Define attributes (columns) for Service Maps collection page -->
+<!--- Name | Description | Attached Local Mapping Service          -->
+<!--***************************************************************-->    
+    
+    <!-- Extension points relating to the service maps collection panel. --> 
+    <!-- Specifies what properties of an individual service map are showed on the service maps collection panel. -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="com.ibm.ws.console.lm.ServiceMapping.ServiceMaps.collection" contextType="ServiceMaps">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="serviceMapsCollection.do?EditAction=true"
+                label="ServiceMapping.servicemaps.label.name">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="ServiceMapping.servicemaps.label.description">
+          </item>
+          <item
+                attributeName="collectionFormAttachedLMServiceValue"
+                sortable="sort"
+                itemURI="serviceMapsCollection.do?EditLMServiceAction=true"
+                label="ServiceMapping.servicemaps.label.attachedLMS">
+          </item>
+      </collectionItem>
+    </extension>
+    
+<!--**************************************************-->
+<!--  Define buttons for Service Maps collection page -->
+<!--**************************************************-->
+    
+    <extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="com.ibm.ws.console.lm.ServiceMapping.ServiceMaps.buttons" contextType="ServiceMaps">
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.servicemaps.button.install"
+                actionURI="serviceMapsCollection.do">
+          </action>
+                              
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.servicemaps.button.uninstall"
+                actionURI="serviceMapsCollection.do">
+          </action>
+          
+<!--***************************************************************************-->          
+<!-- Commenting out the export button for now. Will add back in post WAS 8.5.5 -->          
+<!--          <action                                                          -->
+<!--                enablesFor="Collection"                                    -->
+<!--                role="administrator,configurator"                          -->
+<!--                label="ServiceMapping.servicemaps.button.export"           -->
+<!--                actionURI="serviceMapsCollection.do">                      -->
+<!--          </action>                                                        -->
+<!--***************************************************************************-->
+
+      </actionSet>
+    </extension>
+
+<!--***************************************************************-->
+<!--  Define attributes (columns) for LMServices collection page   -->
+<!--- Name | Description | Attached Service Map                    -->
+<!--***************************************************************-->    
+    
+    <!-- Extension points relating to the LMServices collection panel. --> 
+    <!-- Specifies what properties of an individual Local Mapping Service are showed on the LMServices collection panel. -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="com.ibm.ws.console.lm.ServiceMapping.LMServices.collection" contextType="LMServices">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="lmServicesCollection.do?EditAction=true"
+                label="ServiceMapping.lmservices.label.name">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="ServiceMapping.lmservices.label.description">
+          </item>
+          <item
+                attributeName="attachedServiceMap"
+                sortable="sort"
+                itemURI="lmServicesCollection.do?EditServiceMapAction=true"
+                label="ServiceMapping.lmservices.label.attachedServiceMap">
+          </item>
+          <item
+                attributeName="status"
+                sortable="sort"
+                itemURI=""
+                label="ServiceMapping.lmservices.label.status">
+          </item>          
+      </collectionItem>
+    </extension>
+    
+    <!-- End extension points relating to the service maps collection panel. --> 
+	<extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true" />
+	</extension>
+	
+<!--************************************************************-->
+<!--  Define buttons for Local Mapping Services collection page -->
+<!--************************************************************-->
+    
+    <extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="com.ibm.ws.console.lm.ServiceMapping.LMServices.buttons" contextType="LMServices">
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.new"
+                actionURI="lmServicesCollection.do">
+          </action>
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.delete"
+                actionURI="lmServicesCollection.do">
+          </action>
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.attach"
+                actionURI="lmServicesCollection.do">
+          </action>
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.detach"
+                actionURI="lmServicesCollection.do">
+          </action>
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.start"
+                actionURI="lmServicesCollection.do">
+          </action>
+          <action
+                enablesFor="Collection"
+                role="administrator,configurator"
+                label="ServiceMapping.lmservices.button.stop"
+                actionURI="lmServicesCollection.do">
+          </action>          
+      </actionSet>
+    </extension>	    
+
+</plugin>

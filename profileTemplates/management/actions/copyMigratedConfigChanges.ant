@@ -1,0 +1,84 @@
+<project name="copyMigratedConfigChanges" default="main" basedir=".">
+    
+    <target name="main">
+		<antcall target="removeXDPortlet"></antcall>
+		<!--antcall target="copyPlugin"></antcall-->
+		<antcall target="remodeNodeMetadaEntries"></antcall>
+		<antcall target="installXDPortlet"></antcall>
+    </target>
+   <target name="copyPlugin" description="Copy the plugins over to support ND version 7.0">                    
+
+   <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.dynamiccluster/plugin70.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.dynamiccluster/plugin.xml"
+            overwrite="true"/>
+
+    <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.middlewareserver/plugin70.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.middlewareserver/plugin.xml"
+            overwrite="true"/>
+
+    <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.odr/plugin70.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.odr/plugin.xml"
+            overwrite="true"/>
+
+    <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.odr/console-defs70.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.odr/console-defs.xml"
+            overwrite="true"/>
+	<copy   file="${InstallRoot}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/ONDEMAND_ROUTER/serverindex.xml"
+          tofile="${WAS_HOME}/profiles/default/config/templates/servertypes/ONDEMAND_ROUTER/serverindex.xml"
+            overwrite="true"/>
+  </target>
+  
+  <target name="remodeNodeMetadaEntries" description="Remove Node Metadata Properties Entries for CG and XS"> 
+		<wscmtlog message="Remove Node Metadata Properties Entries for CG and XS"/>
+        <replace encoding="ISO8859-1" dir="${WAS_HOME}/profiles/default/config/cells">
+                <include name="**/nodes/**/node-metadata.properties"/>
+                           <replacefilter token="com.ibm.websphere.wxdcgProductShortName=WXDCG" value=""/>
+                           <replacefilter token="com.ibm.websphere.wxddgProductShortName=WXDDG" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxdcgProductVersion=6.1.0.5" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxdcgProductVersion=6.1.1.1" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxdcgProductVersion=6.1.1.2" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxdcgProductVersion=6.1.1.3" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxdcgProductVersion=6.1.1.4" value=""/>
+						   <replacefilter token="com.ibm.websphere.wxddgProductVersion=6.1.0.5" value=""/>
+						   <replacefilter token="com.ibm.ws.xd.cg.base_6.0.0.0," value=""/>
+						   <replacefilter token="com.ibm.ws.xd.dg.base_6.1.0.0," value=""/>
+                          
+        </replace>
+		
+  </target> 
+
+
+
+<target name="removeXDPortlet" description="remove  XD Portlet into the ISC">
+        <wscmtlog message="Remove XD Welcome Portlet if has not already been removed"/>   
+        <exec executable="${WAS_HOME}/profiles/default/bin/wsadmin.sh"
+                output="${WAS_HOME}/profiles/default/logs/migratedRemoveXDPortlet.log">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-lang"/>
+            <arg value="jython"/>
+            <arg value="-f"/>
+            <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/removeXDPortlet.py"/>
+            <arg value="-washome"/>
+            <arg value="${WAS_HOME}"/>
+        </exec>
+    </target>
+
+
+
+ <target name="installXDPortlet" description="install XD Portlet into the ISC">
+         <wscmtlog message="Install new VE Welcome Portlet"/>      
+        <exec executable="${WAS_HOME}/profiles/default/bin/wsadmin.sh"
+                output="${WAS_HOME}/profiles/default/logs/migratedInstallXDPortlet.log">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-lang"/>
+            <arg value="jython"/>
+            <arg value="-f"/>
+            <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/installXDPortlet.py"/>
+            <arg value="-washome"/>
+            <arg value="${WAS_HOME}"/>
+        </exec>
+    </target>
+
+</project>

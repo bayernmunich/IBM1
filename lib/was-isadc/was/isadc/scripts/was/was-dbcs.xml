@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS DBCS Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS DBCS Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-collections.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+
+	<property name="autopdProblem" value="WAS_DBCS_Problem" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="infocollectProblemType" value="was-dbcs" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="set_was_problem_type,
+					setup_autopd, 
+					validate_os,
+					was_stack_custom_init,
+			         determine_locale,	         		 		  	  		    		   
+		    		 recovery_needed_with_condition, 
+		    		 
+		    		 start_time, 
+		    		 
+		    		 generate_dbcs_trace_string,
+					 check_set_trace_choice_valid_with_condition,
+			         get_default_trace_values,	 
+			      	 set_was_runtime_trace_with_condition,   
+			      	 set_was_trace_with_condition,S
+					 	    		  
+		    		 pause, 
+		    		 end_time, 
+		    		 gen_history_report, 
+		    		 
+		    		 restore_user_default_trace_values,
+		    		 recovery_completed_with_condition, 
+			         set_server_restore_status_with_condition,
+			         restore_app_server_status, 
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<!--  determine the locale -->
+	<target name="determine_locale" description="get the locale for a UNIX system" unless="isWindows">
+
+		<!-- generate the locale information -->
+		<exec executable="locale" dir="/usr/bin" output="${autopd.echolog.instance}" os="${os.unixkind}">
+			<arg line=">> ${autopdtmp}/autopd/RequiredInfoFile.txt" />
+		</exec>
+
+		<!-- zip up the locale info -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/was">
+				<include name="RequiredInfoFile.txt" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!--  generate the DBCS trace string or v5 -->
+	<target name="generate_dbcs_trace_string" description="Enable the data replication tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="Servlet_Engine=all=enabled:HTTP_Transport=all=enabled" />
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+			<autopdproperty name="was.trace.string" value="*=info:com.ibm.ws.webcontainer.*=all:com.ibm.wsspi.webcontainer.*=all:HTTPChannel=all:GenericBNF=all" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+</project>

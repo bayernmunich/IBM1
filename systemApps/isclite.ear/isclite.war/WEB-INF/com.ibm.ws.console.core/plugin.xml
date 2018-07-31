@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<plugin
+   id="com.ibm.ws.console.core"
+   name="wsccore"
+   version="1.0.0"
+   embedded="true"
+   vendor-name="IBM Corp. - WebSphere Server Group">
+
+<extension-point id="navigatorTask" name="%navTask"/>
+<extension-point id="menuBarTask" name="%mbTask"/>
+<extension-point id="help" name="%help"/>
+<extension-point id="view" name="%view"/>
+<extension-point id="status" name="%statusTray"/>
+<extension-point id="detailTab" name="%detailTab"/>
+<extension-point id="actionSet" name="%actionSet"/>
+<extension-point id="link" name="%link"/>
+<extension-point id="collectionItem" name="%collectionItem"/>
+<extension-point id="wizardStep" name="%wizardStep"/>
+<extension-point id="homePage" name="%homePage"/>
+<extension-point id="helpToken" name="%helpToken" />
+
+<extension point="com.ibm.websphere.wsc.support">
+	<ProductDescriptor productId="com.ibm.websphereapplicationserver" productName="support.link.label.websphereapplicationserver" productCategory="Websphere">
+		<LinksExtensionData>
+			<HomePageURL>http://www.ibm.com/software/webservers/appserv/was/</HomePageURL>
+			<SupportPageURL>http://www.ibm.com/software/webservers/appserv/was/support/</SupportPageURL>
+			<ForumURL>news://news.software.ibm.com/ibm.software.websphere.application-server</ForumURL>
+		</LinksExtensionData>
+	</ProductDescriptor>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.support">
+	<ProductDescriptor productId="com.ibm.websphereapplicationserver.iseries" productName="support.link.label.websphereapplicationserver.iseries" productCategory="Websphere">
+		<LinksExtensionData>
+			<HomePageURL>http://www.ibm.com/servers/eserver/iseries/software/websphere/wsappserver/</HomePageURL>
+			<SupportPageURL>http://www.ibm.com/servers/eserver/iseries/software/websphere/wsappserver/support.html</SupportPageURL>
+			<ForumURL>news://news.software.ibm.com/ibm.software.websphere.application-server.as400</ForumURL>
+		</LinksExtensionData>
+	</ProductDescriptor>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.support">
+	<ProductDescriptor productId="com.ibm.websphereapplicationserver.zos" productName="support.link.label.websphereapplicationserver.zOS" productCategory="Websphere">
+		<LinksExtensionData>
+			<HomePageURL>http://www.ibm.com/software/webservers/appserv/zos_os390/index.html</HomePageURL>
+			<SupportPageURL>http://www.ibm.com/software/webservers/appserv/zos_os390/support/</SupportPageURL>
+		</LinksExtensionData>
+	</ProductDescriptor>
+</extension>
+
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+        <tasks>
+            <categoryDefinition id="systemadmin" parent="root" icon="" label="nav.SystemAdmin.displayName" weight="60"/>
+            <task id="savewscchanges" icon="" label="nav.swg.com.ibm.ws.saveconfig" resourceType="ALL" view="/syncworkspace.do?syncaction=list" external="false" weight="20" role="administrator,configurator,deployer,operator,adminsecuritymanager,auditor">
+                <category id="systemadmin"/>
+            </task>
+            <categoryDefinition id="com.ibm.wim.management.navigationElement.WIM" parent="root" icon="" label="nav.console.users.groups" weight="70" role="administrator,adminsecuritymanager,iscadmins,auditor"/>
+            <task id="wscpreferences" icon="" label="menu.preferences" view="/menuBarCmd.do?forwardName=console.preferences.main" external="false" weight="50">
+                <category id="systemadmin"/>
+            </task>
+            <task id="manageusers" icon="" label="nav.user.management" view="/navigatorCmd.do?forwardName=console.users.main" external="false" weight="50" role="adminsecuritymanager,auditor">
+                <category id="com.ibm.wim.management.navigationElement.WIM"/>
+            </task>
+            <task id="managegroups" icon="" label="nav.group.management" view="/navigatorCmd.do?forwardName=console.groups.main" external="false" weight="60" role="adminsecuritymanager,auditor">
+                <category id="com.ibm.wim.management.navigationElement.WIM"/>
+            </task>
+            <categoryDefinition id="environment" parent="root" icon="" label="nav.Environment.displayName" weight="50"/>
+        </tasks>
+    </extension>
+
+<extension point="com.ibm.ws.console.core.homePage">
+	<homepages>
+		<homepage url="base.home.page" weight="2"/>
+	</homepages>
+</extension> 
+
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="actionButtons1" contextType="console.users.main">
+         <action enablesFor="collection" label="button.logout" actionURI="manageusers.do?type=admin" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.add.users" actionURI="manageusers.do?type=admin" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.remove.users" actionURI="manageusers.do?type=admin" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.refreshAll" actionURI="manageusers.do?type=admin" role="adminsecuritymanager">
+                <compatibility>
+                        <match key="com.ibm.websphere.cellType" value="distributedcell|mixedcell|zoscell"/>
+                        <match key="com.ibm.ws.console.core.user.isSecurityEnabled" value="true"/>
+                </compatibility>
+         </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="actionButtons2" contextType="console.groups.main">
+         <action enablesFor="collection" label="button.add.users" actionURI="managegroups.do?type=admin" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.remove.users" actionURI="managegroups.do?type=admin" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.refreshAll" actionURI="managegroups.do?type=admin" role="adminsecuritymanager">
+                <compatibility>
+                        <match key="com.ibm.websphere.cellType" value="distributedcell|mixedcell|zoscell"/>
+                        <match key="com.ibm.ws.console.core.user.isSecurityEnabled" value="true"/>
+                </compatibility>
+         </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="actionButtons3" contextType="console.naming.users.main">
+         <action enablesFor="collection" label="button.add.users" actionURI="managenamingusers.do?type=naming" role="administrator"/>
+         <action enablesFor="collection" label="button.remove.users" actionURI="managenamingusers.do?type=naming" role="administrator"/>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="actionButtons4" contextType="console.naming.groups.main">
+         <action enablesFor="collection" label="button.add.users" actionURI="managenaminggroups.do?type=naming" role="administrator"/>
+         <action enablesFor="collection" label="button.remove.users" actionURI="managenaminggroups.do?type=naming" role="administrator"/>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems1" contextType="console.selectnode.main">
+         <item attributeName="node" sortable="sort" label="label.node"/>
+         <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+         <item attributeName="cell" sortable="nosort" label="label.cell"/>
+
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems8" contextType="console.selectcluster.main">
+         <item attributeName="cluster" sortable="sort" label="label.cluster"/>
+         <item attributeName="cell" sortable="nosort" label="label.cell"/>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems2" contextType="console.selectserver.main">
+         <item attributeName="server" sortable="sort" label="label.server"/>
+         <item attributeName="node" sortable="sort" label="label.node"/>
+         <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems3" contextType="console.users.main">
+         <item attributeName="user" sortable="sort" itemURI="manageusers.do?action=update&#38;type=admin" label="label.user"/>
+         <item attributeName="displayRole" sortable="sort" label="label.role"/>
+         <item attributeName="status" sortable="sort" label="label.status"/>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems4" contextType="console.groups.main">
+         <item attributeName="group" sortable="sort" itemURI="managegroups.do?action=update&#38;type=admin" label="label.group"/>
+         <item attributeName="displayRole" sortable="sort" label="label.role"/>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems5" contextType="console.naming.users.main">
+         <item attributeName="user" sortable="sort" itemURI="managenamingusers.do?action=update&#38;type=naming" label="label.user"/>
+         <item attributeName="displayRole" sortable="sort" label="label.role"/>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems6" contextType="console.naming.groups.main">
+         <item attributeName="group" sortable="sort" itemURI="managenaminggroups.do?action=update&#38;type=naming" label="label.group"/>
+         <item attributeName="displayRole" sortable="sort" label="label.role"/>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer1" contextType="ApplicationServer">
+        <categoryDefinition id="additional.properties" label="config.additional.properties" parent="root"/>
+    </linkSet>
+</extension>
+
+<!--LI3509-->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="collectionItems9" contextType="console.commandassistance.main">
+         <item attributeName="command" sortable="nosort" itemURI="description" label="commandassistance.command.label"/>
+    </collectionItem>
+</extension>
+<!--LI3509-->
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="AuthGroupCollection" contextType="AuthorizationGroup">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="authorizationGroupCollection.do?EditAction=true"
+                label="AuthorizationGroup.name.displayName">
+          </item>
+         </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="actionButtonsauthgroup" contextType="AuthorizationGroup">
+         <action enablesFor="collection" label="button.new" actionURI="authorizationGroupCollection.do" role="adminsecuritymanager"/>
+         <action enablesFor="collection" label="button.delete" actionURI="authorizationGroupCollection.do" role="adminsecuritymanager"/>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="admindetailtab" contextType="AuthorizationGroup">
+        <tab
+              label="tab.configuration"
+              contentURI="AuthorizationGroup.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="admindetailtab" contextType="AuthorizationGroupUpdate">
+        <tab
+              label="tab.configuration"
+              contentURI="AuthorizationGroup.config.tab.view.update">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="adminusersgroups"
+          contextType="AuthorizationGroup">
+    <link label="nav.user.management"
+          description="nav.user.management"
+          categoryId="additional.properties"
+          actionURI="userGroupCmd.do?forwardName=console.users.main"/>
+    <link label="nav.group.management"
+          description="nav.group.management"
+          categoryId="additional.properties"
+          actionURI="userGroupCmd.do?forwardName=console.groups.main"/>
+   </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="adminusersgroups"
+          contextType="AuthorizationGroupUpdate">
+    <link label="nav.user.management"
+          description="nav.user.management"
+          categoryId="additional.properties"
+          actionURI="userGroupCmd.do?forwardName=console.users.main"/>
+    <link label="nav.group.management"
+          description="nav.group.management"
+          categoryId="additional.properties"
+          actionURI="userGroupCmd.do?forwardName=console.groups.main"/>
+   </linkSet>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.treecontroller">
+    <tree id="authgrouptree" class="com.ibm.ws.console.core.authgroup.AuthGroupTreeController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.nodegroups" name="auth.tree.nodegroups.name" parent="root" controller="com.ibm.ws.console.core.authgroup.controller.NodeGroupController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.nodes" name="auth.tree.nodes.name" parent="root" controller="com.ibm.ws.console.core.authgroup.controller.NodeController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.appservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.core.authgroup.controller.AppServerController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.webservers" name="auth.tree.webservers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.core.authgroup.controller.WebServerController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.proxyservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.core.authgroup.controller.ProxyServerController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.applications" name="auth.tree.applications.name" parent="root" controller="com.ibm.ws.console.core.authgroup.controller.AppController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.clusters" name="auth.tree.clusters.name" parent="root" controller="com.ibm.ws.console.core.authgroup.controller.ClusterController"/>
+</extension>
+
+<extension point="com.ibm.ws.console.core.helpToken">
+  <help-token-generators>
+    <help-token-generator>
+      <class-name>com.ibm.ws.console.core.help.token.impl.DefaultHelpTokenGenerator</class-name>
+      <order>9999</order>
+    </help-token-generator>
+  </help-token-generators>
+</extension>
+
+</plugin>

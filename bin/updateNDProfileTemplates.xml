@@ -1,0 +1,67 @@
+<!-- *******************************************************************  -->
+<!-- Script to update ND profile with V5 server templates.                -->
+<!--                                                                      -->
+<!-- Usage : Go to dmgr profile's bin directory and execute the following -->
+<!-- ws_ant -buildfile updateNDProfileTemplates.xml                       -->
+<!--                                                                      -->
+<!-- *******************************************************************  -->
+
+<project name="updateNDProfileTemplates" default="copyTemplates" basedir=".">
+
+
+  <property environment="env"/>
+  <property name="wasHome" value="${env.WAS_HOME}"/>
+  <property name="userInstallRoot" value="${env.USER_INSTALL_ROOT}"/>
+  <property name="nodeName" value="${env.WAS_NODE}"/>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii" description="Replaces all instances of the given token for the given file with the given value">
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+
+    </target>
+
+  <target name="copyTemplates" description="copy template files to dmgr profile ">
+
+      <copy tofile="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/template-metadata.xml.orig" 
+           file="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/template-metadata.xml"
+           overwrite="true"
+      />
+<!--
+      <copy tofile="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/template-metadata.xml" 
+          file="${wasHome}/profileTemplates/dmgr/documents/config/templates/servertypes/APPLICATION_SERVER/template-metadata.xml"
+          overwrite="true"
+      </copy>
+-->
+      <java classname="com.ibm.ws.management.tools.ServerTemplateBuilder" fork="true">
+          <classpath>
+              <fileset dir="${wasHome}">
+                  <include name="lib/*.jar"/>
+                  <include name="classes/*.jar"/>
+              </fileset>
+          </classpath>
+          <jvmarg value="-Duser.install.root=${userInstallRoot}"/>
+      </java>
+      <copy todir="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/servers/default_5X" overwrite="true">
+          <fileset dir="${wasHome}/profileTemplates/dmgr/documents/config/templates/servertypes/APPLICATION_SERVER/servers/default_5X"/>
+      </copy>
+      <copy todir="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultZOS_5X" overwrite="true">
+          <fileset dir="${wasHome}/profileTemplates/dmgr/documents/config/templates/servertypes/APPLICATION_SERVER/servers/defaultZOS_5X"/>
+      </copy>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultZOS_5X/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${userInstallRoot}/config/templates/servertypes/APPLICATION_SERVER/servers/default_5X/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+    </target>
+
+</project>

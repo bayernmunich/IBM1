@@ -1,0 +1,232 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS JMX Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS JMX Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_JMX_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-jmx" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+
+		
+		was_stack_custom_init,
+		
+		jmx_collect_info,
+		jmx_generate_trace_string,			         
+		trace_setup_custom,	
+					
+		jmx_client_trace_collect, 
+		execute_collector, 
+		execute_vce_info_for_was,
+		common_postamble_general_with_ftp">
+	</target>
+
+	<target name="jmx_collect_info">
+		<inputdialogtask >
+			<fieldtask name="prompt"
+			           label="client.jmx.api"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt1"
+			           label="jmx.label1"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt2"
+			           label="jmx.label2"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt3"
+			           label="jmx.label3"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt4"
+			           label="jmx.label4"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt5"
+			           label="jmx.label5"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt6"
+			           label="jmx.label6"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt7"
+			           label="jmx.label7"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.stmt8"
+			           label="jmx.label8"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	
+	</target>
+	
+	<target name="jmx_client_trace_collect"> 
+		<inputdialogtask doSkip="true" actionProperty="isSkip" >
+			<fieldtask name="prompt"
+			           label="Input_Required_WAS"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.client1"
+			           label="jmx.client.label0"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.client1"
+			           label="jmx.client.label1"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.client.file"
+			           label="jmx.client.label2"
+			           type="filebrowser"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask> 
+		
+		<condition property="isPromptSkip" > 
+			<equals arg1="skip" arg2="${isSkip}" casesensitive="false" />
+		</condition> 
+		
+		<if isNotTrue="${isPromptSkip}"> 
+			<available file="${ws.jmx.client.file}" property="jmx.client.trace.available" /> 
+			
+			<if isTrue="${jmx.client.trace.available}" > 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset file="${ws.jmx.client.file}" prefix="${autopdproblem}/Client-Trace" />
+				</zip>
+	 
+			</if> 
+		</if> 
+
+<!-- Sample Code Snippet --> 
+	
+		<inputdialogtask doSkip="true" actionProperty="isSnippetSkip">
+			<fieldtask name="prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jmx.question"
+			           label="ws_jmx_q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<condition property="isSkipSnippet" > 
+			<equals arg1="skip" arg2="${isSnippetSkip}" casesensitive="false" />
+		</condition> 
+		
+		<if isNotTrue="${isSkipSnippet}"> 
+			<concat destfile="${autopdtmp}/autopd/Code-Snippet.txt" append="true">
+				Simple client or snippet of the problem code.${line.separator}
+						${ws.jmx.question}${line.separator}
+			</concat>
+		
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdproblem}" > 
+					<include name="Code-Snippet.txt" /> 
+				</zipfileset> 
+			</zip>
+		</if> 
+
+		
+	</target> 
+
+		<target name="jmx_generate_trace_string" >
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="Admin=all" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	
+	</target>
+	
+	
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere JMX Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the JMX 
+					problem. It will set the appropriate trace string.
+					After the problem has been reproduced the logs, configuration,
+					and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1196218" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the JMX 
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration, and trace 
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere JMX Problem =>
+This problem category is run on the managed node experiencing the JMX 
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration,
+and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

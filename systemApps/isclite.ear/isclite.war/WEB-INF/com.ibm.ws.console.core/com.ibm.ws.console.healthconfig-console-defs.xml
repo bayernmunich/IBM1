@@ -1,0 +1,752 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+
+<tiles-definitions>
+
+	<definition name="healthclass.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.healthconfig.controller.HealthClassCollectionController">
+		<put name="contextType" value="HealthClass"/>
+		<put name="descTitle" value="healthClasses" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="descText" value="desc.healthclass.text" />
+		<putList name="contentList">
+			<add value="healthclass.collection.paging.extend" />
+			<add value="healthclass.collection.quicksearch.extend" />
+			<add value="healthclass.collection.table.main" />
+		</putList>
+	</definition>
+
+
+	<!-- paging is the page # at the top of the filter  -->
+	<definition name="healthclass.collection.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="HealthClassCollectionForm" />
+		<put name="formAction" value="HealthClassCollection.do" />
+		<put name="formName" value="HealthClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthClassCollectionForm" />
+	</definition>
+
+
+	<!-- quicksearch is the filter panel -->
+	<definition name="healthclass.collection.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="HealthClassCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="HealthClassCollectionForm" />
+		<put name="formAction" value="HealthClassCollection.do" />
+		<put name="formName" value="HealthClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthClassCollectionForm" />
+		<put name="parent" value="healthclass.content.main" />
+		<putList name="searchList">
+			<add value="healthclass.name:name" />
+		</putList>
+	</definition>
+
+	<!-- the table main contains the table of the current objects -->
+	<definition name="healthclass.collection.table.main" path="/com.ibm.ws.console.healthconfig/HealthClassCollectionTableLayout.jsp">
+		<put name="iterationName" value="HealthClassCollectionForm" />
+		<put name="formName" value="HealthClassCollectionForm" />
+		<put name="formAction" value="HealthClassCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthClassCollectionForm" />
+		<put name="buttons" value="healthclass.collection.buttons.panel" />
+		<put name="parent" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown"/>
+		<put name="htmlFilter" value="true"/>
+		<putList name="collectionList">
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/HealthClass/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/HealthClass/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+
+
+	<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->
+	<definition name="healthclass.collection.buttons.panel" path="/com.ibm.ws.console.healthconfig/buttonLayout.jsp">
+		<put name="buttonCount" value="2" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="healthclass.collection.buttons.panel" />
+		<putList name="actionList">
+		</putList>
+	</definition>
+
+	<!-- The detail main panels are shown when you select an existing to display, or new -->
+	<definition name="healthclass.detail.main" path="/secure/layouts/configboxLayout.jsp">
+		<put name="contextType" value="HealthClass"/>
+		<putList name="list">
+			<add value="healthclass.detail.title" />
+			<add value="healthclass.detail.tabs" />
+		</putList>
+	</definition>
+
+	<!-- The detail.title includes the title information at the top of the detail page -->
+	<definition name="healthclass.detail.title" extends="detail.title">
+		<put name="formName" value="HealthClassDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="titleKey" value="healthclass.detail.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.content.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="refId" />
+		<put name="instanceDescription" value="healthclass.detail.description" />
+		<put name="displayName" value="healthclass.name" />
+	</definition>
+
+	<!-- the detail.tabs goes below the detail.title in the detail panel.  It has config and runtime tabs -->
+	<definition name="healthclass.detail.tabs" path="/secure/layouts/tabsLayout.jsp">
+		<put name="selectUri" value="DisplayHealthClassDetails.do" />
+		<put name="selectedPerspective" value="tab.configuration" />
+		<put name="formName" value="HealthClassDetailForm" />
+		<putList name="tabList">
+		</putList>
+	</definition>
+
+
+	<definition name="healthclass.topology.tab.view" path="/secure/layouts/topologyLayout.jsp">
+		<put name="treeView" value="healthclass.topology.tree.view" />
+	</definition>
+
+	<definition name="healthclass.topology.tree.view" path="/secure/layouts/treeLayout.jsp" controllerClass="com.ibm.ws.console.healthconfig.controller.HealthClassTopologyController">
+		<put name="rootName" value="healthclass.topology.root" />
+		<put name="rootImage" value="images/onepix.gif" />
+		<putList name="treeList"></putList>
+	</definition>
+
+	<!--The detail.config is the panel that shows the General and Additional properties -->
+	<definition name="healthclass.detail.config" path="/secure/layouts/vboxLayout.jsp">
+		<putList name="list">
+			<add value="healthclass.general.properties" />
+		</putList>
+	</definition>
+
+	<!-- This defines all the general properties -->
+	<definition name="healthclass.general.properties" path="/com.ibm.ws.console.healthconfig/HealthClassCustomPropsLayout.jsp">
+		<put name="formAction" value="HealthClassDetail.do" />
+		<put name="formName" value="HealthClassDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthClassDetailForm" />
+		<put name="formFocus" value="description" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+			<!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+			<item value="healthclass.name:name:yes:Text:healthclass.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="healthclass.description:description:no:Textarea:healthclass.description.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<!-- <item value="healthclass.reactionMode:reactionMode:no:Select:healthclass.reactionMode.description:no:yes:REACTION_MODE_SUPERVISED,REACTION_MODE_AUTOMATIC:REACTION_MODE_SUPERVISED,REACTION_MODE_AUTOMATIC" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" /> -->
+			<!-- <item value="healthclass.type:type:no:Select:healthclass.healthcondition.description:no:yes:AGE,STUCKREQUEST,RESPONSE,MEMORY,MEMORYLEAK,STORMDRAIN,WORKLOAD:AGE,STUCKREQUEST,RESPONSE,MEMORY,MEMORYLEAK,STORMDRAIN,WORKLOAD" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" /> -->
+		</putList>
+	</definition>
+
+
+	<definition name="healthclass.wizard" path="/com.ibm.ws.console.healthconfig/showMeStepsLayout.jsp">
+		<put name="titleKey" value="healthclass.wizard.title" />
+		<put name="descKey" value="healthclass.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps" extends="healthclass.wizard">
+		<put name="contextType" value="healthclass.wizard.steps" />
+		<put name="stepArraySessionKey" value="HEALTHCLASS_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<putList name="stepsList">
+			<item value="healthclass.wizard.steps.properties" link="/com.ibm.ws.console.healthconfig/CreateHealthClassProperties" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="healthclass.wizard.steps.conditionproperties" link="/com.ibm.ws.console.healthconfig/CreateHealthClassConditionProperties" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<!-- begin Add Action steps 1 and 2 -->
+                       <item value="createhealthclass.actionPlan.wizard.steps.selectType" link="/com.ibm.ws.console.healthconfig/CreateHealthActionPlanType" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+                       <item value="createhealthclass.actionPlan.wizard.steps.selectTarget" link="/com.ibm.ws.console.healthconfig/CreateHealthActionPlanTarget" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<!-- end Add Action steps 1 and 2 -->
+			<item value="healthclass.wizard.steps.configuremembers" link="/com.ibm.ws.console.healthconfig/CreateHealthClassConfigureMembers" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="healthclass.wizard.steps.confirm" link="/com.ibm.ws.console.healthconfig/ConfirmHealthClassCreate" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+	</definition>
+
+
+	<definition name="healthclass.wizard.steps.configuremembers" extends="healthclass.wizard.steps">
+		<put name="actionHandler" value="CreateHealthClassConfigureMembers" />
+		<put name="actionForm" value="CreateHealthClassConfigureMembersForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="helpTopic" value="CreateHealthClassWizardForm.detail.appservers" />
+		<put name="pluginId" value="com.ibm.ws.console.healthconfig" />
+	</definition>
+	<definition name="healthclass.wizard.steps.configuremembers.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassConfigureMembersa.jsp">
+		<put name="actionHandler" value="CreateHealthClassConfigureMembers" />
+		<put name="actionForm" value="CreateHealthClassConfigureMembersForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+
+	<definition name="healthclass.wizard.steps.properties" extends="healthclass.wizard.steps">
+		<put name="actionHandler" value="CreateHealthClassProperties" />
+		<put name="actionForm" value="CreateHealthClassPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="helpTopic" value="CreateHealthClassWizardForm.detail" />
+		<put name="pluginId" value="com.ibm.ws.console.healthconfig" />
+	</definition>
+
+	<definition name="healthclass.wizard.steps.conditionproperties" extends="healthclass.wizard.steps">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="helpTopic" value="CreateHealthClassWizardForm.detail.condition" />
+		<put name="pluginId" value="com.ibm.ws.console.healthconfig" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+
+    <!-- begin embeded AddAction steps -->
+	<definition name="createhealthclass.actionPlan.wizard.steps.selectType" extends="healthclass.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="CreateHealthActionPlanType" />
+		<put name="actionForm" value="CreateHealthActionPlanTypeForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthActionPlanWizardForm" />
+		<put name="helpTopic" value="CreateHealthClassWizardForm.detail.condition" />
+		<put name="pluginId" value="com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+	
+	<definition name="createhealthclass.actionPlan.wizard.steps.selectTarget" extends="healthclass.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="CreateHealthActionPlanTarget" />
+		<put name="actionForm" value="CreateHealthActionPlanTargetForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthActionPlanWizardForm" />
+		<put name="helpTopic" value="CreateHealthClassWizardForm.detail.condition" />
+		<put name="pluginId" value="com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+    <!-- end embeded AddAction steps -->
+
+	<definition name="healthclass.wizard.steps.condition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassConditionPropertiesa.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList"></putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.agecondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassAge.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.workloadcondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassWorkload.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+	<definition name="healthclass.wizard.steps.memorycondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassMemory.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+	<definition name="healthclass.wizard.steps.responsecondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassResponse.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+	<definition name="healthclass.wizard.steps.stuckrequestcondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassStuckRequest.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.stormdraincondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassStormDrain.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.memoryleakcondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassMemoryLeak.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+	
+	<definition name="healthclass.wizard.steps.gcpercentagecondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassGCPercent.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.properties.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassType.jsp">
+		<put name="actionHandler" value="CreateHealthClassProperties" />
+		<put name="actionForm" value="CreateHealthClassPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+
+		<putList name="attributeList">
+		<!--	<item value="healthclass.type:type:no:Select:healthclass.wizard.healthcondition.description:no:yes:AGE,STUCKREQUEST,RESPONSE,MEMORY,MEMORYLEAK,STORMDRAIN,WORKLOAD:AGE,STUCKREQUEST,RESPONSE,MEMORY,MEMORYLEAK,STORMDRAIN,WORKLOAD" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />-->
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.customcondition.attributes" path="/com.ibm.ws.console.healthconfig/CreateHealthClassCustomCondition.jsp">
+		<put name="actionHandler" value="CreateHealthClassConditionProperties" />
+		<put name="actionForm" value="CreateHealthClassConditionPropertiesForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+		</putList>
+	</definition>
+
+	<definition name="healthclass.wizard.steps.confirm" extends="healthclass.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="ConfirmHealthClassCreate" />
+		<put name="actionForm" value="ConfirmHealthClassCreateForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthClassWizardForm" />
+	</definition>
+
+<!-- start of the Health Custom action Panel -->
+	<definition name="healthclass.customaction.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.healthconfig.controller.HealthCustomActionCollectionController">
+		<put name="contextType" value="HealthCustomAction"/>
+		<put name="descTitle" value="healthCustomAction" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="descText" value="desc.healthclass.customAction.text" />
+		<put name="helpTopic" value="HealthCustomAction.collection" />
+		<putList name="contentList">
+			<add value="healthclass.customaction.collection.paging.extend" />
+			<add value="healthclass.customaction.collection.quicksearch.extend" />
+			<add value="healthclass.customaction.collection.table.main" />
+		</putList>
+	</definition>
+
+
+	<!-- paging is the page # at the top of the filter  -->
+	<definition name="healthclass.customaction.collection.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="HealthCustomActionCollectionForm" />
+		<put name="formAction" value="HealthCustomActionCollection.do" />
+		<put name="formName" value="HealthCustomActionCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionCollectionForm" />
+	</definition>
+
+
+	<!-- quicksearch is the filter panel -->
+	<definition name="healthclass.customaction.collection.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="HealthCustomActionCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="HealthCustomActionCollectionForm" />
+		<put name="formAction" value="HealthCustomActionCollection.do" />
+		<put name="formName" value="HealthCustomActionCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionCollectionForm" />
+		<putList name="searchList">
+			<add value="healthclass.customAction.name:name" />
+		</putList>
+	</definition>
+
+	<!-- the table main contains the table of the current objects -->
+	<definition name="healthclass.customaction.collection.table.main" path="/com.ibm.ws.console.healthconfig/HealthClassCustomActionCollectionTableLayout.jsp">
+		<put name="iterationName" value="HealthCustomActionCollectionForm" />
+		<put name="formName" value="HealthCustomActionCollectionForm" />
+		<put name="formAction" value="HealthCustomActionCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionCollectionForm" />
+		<put name="buttons" value="healthclass.customaction.collection.buttons.panel" />
+		<put name="parent" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.customaction.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown"/>
+		<put name="htmlFilter" value="true"/>
+		<putList name="collectionList">
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/HealthCustomAction/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/HealthCustomAction/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+
+	<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->
+	<definition name="healthclass.customaction.collection.buttons.panel" path="/com.ibm.ws.console.healthconfig/buttonLayout.jsp">
+		<put name="buttonCount" value="2" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="healthclass.customaction.collection.buttons.panel" />
+		<putList name="actionList">
+		</putList>
+	</definition>
+	
+	<definition name="healthcustom.wizard" path="/com.ibm.ws.console.healthconfig/showMeStepsLayout.jsp">
+		<put name="titleKey" value="healthclass.customAction.wizard.title" />
+		<put name="descKey" value="healthclass.customAction.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<put name="helpTopic" value="HealthCustomAction.wizard" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="healthcustom.wizard.steps" extends="healthcustom.wizard">
+		<put name="contextType" value="healthcustom.wizard.steps" />
+		<put name="stepArraySessionKey" value="HEALTHCUSTOM_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<putList name="stepsList">
+			<item value="healthclass.customAction.wizard.steps.actionType" 	
+				  link="/com.ibm.ws.console.healthconfig/CreateHealthCustomProcessType"
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+	     	<item value="healthclass.customAction.wizard.steps.customAction"
+				  link="/com.ibm.ws.console.healthconfig/DefineHealthCustomProcessType"
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+	    	<item value="healthclass.customAction.wizard.steps.confirm"
+				  link="/com.ibm.ws.console.healthconfig/ConfirmHealthClassCustom" 	
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+		
+	</definition>
+		<definition name="healthclass.customAction.wizard.steps.customAction" extends="healthcustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="DefineHealthCustomProcessType" />
+		<put name="actionForm" value="DefineHealthCustomProcessTypeForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthCustomActionWizardForm" />
+	</definition>
+	
+	<definition name="healthclass.customAction.wizard.steps.actionType" extends="healthcustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="CreateHealthCustomProcessType" />
+		<put name="actionForm" value="CreateHealthCustomProcessTypeForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthCustomActionWizardForm" />
+	</definition>
+	
+	<definition name="healthclass.customAction.wizard.steps.confirm" extends="healthcustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="ConfirmHealthClassCustom" />
+		<put name="actionForm" value="ConfirmHealthClassCustomForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthCustomActionWizardForm" />
+	</definition>
+	
+	
+	<!-- NamedJavaPrcessDef page -->
+    <definition extends="detail.config.view" name="healthclass.customAction.JavaProcDef.config.view">
+	    <put name="contextType" value="HealthCustomActionJavaProcDef"/>
+        <putList name="list">
+            <add value="healthclass.customAction.JavaProcDef.detail.title"/>
+            <add value="healthclass.customAction.JavaProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="healthclass.customAction.JavaProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.healthconfig"/>
+        <put name="titleKey" value="healthclass.customAction.wizard.title"/>
+        <put name="collectionLink" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.customaction.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="healthclass.customAction.display.description"/>
+        <put name="helpTopic" value="HealthCustomAction.wizard" />
+        <put name="displayName" value="healthclass.customAction.wizard.title"/>
+    </definition>
+    <definition name="healthclass.customAction.JavaProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="HealthCustomActionDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="healthclass.customAction.JavaProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="healthclass.customAction.JavaProcDef.detail.buttons.panel"/>
+            <add value="healthclass.customAction.JavaProcDef.config.general.properties"/>
+         <!--   <add value="healthclass.customAction.JavaProcDef.config.additional.properties"/> -->
+        </putList>
+    </definition>
+    <definition name="healthclass.customAction.JavaProcDef.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="healthclass.customAction.JavaProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="healthclass.customAction.JavaProcDef.config.general.properties" path="/com.ibm.ws.console.healthconfig/configGenPropLayout.jsp">
+        <put name="formAction" value="HealthCustomActionDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+  			<item  value="healthclass.customAction.name:name:yes:Text:ProcessDef.executableName.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.location:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:no:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.usernameVar:usernameVar:no:Text:healthclass.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.usernameVal:usernameVal:no:Text:healthclass.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVar:passwordVar:no:Text:healthclass.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVal:passwordVal:no:Password:healthclass.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="healthclass.customAction.executable.os:osnamesList:no:Dynamicselect:healthclass.customAction.executable.os:no:yes:windows,unix,zos:healthclass.customAction.windows,healthclass.customAction.unix,healthclass.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+          </putList>
+    </definition>
+	
+	<definition name="healthclass.customAction.wizard.JavaProcDef" path="/com.ibm.ws.console.healthconfig/createProcDef.jsp">
+        <put name="formName" value="DefineHealthCustomProcessTypeForm"/>
+        <put name="actionForm" value="DefineHealthCustomProcessTypeForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item  value="healthclass.customAction.name:name:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.location:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:no:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.usernameVar:usernameVar:no:Text:healthclass.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.usernameVal:usernameVal:no:Text:healthclass.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVar:passwordVar:no:Text:healthclass.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVal:passwordVal:no:Password:healthclass.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="healthclass.customAction.executable.os:osnamesList:no:Dynamicselect:healthclass.customAction.executable.os:no:yes:windows,unix,zos:healthclass.customAction.windows,healthclass.customAction.unix,healthclass.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+
+            </putList>
+    </definition>
+
+
+
+    <!--  Server Operations - Detail View -->
+<!-- NamedPrcessDef page -->
+    <definition extends="detail.config.view" name="healthclass.customAction.ProcDef.config.view">
+        <put name="contextType" value="HealthCustomActionProcDef"/>
+        <putList name="list">
+            <add value="healthclass.customAction.ProcDef.detail.title"/>
+            <add value="healthclass.customAction.ProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="healthclass.customAction.ProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.healthconfig"/>
+        <put name="titleKey" value="healthclass.customAction.wizard.title"/>
+        <put name="collectionLink" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.customaction.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="healthclass.customAction.display.description"/>
+        <put name="displayName" value="healthclass.customAction.wizard.title"/>
+        <put name="helpTopic" value="HealthCustomAction.wizard" />
+    </definition>
+    <definition name="healthclass.customAction.ProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="HealthCustomActionDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="healthclass.customAction.ProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="healthclass.customAction.ProcDef.detail.buttons.panel"/>
+            <add value="healthclass.customAction.ProcDef.config.general.properties"/>
+         <!--   <add value="healthclass.customAction.ProcDef.config.additional.properties"/> -->
+        </putList>
+    </definition>
+    <definition name="healthclass.customAction.ProcDef.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="healthclass.customAction.ProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+    <!-- Wizard -->
+    <definition extends="detail.config.general.properties" name="healthclass.customAction.ProcDef.config.general.properties" path="/com.ibm.ws.console.healthconfig/configGenPropLayout.jsp">
+        <put name="formAction" value="HealthCustomActionDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthCustomActionDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item  value="healthclass.customAction.name:name:yes:Text:ProcessDef.executableName.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.usernameVar:usernameVar:no:Text:healthclass.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="healthclass.customAction.usernameVal:usernameVal:no:Text:healthclass.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVar:passwordVar:no:Text:healthclass.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="healthclass.customAction.passwordVal:passwordVal:no:Password:healthclass.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="healthclass.customAction.executable.os:osnamesList:no:Dynamicselect:healthclass.customAction.executable.os:no:yes:windows,unix,zos:healthclass.customAction.windows,healthclass.customAction.unix,healthclass.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            </putList>
+    </definition>
+
+
+
+    <!-- for wizard: attributeList must keep the same as above -->
+    <definition name="healthclass.customAction.wizard.ProcDef" path="/com.ibm.ws.console.healthconfig/createProcDef.jsp">
+        <put name="formName" value="DefineHealthCustomProcessTypeForm"/>
+        <put name="actionForm" value="DefineHealthCustomProcessTypeForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item  value="healthclass.customAction.name:name:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="healthclass.customAction.usernameVar:usernameVar:no:Text:healthclass.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="healthclass.customAction.usernameVal:usernameVal:no:Text:healthclass.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="healthclass.customAction.passwordVar:passwordVar:no:Text:healthclass.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="healthclass.customAction.passwordVal:passwordVal:no:Password:healthclass.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="healthclass.customAction.executable.os:osnamesList:no:Dynamicselect:healthclass.customAction.executable.os:no:yes:windows,unix,zos:healthclass.customAction.windows,healthclass.customAction.unix,healthclass.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+      <!--  <item  value="healthclass.customaction.displayPidVarName:pidVarName:no:Text:healthclass.customaction.pidVarName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/> -->
+            </putList>
+    </definition>
+	
+		<definition name="healthclass.actionPlan.wizard" path="/com.ibm.ws.console.healthconfig/showMeStepsLayout.jsp">
+		<put name="titleKey" value="healthclass.actionPlan.wizard.title" />
+		<put name="descKey" value="healthclass.actionPlan.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="healthclass.actionPlan.wizard.steps" extends="healthclass.actionPlan.wizard">
+		<put name="contextType" value="healthclass.actionPlan.wizard.steps" />
+		<put name="stepArraySessionKey" value="HEALTHACTION_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<putList name="stepsList">
+			<item value="healthclass.actionPlan.wizard.steps.selectType" 	
+				  link="/com.ibm.ws.console.healthconfig/CreateHealthActionPlanType"
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+	     	<item value="healthclass.actionPlan.wizard.steps.selectTarget"
+				  link="/com.ibm.ws.console.healthconfig/CreateHealthActionPlanTarget"
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+	    	<item value="healthclass.actionPlan.wizard.steps.confirm"
+				  link="/com.ibm.ws.console.healthconfig/ConfirmHealthActionPlan" 	
+				  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+		
+	</definition>
+	<definition name="healthclass.actionPlan.wizard.steps.selectType" extends="healthclass.actionPlan.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="CreateHealthActionPlanType" />
+		<put name="actionForm" value="CreateHealthActionPlanTypeForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthActionPlanWizardForm" />
+		<put name="readOnlyView" value="no" />
+	</definition>
+	
+	<definition name="healthclass.actionPlan.wizard.steps.selectTarget" extends="healthclass.actionPlan.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="CreateHealthActionPlanTarget" />
+		<put name="actionForm" value="CreateHealthActionPlanTargetForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthActionPlanWizardForm" />
+	</definition>
+	
+	<definition name="healthclass.actionPlan.wizard.steps.confirm" extends="healthclass.actionPlan.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="actionHandler" value="ConfirmHealthActionPlan" />
+		<put name="actionForm" value="ConfirmHealthActionPlanForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.CreateHealthActionPlanWizardForm" />
+	</definition>
+
+	<definition name="healthclass.actionPlan.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.healthconfig.controller.HealthActionPlanCollectionController">
+		<put name="contextType" value="HealthActionPlan"/>
+		<put name="descTitle" value="healthclass.customCondition.action.label" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.healthconfig" />
+		<put name="descText" value="healthclass.customCondition.action.label" />
+		<putList name="contentList">
+			<add value="healthclass.actionPlan.paging.extend" />
+			<add value="healthclass.actionPlan.quicksearch.extend" />
+			<add value="healthclass.actionPlan.collection.table.main" />
+		</putList>
+	</definition>
+
+	<definition name="healthclass.actionPlan.content.main2" path="/secure/layouts/vboxLayout.jsp" controllerClass="com.ibm.ws.console.healthconfig.controller.HealthActionPlanCollectionController">
+		<put name="contextType" value="HealthActionPlan"/>
+		<putList name="list">
+			<add value="healthclass.actionPlan.collection.table.main" />
+		</putList>
+	</definition>
+
+	<!-- paging is the page # at the top of the filter  -->
+	<definition name="healthclass.actionPlan.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="HealthActionPlanCollectionForm" />
+		<put name="formAction" value="HealthActionPlanCollection.do" />
+		<put name="formName" value="HealthActionPlanCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthActionPlanCollectionForm" />
+	</definition>
+
+
+	<!-- quicksearch is the filter panel -->
+	<definition name="healthclass.actionPlan.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="HealthActionPlanCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="HealthActionPlanCollectionForm" />
+		<put name="formAction" value="HealthActionPlanCollection.do" />
+		<put name="formName" value="HealthActionPlanCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthActionPlanCollectionForm" />
+		<putList name="searchList">
+			<add value="healthclass.actionPlan.step.label:name" />
+		</putList>
+	</definition>
+
+	<!-- the table main contains the table of the current objects -->
+	<definition name="healthclass.actionPlan.collection.table.main" path="/com.ibm.ws.console.healthconfig/HealthActionPlanCollectionTableLayout.jsp">
+		<put name="iterationName" value="HealthActionPlanCollectionForm" />
+		<put name="formName" value="HealthActionPlanCollectionForm" />
+		<put name="formAction" value="HealthActionPlanCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.healthconfig.form.HealthActionPlanCollectionForm" />
+		<put name="buttons" value="healthclass.actionPlan.collection.buttons.panel" />
+		<put name="parent" value="com.ibm.ws.console.healthconfig.forwardCmd.do?forwardName=healthclass.actionPlan.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown"/>
+		<put name="htmlFilter" value="true"/>
+		<putList name="collectionList">
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/HealthClass/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/HealthClass/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+
+	<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->
+	<definition name="healthclass.actionPlan.collection.buttons.panel" extends="buttons.panel">
+		<put name="buttonCount" value="4" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="healthclass.actionPlan.collection.buttons.panel" />
+		<putList name="actionList">
+		</putList>
+	</definition>
+
+</tiles-definitions>

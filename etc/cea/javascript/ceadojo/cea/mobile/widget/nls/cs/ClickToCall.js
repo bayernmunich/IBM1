@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"Okno spolupráce","SHOW_COLLABORATION_WINDOW":"Zobrazit okno spolupráce","CLICK_TO_CALL":"Klepnutím provedete volání"})

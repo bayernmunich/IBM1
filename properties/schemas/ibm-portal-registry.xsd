@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-registry.xsd"
+  xmlns:registry="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-registry.xsd"
+  xmlns:base="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified" attributeFormDefault="unqualified" version="0.9" xml:lang="en">
+
+  <xs:import namespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" schemaLocation="ibm-portal-base.xsd"/>
+	
+	<!--
+        Registry Description - Root Element 
+        -->
+	<xs:element name="registry" type="registry:Registry">
+		<xs:annotation>
+			<xs:documentation>
+            The topology element specifies how the application artifacts and layout 
+            are combined to an application.
+			The  element describes the application as a component </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:complexType name="Registry">
+		<xs:sequence>
+			<xs:element name="component" type="registry:Component" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+	<xs:complexType name="Component">
+		<xs:sequence>
+			<xs:element name="title" type="base:Text"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:choice>
+				<xs:element name="about-page" type="xs:string" minOccurs="0"/>
+				<xs:element name="PAA-ref" type="xs:token" minOccurs="0" />
+			</xs:choice>
+			<xs:element name="requires" type="registry:Requires" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="portletApplication" type="registry:PortletApplication" maxOccurs="unbounded"/>
+			<!-- <xs:element name="required" type="registry:Requires" minOccurs="0" maxOccurs="unbounded"/>  -->
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:ID" use="required"/>
+		<xs:attribute name="version" type="base:VersionString" use="required"/>
+		<xs:attribute name="contextRoot" type="xs:string" use="required"/>
+	</xs:complexType>
+	
+	<xs:complexType name="Requires">
+		<xs:annotation>
+			<xs:documentation>The requires element is used to enumerate prerequisite to this application.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="uniqueName" type="xs:string" use="required"/>
+		<xs:attribute name="version" type="xs:string" use="required"/>
+	</xs:complexType>
+	
+    <xs:complexType name="PortletApplication">
+       <xs:annotation>
+           <xs:documentation>The portletApplication element is used to enumerate the portlet Applications.</xs:documentation>
+       </xs:annotation>
+       <xs:attribute name="id" type="xs:string" use="required"/>
+       <xs:attribute name="name" type="xs:string" use="required"/>
+   </xs:complexType>
+</xs:schema>

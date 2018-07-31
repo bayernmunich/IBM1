@@ -1,0 +1,59 @@
+#------------------------------------------------------------------------------------------------
+# This JACL script deletes proxy objects.  This scrit is used as part of the uninstall process 
+#-- To delete proxy objects at the wsadmin prompt:
+#-- Usage:
+#--
+#--
+#--  At the wsadmin prompt:  
+#--  
+#--   wsadmin -conntype none -f deleteProxyObjects.jacl
+#--
+#------------------------------------------------------------------------------------------------
+
+proc deleteProxyObjects {args} {
+ 
+  global AdminConfig
+
+    
+  set servers [$AdminConfig list Server]
+  set genericServerClusters [$AdminConfig list GenericServerCluster]
+  set uriGroups [$AdminConfig list URIGroup]
+ 
+  foreach server $servers {
+      set servertype [$AdminConfig showAttribute $server serverType]
+      if {$servertype == "PROXY_SERVER"} {
+         set remove [$AdminConfig remove $server]
+      }
+  } 
+ 
+ foreach genericServerCluster $genericServerClusters {  
+     set remove [$AdminConfig remove $genericServerCluster]
+ }
+
+ foreach uriGroup $uriGroups {  
+     set remove [$AdminConfig remove $uriGroup]
+ }
+
+ set found false
+ set elements [$AdminConfig list Cell]
+ foreach element $elements {  
+     set vhosts [$AdminConfig list VirtualHost]
+
+     foreach vhost $vhosts {  
+         set vHostName [$AdminConfig showAttribute $vhost name]
+         if {($vHostName == "proxy_host")} {
+              set remove [$AdminConfig remove $vhost]
+              break;
+         }
+     }
+ }
+
+
+}
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+
+deleteProxyObjects 
+$AdminConfig save 
+

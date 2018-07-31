@@ -1,0 +1,101 @@
+<!-- Licensed Materials - Property of IBM                                                 -->
+<!-- 5724-I63, 5724-H88, 5655-N02, 5733-W70 (C) Copyright IBM Corp. 2010, 2010   	  -->
+<!-- All Rights Reserved                                                                  -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure restricted by -->
+<!-- GSA ADP Schedule Contract with  the IBM Corp.                                        -->
+
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="applyPerfTuning" default="applyPerfTuningSetting" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="check4param" classname="com.ibm.ws.profile.anttasks.CheckForSpecifiedParam"/>
+
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>   		
+	&importExternalLogs;
+    <target name="tuningTemplateFile"
+            description="Determines the property file template used for performance tuning">
+
+        <condition property="templateFile" value="${WAS_HOME}/scriptLibraries/perfTuning/V70/default.props">
+            <equals arg1="${applyPerfTuningSetting}" arg2="standard"/>
+        </condition>
+        
+        <condition property="templateFile" value="${WAS_HOME}/scriptLibraries/perfTuning/V70/development.props">
+            <equals arg1="${applyPerfTuningSetting}" arg2="development"/>
+        </condition>
+        
+        <condition property="templateFile" value="${WAS_HOME}/scriptLibraries/perfTuning/V70/peak.props">
+            <equals arg1="${applyPerfTuningSetting}" arg2="peak"/>
+        </condition>        
+
+        <wscmtlog>Detected the template file used for performance tuning </wscmtlog>
+    </target>
+
+    <target name="checkIfDefaultTemplate" description="Determines if the chosen template is not Default tuning template">
+	<check4param param="isDeveloperServer" property="isdvprset"/>
+	<check4param param="applyPerfTuningSetting" property="isperftuningset"/>
+	<check4param param="development" property="developement"/>
+        <condition property="notDefault">
+		<and>	
+			<equals arg1="${isdvprset}" arg2="true"/>
+			<equals arg1="${isperftuningset}" arg2="true"/>
+			<equals arg1="${applyPerfTuningSetting}" arg2="development"/>
+		</and>
+	</condition>
+	        <condition property="notDefault">
+		<and>	
+			<equals arg1="${isdvprset}" arg2="false"/>
+			<equals arg1="${isperftuningset}" arg2="true"/>
+			<equals arg1="${applyPerfTuningSetting}" arg2="development"/>
+		</and>
+	</condition>
+        <condition property="notDefault">
+            <equals arg1="${applyPerfTuningSetting}" arg2="peak"/>
+        </condition>
+    </target>
+    
+    <target name="applyPerfTuning" description="Apply Perf Tuning Parameters" if="notDefault"
+        depends="tuningTemplateFile">
+            
+        <wscmtlog>Apply pre-defined performance tuning templates to a specific application server instance</wscmtlog>
+	<pathconvert targetos="unix" property="chngTemplateFile">
+		<path>
+			<pathelement location="${templateFile}"/>
+		</path>
+	</pathconvert>
+	<!-- fail on error was true, but changed to false to accomodate F69142-65189 -->
+        <wsadmin conntype="none"
+                 failonerror="false"
+				 returnProperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/applyPerfTuningTemplate.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${WAS_HOME}/bin/applyPerfTuningTemplate.py"
+                 lang="jython"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="-nodeName"/>
+	         <arg value="${nodeName}"/>
+	         <arg value="-serverName"/>
+	         <arg value="${serverName}"/>
+	         <arg value="-templateFile"/>
+	         <arg value="${chngTemplateFile}"/>
+        </wsadmin>  
+		<antcall target="importLogsToMain" >
+			<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/applyPerfTuningTemplate.log" />
+			<param name="description" value="Applying Performance Tuning" />
+			<param name="precondition" value="foetrue" />
+		</antcall>	 		
+    </target>
+
+    <target name="applyPerfTuningSetting" description="Tunes the Application Server based on the perf tuning parameter" depends="checkIfDefaultTemplate">
+	<antcall target="applyPerfTuning"/>
+    </target>
+
+</project>

@@ -1,0 +1,61 @@
+// Licensed Materials - Property of IBM
+//
+// (C) Copyright IBM Corp. 2010, 2011 All Rights Reserved
+//
+// US Government Users Restricted Rights - Use, duplicate or
+// disclosure restricted by GSA ADP Schedule Contract with
+// IBM Corp.
+// IBM_COPYRIGHT_END
+
+#pragma namespace ("root/ibm_ctxt")
+
+class CTXT_Base as $CTXT_Base
+{
+    [Key]
+    string ClassName;
+};
+
+class CTXT_ComputerSystem as $CTXT_ComputerSystem : CTXT_Base
+{
+    string PrimaryHostName;
+    string VMID;
+    string PrimaryOwnerName;
+    string PrimaryOwnerContact;
+    uint32 OperationalState;
+    string Manufacturer;
+    string SystemBoardUUID;
+    string MachineType;
+    string Model;
+    string SerialNumber;
+    uint32 SystemArchitecture;
+}; 
+
+class CTXT_OperatingSystem as $CTXT_OperatingSystem : CTXT_Base
+{
+    string OSName;
+    string OSType;
+    string OSVersion;
+    datetime LocalDateTime;
+    sint32 CurrentTimeZone;
+    uint32 OperationalState;
+    string SystemGUID;
+}; 
+
+instance of Tivoli_ObjectProvider as $CTXT_Provider
+{
+	Name = "CTXT_Provider";
+	Version = "1.0.0";
+	ClassName = "com.ibm.sysmgmt.uim.provider.core.sysctxt.SystemContextProvider";
+};
+
+instance of Tivoli_ClassProvider 
+{
+	Class = $CTXT_ComputerSystem;
+	Provider = $CTXT_Provider;
+};
+
+instance of Tivoli_ClassProvider 
+{
+	Class = $CTXT_OperatingSystem;
+	Provider = $CTXT_Provider;
+};

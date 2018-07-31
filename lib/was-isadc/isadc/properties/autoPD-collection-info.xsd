@@ -1,0 +1,114 @@
+<?xml version="1.0" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://www.ibm.com/autopd/collectionInfo" 
+	xmlns="http://www.ibm.com/autopd/collectionInfo"
+	elementFormDefault="qualified">
+
+	<xsd:annotation>
+		<xsd:documentation xml:lang="en">
+			* Licensed Material - Property of IBM * * Copyright IBM Corp. 2007 -
+			All Rights Reserved. * US Government Users Restricted Rights - Use,
+			duplication or disclosure * restricted by GSA ADP Schedule Contract
+			with IBM Corp.
+		</xsd:documentation>
+	</xsd:annotation>
+
+   <xsd:element name="collectionInfo">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element ref="global"/>
+            <xsd:element ref="system"/>
+            <xsd:element ref="productInfoList"/>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" ref="additionalInfo"/>           
+         </xsd:sequence>
+         <xsd:attribute name="collectionInfoVersion" type="xsd:string" use="required"/>
+      </xsd:complexType>
+   </xsd:element>
+
+   <xsd:element name="global">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="additionalInfo"/>
+            </xsd:sequence>
+            <xsd:attribute name="collectionType" type="xsd:string" use="required"/>
+            <xsd:attribute name="collectionTime" type="xsd:string" use="required"/> 
+			<xsd:attribute name="userLocale" type="xsd:string" use="required"/>
+        </xsd:complexType>
+   </xsd:element>
+    
+   <xsd:element name="system">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="additionalInfo"/>
+            </xsd:sequence>
+            <xsd:attribute name="operatingSystem" type="xsd:string" use="required"/>
+            <xsd:attribute name="locale" type="xsd:string" use="required"/>
+        </xsd:complexType>
+   </xsd:element>
+
+    <xsd:element name="productInfoList">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="productInfo"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+   <xsd:element name="productInfo">
+        <xsd:complexType>
+            <xsd:sequence>
+				<xsd:element minOccurs="0" maxOccurs="1" name="logFiles" type="LogFilesType"/> 
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="additionalInfo"/>
+            </xsd:sequence>
+            <xsd:attribute name="productName" type="xsd:string" use="required"/>
+            <xsd:attribute name="productVersion" type="xsd:string" use="required"/>
+            <xsd:attribute name="productFixpack" type="xsd:string" use="optional"/>
+            <xsd:attribute name="productInstallRootLocation" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+   </xsd:element>
+
+   <xsd:element name="additionalInfo">
+        <xsd:complexType>
+            <xsd:attribute name="additionalInfoCategory" type="AdditionalInfoCategoryType" use="required"/>
+            <xsd:attribute name="additionalInfoLocation" type="xsd:string" use="required"/>
+         </xsd:complexType>
+   </xsd:element>
+
+   <xsd:simpleType name="AdditionalInfoCategoryType">
+		<xsd:restriction base="xsd:string">
+ 			<xsd:enumeration value="autopdAnalysisSpecification" />
+  			<xsd:enumeration value="autopdEnvironmentInfo" />
+ 			<xsd:enumeration value="WebSphere Application Server Profile Root" />
+			<xsd:enumeration value="WebSphere Application Server iSeries User Install Root" />
+			<xsd:enumeration value="WebSphere Application Server Deployment Manager Root" />
+			<xsd:enumeration value="plrtData" />
+			<xsd:enumeration value="cisaData" />
+			<xsd:enumeration value="generalSystemData" />
+			<xsd:enumeration value="exportConfigData" />
+			<xsd:enumeration value="portalEnvironmentInfo" />
+			<xsd:enumeration value="additionalDB2Data" />
+			<xsd:enumeration value="additionalWebSphereMQData" />
+			<xsd:enumeration value="additionalTivoliDSData" />
+			<xsd:enumeration value="additionalIHSData" />
+			<xsd:enumeration value="DataPower-touchpoint-basedCollection" />
+			<xsd:enumeration value="IMS-on-zSeries-touchpoint-basedCollection" />
+			<xsd:enumeration value="WebSphere Application Server WAS Exporter Output" />		
+		</xsd:restriction>
+   </xsd:simpleType>
+
+	<xsd:complexType name="LogFilesType">
+		<xsd:sequence>
+			<xsd:element minOccurs="0" maxOccurs="unbounded" name="logFile" type="LogFileType"/> 
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogFileType">
+		<xsd:sequence>
+			<xsd:element maxOccurs="unbounded" minOccurs="1" name="logParameter" type="LogParameterType"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogParameterType">
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+		<xsd:attribute name="value" type="xsd:string" use="required"/>
+	</xsd:complexType>
+ 
+</xsd:schema>

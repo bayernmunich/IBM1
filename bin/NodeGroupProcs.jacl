@@ -1,0 +1,139 @@
+# (C) Copyright IBM Corp. 2004,2005 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you 
+# in the  use of  the product. The code is provided 'AS IS', without warranty or 
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+
+
+#---------------------------------------------------
+#
+# addNodeGroupMember -- this takes a nodegroup name
+#		and the name of the node to add to 
+#		the nodegroup and adds the node to the
+#		nodegroup member list.  
+# 
+#---------------------------------------------------
+
+proc addNodeGroupMember {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  if {[regexp help [lindex $args 0]]} {
+     puts "Syntax: addNodeGroupMember nodegroupName nodeName"
+     puts ""
+     puts "Creates and adds a NodeGroupMember to the NodeGroup specified"
+     puts "by the nodegroupName parameter for the node denoted by the nodeName parameter."
+     return 1
+  }
+  if {[llength $args] < 2} {
+     puts "Syntax: addNodeGroupMember nodegroupName nodeName"
+     return 1
+  }
+
+  set ngName [lindex $args 0]
+  set nodeName [lindex $args 1]
+
+  #Get NodeGroups
+  set nodeGroupList [$AdminConfig list NodeGroup]
+  # Locate Node in Cell
+  set node [$AdminConfig getid /Node:$nodeName]
+
+  #Check if Node Was Found
+  set nodeLength [string length $node]
+  if {$nodeLength > 0} {
+	# Located Node, Verify it isn't a member of a preexisting Nodegroup
+	puts "Verifying Node $nodeName is not currently associated with a nodegroup ..."
+	set ngLongName ""
+	foreach ngTmpLongName $nodeGroupList { 	
+
+		set ngShortName [string range $ngTmpLongName 0 [expr [string first ( $ngTmpLongName]-1]]
+		# Located NodeGroup, Continue On
+		if {$ngShortName == $ngName} {
+			#Flag the NodeGroup as found
+			set ngLongName $ngTmpLongName
+		}
+			
+ 	 }
+	puts "Node $nodeName is currently not associated with nodegroup"
+	set ngNameLength [string length $ngLongName]
+	if {$ngNameLength == 0} {
+		# Could not Locate NodeGroup, return
+		puts "Cannot locate NodeGroup in cell.  Please verify NodeGroup Name is accurate."
+		return 1
+	}
+
+	# The Node Group Has Been Located & the Node Is Not Already Mapped
+	# Now Add the Node To the NodeGroup
+	puts "NodeGroup $ngName has been found, adding Node $nodeName to its membership list..."
+	$AdminConfig modify $ngLongName [subst {{members {{{nodeName $nodeName}}}}}]
+	$AdminConfig save
+	puts "Successfully added Node $nodeName to nodegroup $ngName."
+	return 0
+  } else {
+	puts "Cannot locate Node in cell.  Please verify Node Name is accurate."
+	return 1
+  }
+}
+
+#---------------------------------------------------
+#
+# removeNodeGroupMember -- this removes the node 
+#		from the membership list of the 
+#		specified nodegroup
+# 
+#---------------------------------------------------
+
+proc removeNodeGroupMember {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  if {[regexp help [lindex $args 0]]} {
+     puts "Syntax: removeNodeGroupMember nodegroupName nodeName"
+     puts ""
+     puts "Removes the NodeGroupMember from the NodeGroup specified"
+     puts "by the nodegroupName parameter denoted by the nodeName parameter."
+     return 1
+  }
+  if {[llength $args] < 2} {
+     puts "Syntax: removeNodeGroupMember nodegroupName nodeName"
+     return 1
+  }
+
+  set ngName [lindex $args 0]
+  set nodeName [lindex $args 1]
+
+  #First Check if the NodeGroup Exists
+  set ngLongName [$AdminConfig getid /NodeGroup:$ngName]
+  set ngNameLength [string length $ngLongName]
+  if {$ngNameLength > 0} {
+
+	#Located NodeGroup - Find NodeMember
+	set mems [lindex [$AdminConfig showAttribute $ngLongName members] 0]
+	foreach mem $mems {
+		set memName [$AdminConfig showAttribute $mem nodeName]
+		if {$memName == $nodeName} {
+			#Found the NodeGroupMember, Now Remove It
+			puts "Located NodeGroupMember for Node $nodeName in nodegroup $ngName, removing NodeGroupMember ..."
+			$AdminConfig remove $mem
+			$AdminConfig save
+			puts "Successfully removed node $nodeName from nodegroup $ngName."
+			return 0
+		}
+	}
+
+	#Node was not found in the nodegroup
+	puts "Node is currently not a member of the NodeGroup. No action taken."
+	return 0
+  } else {
+	# Could not Locate NodeGroup, return
+	puts "Cannot locate NodeGroup in cell.  Please verify NodeGroup Name is acurate."
+	return 1
+  } 
+
+}

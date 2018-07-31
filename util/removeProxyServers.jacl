@@ -1,0 +1,80 @@
+# --------------------------------------------------------------------
+# This script removes any ProxyServer configured on the specified node. 
+#
+# The script may be invoked as 
+# wsadmin -conntype NONE -f removeProxyServers.jacl {node_name} 
+#
+# -------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------- 
+#
+# The main procudure for removing Proxy servers on a node.
+#
+# This script deletes any proxy server configured on the node
+# by identifying the type of server in the serverindex.xml file.
+# ------------------------------------------------------------------- 
+proc removeProxyServer {node_name}  {
+global AdminConfig 
+global AdminControl
+global AdminApp
+
+	#--------------------------------------------------------------
+	# get all the servers on the specified node sanity checking
+	#--------------------------------------------------------------
+	set serverEntries [$AdminConfig getid /Node:$node_name/ServerIndex:/ServerEntry:/]
+	if {[llength $serverEntries] == 0} {
+		puts "removeProxyServer: WARNING -- no server entries found on this node $node_name"
+		return
+    }
+
+    #----------------------------------------------------------------
+    # remove any proxy servers configured on the node 
+    #----------------------------------------------------------------
+	foreach serverEntry $serverEntries {
+		if {[string compare [$AdminConfig showAttribute $serverEntry serverType] "PROXY_SERVER"] == 0 } {
+			set victimServerName [$AdminConfig showAttribute $serverEntry serverName]
+			set victimServer [$AdminConfig getid /Node:$node_name/Server:$server_name/]
+			catch {$AdminConfig remove $victimServer} result
+		}
+    }
+}
+
+   
+# ----------------------------------------------------------------------
+# Main Program
+# ----------------------------------------------------------------------
+
+if {$argc != 1} {
+	puts stdout "removeProxyServers: USAGE \"wsadmin \[-conntype NONE\] -f removeProxyServers.jacl {node_name} \" "
+	exit
+}
+
+set node_name [string trim [lindex $argv 1]]
+
+removeProxyServer $node_name 
+$AdminConfig save
+#--------------------------------------------------------------
+#     -- is a nodeSync MBean available on this node?
+#--------------------------------------------------------------
+if { [ catch {$AdminControl completeObjectName type=NodeSync,node=$node_name,*} nodeSync] } {
+	puts "removeProxyServers: WARNING could not use AdminControl to find NodeSync"
+} else {
+	if {[llength $nodeSync] == 0} {
+		puts "remove: WARNING -- NodeSync MBean not found for name $node_name"
+	}	
+	#--------------------------------------------------------------
+	# Find out if serverStartupSyncEnabled is true for this node
+	# We just created this server, so if this attribute is set to
+	# "false" we have to perform a sync.  If we do not, the node we
+	# are installing on may have an out-of-date copy of the config
+	# data.
+	#--------------------------------------------------------------
+	set enabled [$AdminControl getAttribute $nodeSync serverStartupSyncEnabled]
+	if {[string compare $enabled "false"] == 0} {
+		puts "removeProxyServers: Invoking synchronization for node $nodeSync because serverStartupSyncEnabled is set to false..."
+		$AdminControl invoke $nodeSync sync
+		puts "removeProxyServers: Done with synchronization."
+	}	
+}
+puts stdout "removeProxyServers: Done"

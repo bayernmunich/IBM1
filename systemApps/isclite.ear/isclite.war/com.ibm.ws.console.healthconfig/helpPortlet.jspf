@@ -1,0 +1,413 @@
+<%-- IBM Confidential OCO Source Material --%>
+<%-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2004, 2008 --%>
+<%-- The source code for this program is not published or otherwise divested --%>
+<%-- of its trade secrets, irrespective of what has been deposited with the --%>
+<%-- U.S. Copyright Office. --%>
+
+<%@page import="com.ibm.isclite.platform.*,com.ibm.isc.api.platform.ProductInfo"%>  <%-- F904.6_20487.14 --%>
+<%@page language="java" import="java.net.*,java.io.*,java.util.*,java.lang.reflect.*,javax.servlet.http.*,java.net.URL,java.net.URLConnection,com.ibm.ws.console.core.bean.UserPreferenceBean,com.ibm.ws.console.core.*,com.ibm.ws.console.core.help.token.HelpTokenManager"%>
+
+<!--WSC Console: needed for Federation-->
+<%@ page import="com.ibm.ws.console.core.WSCDefines" %>
+
+<!--CommandAssistance LI3509-->
+<%@ page import="com.ibm.ws.console.core.commandassistance.CommandAssistance" %>
+
+<tiles:useAttribute name="additionalInfo" classname="java.util.List" ignore="true" />
+<%
+//WSC Console: needed for Federation
+// isc changed to iscFederation to avoid duplication
+    Boolean iscFederation = (Boolean)request.getSession().getAttribute(WSCDefines.WSC_ISC_LAUNCHED_TASK);
+    if ( iscFederation == null) {
+    	iscFederation = new Boolean(false);
+    }
+    Boolean isPortletComp = (Boolean)request.getSession().getAttribute(WSCDefines.PORTLET_COMPATIBLE);
+    if(isPortletComp == null){
+        isPortletComp = new Boolean(false);
+    }
+
+	if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+%>
+	<script language="JavaScript">
+	var federationAdder = 10;
+	</script>
+<%} else { %>
+	<script language="JavaScript">
+	var federationAdder = 0;
+	</script>
+<%}%>
+
+
+   <!-- CommandAssistance LI3509-59 start -->
+	<script language="JavaScript">
+
+   function loadCAWindow(username)
+   {
+      initializeCAWindowVar();
+      if (top.CAWindowHandle==null ||
+          top.CAWindowHandle.closed)
+      {
+         //alert("caWindow is null or closed");
+         var windowName = "wsadminCAWindow" + username;
+         //alert(windowName);
+         top.CAWindowHandle = window.open('com.ibm.ws.console.core.commandassistance.forwardCmd.do?forwardName=console.commandassistance.main', windowName, 'resizable=yes,scrollbars=yes,width=700,height=350');
+         top.CAWindowHandle.focus();
+      }
+      else
+      {
+         //alert("caWindow exits - give focus and reload");
+         top.CAWindowHandle.focus();
+         top.CAWindowHandle.location.reload();
+      }
+   }
+
+
+   function reloadCAWindow()
+   {
+      //alert("in reloadCAWindow()");
+      if (top.CAWindowHandle!=null && !top.CAWindowHandle.closed)
+      {
+         top.CAWindowHandle.location.reload();
+      }
+   }
+
+   function initializeCAWindowVar() {
+      // Create it if it doesn't exist yet, read the value if it does
+      if (top.CAWindowVar == null) {
+         top.CAWindowVar = "initialized";
+         top.CAWindowHandle = null;
+      }
+   }
+
+
+	</script>
+   <!-- CommandAssistance LI3509-59 end -->
+
+         <%
+         UserPreferenceBean userpref = (UserPreferenceBean)session.getAttribute(com.ibm.ws.console.core.Constants.USER_PREFS);
+        Boolean descriptionsOn = new Boolean("true");
+        String descriptionshow = userpref.getProperty("System/workspace", "descriptionsShow", "true");
+        if (descriptionshow!=null && descriptionshow.equals("true")) {
+		   descriptionsOn = Boolean.TRUE;
+	}
+        else
+               descriptionsOn = Boolean.FALSE;
+
+        String FHState = (String)session.getAttribute("wasHelpPortlet");
+        String FHStateImg = "title_minimize.gif";
+        //WSC Console Federation
+        if ( iscFederation.booleanValue() == true ) {
+        	FHStateImg = "IRU_title_minimize.gif";
+        }
+        String FHWidth = "20%";
+        if (FHState == null) {
+           FHState = "table-row-group";
+        } else {
+        if (FHState.equals("none")) {
+                  FHStateImg = "title_restore.gif";
+                  //WSC Console Federation
+                  if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+			      	FHStateImg = "IRU_title_restore.gif";
+			      }
+                  FHWidth = "1%";
+           }
+        }
+	String [] toolbarImages_ = (String []) session.getAttribute("federationISCToolbarImages");
+	if (toolbarImages_ != null) {
+		FHStateImg = toolbarImages_[1];
+	} else {
+		FHStateImg = request.getContextPath() + "/images/" + FHStateImg;
+	}
+        //WSC Console Federation
+        String style = "position:relative";
+        //WSC Console Federation
+        if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true ) {
+        	style = "position:relative;top:10";
+        }
+
+        if (descriptionsOn.booleanValue() != false) 	{
+        %>
+
+      <TD valign="top" WIDTH="<%=FHWidth%>" >
+
+      <!--WSC Console Federation-->
+     <div class="hpWidth">
+     <div class="hpMinWidth">
+     <div class="hpLayout">
+     <div class="hpContainer">
+      <DIV ID="wasHelpPortletPos" style="<%=style%>">
+      <TABLE WIDTH="90%" CELLPADDING="0" CELLSPACING="0" BORDER="0" CLASS="wasPortlet" role="region" aria-label="<bean:message key="wsc.field.help.label"/>">
+      <TR>
+      	<% //WSC Console Federation
+      	if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true ) {
+      	%>
+      	<td class="wpsPortletFederationHelpTitle">
+      	<% } else { %>
+        <td class="wpsPortletTitle">
+        <%}%>
+        <bean:message key="wsc.field.help.label"/></td>
+      	<% //WSC Console Federation
+      	if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true ) {
+      	%>
+        <td class="wpsPortletTitleControlsFederation">
+      	<% } else { %>
+        <td class="wpsPortletTitleControls">
+        <%}%>
+        <A href="javascript:showHidePortlet('wasHelpPortlet')">
+        <img id="wasHelpPortletImg" SRC="<%=FHStateImg%>" alt="<bean:message key="wsc.expand.collapse.alt"/>" border="0" align="texttop" />
+        </A>
+        </td>
+      </TR>
+
+
+      <TBODY ID="wasHelpPortlet" style="display:<%=FHState%>">
+      <TR>
+      	<% //WSC Console Federation
+      	if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true ) {
+      	%>
+        <TD CLASS="wpsPortletAreaHelpFederation" COLSPAN="2" valign="top">
+      	<% } else { %>
+      <TD CLASS="wpsPortletArea" COLSPAN="2" valign="top">
+        <%}%>
+
+
+      <div class="helpSectionTitles"><bean:message key="wsc.field.help.label.field"/></div>
+
+      <% //WSC Console Federation
+      if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+      %>
+	   <DIV CLASS="table-textHelpFederation" ID="fieldHelpPortlet">
+	  <% } else { %>
+      <DIV CLASS="table-text-help-portlet" ID="fieldHelpPortlet">
+      <%}%>
+         <bean:message key="wsc.field.help.noinfo"/>
+      </DIV>
+
+<% String fieldHelp = (String)request.getAttribute("fieldHelp"); %>
+
+
+<%
+if (fieldHelp != null) {
+     String pluginIdentifier = (String) pageContext.getAttribute ("pluginId", PageContext.REQUEST_SCOPE);
+     String pluginContextRoot = (String) pageContext.getAttribute ("pluginContextRoot", PageContext.REQUEST_SCOPE);
+
+     if ((pluginIdentifier != null) || (pluginContextRoot != null)) {
+%>
+      <div STYLE="margin-top:1.25em" class="helpSectionTitles">
+           <bean:message key="wsc.field.help.label.page"/></div>
+      <% //WSC Console Federation
+      if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+      %>
+	   <DIV CLASS="table-textHelpFederation" id="pageHelpLink">
+	  <% } else { %>
+      <DIV CLASS="table-text-help-portlet" id="pageHelpLink">
+      <%}%>
+
+	   <ibmcommon:info label="wsc.field.help.page.link" topic="<%=fieldHelp%>"/>
+
+      </DIV>
+<%
+}
+}
+%>
+
+<%
+  HelpTokenManager manager = HelpTokenManager.getInstance();
+  String token = HelpTokenManager.getInstance().getHelpToken (request);
+  String version = HelpTokenManager.getInstance().getVersion (request);
+%>
+<script language="JavaScript">
+  var helpProdVersion = "<%= token %>";
+  var helpWASVersion = "<%= version %>";
+
+  if (!top.helpProdVersion) {
+       top.helpProdVersion = helpProdVersion;
+  }
+
+  if (!top.helpWASVersion) {
+       top.helpWASVersion = helpWASVersion;
+  }
+</script>
+<%
+  if (additionalInfo != null) {
+%>
+     <div STYLE="margin-top:1.25em" class="helpSectionTitles">
+           <bean:message key="wsc.field.help.suggested.resources"/></div>
+        <%
+          for (Iterator j = additionalInfo.iterator(); j.hasNext(); ) {
+          String info = (String) j.next();
+          String infoKey = info.substring (0, info.indexOf (":"));
+          String topic = info.substring (info.indexOf (":") + 1);
+        %>
+        <% //WSC Console Federation
+        if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+        %>
+	   <DIV CLASS="table-textHelpFederation" id="pageHelpLink">
+        <% } else { %>
+          <DIV CLASS="table-text-help-portlet" id="pageHelpLink">
+        <%}%>
+            <a href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=<%= version %>&product=<%= token %>&topic=<%= topic %>" target="_blank"><bean:message key="<%= infoKey %>" /></a>
+          </DIV>
+        <%
+          }
+        %>
+<%
+  }
+%>
+
+<%-- LI3509 begin --%>
+      <%
+      String requestId = (String)request.getAttribute("CmdAsstReqId");
+      String forceCmdAsst = (String) request.getAttribute("CmdAsstForceLink");
+
+      if ("true".equals(forceCmdAsst) ||
+         ((requestId != null) && (CommandAssistance.isRequestInstrumented((String)(request.getSession()).getId(), requestId)))){
+         session.setAttribute("lastCARequest", requestId);
+         User user = (User) session.getAttribute("user");
+		 String userName = user.getUserID();
+		 // 457243 - special characters causing problems
+         userName = java.net.URLEncoder.encode(userName,"UTF-8");
+         userName = userName.replace(".", "%2E");
+         userName = userName.replace("*", "%2A");
+         userName = userName.replace("+", "%20");         
+         userName = userName.replace("%", "_");  // IE doesn't like the % in the window name
+         
+
+      %>
+        <div STYLE="margin-top:1.25em" class="helpSectionTitles">
+           <bean:message key="commandassistance.link.header"/>
+        </div>
+
+        <DIV CLASS="table-text-help-portlet">
+        <A href="#" onClick="loadCAWindow('<%=userName%>');return false;"><bean:message key="commandassistance.link"/></A>
+        </DIV>
+        <script>
+           //alert("reloading caWindow");
+           reloadCAWindow()
+        </script>
+
+      <%
+        request.removeAttribute("CmdAsstReqId");
+        request.removeAttribute("CmdAsstForceLink");
+      }
+      %>
+      <%-- Commented out for now, since usability team does not want this message issued if there is no cmd
+      else {
+      %>
+        <div STYLE="margin-top:1.25em" class="helpSectionTitles">
+           <bean:message key="commandassistance.link.header"/>
+        </div>
+        <DIV CLASS="table-text-help-portlet">
+           <bean:message key="commandassistance.unavailable.text"/>
+        </DIV>
+      <%
+      }
+      %>
+      --%>
+<%-- LI3509 end --%>
+
+<%
+        Class product = Class.forName("com.ibm.isc.api.platform.ProductInfo");
+        Class productInfo = Class.forName("com.ibm.isclite.platform.ProductInfoImpl");
+		Method getVersion = productInfo.getMethod("getVersion", (Class[])null);
+		Object productInfoObject = productInfo.newInstance();
+        //ProductInfoImpl productInfo = new ProductInfoImpl();
+		//System.out.println("Product Version: " + productInfo.getVersion());
+		//System.out.println("Product Version: " + (String)getVersion.invoke(productInfoObject, new Object[0]));
+		String prodVersion = null;
+        
+		if (((String)getVersion.invoke(productInfoObject, new Object[0])).startsWith("7")) {
+			Class wasProduct = Class.forName("com.ibm.websphere.product.WASProduct");
+			Object wasObject = wasProduct.newInstance();
+			Method productPresent = wasProduct.getMethod("productPresent", new Class[] {java.lang.String.class});
+			//WASProduct productInfo = new WASProduct();
+	        //if (productInfo.productPresent("ND")) {
+	        if (((Boolean)productPresent.invoke(wasObject,"ND")).booleanValue()) {	
+	                prodVersion = "ND";
+	        }
+	        else {
+	                if (((Boolean)productPresent.invoke(wasObject,"BASE")).booleanValue()) {
+	                        prodVersion = "BASE";
+	                } else {
+	                        prodVersion = "ND";
+	                }
+	        }	
+		} else {
+			Method isThisProductInstalled = productInfo.getMethod("isThisProductInstalled", new Class[] {java.lang.String.class});
+	        //if (productInfo.isThisProductInstalled(ProductInfo.ID_ND)) {
+	        if (((Boolean)isThisProductInstalled.invoke(productInfoObject, (String)product.getField("ID_ND").get(null))).booleanValue()) {	
+                prodVersion = (String)product.getField("ID_ND").get(null);
+       		}
+        	else {
+                //if (productInfo.isThisProductInstalled(ProductInfo.ID_BASE)) {
+                if (((Boolean)isThisProductInstalled.invoke(productInfoObject,(String)product.getField("ID_BASE").get(null))).booleanValue()) {	
+                        prodVersion = (String)product.getField("ID_BASE").get(null);
+                } else {
+                        prodVersion = (String)product.getField("ID_ND").get(null);
+                }
+        	}
+			
+		} 
+
+       Boolean externalConnection = new Boolean("false");
+        session.setAttribute("externalConnection",externalConnection);
+
+        if (session.getAttribute("externalConnection") != null) {
+                externalConnection = (Boolean)session.getAttribute("externalConnection");
+       }
+
+         if (externalConnection.booleanValue() != false) {
+
+
+
+ %>
+
+              <div STYLE="margin-top:1.25em" class="helpSectionTitles">
+              <bean:message key="wsc.field.help.label.tasks"/>
+              </div>
+      <% //WSC Console Federation
+      if ( iscFederation.booleanValue() == true && isPortletComp.booleanValue()==true) {
+      %>
+	   <DIV CLASS="table-textHelpFederation" NOWRAP>
+	  <% } else { %>
+      <DIV CLASS="table-text-help-portlet" NOWRAP>
+      <%}%>
+
+              <A target="taskHelpIFrame" href="/ibm/console/secure/javascriptToURL.jsp?topic=<%=fieldHelp%>&version=<%=prodVersion%>" onclick="findTaskHelpLink('<%=fieldHelp%>','<%=prodVersion%>')"  CLASS="expand-task">
+              <img id="taskHelpDivImg" SRC="<%=request.getContextPath()%>/images/arrow_collapsed.gif" alt="<bean:message key="wsc.expand.collapse.alt"/>" border="0" align="left" />
+              <bean:message key="wsc.field.help.tasks.link"/>
+              </A>
+      </DIV>
+
+      <DIV id="taskHelpDiv" style="height:1%">
+            <IFRAME NAME="taskHelpIFrame" ID="taskHelpIFrame" SCROLLING="AUTO" FRAMEBORDER="0" width="100%" SRC="<%=request.getContextPath()%>/blank.html"></IFRAME>
+      </DIV>
+
+            <script>
+            document.getElementById("taskHelpIFrame").height="1%";
+            </script>
+
+ <% } %>
+
+
+
+      </TD>
+      </TR>
+
+      </TBODY>
+
+
+
+      </TABLE>
+
+      </DIV>
+     </div>
+     </div>
+     </div>
+     </div>
+
+
+    </TD>
+
+       <% } %>
+

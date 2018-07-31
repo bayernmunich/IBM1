@@ -1,0 +1,646 @@
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2004, 2017 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->	
+<form-validation>	
+	
+  <formset>
+
+    <constant>
+      <constant-name>IPv4WithWildcards</constant-name>
+      <constant-value>(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]|\*)\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]|\*)\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]|\*)\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5]|\*)</constant-value>
+    </constant>
+
+    <constant>
+      <constant-name>IPv6WithWildcards</constant-name>
+      <constant-value>(([0-9a-fA-F]{1,4}|[\*]):){3,7}([0-9a-fA-F]{1,4}|[\*])</constant-value>
+    </constant>
+
+    <constant>
+      <constant-name>IPv4orIPv6</constant-name>
+      <constant-value>(${IPv4WithWildcards}|${IPv6WithWildcards})</constant-value>
+    </constant>
+
+    <constant>
+      <constant-name>multiIPv4orIPv6</constant-name>
+      <constant-value>^[\s]*(${IPv4WithWildcards}|${IPv6WithWildcards}[\s]*)(,[\s]*(${IPv4WithWildcards}|${IPv6WithWildcards}))*[\s]*$</constant-value>
+    </constant>
+
+    <constant>
+        <constant-name>NestedDNSHostnameWithWildcards</constant-name>
+        <constant-value>((\*\.)?(\*)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z0-9\-]{2,61}(\.\*)?(\*)?)||((\*\.)?(\*)?([a-zA-Z0-9]([a-zA-Z0-9\-\.])*)?((\$\{[^\\\/\,\:\;\"\*\?\&gt;\&lt;\|\=\+\&amp;\%\'\#\$\@][^\\\/\,\:\;\"\*\?\&lt;\&gt;\|\=\+\&amp;\%\'\#\$\@]*\}))([a-zA-Z0-9\-\.]||(\$\{[^\\\/\,\:\;\"\*\?\&gt;\&lt;\|\=\+\&amp;\%\'\#\$\@][^\\\/\,\:\;\"\*\?\&lt;\&gt;\|\=\+\&amp;\%\'\#\$\@]*\}))*(\.\*)?(\*)?)</constant-value>
+    </constant>
+
+    <constant>
+      <constant-name>multiDNSHostName</constant-name>
+      <constant-value>^[\s]*(${NestedDNSHostnameWithWildcards}[\s]*)(,[\s]*(${NestedDNSHostnameWithWildcards}))*[\s]*$</constant-value>
+    </constant>
+  	
+    <form name="com.ibm.ws.console.channelfw.channels.tcp.TCPInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <field property="maxOpenConnections" depends="required,integer,range">
+        <arg0 key="TCPInboundChannel.maxOpenConnections.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>1280000</var-value>
+        </var>
+      </field>
+      <field property="inactivityTimeout" depends="required,integer,range">
+        <arg0 key="TCPInboundChannel.inactivityTimeout.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>3600</var-value>
+        </var>
+      </field>
+
+      <field property="addressExcludeList" depends="when,mask">
+        <arg0 key="TCPInboundChannel.addressExcludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>addressExcludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${multiIPv4orIPv6}</var-value>
+
+        </var>                	
+      </field>
+
+      <field property="addressIncludeList" depends="when,mask">
+        <arg0 key="TCPInboundChannel.addressIncludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>addressIncludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${multiIPv4orIPv6}</var-value>
+
+        </var>                	
+      </field>
+
+      <field property="hostNameExcludeList" depends="when,mask">
+        <arg0 key="TCPInboundChannel.hostNameExcludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>hostNameExcludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+		  <var-value>${multiDNSHostName}</var-value>
+		</var>                	
+      </field>
+
+      <field property="hostNameIncludeList" depends="when,mask">
+        <arg0 key="TCPInboundChannel.hostNameIncludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>hostNameIncludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+		  <var-value>${multiDNSHostName}</var-value>
+		</var>                	
+      </field>
+      
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.ssl.SSLInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.http.HTTPInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <!-- Need greater control over this validation because an empty string is
+           allowed as part of the scheme to hide '-1' for unlimited requests
+           per connection.
+      <field property="maximumPersistentRequests" depends="required,integer,range">
+        <arg0 key="HTTPInboundChannel.maximumPersistentRequests.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>-1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      -->
+      <field property="readTimeout" depends="required,integer,range">
+        <arg0 key="HTTPInboundChannel.readTimeout.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <field property="writeTimeout" depends="required,integer,range">
+        <arg0 key="HTTPInboundChannel.writeTimeout.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <field property="persistentTimeout" depends="when,required,integer,range">
+        <arg0 key="HTTPInboundChannel.persistentTimeout.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+            <var>
+                <var-name>field[0]</var-name>
+                <var-value>keepAlive</var-value>
+            </var>
+            <var>
+                <var-name>fieldTest[0]</var-name>
+                <var-value>EQUAL</var-value>
+            </var>
+            <var>
+                <var-name>fieldValue[0]</var-name>
+                <var-value>true</var-value>
+            </var>
+      </field>
+      
+      <field property="maxFieldSize" depends="required,integer,range">
+        <arg0 key="HTTPInboundChannel.denialOfService.maxHeaderFieldSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>50</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      
+      <field property="maxHeaders" depends="required,integer,range">
+        <arg0 key="HTTPInboundChannel.denialOfService.maxHeaders.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>50</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>4000</var-value>
+        </var>
+      </field>
+      
+      <field property="maxRequestMessageBodySize" depends="integer,range">
+        <arg0 key="HTTPInboundChannel.denialOfService.maximumBufferSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      
+      <field property="accessFilePath" depends="mask">
+        <arg0 key="HTTPAccessLoggingService.accessFilePath.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${file_name}</var-value>
+        </var>
+      </field>
+      
+      <field property="accessMaximumSize" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.accessMaximumSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2000</var-value>
+        </var>
+      </field>
+      
+      <field property="accessMaximumBackupFiles" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.maxBackupFiles.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      
+      <field property="errorFilePath" depends="mask">
+        <arg0 key="HTTPAccessLoggingService.errorFilePath.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${file_name}</var-value>
+        </var>
+      </field>
+      <field property="errorMaximumSize" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.errorMaximumSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2000</var-value>
+        </var>
+      </field>
+      
+     <field property="errorMaximumBackupFiles" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.maxBackupFiles.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      
+      <field property="frcaFilePath" depends="mask">
+        <arg0 key="HTTPAccessLoggingService.FRCAFilePath.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${file_name}</var-value>
+        </var>
+      </field>
+      <field property="frcaMaximumSize" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.FRCAMaximumSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2000</var-value>
+        </var>
+      </field>
+      
+       <field property="frcaMaximumBackupFiles" depends="integer,range">
+        <arg0 key="HTTPAccessLoggingService.maxBackupFiles.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.httptunnel.HTTPTunnelInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.webcontainer.WebContainerInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <field property="writeBufferSize" depends="required,integer,range">
+        <arg0 key="WebContainerInboundChannel.writeBufferSize.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.webcontainer.GenericInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.dcs.DCSInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+    
+    <!-- LIDB2356-40 changes begin here -->
+    <form name="com.ibm.ws.console.channelfw.channels.sip.SIPInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+        
+    <form name="com.ibm.ws.console.channelfw.channels.udp.UDPInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+      <field property="addressExcludeList" depends="when,mask">
+        <arg0 key="UDPInboundChannel.addressExcludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>addressExcludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${multiIPv4orIPv6}</var-value>
+        </var>                	
+      </field>
+      <field property="addressIncludeList" depends="when,mask">
+        <arg0 key="UDPInboundChannel.addressIncludeList.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>addressIncludeList</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>NOTNULL</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${multiIPv4orIPv6}</var-value>
+        </var>                	
+      </field>
+    </form>
+
+    <form name="com.ibm.ws.console.channelfw.channels.sipcontainer.SIPContainerInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>        
+    <!-- LIDB2356-40 changes end here -->
+    <form name="com.ibm.ws.console.channelfw.channels.orb.ORBInboundChannelDetailForm">
+      <field property="name" depends="required,mask">
+        <arg0 key="TransportChannel.name.displayName"/>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${was_name}</var-value>
+        </var>
+      </field>
+      <field property="discriminationWeight" depends="integer,range">
+        <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>0</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>2147483647</var-value>
+        </var>
+      </field>
+    </form>
+        
+  </formset>
+</form-validation>

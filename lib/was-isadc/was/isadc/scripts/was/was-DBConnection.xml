@@ -1,0 +1,799 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Database Connectivity Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Database Connectivity Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_DB_Connection_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-dbconnection" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2,  
+					validate_os,
+
+		
+					was_stack_custom_init, 
+					determine_DB_problem_type,
+					
+					generate_db_trace_string,
+		
+					trace_setup_custom, 
+		
+					execute_collector, 
+					execute_vce_info_for_was,
+					common_postamble_general_with_ftp">
+	</target>
+
+	<!-- determine the data problem type - runtime or config -->
+	<target name="determine_DB_problem_type">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_determine_db_problem_type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Determining a more detailed description of the database problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1168"
+		           level="info" />
+<!--
+		<autopdinput message="query_runtime_config"
+		             validargs="Runtime,Configuration"
+		             addproperty="db.query.problem"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="db.run.collector">
+			<equals arg1="Configuration" arg2="${db.query.problem}" />
+		</condition>
+
+		<condition property="db.continue.collection">
+			<equals arg1="Runtime" arg2="${db.query.problem}" />
+		</condition>
+
+		<if isTrue="${db.run.collector}">
+			<inputdialogtask noCancel="true">
+				<fieldtask name="prompt2" label="Wrong_collection_type" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label_run_collector1" label="run_collector1" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label_run_collector2" label="run_collector2" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label_run_collector3" label="run_collector3" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+-->
+
+
+		<inputdialogtask>
+			<fieldtask name="prompt3"
+	           label="Input_Required"
+	           type="prompt"
+	           bundle="autopdtoolstrings" />
+			<fieldtask name="label_query_db"
+	           label="query_db_problem"
+	           type="textarea"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="query_db1"
+	           label="query_db1"
+	           type="textarea"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="query_db2"
+	           label="query_db2"
+	           type="textarea"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="db.problem.type"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	           label="select_one"
+	           list="DBConn:JMSConn:EIS"
+	           listDetails="DBConn:JMSConn:EIS"
+	           type="selectlist" />
+			<fieldtask name="query_db3"
+	           label="query_db3"
+	           type="textarea"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Provide a full description of the problem that you have encountered${line.separator}
+					${label_query_db}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Under what circumstances does the problem occur? Does it occur every time a certain task is done or does it occur intermittently? Has this problem always occurred? If not, was a change recently made before the problem started to occur?${line.separator}
+					${query_db1}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What are the names and JNDI names of the data sources or connection factories that are involved in the problem scenario?${line.separator}
+					${query_db2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Problem Type-${line.separator}
+					${db.problem.type}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What is the name and version of the backend system? If the backend system is remote, what platform is it running on?${line.separator}
+					${query_db3}${line.separator}
+		</concat>
+
+		<condition property="DBConnProblem">
+			<equals arg1="DBConn" arg2="${db.problem.type}" />
+		</condition>
+		<condition property="JMSConnProblem">
+			<equals arg1="JMSConn" arg2="${db.problem.type}" />
+		</condition>
+		<condition property="EISProblem">
+			<equals arg1="EIS" arg2="${db.problem.type}" />
+		</condition>
+		<echo message="Database Connection Pooling Problem Type : ${db.problem.type} "/>
+		
+		<if isTrue="${DBConnProblem}" >
+			
+			<inputdialogtask>
+				<fieldtask name="prompt4"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+				<fieldtask name="query_db_database1"
+		           label="query_db_database1"
+		           type="textarea"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="datasource.type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="query_db_database2"
+		           list="V5DataSource:V4DataSource"
+		           listDetails="V5DataSource:V4DataSource"
+		           type="selectlist" />
+				<fieldtask name="query_db_database3"
+		           label="query_db_database3"
+		           type="textarea"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the name and version of the JDBC driver that you are using?${line.separator}
+						${query_db_database1}${line.separator}
+			</concat>
+
+			<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				Data Source Type-${line.separator}
+						${datasource.type}${line.separator}
+			</concat>
+			
+			<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				Does the same problem occur when you perform the same operation in a Java program running outside of WebSphere Application Server using the same JDBC driver to connect to the database?${line.separator}
+						${query_db_database3}${line.separator}
+			</concat>
+
+			<condition property="V5DataSource">
+				<equals arg1="V5DataSource" arg2="${datasource.type}" />
+			</condition>
+			<condition property="V4DataSource">
+				<equals arg1="V4DataSource" arg2="${datasource.type}" />
+			</condition>
+	
+			<echo message="DataSource Type : ${datasource.type}" />
+		</if>
+
+
+
+	</target>
+
+	<target name="call_collection_type">
+		<if isTrue="${db.continue.collection}">
+			<antcall target="continue_runtime_collection" />
+		</if>
+	</target>
+
+	<!-- if this is a Runtime problem then set trace and reproduct the problem -->
+	<target name="continue_runtime_collection"
+	        depends="questions_on_db_problem, 
+		 			generate_db_trace_string,
+
+					collect_wasDBC_information">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="
+					 collect_was_recovery_common, 
+				     restore_user_default_trace_values,  
+				     recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- Step 3(questions_on_db_problem) -->
+	<!-- Questions with regards to the db problem -->
+	<target name="questions_on_db_problem"
+	        description="Get the necessry information on the db problems the user has">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Gather_jdbc_driver_info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting the WAS JDBC Driver information"
+		           replace="${autopdts};;${step.count}" />
+
+		<mkdir dir="${autopdtmp}/DBconnection" />
+		<autopddelete>
+			<fileset dir="${autopdtmp}/DBconnection">
+				<include name="**/*" />
+			</fileset>
+		</autopddelete>
+
+		<!-- Step 3: Need to find the JDBC Driver with exact version -->
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="prompt1"
+			           label="Answer_questions"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="datasource"
+			           label="datasource"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="db_name"
+			           label="db_name"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="remote_db_platform_hostname"
+			           label="remote_db_platform_hostname"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="remote_db_platform_os"
+			           label="remote_db_platform_os"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="errors"
+			           label="errors"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			Name of datasource experiencing problems-${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			${datasource}${line.separator}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			Exact Database name -${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			${db_name}${line.separator}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			Database hostname (if remote)-${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			${remote_db_platform_hostname}${line.separator}${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			Database platform OS and version (if
+			remote)-${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			${remote_db_platform_os}${line.separator}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			Errors/Symptoms-${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBConnectionInfo.txt" append="true">
+			${errors}${line.separator}${line.separator}
+		</concat>
+
+	</target>
+
+	<target name="generate_db_trace_string"
+	        description="Generate trace string depending on user problem">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<if isTrue="${DBConnProblem}">
+
+			<if isTrue="${isWASVersion50}">
+				
+				<if isTrue="${V5DataSource}" >
+					<property name="was.trace.string"
+				   		value="WAS.j2c=all=enabled:RRA=all=enabled:WAS.database=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+				</if>
+				<if isTrue="${V4DataSource}" >
+					<property name="was.trace.string"
+				   		value="com.ibm.ejs.cm.*=all=enabled:WAS.database=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+				</if>
+			</if>
+
+			<if isTrue="${isWASVersion51}">
+				<if isTrue="${V5DataSource}" >
+					<property name="was.trace.string"
+				   		value="WAS.j2c=all=enabled:RRA=all=enabled:WAS.database=all=enabled:Transaction=all=enabled" />
+				</if>
+				<if isTrue="${V4DataSource}" >
+					<property name="was.trace.string"
+				   		value="com.ibm.ejs.cm.*=all=enabled:WAS.database=all=enabled:Transaction=all=enabled" />
+				</if>
+			</if>
+
+			<if isTrue="${isWASVersion6}">
+				<if isTrue="${V5DataSource}" >
+					<property name="was.trace.string"
+				   		value="*=info:WAS.j2c=all:RRA=all:WAS.database=all:Transaction=all" />
+				</if>
+				<if isTrue="${V4DataSource}" >
+					<property name="was.trace.string"
+				   		value="*=info:com.ibm.ejs.cm.*=all:WAS.database=all:Transaction=all" />
+				</if>
+			</if>
+		</if>
+
+		<if isTrue="${JMSConnProblem}">
+			<if isTrue="${isWASVersion50}">
+				<property name="was.trace.string"
+				   value="WAS.j2c=all=enabled:Messaging=all=enabled:JMSApi=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+			</if>
+
+			<if isTrue="${isWASVersion51}">
+				<property name="was.trace.string"
+				   value="WAS.j2c=all=enabled:Messaging=all=enabled:JMSApi=all=enabled:Transaction=all=enabled" />
+			</if>
+
+			<if isTrue="${isWASVersion6}">
+				<autopdproperty name="was.trace.string"
+				   value="*=info:WAS.j2c=all:Messaging=all:JMSApi=all:Transaction=all" />
+			</if>
+		</if>
+
+		<if isTrue="${EISProblem}">
+			<if isTrue="${isWASVersion50}">
+				<property name="was.trace.string"
+				   value="WAS.j2c=all=enabled:com.ibm.connector2.*=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+			</if>
+
+			<if isTrue="${isWASVersion51}">
+				<property name="was.trace.string"
+				   value="WAS.j2c=all=enabled:com.ibm.connector2.*=all=enabled:Transaction=all=enabled" />
+			</if>
+
+			<if isTrue="${isWASVersion6}">
+				<autopdproperty name="was.trace.string"
+				   value="*=info:WAS.j2c=all:com.ibm.connector2.*=all:Transaction=all" />
+			</if>
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- This target controls the collection activities for this script. -->
+	<target name="collect_wasDBC_information"
+	        description="Collect config information from Application Server and about the DB connection">
+		
+		<if isNotTrue="${isOS400}">
+			<levelreporttask format="html"
+			                 filename="${autopdtmp}/autopd/levelreport.html" />
+		</if>
+
+	</target>
+
+	<!-- BEGIN CURRENTLY UNUSED TARGETS -->
+
+
+	<!-- Step 2(CollectAppliedFixes)
+		NOTE: currently not being called. Not required by latest mustGather
+	-->
+	<target name="CollectAppliedFixes"
+	        description="Collect Files that have list of interim fixes that have been applied.">
+		<!-- Step 2:This target is used to, based on version, gather the needed list of fixes applied
+			-for V4, collect install_root/properties/com/ibm/websphere/product.xml
+			-for V5, collect install_root/properties/version/history/event.history
+			-for V6, ????
+			This will set a variable called AppliedFixes.WAS for use later in zipping up information
+		-->
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Gather_Upgrade_update_records"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting the materials that indicate the list of applied fixes to WAS"
+		           replace="${autopdts};;${step.count}" />
+		<trim_filename key="was.root.trimmed"
+		               filename="${was.root}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+		<trim_filename key="was.enhanced.root.trimmed"
+		               filename="${was.enhanced.root}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+		<mkdir dir="${autopdtmp}/DBconnection" />
+		<autopddelete>
+			<fileset dir="${autopdtmp}/DBconnection">
+				<include name="**/*" />
+			</fileset>
+		</autopddelete>
+		<if isTrue="${isWASVersion5}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.root}/properties/version/history/"
+				            prefix="autopdzip/${was.root.trimmed}/properties/version/history/">
+					<include name="event.history" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isTrue="${isWASVersion6}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Describe_History_of_updates_and_fixpacks"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="answerfp"
+				           label="answer"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			<concat destfile="${autopdtmp}/DBconnection/FixpacksUpdates.txt"
+			        append="true">
+				What fixpacks and updates have been
+				applied?${line.separator}
+			</concat>
+			<concat destfile="${autopdtmp}/DBconnection/FixpacksUpdates.txt"
+			        append="true">
+				${answerfp}${line.separator}
+			</concat>
+		</if>
+	</target>
+
+	<!-- Steps 1-7 for DB connection problems relating specifically to pooling.-->
+	<target name="PoolingQuestionaire"
+	        description="Provide required Pooling information in a file"
+	        if="isPoolingProblem">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Collect_DB_pooling_info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting DB connection-pooling Datasource, resources, application topology, and debug steps"
+		           replace="${autopdts};;${step.count}" />
+
+		<!-- Step 1: Does the application use a Websphere Data Source? -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="datasource_info"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer1"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			1.Does the Application use a Websphere Data
+			Source?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			${answer1}${line.separator}
+		</concat>
+		<!-- Step 2: Name of the Datasource that has the problem. -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="datasource_name"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer2"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			2.Name of the Datasource that has the
+			problem?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			${answer2}${line.separator}
+		</concat>
+		<!-- Step 3: XMLConfig export for WASV4?? -->
+		<if isTrue="${isWASVersion4.0}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="xml_config"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="answer3"
+				           label="answer"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt"
+			        append="true">
+				3.XMLConfig Export for WASv4?${line.separator}
+			</concat>
+			<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt"
+			        append="true">
+				${answer3}${line.separator}
+			</concat>
+		</if>
+		<!-- Step 4: variables.xml and resources.xml for WAS v5 (in install_root/config) and V6 (in install_root/profiles/profile_name/config -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/config/cells/${CellName}/"
+			            prefix="autopdzip/${was.enhanced.root}/config/cells/${CellName}/">
+				<include name="variables.xml" />
+				<include name="resources.xml" />
+			</zipfileset>
+		</zip>
+
+		<!-- Step 5: Detailed Application Topology and the problem scenario when it occurs -->
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="app_topology_and_scenario"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer4"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			5.Detailed Application Topology and the problem scenario
+			when it occurs?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			${answer4}${line.separator}
+		</concat>
+		<!-- Step 6: Have you tried the same functionality using the JDBC Driver directly? If yes, does the problem occur? -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="used_jdbc_directly_does_problem_occur"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer5"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			6.Have you tried the same functionality using the JDBC
+			Driver directly? If yes, does the problem
+			occur?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			${answer5}${line.separator}
+		</concat>
+		<!-- Step 7: For WAS V5 and V6 does the application use the WAS V4 or V5 data source? -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="v5_or_v6_datasource"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer6"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			7.For WAS V5 and V6 does the application use the WAS V4 or
+			V5 data source?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/ConnectionPoolInfo.txt" append="true">
+			${answer6}${line.separator}
+		</concat>
+	</target>
+
+	<!-- Step 4(GetStdFiles)
+		
+		NOTE: Not using for the latest version. Done in shared targets
+	-->
+	<target name="GetStdFiles"
+	        description="Get the Stderr and Stdout files from was V4 and V5">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Collect_Std_files"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Stderr and Stdout files"
+		           replace="${autopdts};;${step.count}" />
+		<!-- Step 4: Grab StdErr and Stdout
+			-for V4 install_root/logs/
+			-for V5 install_root/logs/servername/
+			-for V6 install_root/profiles/profileName/logs/servername/
+		-->
+		<trim_filename key="systemout.log.file.trimmed"
+		               filename="${systemout.log.file}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+		<trim_filename key="systemerr.log.file.trimmed"
+		               filename="${systemerr.log.file}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${systemout.log.file}"
+			            fullpath="autopdzip/${systemout.log.file.trimmed}" />
+			<zipfileset file="${systemerr.log.file}"
+			            fullpath="autopdzip/${systemerr.log.file.trimmed}" />
+		</zip>
+	</target>
+
+	<!-- Step 5 (ActivityLog)
+		
+		NOTE: currently not being used. Not in latest mustGather
+	-->
+	<target name="ActivityLog"
+	        description="Get the activity.log file from install_root-logs">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Collect_Activity_log_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Activity.log File"
+		           replace="${autopdts};;${step.count}" />
+		<!-- Step 5: Grab Activity.log from install_root/logs -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/logs/"
+			            prefix="autopdzip/${was.enhanced.root}/logs/">
+				<include name="activity.log" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- Step 6,7,8 (collectDBWASinfo
+		
+		Note: currently not used in latest mustGather
+	-->
+	<target name="collectDBWASinfo"
+	        description="get answers from the user for the remainder of these questions">
+		<!-- Step 6: Find the Database error code (if any) (example: SQL0129E or ORA-01000)
+			Have you checked the Database Documentation for the error Description and performed the recommended Action accordingly?-->
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Collect_DB_info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting DB error code, Exception and version information"
+		           replace="${autopdts};;${step.count}" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="DB_err_code_check_documentation"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answerdb1"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			What is the Database Error code (if any)? and have you
+			checked the DB Documentation for the error description or
+			performed recommended action?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			${answerdb1}${line.separator}
+		</concat>
+		<!-- Step 7: What is the Exception thrown by the problem? -->
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Exception_thrown"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answerdb2"
+			           label="answer"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			What is the Exception thrown by the
+			problem?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			${answerdb2}${line.separator}
+		</concat>
+		<!-- Step 8: if using DB2, run the db2level command (on both client and server) and collect output. -->
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Run_DB2Level_on_client_and_server"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answerdb3"
+			           label="client"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answerdb4"
+			           label="server"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			What is the db2level?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			Client:${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			${answerdb3}${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			Server:${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/DBconnection/DBprobleminfo.txt" append="true">
+			${answerdb4}${line.separator}
+		</concat>
+
+		<autopdinput message="connection_pooling_problem"
+		             validargs="yes,no"
+		             addproperty="poolingProblem"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="isPoolingProblem">
+			<equals arg1="yes" arg2="${poolingProblem}" />
+		</condition>
+
+		<!-- Select problem type: database connection pooling, jms connection pooling, EIS.  Allow a don't know with default traces? -->
+	</target>
+	<!-- End CURRENTLY UNUSED CODE -->
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere DB Connectivity Problem&lt;/h2&gt;&lt;p&gt;
+				This problem category is run on the managed node and is used to determine the database
+				connectivity problem type. Trace is set, the problem is reproduced, and then the logs,
+				configuration, and trace files are collected.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1254645" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node and is used to 
+determine the database connectivity problem type. Trace is set, the problem is reproduced, and 
+then the logs, configuration, and trace files are collected." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere DB Connectivity Problem =>
+This problem category is run on the managed node and is used to determine the database
+connectivity problem type. Trace is set, the problem is reproduced, and then the logs,
+configuration, and trace files are collected." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

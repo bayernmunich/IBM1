@@ -1,0 +1,201 @@
+<project name="CE_3.0" basedir="." default="createServer">
+
+    <target name="init">
+        <condition property="OSEXT" value="sh">
+            <os family="unix" />
+        </condition>
+        <condition property="OSEXT" value="bat">
+            <os family="windows" />
+        </condition>
+        <condition property="serverDir" value='"${ServerConfigFolder}"'>
+            <os family="windows" />
+        </condition>
+        <condition property="serverDir" value="${ServerConfigFolder}">
+            <os family="unix" />
+        </condition>
+    	<condition property="appLocation" value="${APP_LOCATION}">
+    		<os family="unix" />
+    	</condition>
+    	<condition property="appLocation" value='"${APP_LOCATION}"'>
+    	  <os family="windows" />
+    	</condition>
+    	<condition property="planXML" value="${PLAN_XML}">
+    	  <os family="unix" />
+      </condition>
+    	<condition property="planXML" value='"${PLAN_XML}"'>
+    	  <os family="windows" />
+      </condition>
+    	<condition property="JavaOptions" value="${JAVA_OPTS}" else="">
+    		<and>
+    		  <isset property="UseJMXSecureConnector"/>
+    		  <istrue value="${UseJMXSecureConnector}"/>
+    		  <isset property="JAVA_OPTS"/>
+    	    </and>
+    	</condition>
+    	<condition property="SecureJMXParam" value="--secure" else="">
+    		<and>
+              <isset property="UseJMXSecureConnector"/>
+    		  <istrue value="${UseJMXSecureConnector}"/>
+    		</and>
+    	</condition>
+    </target>
+	
+    <!-- 
+     a)  Copy config GERONIMO/var to GERONIMO/SERVER/var - exclude cache directory as it is not required.
+     a1) Copy config GERONIMO/etc to GERONIMO/SERVER/etc
+     b)  Set the port offset
+     c)  Copy repo.xml to SERVER/repo.xml
+     d)  Update repo.xml	
+    -->
+    <target name="copyConfig">
+        <!-- Step 1-->
+        <mkdir dir="${ServerConfigFolder}/var"/>
+        <copy todir="${ServerConfigFolder}/var">
+            <fileset dir="${CE_SERVER_CONFIG_TEMPLATE}">
+                <exclude name="cache/**"/>
+            </fileset>
+        </copy>
+    	<mkdir dir="${ServerConfigFolder}/etc"/>
+    	   <copy todir="${ServerConfigFolder}/etc">
+    	     <fileset dir="${GERONIMO_HOME}/etc">
+    	        <include name="**/**"/>
+    	     </fileset>
+    	</copy>
+	   
+        <!-- Step 2-->
+
+        <replace file="${ServerConfigFolder}/var/config/config-substitutions.properties" token="PortOffset=0" value="PortOffset=${PORT_OFFSET}"/>
+	   
+        <!-- Step 3-->
+        <copy file="${WASCE_REPOXML}" tofile="${ServerConfigFolder}/repo.xml"/>
+		
+        <!-- Step 4-->
+        <mkdir dir="${AppRepository}"/>
+        <replace file="${ServerConfigFolder}/repo.xml" token="@newrepo" value="${SERVER}_repository"/>
+        <replace file="${ServerConfigFolder}/repo.xml" token="@version" value="2.2"/>
+        <replace file="${ServerConfigFolder}/repo.xml" token="@gversion" value="${GERONIMO_VERSION}"/>
+    </target>
+
+    <target name="deleteServerConfig">
+        <delete includeEmptyDirs="true">
+            <!-- <fileset dir="${ServerConfigFolder}" excludes="**/log/**"/> -->
+            <fileset dir="${ServerConfigFolder}" />
+        </delete>
+        <delete includeEmptyDirs="true">
+            <fileset dir="${AppRepository}"/>
+        </delete>
+
+        <delete includeEmptyDirs="true">
+            <fileset dir="${GERONIMO_HOME}/repository/com/ibm/ws/xd/ce/configs/${SERVER}_repository"/>
+        </delete>
+    </target>
+
+    <target name="deployRepo" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy ${ServerConfigFolder}/repo.xml"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    	<replace file="${serverDir}/etc/org.ops4j.pax.url.mvn.cfg" 
+    		  token="org.ops4j.pax.url.mvn.defaultRepositories=file:${karaf.home}/repository@snapshots,file:${karaf.base}/repository@snapshots" 
+    		  value="org.ops4j.pax.url.mvn.defaultRepositories=file:${karaf.home}/repository@snapshots,file:${karaf.home}/${SERVER}_repository@snapshots"/>
+    </target>
+
+    <target name="installApp" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy --targets com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car?ServiceModule=com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car,j2eeType=ConfigurationStore,name=${SERVER}_repository ${appLocation}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+
+    <target name="installAppWithPlan" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy --targets com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car?ServiceModule=com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car,j2eeType=ConfigurationStore,name=${SERVER}_repository ${appLocation} ${planXML}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="installPlan" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy --targets com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car?ServiceModule=com.ibm.ws.xd.ce.configs/${SERVER}_repository/2.2/car,j2eeType=ConfigurationStore,name=${SERVER}_repository ${planXML}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="installAppDefault" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy ${appLocation}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="installAppWithPlanDefault" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy ${appLocation} ${planXML}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="installPlanDefault" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} deploy ${planXML}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="uninstallModule" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} undeploy ${MODULE}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="listStartedModules" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} list-modules --started"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+            <env key="GERONIMO_OPTS" value="-Dorg.apache.geronimo.server.dir=${serverDir}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+
+    <target name="uninstallModuleDefault" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} undeploy ${MODULE}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="startModule" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} start ${MODULE}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="stopModule" depends="init">
+        <exec dir="${GERONIMO_HOME}/bin" executable="${GERONIMO_HOME}/bin/deploy.${OSEXT}" failonerror="true">
+            <arg line="-port ${NamingPort} -u ${USERID} -p ${PASSWORD} ${SecureJMXParam} stop ${MODULE}"/>
+            <env key="JAVA_HOME" value="${JAVA_HOME}"/>
+        	<env key="JAVA_OPTS" value="${JavaOptions}"/>
+        </exec>
+    </target>
+  
+    <target name="createServer" depends="init,copyConfig"/>
+    <target name="removeServer" depends="init,deleteServerConfig"/>
+  
+</project>

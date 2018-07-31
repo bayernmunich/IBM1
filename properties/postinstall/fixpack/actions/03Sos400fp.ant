@@ -1,0 +1,296 @@
+<project name="os400fp" default="install" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/> 
+
+
+    <target name="install" depends="os400fp" />
+    <target name="uninstall" />
+
+    <target name="detectOS400"
+		description="Detects if this is OS/400">
+		<condition property="isOS400" value="true">
+			<equals arg1="${os.name}" arg2="OS/400"/>
+		</condition>
+		<wscmtlog> Detected current OS family to be: ${os.name}</wscmtlog>
+    </target>
+
+    <target name="setProps" if="isOS400"
+		description="Sets properties">
+
+		<!-- If PLUGIN_HOME is passed in, set PROD_ROOT to it else use WAS_HOME -->
+        <condition property="PROD_ROOT" value="${PLUGIN_HOME}">
+           <isset property="PLUGIN_HOME"/>
+        </condition>
+        <property name="PROD_ROOT" value="${WAS_HOME}"/>
+
+    </target>
+
+    <target name="updateQueryWASInstalls" if="isOS400"
+		description="update PROD_ROOT/bin/queryWasInstalls script">
+
+        <wscmtlog>Product Root is: ${PROD_ROOT}</wscmtlog>
+
+
+        <!-- If ${PROD_ROOT}/bin/queryWASinstalls has already been modified -->
+        <replaceregexp file="${PROD_ROOT}/bin/queryWASinstalls"
+            match="if \[ &quot;\$\{QSH_VERSION\:0\:4\}&quot; = &quot;V7R3&quot; \] ; then${line.separator}   JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}else${line.separator}   JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}fi"
+            replace="if [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk80 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk71 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk70 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}
+   fi${line.separator}
+else${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}
+   else${line.separator}
+      if [ &quot;${JAVA_HOME}&quot; = &quot;&quot; ] ; then${line.separator}
+         echo &quot;No Java installs found. Exiting.&quot;${line.separator}
+         exit 1${line.separator}
+      fi${line.separator}
+   fi${line.separator}
+fi"
+
+	    flags="s"/>
+
+        <!-- If ${PROD_ROOT}/bin/queryWASinstalls was not modified -->
+        <replaceregexp file="${PROD_ROOT}/bin/queryWASinstalls"
+            match="${line.separator}JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit"
+            replace="${line.separator}if [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk80 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk71 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk70 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}
+   fi${line.separator}
+else${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}
+   else${line.separator}
+      if [ &quot;${JAVA_HOME}&quot; = &quot;&quot; ] ; then${line.separator}
+         echo &quot;No Java installs found. Exiting.&quot;${line.separator}
+         exit 1${line.separator}
+      fi${line.separator}
+   fi${line.separator}
+fi"
+	    flags="s"/>
+
+        <exec executable="/usr/bin/chown">
+           <arg value="QSYS"/>
+           <arg value="${PROD_ROOT}/bin/queryWASinstalls"/>
+        </exec>	
+
+
+        <!-- If /QIBM/WAS/bin/queryWASinstalls has already been modified -->
+        <replaceregexp file="/QIBM/WAS/bin/queryWASinstalls"
+            match="if \[ &quot;\$\{QSH_VERSION\:0\:4\}&quot; = &quot;V7R3&quot; \] ; then${line.separator}   JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}else${line.separator}   JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}fi"
+            replace="if [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk80 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk71 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk70 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}
+   fi${line.separator}
+else${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}
+   else${line.separator}
+      if [ &quot;${JAVA_HOME}&quot; = &quot;&quot; ] ; then${line.separator}
+         echo &quot;No Java installs found. Exiting.&quot;${line.separator}
+         exit 1${line.separator}
+      fi${line.separator}
+   fi${line.separator}
+fi"
+	    flags="s"/>
+
+        <!-- If /QIBM/WAS/bin/queryWASinstalls was not modified -->
+        <replaceregexp file="/QIBM/WAS/bin/queryWASinstalls"
+            match="${line.separator}JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit"
+            replace="${line.separator}if [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk80 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk80/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk71 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk71/32bit${line.separator}
+   fi${line.separator}
+elif [ -d /QOpenSys/QIBM/ProdData/JavaVM/jdk70 ] ; then${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk70/32bit${line.separator}
+   fi${line.separator}
+else${line.separator}
+   if [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/64bit${line.separator}
+   elif [ -f /QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit/bin/java ] ; then${line.separator}
+      JAVA_HOME=/QOpenSys/QIBM/ProdData/JavaVM/jdk626/32bit${line.separator}
+   else${line.separator}
+      if [ &quot;${JAVA_HOME}&quot; = &quot;&quot; ] ; then${line.separator}
+         echo &quot;No Java installs found. Exiting.&quot;${line.separator}
+         exit 1${line.separator}
+      fi${line.separator}
+   fi${line.separator}
+fi"
+	    flags="s"/>
+
+
+        <exec executable="/usr/bin/chown">
+           <arg value="QSYS"/>
+           <arg value="/QIBM/WAS/bin/queryWASinstalls"/>
+        </exec>	
+
+    </target>
+
+    <target name="checkEjbdeployExists" if="isOS400"
+		description="check is PROD_ROOT/bin/ejbdeploy exists">
+       <echo> message="Checking if ${PROD_ROOT}/bin/ejbdeploy exists" </echo>
+       <available file="${PROD_ROOT}/bin/ejbdeploy" property="ejbdeploy.exists"/>
+    </target>
+
+    <target name="updateEjbDeploy" if="ejbdeploy.exists"
+		description="update PROD_ROOT/bin/ejbdeploy script">
+
+        <wscmtlog>Product Root is: ${PROD_ROOT}</wscmtlog>
+
+        <replaceregexp file="${PROD_ROOT}/bin/ejbdeploy"
+	    match="USE_HIGHEST_AVAILABLE_SDK=true${line.separator}. \$\(/usr/bin/dirname \$0\)/setupCmdLine${line.separator}"
+            replace="if [ &quot;$ITP_LOC&quot; = &quot;&quot; ] ; then${line.separator}
+  . $(/usr/bin/dirname $0)/setupCmdLine${line.separator}fi${line.separator}"
+	    flags="s"/>
+
+        <replaceregexp file="${PROD_ROOT}/bin/ejbdeploy"
+	    match="BOOTPATH=\$\{ITP_LOC\}/batchboot.jar\:\$\{WAS_INSTALL_ROOT\}/java/ext/iwsorbutil.jar\${line.separator}"
+            replace=""
+	    flags="s"/>
+
+        <replaceregexp file="${PROD_ROOT}/bin/ejbdeploy"
+	    match="CP=\$\{ITP_LOC\}/batch2.jar\:\$\{ITP_LOC\}/batch2_nl1.jar${line.separator}"
+            replace=""
+	    flags="s"/>
+
+        <replaceregexp file="${PROD_ROOT}/bin/ejbdeploy"
+	    match="WAS_EXT_DIRS=\$\{WAS_INSTALL_ROOT\}/plugins/j2ee.javax\:\$\{WAS_INSTALL_ROOT\}/plugins/com.ibm.ws.runtime.eclipse:\$\{WAS_INSTALL_ROOT\}/plugins\:\$\{WAS_INSTALL_ROOT\}/plugins/com.ibm.ws.runtime\:\$\{WAS_INSTALL_ROOT\}/lib/j2ee.jar\:\$\{WAS_INSTALL_ROOT\}/plugins\:\$\{WAS_EXT_DIRS\}${line.separator}"
+
+            replace="WAS_EXT_DIRS=$WAS_HOME/plugins:$WAS_EXT_DIRS${line.separator}
+${line.separator}
+   if [ &quot;$EJBDEPLOY_JAVA_HOME&quot; = &quot;&quot; ] ; then${line.separator}
+     EJBDEPLOY_JAVA_HOME=$JAVA_HOME${line.separator}    
+     export EJBDEPLOY_JAVA_HOME=$JAVA_HOME${line.separator}
+   else${line.separator}
+      echo &quot;using JRE in $EJBDEPLOY_JAVA_HOME&quot;${line.separator}
+   fi${line.separator}
+   ${line.separator}
+   if [ &quot;$EJBDEPLOY_JVM_HEAP&quot; = &quot;&quot; ] ; then${line.separator}
+       EJBDEPLOY_JVM_HEAP=&quot;-Xms256m -Xmx256m&quot;${line.separator}
+   else${line.separator}
+       echo &quot;using JVM heap $EJBDEPLOY_JVM_HEAP&quot;${line.separator}
+   fi${line.separator}
+   ${line.separator}
+   # Set the classpath needed for the deploytool${line.separator}
+   ejbd_cp=$ITP_LOC/batch2.jar:$ITP_LOC/batch2_nl1.jar:$ITP_LOC/batch2_nl2.jar${line.separator}
+   ejbd_bootpath=$ITP_LOC/batchboot.jar:$JAVA_HOME/jre/lib/ext/iwsorbutil.jar${line.separator}
+   ${line.separator}
+   JAVA_CMD=&quot;$EJBDEPLOY_JAVA_HOME/jre/bin/java&quot;${line.separator}
+   ${line.separator}
+   # set options for ejb deploy....${line.separator}
+   ejbdopts=&quot;$@&quot;${line.separator}
+   export itp_cp ejbd_cp ejbd_bootpath ejbdopts${line.separator}
+   export WAS_ENDORSED_DIRS=$EJBDEPLOY_JAVA_HOME/jre/lib/endorsed${line.separator}"
+	    flags="s"/>
+
+        <replaceregexp file="${PROD_ROOT}/bin/ejbdeploy"
+	    match="\$\{JAVA_HOME\}/bin/java \$\{JAVA_FLAGS\} \\${line.separator}
+	    -Xbootclasspath/a\:\$\{BOOTPATH\} \\${line.separator}
+	    -Dwebsphere.lib.dir=\$\{WAS_INSTALL_ROOT\}/lib \\${line.separator}
+	    -Ditp.loc=\$\{ITP_LOC\} \\${line.separator}
+	    -Dorg.osgi.framework.bootdelegation=\* \\${line.separator}
+	    -Dejbdeploy.user.install.root=\$\{USER_INSTALL_ROOT\}/ejbdeploy \\${line.separator}
+	    -Duser.install.root=\$\{USER_INSTALL_ROOT\} \\${line.separator}
+	    -Dcom.ibm.sse.model.structuredbuilder=&quot;off&quot; \\${line.separator}
+	    -classpath \$\{CP\} \\${line.separator}
+	    -Dws.ext.dirs=\$\{WAS_EXT_DIRS\} \\${line.separator}
+	    -Dos400.security.properties=\$\{SECURITY_CFG\} \\${line.separator}
+	    com.ibm.etools.ejbdeploy.EJBDeploy &quot;\$@&quot;${line.separator}"
+            replace="$JAVA_CMD \\\\${line.separator}
+    -Xbootclasspath/a:$ejbd_bootpath \\\\${line.separator}
+    $EJBDEPLOY_JVM_HEAP \\\\${line.separator}
+    -Dws.ext.dirs=$WAS_HOME/eclipse/plugins/j2ee.javax_1.4.0:$WAS_HOME/eclipse/plugins/com.ibm.ws.runtime.eclipse_1.0.0:$WAS_EXT_DIRS \\\\${line.separator}
+    -Dwebsphere.lib.dir=$WAS_HOME/lib \\\\${line.separator}
+    -Dwas.install.root=$WAS_HOME \\\\${line.separator}
+    -Djava.endorsed.dirs=&quot;$WAS_ENDORSED_DIRS&quot; \\\\${line.separator}
+    -Ditp.loc=$ITP_LOC \\\\${line.separator}
+    -Dorg.osgi.framework.bootdelegation=* \\\\${line.separator}
+    -Dejbdeploy.user.install.root=$USER_INSTALL_ROOT/ejbdeploy \\\\${line.separator}
+    $USER_INSTALL_PROP \\\\${line.separator}
+    -Dcom.ibm.sse.model.structuredbuilder=&quot;off&quot; \\\\${line.separator}
+    -cp $ejbd_cp \\\\${line.separator}
+    $EJBDEPLOY_JVM_OPTIONS \\\\${line.separator}
+    $WAS_DEBUG \\\\${line.separator}
+    $EJBDEPLOY_JVM_ARGS \\\\${line.separator}
+    com.ibm.etools.ejbdeploy.EJBDeploy &quot;$@&quot;${line.separator}"
+	    flags="s"/>
+
+      <!-- Previous ant task is taking away the executable permission from ejbdeploy -->
+      <chmod file="${PROD_ROOT}/bin/ejbdeploy" perm="+x"/>
+
+
+
+    </target>
+
+
+    <target name="os400fp"
+		description="Invoke script to handle post FP install config actions"
+		depends="detectOS400,
+			setProps,
+			updateQueryWASInstalls,
+			checkEjbdeployExists,
+			updateEjbDeploy">
+
+    </target>
+      
+</project>

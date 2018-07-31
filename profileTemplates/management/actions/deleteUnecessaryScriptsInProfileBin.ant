@@ -1,0 +1,163 @@
+<project name="deleteUnecessaryScriptsInProfileBin" default="deleteUnecessaryScriptsInProfileBin" basedir=".">
+
+    <taskdef name="wscmtlog" 
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+      <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="detectProfileType"
+            description="sets conditions for profile type specific tests">
+
+       	<wscmtlog>Setting conditions for profile type. ServerType: ${serverType}</wscmtlog> 
+
+        <!-- check for jobMgr profile -->
+        <condition property="is.JobMgr" value="true">
+            <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+        </condition>
+
+        <!-- check for admin agent profile -->
+        <condition property="is.AdminAgent" value="true">
+            <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+        </condition>
+
+        <!-- property to indicate admin agent OR job manager on OS400 -->
+        <condition property="is.AdminAgentOrJobMgrOS400" value="true">
+            <and>
+                <equals arg1="${currentOSFamily}" arg2="os/400" />
+                <or>
+                    <istrue value="${is.JobMgr}" />
+                    <istrue value="${is.AdminAgent}" />
+                </or>    
+            </and>
+        </condition>
+
+        <!-- property to indicate either admin agent OR job manager non OS400 -->
+        <condition property="is.AdminAgentOrJobMgr" value="true">
+            <and>
+                <not>
+                    <equals arg1="${currentOSFamily}" arg2="os/400"/>
+                </not>
+                <or>
+                    <istrue value="${is.JobMgr}"/>
+                    <istrue value="${is.AdminAgent}"/>
+                </or>
+            </and>    
+        </condition>
+    </target>
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+        
+     <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setOSShellScriptExtension"
+            description="Sets the variable shellScriptExt to current OS's shell script extension">
+
+        <condition property="shellScriptExt" value="">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="shellScriptExt" value="sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="shellScriptExt" value="bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="deleteUnecessaryShellScriptsInProfileBin" 
+            description="Deletes the irrelevant script files in profile bin dir"
+            unless="configOS400">
+       	<wscmtlog>Delete the unecessary scripts in profile bin for profileName, ${profileName}</wscmtlog> 
+	<delete file="${profilePath}/bin/addNode.${shellScriptExt}"/>
+	<delete file="${profilePath}/bin/removeNode.${shellScriptExt}"/>
+	<delete file="${profilePath}/bin/startNode.${shellScriptExt}"/>
+	<delete file="${profilePath}/bin/stopNode.${shellScriptExt}"/>
+        <delete file="${profilePath}/bin/syncNode.${shellScriptExt}"/>
+    </target>
+
+    <target name="deleteUnecessaryJobMgrShellScriptsInProfileBin" 
+            description="Deletes unnecessary script files for JobMgr or AdminAgent"
+            if="is.AdminAgentOrJobMgr">
+        <wscmtlog>Delete unecessary scripts for Job Manager or Admin Agent. </wscmtlog> 
+	    <delete file="${profilePath}/bin/startManager.${shellScriptExt}" failonerror="false" />
+	    <delete file="${profilePath}/bin/stopManager.${shellScriptExt}" failonerror="false" />
+    </target>
+
+    <target name="deleteUnecessaryJobMgrShellScriptsInProfileBinOS400" 
+            description="Deletes unnecessary script files for JobMgr or AdminAgent on OS400"
+            if="is.AdminAgentOrJobMgrOS400">
+        <wscmtlog>Delete unecessary scripts for Job Manager or Admin Agent on OS400. </wscmtlog> 
+	    <delete file="${profilePath}/bin/startManager" failonerror="false" />
+	    <delete file="${profilePath}/bin/stopManager" failonerror="false" />
+    </target>
+
+    <target name="deleteUnecessaryShellScriptsInProfileBinOS400" 
+            description="Deletes the irrelevant script files in profile bin dir"
+            if="configOS400">
+       	<wscmtlog>Delete the unecessary scripts in profile bin for profileName, ${profileName}</wscmtlog> 
+	<delete file="${profilePath}/bin/addNode"/>
+	<delete file="${profilePath}/bin/removeNode"/>
+	<delete file="${profilePath}/bin/startNode"/>
+	<delete file="${profilePath}/bin/stopNode"/>
+        <delete file="${profilePath}/bin/syncNode"/>
+    </target>
+
+    <target name="deleteUnecessaryScriptsInProfileBin"
+        description="Delete the shell scripts under profile bin that are irrevelant to the specific profile"
+        depends="detectCurrentOSFamily,
+            defineOSSpecificConfigFlag,
+            setOSFileSeparator,
+            setOSShellScriptExtension,
+            detectProfileType,
+            deleteUnecessaryShellScriptsInProfileBinOS400,
+            deleteUnecessaryShellScriptsInProfileBin,
+            deleteUnecessaryJobMgrShellScriptsInProfileBin,
+            deleteUnecessaryJobMgrShellScriptsInProfileBinOS400"/>
+
+</project>

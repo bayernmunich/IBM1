@@ -1,0 +1,420 @@
+<project name="createRemoteMigrJar" default="createRemoteMigrJar" basedir=".">
+
+    <target name="createRemoteMigrJar" description="Create a jar containing the files needed to Run WASPreUpgrade on a remote machine."
+            depends="detectCurrentOS, setOSFileSeparator, setOSFileExtension">
+
+        <!-- TARGETDIR, INCLUDEJAVA and ALLPLUGINS are properties passed in from the script file. -->
+
+        <!-- Set up some global use properties.  These are upper cased and begins with "_". -->
+        <condition property="_COLLECT_JAVA_FROM_WEBSPHERE">
+            <equals arg1="${INCLUDEJAVA}" arg2="true"/>
+        </condition>
+
+        <condition property="_COLLECT_ALL_PLUGINS">
+            <equals arg1="${ALLPLUGINS}" arg2="true"/>
+        </condition>
+
+        <condition property="_MIGR_JAR_FILE" value="${TARGETDIR}/WAS_V855_${currentOS}.${os.arch}_RemoteMigrSupport.jar"
+                                             else="${TARGETDIR}/WAS_V855_RemoteMigrSupport.jar">
+            <isset property="_COLLECT_JAVA_FROM_WEBSPHERE"/>
+        </condition>
+        <property name="_MIGR_TEMP_DIR" value="${TARGETDIR}/migrtemp"/>
+        <property name="_REMOTE_ZIP_INCLUDES" value="${_MIGR_TEMP_DIR}/remotejar.includefiles"/>
+
+        <!-- In case they are re-running - let's start from a clean slate. -->
+        <delete file="${_MIGR_JAR_FILE}"/>
+        <delete dir="${_MIGR_TEMP_DIR}"/>
+        <mkdir dir="${_MIGR_TEMP_DIR}"/>
+        <touch file="${_REMOTE_ZIP_INCLUDES}"/>
+
+        <antcall target="createRemoteMigrJarFile"/>
+    </target>
+
+    <target name="detectCurrentOS" description="Detects the current OS.">
+        <condition property="currentOS" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        <condition property="currentOS" value="aix">
+            <equals arg1="${os.name}" arg2="AIX"/>
+        </condition>
+        <condition property="currentOS" value="hpux">
+            <equals arg1="${os.name}" arg2="HP-UX"/>
+        </condition>
+        <condition property="currentOS" value="sun">
+            <or>
+                <equals arg1="${os.name}" arg2="SunOS"/>
+                <equals arg1="${os.name}" arg2="Solaris"/>
+            </or>
+        </condition>
+        <condition property="currentOS" value="windows">
+            <os family="windows"/>
+        </condition>
+        <!-- If it is not any of the above and we are of the unix family - then assume linux. -->
+        <condition property="currentOS" value="linux">
+            <os family="unix"/>
+        </condition>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform.">
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOS}" arg2="windows"/>
+        </condition>
+        <condition property="separatorFile" value="/">
+            <not>
+                <equals arg1="${currentOS}" arg2="windows"/>
+            </not>
+        </condition>
+    </target>
+
+    <target name="setOSFileExtension"
+            description="Sets the current file extension for this platform.">
+        <condition property="fileExtension" value=".bat">
+            <equals arg1="${currentOS}" arg2="windows"/>
+        </condition>
+        <condition property="fileExtension" value="">
+            <equals arg1="${currentOS}" arg2="os/400"/>
+        </condition>
+        <property name="fileExtension" value=".sh"/>
+    </target>
+
+<!-- ===================================================================================================== -->
+<!-- ============================     BEGIN REAL WORK     ================================================ -->
+<!-- ===================================================================================================== -->
+
+    <target name="createRemoteMigrJarFile"   depends="processWASFiles">
+        <!-- Create the jar from       1) files from the WebSphere install as listed in the ${_REMOTE_ZIP_INCLUDES} file.
+                                       2) from generated, copied and/or modified files found in the ${_MIGR_TEMP_DIR} sub-dirs.
+        -->
+        <jar destfile="${_MIGR_JAR_FILE}">
+            <zipfileset dir="${WAS_INSTALL_ROOT}" filemode="755" dirmode="755">
+                <includesfile name="${_REMOTE_ZIP_INCLUDES}"/>
+            </zipfileset>
+            <!-- Collect the manipulated files. -->
+            <zipfileset dir="${_MIGR_TEMP_DIR}"
+                        filemode="755" dirmode="755">
+                <include name="bin/**/*"/>
+                <include name="lib/**/*"/>
+                <include name="properties/**/*"/>
+            </zipfileset>
+        </jar>
+        <delete dir="${_MIGR_TEMP_DIR}"/>
+    </target>
+
+    <target name="processWASFiles">
+        <!-- Those files coming directly from $WAS_INSTALL_ROOT, we just list those files in the ${_REMOTE_ZIP_INCLUDES} filelist. -->
+        <!-- Those files needing to be changed are copied or created in the ${_MIGR_TEMP_DIR}. -->
+        <!-- What is collected may depend on the _COLLECT_JAVA_FROM_WEBSPHERE and the _COLLECT_ALL_PLUGINS settings. -->
+        <!-- Be sure the processJavaFiles goes first! -->
+
+        <antcall target="processJavaFiles"/>
+        <antcall target="processBinFiles"/>
+        <!-- Let's fix the eol char appropriately.  Both the java and bin processing touch script files. -->
+        <fixcrlf srcDir="${_MIGR_TEMP_DIR}/bin" includes="**/*.bat" eol="crlf"/>
+        <fixcrlf srcDir="${_MIGR_TEMP_DIR}/bin" includes="**/*.sh, **/*.properties" eol="unix"/>
+
+        <antcall target="processDerbyFiles"/>
+        <antcall target="processLibFiles"/>
+        <antcall target="processPluginsFiles"/>
+        <antcall target="processPropertiesFiles"/>
+        <!--  All data between the opening and closing concat task declarations are written as is to the file.
+              including white space.  So do not reformat or indent!!! -->
+
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">configuration/config.ini
+</concat>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">features/**/*
+</concat>
+    </target>
+   
+    <!-- Process differently for _COLLECT_JAVA_FROM_WEBSPHERE (true versus false). -->
+    <target name="processJavaFiles" depends="collectJavaFromWebSphere, useJavaOnRemoteSystem"/>
+
+    <target name="collectJavaFromWebSphere" description="Determine which SDK uses the WAS_HOME/java dir." if="_COLLECT_JAVA_FROM_WEBSPHERE">
+        <!-- This target determines the version of the SDK to be collected, with its accompanying sdk control files. -->
+
+        <!-- Determine the name and location of the java dir, as pointed to by the SDK property files. -->
+        <!-- This will load the COMMAND_DEFAULT_SDK property and it will be set to the jdk version - 1.6_64 -->
+        <loadproperties srcFile="${WAS_INSTALL_ROOT}/properties/sdk/cmdDefaultSDK.properties"/>
+
+        <!-- Add these 2 property files from the $WAS_INSTALL_ROOT}/properties/sdk directory to the list -->
+        <!-- Also add the 2 corresponding bin files from the $WAS_INSTALL_ROOT}/bin/sdk directory to the list -->
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">properties/sdk/cmdDefaultSDK.properties
+properties/sdk/${COMMAND_DEFAULT_SDK}.properties
+bin/sdk/_setupSdk.*
+bin/sdk/_setupsdk${COMMAND_DEFAULT_SDK}.*
+</concat>
+
+        <!-- The java location property is in the properties/sdk/${COMMAND_DEFAULT_SDK}.properties file, and is called: -->
+        <property name="javaLocation" value="com.ibm.websphere.sdk.location.${COMMAND_DEFAULT_SDK}"/>
+		
+        <!-- Get contents of the sdk property file. Convert location property to actual and append to file list. -->
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">
+            <fileset file="${WAS_INSTALL_ROOT}/properties/sdk/${COMMAND_DEFAULT_SDK}.properties"/>
+            <filterchain>
+                <tokenfilter>
+				    <containsregex pattern="${javaLocation}.*"/>
+                    <!-- the \1 capture will be the JDK dir.   "java" or "java1.7" or ... -->
+                    <replaceregex  pattern="${javaLocation}=.*/([^/]*)$"
+                                   replace="\1/**/*"
+                                   byline="true"/>
+                </tokenfilter>
+            </filterchain>
+        </concat>
+    </target>
+
+    <target name="useJavaOnRemoteSystem" unless="_COLLECT_JAVA_FROM_WEBSPHERE">
+        <copy todir="${_MIGR_TEMP_DIR}/bin/sdk">
+            <fileset dir="${WAS_INSTALL_ROOT}/bin/migration/filesForRemoteMigr/bin/sdk">
+                <include name="*.cp"/>
+            </fileset>
+            <globmapper from="*.cp" to="*"/>
+        </copy>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">properties/sdk/**/*
+</concat>
+    </target>
+
+    <!-- Process differently for _COLLECT_JAVA_FROM_WEBSPHERE (true versus false). -->
+    <target name="processBinFiles" depends="appendBinFilesToList, adjustBinScriptsToUseJavaOnRemoteSystem"/>
+
+    <target name="appendBinFilesToList" if="_COLLECT_JAVA_FROM_WEBSPHERE">
+        <copy file="${WAS_INSTALL_ROOT}/bin/migration/filesForRemoteMigr/bin/WASPreUpgrade${fileExtension}.cp" tofile="${_MIGR_TEMP_DIR}/bin/WASPreUpgrade${fileExtension}"/>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">bin/infocenter*
+bin/onlinesupport*
+bin/setupCmdLine*
+bin/versionInfo*
+bin/osgiConsole*
+bin/osgiCfgInit*
+</concat>
+    </target>
+
+    <target name="adjustBinScriptsToUseJavaOnRemoteSystem" unless="_COLLECT_JAVA_FROM_WEBSPHERE">
+        <copy todir="${_MIGR_TEMP_DIR}/bin">
+            <fileset dir="${WAS_INSTALL_ROOT}/bin/migration/filesForRemoteMigr/bin">
+                <include name="*.cp"/>
+            </fileset>
+            <globmapper from="*.cp" to="*"/>
+        </copy>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">bin/infocenter*
+bin/onlinesupport*
+</concat>
+    </target>
+
+    <target name="processDerbyFiles">
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">derby/lib/**/*
+derby/migration/**/*
+</concat>
+    </target>
+
+    <target name="processLibFiles">
+        <mkdir dir="${_MIGR_TEMP_DIR}/lib"/>
+        <copy file="${WAS_INSTALL_ROOT}/lib/.eclipseproduct" tofile="${_MIGR_TEMP_DIR}/lib/.eclipseproduct"/>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">lib/batch.wccm.jar
+lib/batchutilsfep.jar
+lib/bootstrap.jar
+lib/setup.jar
+lib/startup.jar
+</concat>
+    </target>
+	
+    <!-- Process differently for _COLLECT_ALL_PLUGINS (true versus false). -->
+    <target name="processPluginsFiles" depends="collectAllPlugins, collectMinimalPlugins"/>
+        <!-- This can easily be broke from one fixpack to the next.  So remember:
+            1) When adding a new jar, replace the versioning part of the bundle name with a "*".
+            2) occasionally validate and clean up the list below. (bundles removed, renamed or added)
+            3) osgiCfgInit and osgiConsole are shipped as part of the remote jar so as to be able to
+               validate and debug the bundle set. All bundles must resolve!!!
+               To determine changes - install the previous fixpack and compare the plugins directory 
+               with the new fixpack install for new, removed or renamed bundles.
+               When all else fails, use the hidden -allPlugins parameter.
+               It produces a large remote jar but we know the bundles all resolve.
+        -->
+	
+    <target name="collectAllPlugins" if="_COLLECT_ALL_PLUGINS">
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">plugins/**/*
+</concat>
+    </target>		
+	
+    <target name="collectMinimalPlugins" unless="_COLLECT_ALL_PLUGINS">
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">plugins/com.ibm.cds*.jar
+plugins/com.ibm.events.client.jar
+plugins/com.ibm.events.service.jar
+plugins/com.ibm.ffdc.jar
+plugins/com.ibm.hpel.logging.jar
+plugins/com.ibm.icu.jar
+plugins/com.ibm.isclite.migration.jar
+plugins/com.ibm.jaxb.tools.jar
+plugins/com.ibm.jaxws.tools.jar
+plugins/com.ibm.rls.jar
+plugins/com.ibm.sec.authz.ibmsecauthz*.jar
+plugins/com.ibm.tx.jta.jar
+plugins/com.ibm.tx.ltc.jar
+plugins/com.ibm.tx.util.jar
+plugins/com.ibm.websphere.soa.sca.sdo.jar
+plugins/com.ibm.ws.admin.core.jar
+plugins/com.ibm.ws.admin.services.jar
+plugins/com.ibm.ws.admin.system.jar
+plugins/com.ibm.ws.amm.jar
+plugins/com.ibm.ws.beanvalidation.jar
+plugins/com.ibm.ws.bootstrap.jar
+plugins/com.ibm.ws.bootstrap.provisioner.jar
+plugins/com.ibm.ws.cea.migration.jar
+plugins/com.ibm.ws.debug.osgi.jar
+plugins/com.ibm.ws.eba.ras.adapter.jar
+plugins/com.ibm.ws.eclipse.adaptors*jar
+plugins/com.ibm.ws.ecs.jar
+plugins/com.ibm.ws.emf.jar
+plugins/com.ibm.ws.javaee.dd.common.jar
+plugins/com.ibm.ws.javaee.dd.ejb.jar
+plugins/com.ibm.ws.jpa.jar
+plugins/com.ibm.ws.jsf.jar
+plugins/com.ibm.ws.migration.jar
+plugins/com.ibm.ws.policyset.migration.jar
+plugins/com.ibm.ws.portletcontainer.jar
+plugins/com.ibm.ws.prereq.analysis.engine.jar
+plugins/com.ibm.ws.prereq.asm.jar
+plugins/com.ibm.ws.prereq.commonj-twm.jar
+plugins/com.ibm.ws.prereq.commons-collections.jar
+plugins/com.ibm.ws.prereq.commons-discovery.jar
+plugins/com.ibm.ws.prereq.commons-logging.jar
+plugins/com.ibm.ws.prereq.db2.intf.jar
+plugins/com.ibm.ws.prereq.javamail.jar
+plugins/com.ibm.ws.prereq.jrom.jar
+plugins/com.ibm.ws.prereq.nativefile.jar
+plugins/com.ibm.ws.prereq.olt.jar
+plugins/com.ibm.ws.prereq.otis.jar
+plugins/com.ibm.ws.prereq.ow.asm.jar
+plugins/com.ibm.ws.prereq.rxa.jar
+plugins/com.ibm.ws.prereq.soap.jar
+plugins/com.ibm.ws.prereq.syncml4j*.jar
+plugins/com.ibm.ws.prereq.toad.jar
+plugins/com.ibm.ws.prereq.vajava.jar
+plugins/com.ibm.ws.prereq.webtlsrn.jar
+plugins/com.ibm.ws.prereq.wsdeploy.jar
+plugins/com.ibm.ws.prereq.wsdl4j.jar
+plugins/com.ibm.ws.prereq.xlxp.jar
+plugins/com.ibm.ws.rmm.jar
+plugins/com.ibm.ws.runtime.coregroupbridge.jar
+plugins/com.ibm.ws.runtime.dist.jar
+plugins/com.ibm.ws.runtime.gateway.jar
+plugins/com.ibm.ws.runtime.jar
+plugins/com.ibm.ws.runtime.wim.base.jar
+plugins/com.ibm.ws.runtime.wim.core.jar
+plugins/com.ibm.ws.security.crypto.jar
+plugins/com.ibm.ws.sib.server.jar
+plugins/com.ibm.ws.sib.utils.jar
+plugins/com.ibm.ws.sib.wccm.jar
+plugins/com.ibm.ws.sip.interface.jar
+plugins/com.ibm.ws.soa.sca.admin.jar
+plugins/com.ibm.ws.soa.sca.admin.oasis.jar
+plugins/com.ibm.ws.soa.sca.admin.osoa.jar
+plugins/com.ibm.ws.soa.sca.binding.jms.common.jar
+plugins/com.ibm.ws.soa.sca.binding.oasis.common.jar
+plugins/com.ibm.ws.soa.sca.binding.sca.common.jar
+plugins/com.ibm.ws.soa.sca.binding.ws.oasis.jar
+plugins/com.ibm.ws.soa.sca.bindings.jar
+plugins/com.ibm.ws.soa.sca.container.ejb.jar
+plugins/com.ibm.ws.soa.sca.container.http.jar
+plugins/com.ibm.ws.soa.sca.container.jms.jar
+plugins/com.ibm.ws.soa.sca.container.sca.jar
+plugins/com.ibm.ws.soa.sca.container.security.jar
+plugins/com.ibm.ws.soa.sca.container.ws.jar
+plugins/com.ibm.ws.soa.sca.databinding.sdo.oasis.jar
+plugins/com.ibm.ws.soa.sca.extension.oasis.jar
+plugins/com.ibm.ws.soa.sca.jee.jar
+plugins/com.ibm.ws.soa.sca.oasis.observer.integration.jar
+plugins/com.ibm.ws.soa.sca.observer.integration.jar
+plugins/com.ibm.ws.soa.sca.qos.jar
+plugins/com.ibm.ws.soa.sca.qos.oasis.jar
+plugins/com.ibm.ws.soa.sca.runtime.common.jar
+plugins/com.ibm.ws.soa.sca.runtime.oasis.jar
+plugins/com.ibm.ws.soa.sca.runtime.osoa.jar
+plugins/com.ibm.ws.soa.sca.sdo.common.jar
+plugins/com.ibm.ws.soa.sca.serviceregistry.jar
+plugins/com.ibm.ws.soa.sca.serviceregistry.oasis.jar
+plugins/com.ibm.ws.wsadie/**/*
+plugins/com.ibm.ws.wccm.cea.jar
+plugins/com.ibm.ws.wccm.compatibility.jar
+plugins/com.ibm.ws.wccm.jar
+plugins/com.ibm.ws.webcontainer.jar
+plugins/com.ibm.ws.webservices.migration.jar
+plugins/com.ibm.ws.wlm.jar
+plugins/com.ibm.ws.xct.jar
+plugins/com.ibm.wsfp.main.jar
+plugins/com.ibm.wspolicy.main.jar
+plugins/com.ibm.wspolicy4j.jar
+plugins/com.ibm.wsspi.extension.jar
+plugins/com.ibm.wsspi.scacontainer.jar
+plugins/com.ibm.wsspi.soa.sca.observer.jar
+plugins/com.ibm.xml.jar
+plugins/commons-io.jar
+plugins/commons.fileupload.jar
+plugins/ecj-*.jar
+plugins/javassist.jar
+plugins/javax.j2ee.connector.jar
+plugins/javax.j2ee.deploy.jar
+plugins/javax.j2ee.ejb.jar
+plugins/javax.j2ee.el.jar
+plugins/javax.j2ee.interceptor.jar
+plugins/javax.j2ee.jacc.jar
+plugins/javax.j2ee.jaxrpc.jar
+plugins/javax.j2ee.jcdi.jar
+plugins/javax.j2ee.jms.jar
+plugins/javax.j2ee.jsf.jar
+plugins/javax.j2ee.jsp.jar
+plugins/javax.j2ee.jstl.jar
+plugins/javax.j2ee.jta.jar
+plugins/javax.j2ee.management.jar
+plugins/javax.j2ee.persistence.jar
+plugins/javax.j2ee.servlet.jar
+plugins/javax.j2ee.validation.jar
+plugins/org.*.jar
+plugins/org.apache.tuscany.sca.oasis/**/*
+plugins/org.apache.tuscany.sdo.sca.core.model/**/*
+plugins/slf4j-api-*.jar
+plugins/slf4j-jdk14-*.jar
+</concat>
+    </target>
+
+    <target name="processPropertiesFiles">
+        <!-- We must ensure that the WS_PROFILE_REGISTRY property is set to its default value.
+			 This ensures the WAS_INSTALL_ROOT remains correct for WASPreUpgrade.  There are corner cases 
+			 where it can get set incorrectly, causing wierd failures. -->
+        <copy file="${WAS_INSTALL_ROOT}/properties/wasprofile.properties" tofile="${_MIGR_TEMP_DIR}/properties/wasprofile.properties">
+            <filterchain>
+                <tokenfilter>
+                    <replaceregex  pattern="^\s*(WS_PROFILE_REGISTRY)\s*=\s*([^\s]*)\s*$"
+                                   replace="\1=$${was.install.root}/properties/profileRegistry.xml"
+                                   byline="true" flags="g"/>
+                </tokenfilter>
+            </filterchain>
+        </copy>
+        <concat destfile="${_REMOTE_ZIP_INCLUDES}" append="yes" eol="unix">properties/logbr/**/*
+properties/version/dtd/**/*
+properties/version/messages/**/*
+properties/version/*.info
+properties/version/*.product
+properties/version/*.websphere
+properties/version/installed.xml
+properties/version/history.xml
+properties/version/core.feature.marker
+properties/version/com.ibm.websphere.ND.v85.msl
+properties/version/com.ibm.websphere.IBMJAVA.v70.msl
+properties/version/Apache_Derby*
+properties/encoding.properties
+properties/ffdcRun.properties
+properties/ffdcStart.properties
+properties/ffdcStop.properties
+properties/ibm-was-version.properties
+properties/TraceSettings.properties
+properties/uddi4j.properties
+properties/wsadmin.properties
+properties/xd.spi.properties
+properties/xdagentcomp.props
+properties/java.security
+properties/osgi.debug.options
+properties/was.license
+properties/ws-security.xml
+</concat>
+    </target>
+</project>
+

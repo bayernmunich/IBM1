@@ -1,0 +1,91 @@
+<script>
+function setDays(endDay) {
+    startDateDay = document.getElementById("startDateDay");
+    maxDay       = startDateDay.options.length;
+    for (i = 28; i < maxDay; i++)
+       startDateDay.remove(28);
+
+    for (i = 28; i < endDay; i++) {
+        n = new Number(i + 1);
+        option = new Option(n.toString(), n.toString(), false);
+        if (isDom) {
+            startDateDay.add(option, null);
+        } else {
+            startDateDay.add(option);
+        }
+    }
+}
+
+function resetDay() {
+    yearField  = document.getElementById("startDateYear");
+    year       = new Number(yearField.value);
+    monthField = document.getElementById("startDateMonth");
+    month      = new Number(monthField.value);
+    dayField   = document.getElementById("startDateDay");
+    day        = dayField.value;
+    if (month == 2) {
+        if (year % 4 == 0) {
+           setDays(29);
+           maxDay = 29;
+        } else {
+           setDays(28);
+           maxDay = 28;
+        }
+    } else if (month == 4 || month == 6 || month == 9 || month == 11) {
+        setDays(30);
+        maxDay = 30;
+    } else {
+        setDays(31);
+        maxDay = 31;
+    }
+    if (new Number(day) > maxDay)
+        dayField.value = maxDay;
+    else
+        dayField.value = day;
+}
+
+function incYear() {
+    yearField = document.getElementById("startDateYear");
+    if (yearField.disabled)
+        return;
+    year = new Number(yearField.value);
+    year = year + 1;
+    yearField.value = year.toString();
+    resetDay();
+    document.images['startDateYearUp'].src='images/upbutton.gif';
+}
+
+function decYear(thisYear) {
+    yearField = document.getElementById("startDateYear");
+    if (yearField.disabled)
+        return;
+    year = new Number(yearField.value);
+    if (year > thisYear) {
+        year = year - 1;
+        yearField.value = year.toString();
+        resetDay();
+    }
+    document.images['startDateYearDown'].src='images/downbutton.gif';
+}
+
+function incDigit(item, maxValue) {
+    field = document.getElementById(item);
+    if (field.disabled)
+        return;
+    value = new Number(field.value);
+    value = value + 1 < maxValue ? value + 1 : 0;
+    field.value = (value < 10 ? "0" : "") + value.toString();
+    document.images[item + 'Up'].src='images/upbutton.gif';
+}
+
+function decDigit(item, maxValue) {
+    field = document.getElementById(item);
+    if (field.disabled)
+        return;
+    value = new Number(field.value);
+    value = value > 0 ? value - 1 : maxValue - 1;
+    field.value = (value < 10 ? "0" : "") + value.toString();
+    document.images[item + 'Down'].src='images/downbutton.gif';
+}
+
+</script>

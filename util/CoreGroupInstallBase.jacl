@@ -1,0 +1,71 @@
+#--------------------------------------------------------------------
+# The jacl script generates and attaches a unique id to the core group 
+# if necessary. 
+#
+# Prerequisites:
+#   1.) only one coregroup.xml file should exist.
+#   2.) the existing coregroup.xml must be for the "DefaultCoreGroup".
+#
+# NOTE: This script is idempotent. Running it more than once will not 
+# alter the result.
+# 
+# The WAS Base install should simply invoke this script as 
+#         wsadmin -conntype NONE -f CoreGroupInstallBase.jacl   
+#
+# WARNING: Do not use the JACL "exit" syntax in this script (see defect 457680.1)
+#--------------------------------------------------------------------
+proc getTheDefaultCoreGroupId {defaultCoreGroupName}  {
+   global AdminConfig
+
+   set coreGroups [$AdminConfig list CoreGroup]
+   set numOfCoreGroups [llength $coreGroups]
+
+   # if the number of coregroups is something other than 1 something is wrong
+   if {$numOfCoreGroups != 1}  {
+      error "The number of CoreGroups is not 1."
+   }
+
+   set coreGroupName [$AdminConfig showAttribute $coreGroups name]
+
+   # if the lone core group is not the default one, something is wrong
+   if {$coreGroupName != $defaultCoreGroupName}  {
+      error "The Default Core Group is missing."
+   }
+
+   return $coreGroups
+}  
+
+# -------------------------------------------------------------------
+# The procedure creates and returns an unique id which will be added
+# later in the coregroup.xml file. It uses java.rmi.server.UID object
+# to create the unique id. 
+# -------------------------------------------------------------------
+proc createAUniqueId { } {
+    java::import java.rmi.server.UID
+    set UID [java::new UID]
+    set UUID [$UID toString]
+
+    return $UUID
+}
+
+
+# ------------------------------------------------------------------------
+# Main Program
+# ------------------------------------------------------------------------
+
+# set the default coregroup name for install
+set defaultCoreGroupName "DefaultCoreGroup"
+
+# get the default coregroup 
+set defaultCoreGroupId [getTheDefaultCoreGroupId $defaultCoreGroupName]
+
+
+# modify the coregroup object to attach an unique id, if necessary
+set uniqueID [$AdminConfig showAttribute $defaultCoreGroupId coreGroupUID]
+if {$uniqueID == 0}  {
+   # modify the coregroup object to attach an unique id
+   $AdminConfig modify $defaultCoreGroupId [list [list coreGroupUID [createAUniqueId]] ]
+
+   # save the modified object  
+   $AdminConfig save
+}

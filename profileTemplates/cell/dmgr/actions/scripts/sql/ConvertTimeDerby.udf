@@ -1,0 +1,11 @@
+CALL SQLJ.install_jar('@OTISHOME@/lib/OTiSConvertTime.jar', 'APP.otisDerbyUdf',0);
+
+CREATE FUNCTION convert_time() RETURNS VARCHAR(32) 
+      PARAMETER STYLE JAVA NO SQL 
+      LANGUAGE JAVA
+	EXTERNAL NAME 'com.ibm.otis.common.database.MyGMT.getJavaGMT';
+	
+CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(
+    'derby.database.classpath',
+    'APP.otisDerbyUdf');
+

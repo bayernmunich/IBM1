@@ -1,0 +1,33 @@
+<%
+//initRedirect.jsp:
+
+//defect: 527587
+// If a jsp page is requested directly from the browser immediately after a server restart,
+// the struts ActionServlet will not have initialized yet, and errors will be thrown if the
+// jsp attempts to create a message or include a tile.
+
+// This file will test getting the messageResource.
+// if not found, then we will try to initialize struts ActionServlet by going to the root path "/"
+// This activates struts, causing it to init.
+
+// There is also a session attribute flag used to prevent an infinite loop of redirects in case of error.
+
+// This jsp should be added to the top of any jsp that may be loaded directly (as seen in the browser URL)
+//	such as error.jsp, unsecureLogon.jsp, ...
+
+try {
+	org.apache.struts.util.MessageResources messages = (org.apache.struts.util.MessageResources)pageContext.getServletContext().getAttribute(org.apache.struts.action.Action.MESSAGES_KEY);
+
+	if (messages==null && session.getAttribute("actionServletInitDone")==null){
+   		session.setAttribute("actionServletInitDone","true");
+   		System.out.println("initRedirect: The struts ActionServlet may not be initialized; redirecting to root path: "+request.getContextPath());
+		((HttpServletResponse)pageContext.getResponse()).sendRedirect(request.getContextPath() + "/");		
+		return;
+	} else if (messages==null){
+		System.out.println("initRedirect: already redirected once; messages still null.");
+	}
+} catch (Exception e){
+	System.out.println("Exception in initRedirect: "+e);
+}
+
+%>

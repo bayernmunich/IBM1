@@ -1,0 +1,89 @@
+<project name="AddQuoteForEXTPath" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="unix"/>
+            </and>            
+        </condition>
+        
+        <condition property="configWindows" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="windows"/>
+            </and>
+        </condition>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="AddQuotesWindows"
+            description="Add missing quotes to ikeyman_old.bat on windows"
+            if="configWindows">           
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+		<param name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman_old.bat"/>
+		<param name="token" value="EXT=%JAVA_HOME%\lib\ext"/>
+                <param name="tokenValue" value="&quot;EXT&quot;=&quot;%JAVA_HOME%\lib\ext&quot;"/>
+	      </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+		<param name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}ikeyman_old.bat"/>
+		<param name="token" value="EXT=%JAVA_HOME%\jre\lib\ext"/>
+                <param name="tokenValue" value="&quot;EXT&quot;=&quot;%JAVA_HOME%\jre\lib\ext&quot;"/>
+	      </antcall>
+    </target>
+                      
+    <target name="install"
+        description="Set firststeps batch and shell scripts to account for server installed"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+            AddQuotesWindows"/>
+            
+    <target name="uninstall">
+    </target>
+</project>

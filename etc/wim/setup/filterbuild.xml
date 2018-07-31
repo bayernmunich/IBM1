@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="wimSchemaFilter" default="filter-files" basedir="..">
+   
+  <property environment="env"/> 
+  <property name="wmm.schema.src" value="${env.SCHEMA_LOCATION}"/>
+  <property name="wmm.schema.dest" value="${env.SCHEMA_DEST_LOCATION}"/>
+  <property name="wmm.schema.temp" value="${env.SCHEMA_LOCATION}/TEMP"/>
+  <property name="wmm.db.type" value="${env.DBTYPE}"/>
+  <property name="wmm.schema.src.db" location="${wmm.schema.src}/${wmm.db.type}" />
+  <property name="wmm.schema.dest.db" value="${wmm.schema.dest}/${wmm.db.type}"/>
+
+  <condition property="noschema" value="true">
+	<and>
+	    <equals arg1="${env.DBSCHEMA}" arg2="$${env.DBSCHEMA}"/>
+	</and>
+  </condition>
+
+  <condition property="dbuser" value="true">
+	<and>
+	<not>
+	    <equals arg1="${env.DBOWNER}" arg2="$${env.DBOWNER}"/>
+	 </not>
+        <equals arg1="${env.DBSCHEMA}" arg2="$${env.DBSCHEMA}"/>
+	</and>
+
+  </condition>
+
+  <condition property="nodbname" value="true">
+	<and>
+	    <equals arg1="${env.DBNAME}" arg2="$${env.DBNAME}"/>
+	</and>
+  </condition>
+  
+  <condition property="notsprefix" value="true">
+  	<and>
+  	    <equals arg1="${env.TSPREFIX}" arg2="$${env.TSPREFIX}"/>
+  	</and>
+    </condition>
+
+  <condition property="notablebufferpool" value="true">
+  	<and>
+  	    <equals arg1="${env.DEFAULT_TABLE}" arg2="$${env.DEFAULT_TABLE}"/>
+  	</and>
+    </condition>
+
+	<condition property="nolobtablebufferpool" value="true">
+  	<and>
+  	    <equals arg1="${env.LOB_TABLE}" arg2="$${env.LOB_TABLE}"/>
+  	</and>
+    </condition>
+
+	<condition property="noindexbufferpool" value="true">
+  	<and>
+  	    <equals arg1="${env.INDEX_TABLE}" arg2="$${env.INDEX_TABLE}"/>
+  	</and>
+    </condition>
+  
+   
+   
+   <target name="filter-files">
+	<antcall target="unsetschema"/>
+	<antcall target="setschema"/>
+	<antcall target="setdbuser"/>
+	<antcall target="setdbname"/>
+	<antcall target="settsprefix"/>
+	<antcall target="settablebufferpool"/>
+	<antcall target="setlobtablebufferpool"/>
+	<antcall target="setindextablebufferpool"/>
+   </target>
+
+  
+ <target name="unsetschema" if="noschema">
+  	<echo message="running unsetschema"/>
+ 	<filter token="dbschema." value=""/>
+	<copy todir="${wmm.schema.dest}" filtering="true" overwrite="true">
+        <fileset dir="${wmm.schema.src}">
+		<include name="bootstrap.sql"/>
+		<include name="keys.sql"/>
+	</fileset>
+	</copy>
+ 	<filter token="dbschema." value=""/>
+	<copy todir="${wmm.schema.dest.db}" filtering="true" overwrite="true">
+        <fileset dir="${wmm.schema.src.db}"/>
+	</copy>
+   </target>
+
+ <target name="setschema" unless="noschema">
+  	<echo message="running setschema"/>
+ 	<filter token="dbschema." value="${env.DBSCHEMA}."/>
+ 	<filter token="DbUser" value="${env.DBSCHEMA}"/>
+	<copy todir="${wmm.schema.dest}" filtering="true" overwrite="true">
+	        <fileset dir="${wmm.schema.src}">
+			<include name="bootstrap.sql"/>
+			<include name="keys.sql"/>
+		</fileset>
+	</copy>
+	<filter token="dbschema." value="${env.DBSCHEMA}."/>
+ 	<filter token="DbUser" value="${env.DBSCHEMA}"/>
+	<copy todir="${wmm.schema.dest.db}" filtering="true" overwrite="true">
+	        <fileset dir="${wmm.schema.src.db}"/>
+	</copy>
+ </target>
+ 
+  <target name="setdbuser" if="dbuser">
+    <echo message="running setDBUser"/>
+       	 <filter token="DbUser" value="${env.DBOWNER}"/>
+    <copy todir="${wmm.schema.temp}" filtering="true">
+	        <fileset dir="${wmm.schema.dest.db}">
+	        <include name="schema.sql"/>
+	        </fileset>
+    </copy>
+    <copy todir="${wmm.schema.dest.db}" overwrite="true">
+	 	<fileset dir="${wmm.schema.temp}"/>
+    </copy>
+    <delete dir="${wmm.schema.temp}"/>  
+  </target>
+
+<target name="setdbname" unless="nodbname">
+    <echo message="running setDBName"/>
+         <filter token="DbName" value="${env.DBNAME}"/>
+	<copy todir="${wmm.schema.temp}" filtering="true">
+	        <fileset dir="${wmm.schema.dest.db}"/>
+    </copy>
+    <copy todir="${wmm.schema.dest.db}" overwrite="true">
+	 	<fileset dir="${wmm.schema.temp}"/>
+    </copy>
+   <delete dir="${wmm.schema.temp}"/>  
+  </target>
+  
+  <target name="settsprefix" unless="notsprefix">
+      <echo message="running settsprefix"/>
+           <filter token="TSPREFIX" value="${env.TSPREFIX}"/>
+  	<copy todir="${wmm.schema.temp}" filtering="true">
+  	        <fileset dir="${wmm.schema.dest.db}"/>
+      </copy>
+      <copy todir="${wmm.schema.dest.db}" overwrite="true">
+  	 	<fileset dir="${wmm.schema.temp}"/>
+      </copy>
+     <delete dir="${wmm.schema.temp}"/>  
+  </target>
+
+  <target name="settablebufferpool" unless="notablebufferpool">
+      <echo message="running settablebufferpool"/>
+           <filter token="DEFAULT_TABLE" value="${env.DEFAULT_TABLE}"/>
+  	<copy todir="${wmm.schema.temp}" filtering="true">
+  	        <fileset dir="${wmm.schema.dest.db}"/>
+      </copy>
+      <copy todir="${wmm.schema.dest.db}" overwrite="true">
+  	 	<fileset dir="${wmm.schema.temp}"/>
+      </copy>
+     <delete dir="${wmm.schema.temp}"/>  
+  </target>
+
+  <target name="setlobtablebufferpool" unless="nolobtablebufferpool">
+      <echo message="running setlobtablebufferpool"/>
+           <filter token="LOB_TABLE" value="${env.LOB_TABLE}"/>
+  	<copy todir="${wmm.schema.temp}" filtering="true">
+  	        <fileset dir="${wmm.schema.dest.db}"/>
+      </copy>
+      <copy todir="${wmm.schema.dest.db}" overwrite="true">
+  	 	<fileset dir="${wmm.schema.temp}"/>
+      </copy>
+     <delete dir="${wmm.schema.temp}"/>  
+  </target>
+
+    <target name="setindextablebufferpool" unless="noindexbufferpool">
+      <echo message="running setindextablebufferpool"/>
+           <filter token="INDEX_TABLE" value="${env.INDEX_TABLE}"/>
+  	<copy todir="${wmm.schema.temp}" filtering="true">
+  	        <fileset dir="${wmm.schema.dest.db}"/>
+      </copy>
+      <copy todir="${wmm.schema.dest.db}" overwrite="true">
+  	 	<fileset dir="${wmm.schema.temp}"/>
+      </copy>
+     <delete dir="${wmm.schema.temp}"/>  
+  </target>
+  
+
+
+</project>

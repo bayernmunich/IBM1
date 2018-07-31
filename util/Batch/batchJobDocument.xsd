@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+ <xsd:element name="classname" type="xsd:string"/>
+ <xsd:element name="impl-class" type="xsd:string"/>
+ <xsd:element name="jndi-name" type="xsd:string"/>
+ <xsd:element name="logical-name" type="xsd:string"/>
+
+ <xsd:element name="scheduling-mode">
+     <xsd:simpleType>
+         <xsd:restriction base="xsd:string">
+             <xsd:pattern value="sequential"/>
+         </xsd:restriction>
+     </xsd:simpleType>
+ </xsd:element>
+ 
+ <xsd:element name="required">
+     <xsd:simpleType>
+         <xsd:restriction base="xsd:string">
+             <xsd:pattern value="[YNyn]"/>
+         </xsd:restriction>
+     </xsd:simpleType>
+ </xsd:element>
+
+ <xsd:element name="batch-data-streams">
+   <xsd:complexType>
+       <xsd:sequence>
+           <xsd:element maxOccurs="unbounded" minOccurs="1" ref="bds"/>
+       </xsd:sequence>
+	   <xsd:attribute name="timeout" type="xsd:string" use="optional"/>
+   </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="job-scheduling-criteria">
+   <xsd:complexType>
+       <xsd:sequence>
+           <xsd:element maxOccurs="unbounded" minOccurs="1" ref="required-capability"/>
+       </xsd:sequence>
+   </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="bds">
+    <xsd:complexType>
+        <xsd:all>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="logical-name"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="impl-class"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="props"/>
+        </xsd:all>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="checkpoint-algorithm">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="classname"/>
+            <xsd:element maxOccurs="unbounded" minOccurs="0" ref="props"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="checkpoint-algorithm-ref">
+    <xsd:complexType>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="required-capability">
+    <xsd:complexType>
+        <xsd:attribute name="expression" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="results-algorithm">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="classname"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="props"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="required"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="results-algorithms">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="results-algorithm"/>
+            </xsd:sequence>
+        </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="results-ref">
+        <xsd:complexType>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+        </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="substitution-props">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="unbounded" minOccurs="0" ref="prop"/>
+        </xsd:sequence>
+    </xsd:complexType>
+ </xsd:element>
+ 
+
+ <xsd:element name="job">
+    <xsd:complexType>
+      <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="1" ref="jndi-name"/>
+          <xsd:element maxOccurs="1" minOccurs="0" ref="job-scheduling-criteria"/>
+          <xsd:element maxOccurs="1" minOccurs="0" ref="step-scheduling-criteria"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" ref="checkpoint-algorithm"/> 
+          <xsd:element maxOccurs="1" minOccurs="0" ref="results-algorithms"/> 
+          <xsd:element maxOccurs="1" minOccurs="0" ref="substitution-props"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="1" ref="job-step"/>
+      </xsd:sequence>
+      <xsd:attribute name="name" type="xsd:string" use="required"/>
+      <xsd:attribute name="class" type="xsd:string" use="optional"/>
+      <xsd:attribute name="accounting" type="xsd:string" use="optional"/>
+      <xsd:attribute name="default-application-name" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="job-step">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="step-scheduling"/>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="jndi-name"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="classname"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="checkpoint-algorithm-ref"/>
+            <xsd:element maxOccurs="unbounded" minOccurs="0" ref="results-ref"/>        
+            <xsd:element maxOccurs="1" minOccurs="0" ref="batch-data-streams"/>
+            <xsd:element maxOccurs="1" minOccurs="0" ref="props"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+        <xsd:attribute name="application-name" type="xsd:string" use="optional"/>
+        
+    </xsd:complexType>
+ </xsd:element>
+
+
+ <xsd:element name="prop">
+    <xsd:complexType>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+        <xsd:attribute name="value" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="props">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="unbounded" minOccurs="0" ref="prop"/>
+        </xsd:sequence>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="returncode-expression">
+    <xsd:complexType>
+        <xsd:attribute name="step" type="xsd:string" use="required"/>
+        <xsd:attribute name="operator" type="xsd:string" use="required"/>
+        <xsd:attribute name="value" type="xsd:string" use="required"/>
+    </xsd:complexType>
+ </xsd:element>
+
+ <xsd:element name="step-scheduling">
+    <xsd:complexType>
+         <xsd:sequence>
+             <xsd:element maxOccurs="unbounded" minOccurs="1" ref="returncode-expression"/>
+         </xsd:sequence>
+         <xsd:attribute name="condition" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+ </xsd:element>
+ 
+ <xsd:element name="step-scheduling-criteria">
+    <xsd:complexType>
+        <xsd:sequence>
+            <xsd:element maxOccurs="1" minOccurs="1" ref="scheduling-mode"/>
+        </xsd:sequence>
+    </xsd:complexType>
+ </xsd:element>
+
+</xsd:schema>

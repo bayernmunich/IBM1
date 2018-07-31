@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Collect WAS Product Information" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir"
+	         file="${ant.file.Collect WAS Product Information}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+
+	<property name="autopdProblem" value="WAS_Info" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-info" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+					usage,
+					was_stack_simple_init,
+			        autopd_feedbacks,
+					collect_was_product_information,
+					meta_file_collection,
+					ftp_logs_to_ecurep,
+			     	script_completed">
+	</target>
+
+	<!-- The 'mysetup' target is not needed for this script. -->
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_product_information"
+	        description="Collect Application Server product information from the system">
+
+		<persistattributes appInstallRoot="${was.root}"
+		                   taxonomy="${taxonomy}"
+		                   problemType="${problem.type}"
+		                   outputPath="${autopdtmp}"
+		                   name="meta.output.name"
+		                   persist="true" />
+
+		<if isNotTrue="${isOS400}">
+			<if isNotTrue="${isZos}">
+				<levelreporttask format="html"
+				                 filename="${autopdtmp}/autopd/levelreport.html" />
+			</if>
+		</if>
+
+		<infocollect problem="wasinfo"
+		             patternFile="${bundle.basedir}/properties/SSEQTP/templates/pattern_template.xml"
+		             levelreport="${autopdtmp}/autopd/levelreport.html"
+		             autopdreport="${autopdtmp}/autopd/autopd_analysis_report.html"
+		             productname="${was.product.name}"
+		             productversion="${was.product.version}"
+		             autopdname="${autopd_name}"
+		             autopdversion="${autopd_version}">
+		</infocollect>
+
+		<if isTrue="${isWindows}">
+			<property name="analysis.report.location"
+			          value="${autopdtmp}\autopd\autopd_analysis_report.html" />
+			<property name="analysis.dir" value="${autopdtmp}\autopd" />
+		</if>
+		<if isTrue="${isOS400}">
+			<property name="analysis.report.location"
+			          value="${autopdtmp}/autopd/autopd_analysis_report.html" />
+			<property name="analysis.dir" value="${autopdtmp}/autopd" />
+		</if>
+		<if isTrue="${isAIX}">
+			<property name="analysis.report.location"
+			          value="${autopdtmp}/autopd/autopd_analysis_report.html" />
+			<property name="analysis.dir" value="${autopdtmp}/autopd" />
+		</if>
+		<if isTrue="${isSunOS}">
+			<property name="analysis.report.location"
+			          value="${autopdtmp}/autopd/autopd_analysis_report.html" />
+			<property name="analysis.dir" value="${autopdtmp}/autopd" />
+		</if>
+		<if isTrue="${isLinux}">
+			<property name="analysis.report.location"
+			          value="${autopdtmp}/autopd/autopd_analysis_report.html" />
+			<property name="analysis.dir" value="${autopdtmp}/autopd" />
+		</if>
+
+		<if isTrue="${isZos}">
+			<mkdir dir="${autopdtmp}/autopd/logs" />
+			<mkdir dir="${autopdtmp}/autopd/reports" />
+
+			<!-- autopd log files -->
+			<copy todir="${autopdtmp}/autopd/logs" flatten="true">
+				<fileset dir="${loginstancedir}">
+					<include name="*.log" />
+				</fileset>
+			</copy>
+
+			<!-- transform the autopd logs -->
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/zos"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="zos.convertDir.sh" />
+				<arg line="${autopdtmp}/autopd/logs" />
+			</exec>
+
+			<!-- zip up the logs -->
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd/logs" prefix="autopdzip/autopd/logs">
+					<include name="*.ascii" />
+				</zipfileset>
+			</zip>
+
+			<antcall target="collect_autopd_reports" />
+			<delete dir="${autopdtmp}/autopd/reports" />
+			<delete dir="${autopdtmp}/autopd/logs" />
+		</if>
+
+		<wsnlsecho key="Product_information_is_in"
+		           bundle="autopdtoolstrings"
+		           message="Product information is in {0}"
+		           replace="${analysis.report.location}"
+		           id="1015"
+		           level="info" />
+
+		<merge_autopdlog destfile="${autopdlog}" sourcefile="${autopd.log.instance}" />
+		<merge_autopdlog destfile="${echolog}" sourcefile="${autopd.echolog.instance}" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${analysis.dir}" prefix="autopdzip/analysis">
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Collect Product Information&lt;/h2&gt;&lt;p&gt;
+				This problem category is the simplest of all scripts. It collects information about the product and exits.
+				No middleware operations are performed and environment read operations occur, only.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is the simplest of all scripts. 
+It collects information about the product and exits. No middleware operations are performed 
+and environment read operations occur, only." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Collect Product Information =>
+This problem category is the simplest of all scripts. It collects information about the product and exits.
+No middleware operations are performed and environment read operations occur, only." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

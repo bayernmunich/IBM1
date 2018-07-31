@@ -1,0 +1,879 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2006
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<plugin id="com.ibm.ws.console.environment"
+        name="environment"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="environment">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <!-- MOVED TO APPSERVERENVIRONMENT -->
+        <!--<task id="virtualhosts" icon="/com.ibm.ws.console.environment/images/onepix.gif" label="nav.view.virtual.hosts" view="/navigatorCmd.do?forwardName=VirtualHost.content.main" external="false" weight="20">
+            <category id="environment"/>
+        </task>-->
+        <task id="variableSubstitutionEntry" icon="/com.ibm.ws.console.environment/images/onepix.gif" label="nav.view.variable.substitution.entry" view="/navigatorCmd.do?forwardName=VariableSubstitutionEntry.content.main" external="false" weight="30">
+            <category id="environment"/>
+        </task>
+        <!-- MOVED TO APPSERVERENVIRONMENT -->
+        <!--<task id="libraries" icon="/com.ibm.ws.console.environment/images/onepix.gif" label="nav.view.libraries" view="/navigatorCmd.do?forwardName=Library.content.main" external="false" weight="40">
+            <category id="environment"/>
+        </task>
+        <task id="nameSpaceBindings" icon="/com.ibm.ws.console.environment/images/onepix.gif" label="nav.view.name.space.bindings" view="/navigatorCmd.do?forwardName=NameSpaceBinding.content.main" external="false" weight="10">
+            <category id="naming"/>
+        </task>-->
+      </tasks>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- 216981  - Moved to appservermanagement
+<extension point="com.ibm.ws.console.core.homePage">
+	<homepages>
+		<homepage url="base.home.page" weight="1"/>
+	</homepages>
+</extension>    -->
+
+
+<!-- Begin LI2505 changes -->
+<!-- Begin WAS.webui.admin -->
+<!-- Begin  212143 - z/OS adaptive field -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="Node.config.general.properties" contextType="Node">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive field -->
+<!-- Begin  273632 - z/OS adaptive field -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="Cell.config.general.properties" contextType="Cell">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.cellType" value="(zosbase|zoscell|mixedcell)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  273632 - z/OS adaptive field -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Node1" contextType="Node">
+        <link
+          categoryId="additional.properties"
+          label="Node.properties.displayName"
+          description="Node.properties.description"
+          actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+        <link
+          categoryId="additional.properties"
+          label="environment.nodeproperties.displayName"
+          description="environment.nodeproperties.description"
+          actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=NodeProperties.props.main_contained">
+        </link>
+        <link
+          categoryId="additional.properties"
+          label="InstalledSDKs.label"
+          description="InstalledSDKs.link.description"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.content.main">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Node2" contextType="NodeUnmanaged">
+        <link
+              categoryId="additional.properties"
+              label="Node.properties.displayName"
+              description="Node.properties.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Node3" contextType="NodeUnmanagedNew">
+        <link
+              categoryId="additional.properties"
+              label="Node.properties.displayName"
+              description="Node.properties.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Cell1" contextType="Cell">
+        <link
+              categoryId="additional.properties"
+              label="Cell.properties.displayName"
+              description="Cell.properties.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Cell.related1" contextType="Cell">
+        <link
+              categoryId="related.items"
+              label="Cell.nodes.displayName"
+              description="Cell.nodes.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Node.content.main&amp;lastPage=Cell.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.Node.collection1" contextType="Node">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.addnode"
+              scope="Cell"
+              actionURI="nodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.removenode"
+              scope="Cell"
+              actionURI="nodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.forceremovenode"
+              scope="Cell"
+              actionURI="nodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.sync"
+              actionURI="nodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.fullresync"
+              actionURI="nodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="nodeCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.Node.collectionItem1" contextType="Node">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nodeCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="discoveryProtocol"
+              sortable="sort"
+              itemURI=""
+              label="Node.discoveryProtocol.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Node.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Node.detailTab1" contextType="Node">
+        <tab
+              label="tab.configuration"
+              contentURI="Node.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="Node.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Node.unmanaged.new.configTab1" contextType="NodeUnmanagedNew">
+        <tab
+              label="tab.configuration"
+              contentURI="Node.unmanaged.new.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Node.unmanaged.detailTab1" contextType="NodeUnmanaged">
+        <tab
+              label="tab.configuration"
+              contentURI="Node.unmanaged.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="Node.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Cell.detailTab1" contextType="Cell">
+        <tab
+              label="tab.configuration"
+              contentURI="Cell.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="Cell.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.admin -->
+
+<!-- Begin WAS.webui.web -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.VirtualHost1" contextType="VirtualHost">
+        <link
+              categoryId="additional.properties"
+              label="VirtualHost.aliases.displayName"
+              description="VirtualHost.aliases.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=HostAlias.content.main&amp;sfname=aliases">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="VirtualHost.mimeTypes.displayName"
+              description="VirtualHost.mimeTypes.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=MimeEntry.content.main&amp;sfname=mimeTypes">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.MimeEntry.collection1" contextType="MimeEntry">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="mimeEntryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="mimeEntryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.HostAlias.collection1" contextType="HostAlias">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="hostAliasCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="hostAliasCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.VirtualHost.collection1" contextType="VirtualHost">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="virtualHostCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="virtualHostCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.MimeEntry.collectionItem1" contextType="MimeEntry">
+        <item
+              attributeName="type"
+              type="url"
+              sortable="sort"
+              itemURI="mimeEntryCollection.do?EditAction=true"
+              label="MimeEntry.displayName">
+        </item>
+        <item
+              attributeName="extensions"
+              sortable="sort"
+              itemURI="mimeEntryCollection.do?EditAction=true"
+              label="MimeEntry.extensions.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.HostAlias.collectionItem1" contextType="HostAlias">
+        <item
+              attributeName="hostname"
+              sortable="sort"
+              itemURI="hostAliasCollection.do?EditAction=true"
+              label="HostAlias.displayName">
+        </item>
+        <item
+              attributeName="port"
+              sortable="sort"
+              itemURI=""
+              label="HostAlias.port.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.VirtualHost.collectionItem1" contextType="VirtualHost">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="virtualHostCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.MimeEntry.detailTab1" contextType="MimeEntry">
+        <tab
+              label="tab.configuration"
+              contentURI="MimeEntry.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.HostAlias.detailTab1" contextType="HostAlias">
+        <tab
+              label="tab.configuration"
+              contentURI="HostAlias.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.VirtualHost.detailTab1" contextType="VirtualHost">
+        <tab
+              label="tab.configuration"
+              contentURI="VirtualHost.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.web -->
+
+<!-- Begin WAS.webui.common.server -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Classloader1" contextType="Classloader">
+        <link
+              categoryId="additional.properties"
+              label="Classloader.libraries.displayName"
+              description="Classloader.libraries.description"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=LibraryRef.content.main&amp;sfname=libraries">
+        </link>
+    </linkSet>
+</extension>
+<!-- ActionSets -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.Classloader.collection1" contextType="Classloader">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="classloaderCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="classloaderCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.VariableSubstitutionEntry.collection1" contextType="VariableSubstitutionEntry">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="variableSubstitutionEntryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="variableSubstitutionEntryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.Library.collection1" contextType="Library">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="libraryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="libraryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.Classloader.collectionItem1" contextType="Classloader">
+        <item
+              attributeName="refId"
+              sortable="sort"
+              itemURI="classloaderCollection.do?EditAction=true"
+              label="Classloader.id.displayName">
+        </item>
+        <item
+              attributeName="mode"
+              sortable="sort"
+              itemURI="classloaderCollection.do?EditAction=true"
+              label="Classloader.mode.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.Library.collectionItem1" contextType="Library">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="libraryCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="environment.label.description">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.VariableSubstitutionEntry.collectionItem1" contextType="VariableSubstitutionEntry">
+        <item
+              attributeName="symbolicName"
+              sortable="sort"
+              itemURI="variableSubstitutionEntryCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="VariableSubstitutionEntry.value.displayName">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="environment.label.scope">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Classloader.config.view1.detailTab1" contextType="Classloader.config.view1">
+        <tab
+              label="tab.configuration"
+              contentURI="Classloader.config.tab.view1">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.VariableSubstitutionEntry.detailTab1" contextType="VariableSubstitutionEntry">
+        <tab
+              label="tab.configuration"
+              contentURI="VariableSubstitutionEntry.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Library.detailTab1" contextType="Library">
+        <tab
+              label="tab.configuration"
+              contentURI="Library.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Library.detailTab2" contextType="LibrarySelectScope">
+        <tab
+              label="tab.configuration"
+              contentURI="Library.config.tab.view.select.scope">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.Classloader.detailTab1" contextType="Classloader">
+        <tab
+              label="tab.configuration"
+              contentURI="Classloader.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.common.server -->
+
+
+
+<!-- Begin WAS.webui.namingdirectory -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.NameSpaceBinding.collection1" contextType="NameSpaceBinding">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="nameSpaceBindingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="nameSpaceBindingCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.NameSpaceBinding.collectionItem1" contextType="NameSpaceBinding">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nameSpaceBindingCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="environment.label.scope">
+        </item>
+        <item
+              attributeName="bindingType"
+              sortable="sort"
+              itemURI=""
+              label="NameSpaceBinding.bindingType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.IndirectLookupNameSpaceBinding.detailTab1" contextType="IndirectLookupNameSpaceBinding">
+        <tab
+              label="tab.configuration"
+              contentURI="IndirectLookupNameSpaceBinding.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.StringNameSpaceBinding.detailTab1" contextType="StringNameSpaceBinding">
+        <tab
+              label="tab.configuration"
+              contentURI="StringNameSpaceBinding.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.CORBAObjectNameSpaceBinding.detailTab1" contextType="CORBAObjectNameSpaceBinding">
+        <tab
+              label="tab.configuration"
+              contentURI="CORBAObjectNameSpaceBinding.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.EjbNameSpaceBinding.detailTab1" contextType="EjbNameSpaceBinding">
+        <tab
+              label="tab.configuration"
+              contentURI="EjbNameSpaceBinding.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.namingdirectory -->
+
+<!-- Begin Unknown -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.NodeProperties.props.collection1" contextType="NodeProperties.props.content.main_contained">
+        <action
+              enablesFor="Detail"
+              label="environment.nodeproperties.button.back"
+              actionURI="nodePropertiesCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.NodeProperties.props.content.main_contained.collectionItem1" contextType="NodeProperties.props.content.main_contained">
+        <item
+              attributeName="nodePropName"
+              sortable="sort"
+              itemURI=""
+              label="environment.nodePropName.displayName">
+        </item>
+        <item
+              attributeName="nodePropValue"
+              sortable="sort"
+              itemURI=""
+              label="environment.nodePropValue.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="test.NodeProperties.props.detailTab1" contextType="NodeProperties.props">
+        <tab
+              label="tab.configuration"
+              contentURI="NodeProperties.props.config.tab.view_contained">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End Unknown -->
+
+<!-- LIDB3436-97-->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="IndirectLookupNameSpaceBinding.config.general.properties" contextType="IndirectLookupNameSpaceBinding">
+        <field
+              attributeName="initialContextFactory"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- LIDB3436-97 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.Indirect1" contextType="IndirectLookupNameSpaceBinding">
+        <link
+              categoryId="additional.properties"
+              label="IndirectNameSpaceBinding.other.ctxproperties.displayName"
+              description="IndirectNameSpaceBinding.other.ctxproperties.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=OtherContextProperty.content.main&amp;sfname=otherCtxProperties">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion"  value="(6\.[1-9].*)|(([7-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin 308432 othercontextproperties -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.OtherContextProperty.collection1" contextType="OtherContextProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="otherContextPropertyCollection.do?EditAction=true"
+              label="OtherContextProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="OtherContextProperty.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="OtherContextProperty.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.OtherContextProperty.buttons1" contextType="OtherContextProperty">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="otherContextPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="otherContextPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="environment.OtherContextProperty.tab" contextType="OtherContextProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="OtherContextProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End 308432 othercontextproperties -->
+
+<!-- 447289 -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="com.ibm.ws.console.environment.LibraryDetailForm" contextType="Library">
+        <field
+              attributeName="isolatedClassloader"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="[7-9].*"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+
+<!-- SIP Appliaction Routers -->
+<!-- (nav item moved to appserverenvironment) -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+	<actionSet id="SIPApplicationRouter.SIPApplicationRouter.collection1" contextType="SIPApplicationRouterCollection">
+    	<action
+        	enablesFor="Collection"
+            label="button.new"
+            actionURI="sipAppRouterCollection.do"
+            role="administrator,configurator">
+      	</action>
+        <action
+        	enablesFor="Collection"
+            label="button.delete"
+            actionURI="sipAppRouterCollection.do"
+            role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+	<collectionItem id="SIPApplicationRouter.SIPApplicationRouter.collectionItem1" contextType="SIPApplicationRouterCollection">
+    	<item
+			attributeName="name"
+			sortable="sort"
+			itemURI="sipAppRouterCollection.do?EditAction=true"
+			label="SIPApplicationRouter.Name.displayName">
+		</item>
+	</collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+	<collectionItem id="SIPApplicationRouter.SIPApplicationRouter.collectionItem1234" contextType="SIPApplicationRouterAppOrder">
+    	<item
+			attributeName="weight"
+            itemURI=""
+			label="SIPApplicationRouter.applicationOrder.startupOrder"
+			editable="true"
+			role="administrator,configurator">
+		</item>
+    	<item
+			attributeName="memberName"
+			sortable="sort"
+			label="SIPApplicationRouter.applicationName.displayName">
+		</item>
+	</collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+	<actionSet id="SIPApplicationRouter.SIPApplicationRouterDAR.collection1" contextType="SIPApplicationRouterDAR">
+	    <action
+        	enablesFor="Collection"
+            label="SIPApplicationRouter.darConfigPage.add.button"
+            actionURI="sipApplicationRouterDARDetail.do?action=new"
+            role="administrator,configurator">
+      	</action>
+      	<action
+        	enablesFor="Collection"
+            label="SIPApplicationRouter.darConfigPage.delete.button"
+            actionURI="sipApplicationRouterDARDetail.do?action=delete"
+            role="administrator,configurator">
+      	</action>
+      	<action
+        	enablesFor="Collection"
+            label="SIPApplicationRouter.dar.rule.moveUp"
+            actionURI="sipApplicationRouterDARDetail.do?action=moveUp"
+            role="administrator,configurator">
+      	</action>
+      	<action
+        	enablesFor="Collection"
+            label="SIPApplicationRouter.dar.rule.moveDown"
+            actionURI="sipApplicationRouterDARDetail.do?action=moveDown"
+            role="administrator,configurator">
+      	</action>     	
+    	<action
+        	enablesFor="Collection"
+            label="SIPApplicationRouter.darConfigPage.import.button"
+            actionURI="sipApplicationRouterDARDetail.do?action=import"
+            role="administrator,configurator">
+      	</action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="SIPApplicationRouter.SIPApplicationRouterDAR.collectionItem1" contextType="SIPApplicationRouterDAR">
+        <item
+              attributeName="app"
+              sortable="nosort"
+              itemURI="sipApplicationRouterDARDetail.do?EditAction=true"
+              label="SIPApplicationRouter.darConfigPage.application">
+        </item>
+        <item
+              attributeName="method"
+              sortable="nosort"
+              itemURI=""
+              label="SIPApplicationRouter.darConfigPage.method">
+        </item>
+		<item
+			  attributeName="subscriber"
+			  sortable="nosort"
+			  itemURI=""
+			  label="SIPApplicationRouter.darConfigPage.subscriber">
+        </item>
+		<item
+			  attributeName="region"
+			  sortable="nosort"
+			  itemURI=""
+			  label="SIPApplicationRouter.darConfigPage.routingRegion">
+        </item>
+		<item
+			  attributeName="modifier"
+			  sortable="nosort"
+			  itemURI=""
+			  label="SIPApplicationRouter.darConfigPage.routeModifier">
+        </item>
+    </collectionItem>
+</extension>
+
+</plugin>
+

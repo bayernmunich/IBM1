@@ -1,0 +1,880 @@
+<project name="updateWCCMFiles" default="updateWCCMFiles" basedir=".">
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="replaceStringRegExp"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+
+    <!-- Default to * for Distributed platform -->
+    <property name="http.transport.host" value="*"/>
+    <property name="defaultServerName" value="server1"/>
+
+    <target name="zSetTransportHost"
+            description="For z/OS only, set http.transport.host to user provided value" if="isCurrentOSzOS">
+
+         <property name="http.transport.host" value="${http.transport.host}"/>
+    </target>
+        
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        <wscmtlog>OS name is ${os.name}</wscmtlog>
+
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="isCurrentOSOS400orZOS" value="true">
+          <or>
+            <equals arg1="${os.name}" arg2="OS/400"/>
+            <os family="z/os"/>
+          </or>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setDefaultLocalHostName"
+            description="set localhost interface name to default string value if no value is already set">
+        <property name="localhostName" value="localhost"/>
+        <wscmtlog>Using ${localhostName} string for local host.</wscmtlog>
+    </target>
+     
+    <target name="checkServerName"
+            description="Check if server name is the default server name">
+      <condition property="server.is.defaultServerName" value="true">
+        <equals arg1="${serverName}" arg2="${defaultServerName}"/>
+      </condition>
+    </target>
+
+   
+    <target name="renameServerDirectoryToMatchServerName" unless="server.is.defaultServerName"
+            description="Renames the server directory to match to the value set in ${serverName}">
+        <move toDir="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/tmp${serverName}">
+            <fileset dir="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${defaultServerName}"/>
+        </move>
+        <move toDir="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}">
+            <fileset dir="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/tmp${serverName}"/>
+        </move>
+    </target>
+
+
+    <target name="detectServersInConfig"
+          description="Determines the type of template being created by checking for a servers directory ">
+
+        <available file="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}" type="dir"
+                           property="servers.in.config"/>  
+        <available file="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${defaultServerName}" type="dir"
+                           property="servers.in.config"/>
+  
+        <condition property="zOSwithServers" value="true">
+          <and>
+            <isset property="isCurrentOSzOS"/>
+            <isset property="servers.in.config"/>
+          </and>
+        </condition>
+                
+        <wscmtlog>Servers in config: ${servers.in.config}</wscmtlog>
+     </target>
+
+     <target name="checkIfResetJvmArgumentsNeeded"
+          description="Determines if the Jvm arguments are needed to be reset for Sun and HP">
+        <condition property="resetJvmArgumentsForSun" value="true">
+          <and>
+            <isset property="servers.in.config"/>
+            <equals arg1="${os.name}" arg2="SunOS"/>
+          </and>
+        </condition>
+        <condition property="resetJvmArgumentsForHP" value="true">
+          <and>
+            <isset property="servers.in.config"/>
+            <equals arg1="${os.name}" arg2="HP-UX"/>
+          </and>
+        </condition>
+     </target>
+     
+     <target name="checkApplicationsDir"
+            description="Checks to see if the profile/config/cells/applications directory exists in the config">
+        <property name="applications.dir" value="${profilePath}/config/cells/${cellName}/applications"/>
+
+        <available file="${profilePath}/config/cells/${cellName}/applications" type="dir" property="app.dir.exists"/>
+        
+      <wscmtlog>applications directory ${profilePath}/config/cells/${cellName}/applications value ${app.dir.exists}</wscmtlog>
+
+    </target>
+   
+    <!-- D506665 --> 
+    <target name="checkIfIsclite.earExists"
+            description="Checks to see if the ${profilePath}/config/cells/applications/isclite.ear directory exists in the config">
+        <property name="isclite.ear.dir" value="${profilePath}/config/cells/${cellName}/applications/isclite.ear"/>
+
+        <available file="${profilePath}/config/cells/${cellName}/applications/isclite.ear" 
+                   type="dir" property="isclite.ear.dir.exists"/>
+        
+      <wscmtlog>applications directory ${profilePath}/config/cells/${cellName}/applications/isclite.ear value ${isclite.ear.dir.exists}</wscmtlog>
+
+    </target>
+   
+    <target name="resolveSetupCmdLineName"
+            description="Resolves the name of setupCmdLine script for the current platform">
+    
+        <condition property="setupCmdLineName" value="setupCmdLine">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="setupCmdLineName" value="setupCmdLine.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="setupCmdLineName" value="setupCmdLine.bat"> 
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+            
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>
+    
+    <target name="resolveWASHomeForOSShellScripts"
+            description="Sets the property WAS_HOME_FOR_OS_SHELL_SCRIPTS with the slash characters set according to the current OS, so that the shell scripts work properly">        
+        
+        <path id="was.home.id">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+        
+        <pathconvert targetos="${currentOSFamily}" 
+            property="WAS_HOME_FOR_OS_SHELL_SCRIPTS" 
+            refid="was.home.id"/>
+            
+        <wscmtlog>WAS_HOME for shell scripts was resolved to be: ${WAS_HOME_FOR_OS_SHELL_SCRIPTS}</wscmtlog>
+    </target>   
+    
+    <target name="resolveWASHomeForPropertyFiles"
+            description="Sets the property WAS_HOME_FOR_PROPERTY_FILES with slash characters etc. adjusted for property files">        
+        
+        <replaceStringRegExp string="${WAS_HOME}"
+            regexp="\\"
+            value="/"
+            property="WAS_HOME_FOR_PROPERTY_FILES_FIRST_PASS"/>
+            
+        <replaceStringRegExp string="${WAS_HOME_FOR_PROPERTY_FILES_FIRST_PASS}"
+            regexp="/:"
+            value="\:/"
+            property="WAS_HOME_FOR_PROPERTY_FILES"/>
+            
+        <wscmtlog>WAS_HOME for property files was resolved to be: ${WAS_HOME_FOR_PROPERTY_FILES}</wscmtlog>
+    </target>   
+
+    <target name="resolveWASProfileLocationForPropertyFiles"
+            description="Sets the property WAS_PROFILE_PATH_FOR_PROPERTY_FILES with slash characters etc. adjusted for property files">        
+        
+        <replaceStringRegExp string="${profilePath}"
+            regexp="\\"
+            value="/"
+            property="WAS_PROFILE_PATH_FOR_PROPERTY_FILES"/>
+         
+        <wscmtlog>profilePath for property files was resolved to be: ${WAS_PROFILE_PATH_FOR_PROPERTY_FILES}</wscmtlog>
+    </target>         
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile"
+            description="Replaces all instances of the given token for the given file with the given value">
+    
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>    
+    
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+    
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="validateDirectoryExists"  > 
+
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirWithSelectedFilesAscii"
+            description="Replaces all instances of the given token for the given file with the given value"
+            if="app.dir.exists" >
+  
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in files ${includedFiles} of directory ${dir} </wscmtlog>
+
+        <replace dir="${dir}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}">
+            <include name = "${includedFiles}"/>
+        </replace>
+    </target>
+    
+    <target name="replaceAllNecessaryTokensWithRightValuesForAllWCCMFiles"
+            description="Bootstrap the entire set of WCCM files">
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(was.install.root)"/>
+            <param name="tokenValue" value="${WAS_HOME}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(user.install.root)"/>
+            <param name="tokenValue" value="${profilePath}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(java.install.root)"/>
+            <param name="tokenValue" value="${WAS_HOME}/java"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(localhost_name)"/>
+            <param name="tokenValue" value="${localhostName}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="$$(node.host.name)"/>
+            <param name="tokenValue" value="${hostName}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="serverDisplayName=&quot;${defaultServerName}&quot;"/>
+            <param name="tokenValue" value="serverDisplayName=&quot;${serverName}&quot;"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="serverName=&quot;${defaultServerName}&quot;"/>
+            <param name="tokenValue" value="serverName=&quot;${serverName}&quot;"/>
+        </antcall>
+      
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/coregroups/DefaultCoreGroup/coregroup.xml"/>
+            <param name="token" value="serverName=&quot;server1&quot;"/>
+            <param name="tokenValue" value="serverName=&quot;${serverName}&quot;"/>
+        </antcall>
+          
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/node.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/cell.xml"/>
+            <param name="token" value="$$(cell.name)"/>
+            <param name="tokenValue" value="${cellName}"/>
+        </antcall>  
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/security.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/security.xml"/>
+            <param name="token" value="$$(cell.name)"/>
+            <param name="tokenValue" value="${cellName}"/>
+        </antcall>
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirWithSelectedFilesAscii">
+            <param name="dir" value="${profilePath}/config/cells/${cellName}/applications"/>
+            <param name="token" value="name=&quot;server1&quot;"/>
+            <param name="tokenValue" value="name=&quot;${serverName}&quot;"/> 
+            <param name="includedFiles" value="**/deployments/**/deployment.xml"/> 
+        </antcall>
+       
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/virtualhosts.xml"/>
+            <param name="token" value="$$(http.transport.host)"/>
+            <param name="tokenValue" value="${http.transport.host}"/>
+        </antcall>
+
+    </target>
+   
+    <!-- F001149.1-29586 begin -->
+    <macrodef name="getPropertyWithNestedPropertyNames">
+        <attribute name="property"/>
+        <attribute name="stem"/>
+        <attribute name="selector"/>
+        <sequential>
+            <property name="@{property}" value="${@{stem}.@{selector}}"/>
+        </sequential>
+    </macrodef>
+    
+    <target name="setNewProfileDefaultSDK">
+       <wscmtlog> Loading ${WAS_HOME}/properties/sdk/newProfileDefaultSDK.properties</wscmtlog>
+       <loadproperties srcFile="${WAS_HOME}/properties/sdk/newProfileDefaultSDK.properties"/>
+       <wscmtlog> com.ibm.websphere.sdkname.newProfileDefaultSDK=${com.ibm.websphere.sdkname.newProfileDefaultSDK} </wscmtlog>
+       
+       <wscmtlog> Loading ${WAS_HOME}/properties/sdk/${com.ibm.websphere.sdkname.newProfileDefaultSDK}.properties</wscmtlog>
+       <loadproperties srcFile="${WAS_HOME}/properties/sdk/${com.ibm.websphere.sdkname.newProfileDefaultSDK}.properties"/>
+       
+       <getPropertyWithNestedPropertyNames property="sdk.location" 
+                                           stem="com.ibm.websphere.sdk.location"
+                                           selector="${com.ibm.websphere.sdkname.newProfileDefaultSDK}" />
+       <wscmtlog> sdk.location=${sdk.location}</wscmtlog>
+       
+       <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+           <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+           <param name="token" value="value=&quot;${WAS_INSTALL_ROOT}/java&quot;"/>
+           <param name="tokenValue" value="value=&quot;${sdk.location}&quot;"/>
+       </antcall>
+    </target>
+    <!-- F001149.1-29586 end -->
+ 
+    <!-- D506665 --> 
+    <target name="replaceDefaultCellForIsclite"
+            description="update DefaultCell in applications/isclite.ear/deployments/isclite/isclite.war/WEB-INF/components.xml"
+            if="isclite.ear.dir.exists">
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/applications/isclite.ear/deployments/isclite/isclite.war/WEB-INF/components.xml"/>
+            <param name="token" value="contextRoot=&quot;cells/DefaultCell"/>
+            <param name="tokenValue" value="contextRoot=&quot;cells/${cellName}"/> 
+        </antcall>
+    </target>            
+    
+    <!-- PM10056 -->
+    <target name="replaceWASHomeForIEHS"
+            description="update WASHome in applications/isclite.ear/deployments/isclite/iehs.war/WEB-INF/iehs.properties"
+            if="isclite.ear.dir.exists">                     	
+    	<antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+    	    <param name="file" value="${profilePath}/config/cells/${cellName}/applications/isclite.ear/deployments/isclite/iehs.war/WEB-INF/iehs.properties"/>
+    	    <param name="token" value="$$(was.install.root)"/>
+    	    <param name="tokenValue" value="${WAS_HOME_FOR_PROPERTY_FILES}"/>
+        </antcall>
+    </target> 
+
+    <target name="replaceAllNecessaryTokensWithRightValuesForAllWCCMFilesForServers"
+            description="update configuration files for server based WCCM files"
+            if="servers.in.config">
+
+        <antcall target="renameServerDirectoryToMatchServerName"/>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="name=&quot;${defaultServerName}&quot;"/>
+            <param name="tokenValue" value="name=&quot;${serverName}&quot;"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="/${defaultServerName}/"/>
+            <param name="tokenValue" value="/${serverName}/"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/variables.xml"/>
+            <param name="token" value="${defaultServerName}"/>
+            <param name="tokenValue" value="${serverName}"/>
+        </antcall>
+
+       <!-- String substution for the system apps --> 
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/systemapps.xml"/>
+            <param name="token" value="serverDisplayName=&quot;${defaultServerName}&quot;"/>
+            <param name="tokenValue" value="serverDisplayName=&quot;${serverName}&quot;"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/systemapps.xml"/>
+            <param name="token" value="serverName=&quot;${defaultServerName}&quot;"/>
+            <param name="tokenValue" value="serverName=&quot;${serverName}&quot;"/>
+        </antcall>
+
+    </target>
+
+    <!-- genericJvmArguments should be -Xquickstart only for operating
+         systems that use IBM JDKs. Solaris machines should use -client,
+         while HP machines should use an empty string.  Begin defect 492902 -->
+
+    <target name="replaceJvmArgumentsForSun"
+            description="Change genericJvmArguments for Sun machines to -client from -Xquickstart"
+            if="resetJvmArgumentsForSun">
+        <wscmtlog>replaceJvmArgumentsForSun profilePath is ${profilePath}</wscmtlog>
+        <wscmtlog>Path is "${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml" </wscmtlog>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="-Xquickstart"/>
+            <param name="tokenValue" value="-client"/>
+        </antcall>
+    </target>
+            
+    <target name="replaceJvmArgumentsForHP"
+            description="Change genericJvmArguments for HP machines to empty from -Xquickstart"
+            if="resetJvmArgumentsForHP">
+        <wscmtlog>replaceJvmArgumentsForHP profilePath is ${profilePath}</wscmtlog>
+        <wscmtlog>Path is "${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml" </wscmtlog>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+        <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="-Xquickstart"/>
+            <param name="tokenValue" value=""/>
+        </antcall>
+    </target>
+    <!-- End defect 492902 -->
+
+    <target name="zReplaceAllNecessaryTokensWithRightValuesForAllWCCMFiles"
+            description="Bootstrap the z-specific entries in WCCM files"
+            if="isCurrentOSzOS">
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.daemon.home)"/>
+            <param name="tokenValue" value="${z.daemon.home}"/>
+        </antcall>
+   
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.daemon.instance.name)"/>
+            <param name="tokenValue" value="${z.daemon.instance.name}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.system.name)"/>
+            <param name="tokenValue" value="${z.system.name}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.node.short.name)"/>
+            <param name="tokenValue" value="${z.node.short.name}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.smpe.home)"/>
+            <param name="tokenValue" value="${z.smpe.home}"/>
+        </antcall>
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.config.mount.point)"/>
+            <param name="tokenValue" value="${z.config.mount.point}"/>
+        </antcall>
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.admin.asynch.proc)"/>
+            <param name="tokenValue" value="${z.admin.asynch.proc}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.control.proc)"/>
+            <param name="tokenValue" value="${z.control.proc}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.servant.proc)"/>
+            <param name="tokenValue" value="${z.servant.proc}"/>
+        </antcall>
+          
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.adjunct.proc)"/>
+            <param name="tokenValue" value="${z.adjunct.proc}"/>
+        </antcall>
+  
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="$$(z.daemon.proc)"/>
+            <param name="tokenValue" value="${z.daemon.proc}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="$$(http.transport.host)"/>
+            <param name="tokenValue" value="${http.transport.host}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/virtualhosts.xml"/>
+            <param name="token" value="$$(http.transport.host)"/>
+            <param name="tokenValue" value="${http.transport.host}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="$$(z.server.short.name)"/>
+            <param name="tokenValue" value="${z.server.short.name}"/>
+        </antcall>
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="$$(z.cluster.transition.name)"/>
+            <param name="tokenValue" value="${z.cluster.transition.name}"/>
+        </antcall>
+                
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/serverindex.xml"/>
+            <param name="token" value="$$(orb.listener.host)"/>
+            <param name="tokenValue" value="${orb.listener.host}"/>
+        </antcall>
+ 
+         
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/node.xml"/>
+            <param name="token" value="$$(z.node.short.name)"/>
+            <param name="tokenValue" value="${z.node.short.name}"/>
+        </antcall>
+
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.cell.short.name)"/>
+            <param name="tokenValue" value="${z.cell.short.name}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.sysplex.name)"/>
+            <param name="tokenValue" value="${z.sysplex.name}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.name)"/>
+            <param name="tokenValue" value="${z.daemon.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.ip.name)"/>
+            <param name="tokenValue" value="${z.daemon.ip.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.listen.ip.name)"/>
+            <param name="tokenValue" value="${z.daemon.listen.ip.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.ssl.port)"/>
+            <param name="tokenValue" value="${z.daemon.ssl.port}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.ip.port)"/>
+            <param name="tokenValue" value="${z.daemon.ip.port}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.job.name)"/>
+            <param name="tokenValue" value="${z.daemon.job.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodegroups/DefaultNodeGroup/nodegroup.xml"/>
+            <param name="token" value="$$(z.daemon.dns.option)"/>
+            <param name="tokenValue" value="${z.daemon.dns.option}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/audit-authz.xml"/>
+            <param name="token" value="$$(z.admin.userid)"/>
+            <param name="tokenValue" value="${z.admin.userid}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/admin-authz.xml"/>
+            <param name="token" value="$$(z.admin.userid)"/>
+            <param name="tokenValue" value="${z.admin.userid}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/audit-authz.xml"/>
+            <param name="token" value="$$(z.config.group)"/>
+            <param name="tokenValue" value="${z.config.group}"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/admin-authz.xml"/>
+            <param name="token" value="$$(z.config.group)"/>
+            <param name="tokenValue" value="${z.config.group}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/cell.xml"/>
+            <param name="token" value="$$(z.cell.short.name)"/>
+            <param name="tokenValue" value="${z.cell.short.name}"/>
+        </antcall>
+                
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/variables.xml"/>
+            <param name="token" value="$$(z.smpe.home)"/>
+            <param name="tokenValue" value="${z.smpe.home}"/>
+        </antcall>
+                
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/variables.xml"/>
+            <param name="token" value="$$(cell.name)"/>
+            <param name="tokenValue" value="${cell.name}"/>
+        </antcall>
+                
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/variables.xml"/>
+            <param name="token" value="$$(z.cell.short.name)"/>
+            <param name="tokenValue" value="${z.cell.short.name}"/>
+        </antcall>
+                
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/variables.xml"/>
+            <param name="token" value="$$(z.unauthenticated.userid)"/>
+            <param name="tokenValue" value="${z.unauthenticated.userid}"/>
+        </antcall>
+        
+    </target>
+
+    <target name="zReplaceAllNecessaryTokensWithRightValuesForAllWCCMFilesForServers"
+            description="Bootstrap the z-specific entries in WCCM files"
+            if="zOSwithServers">
+  
+    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(LOG_ROOT)"/>
+            <param name="tokenValue" value="${profilePath}/logs"/>
+        </antcall>
+        
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(serverName)"/>
+            <param name="tokenValue" value="${serverName}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.server.short.name)"/>
+            <param name="tokenValue" value="${z.server.short.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(node.name)"/>
+            <param name="tokenValue" value="${node.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.cluster.transition.name)"/>
+            <param name="tokenValue" value="${z.cluster.transition.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.system.name)"/>
+            <param name="tokenValue" value="${z.system.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.node.short.name)"/>
+            <param name="tokenValue" value="${z.node.short.name}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.control.proc)"/>
+            <param name="tokenValue" value="${z.control.proc}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.servant.proc)"/>
+            <param name="tokenValue" value="${z.servant.proc}"/>
+        </antcall>
+                
+                <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.adjunct.proc)"/>
+            <param name="tokenValue" value="${z.adjunct.proc}"/>
+        </antcall>
+            
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(z.cell.short.name)"/>
+            <param name="tokenValue" value="${z.cell.short.name}"/>
+        </antcall>
+
+                <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$$(bits)"/>
+            <param name="tokenValue" value="${bits}"/>
+        </antcall>
+                
+    </target>
+
+    <target name="zGetBitMode" if="isCurrentOSzOS">
+        <condition property="is31Bit" value="true">
+          <equals arg1="${bits}" arg2="31bit"/>
+        </condition>
+    </target>
+    
+    <target name="zSetTo31bitIfRequested" 
+            description="For z/OS 31 bit only, update config files to run 31bit" 
+            if="is31Bit">
+        <replaceregexp file="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/variables.xml/"
+            match="(.*)JAVA_HOME(.*)"
+            replace=""
+            encoding="UTF-8"/>
+    </target>
+
+    <target name="zDetermineUpdateAdminAuthz"
+           description="For z/OS only, determine whether we need to modify admin-authz.xml based on value of z.local.os.security"
+           if="isCurrentOSzOS">
+
+        <condition property="editAdminAuthz">
+             <equals arg1="${z.local.os.security}" arg2="false"/>
+        </condition>
+    </target>
+
+   <target name="zDoAdminAuthzEdit"
+           description="For z/OS only, remove the section containing the admin userid and config group if z.local.os.security was false"
+           if="editAdminAuthz">
+     
+    
+        <replaceregexp file="${profilePath}/config/cells/${cellName}/admin-authz.xml"
+                    match="(.*)userid(.*)"
+                    replace=""
+                    flags="g"
+                    encoding="UTF-8"/>
+        <replaceregexp file="${profilePath}/config/cells/${cellName}/admin-authz.xml"
+                    match="(.*)group(.*)"
+                    flags="g"
+                    replace=""
+                    encoding="UTF-8"/>
+        <replaceregexp file="${profilePath}/config/cells/${cellName}/audit-authz.xml"
+                    match="(.*)userid(.*)"
+                    replace=""
+                    flags="g"
+                    encoding="UTF-8"/>
+        <replaceregexp file="${profilePath}/config/cells/${cellName}/audit-authz.xml"
+                    match="(.*)group(.*)"
+                    replace=""
+                    flags="g"
+                    encoding="UTF-8"/>
+        
+   </target>
+
+   <target name="cleanOSGICacheDir" unless="server.is.defaultServerName"
+       description="Cleans up intermediate OSGI server cache with defaultServerName 
+                    if other than defaultServerName was used for final server name">
+       <wscmtlog>Removing ${profilePath}/servers/${defaultServerName}</wscmtlog>
+       <delete dir="${profilePath}/servers/${defaultServerName}" 
+               quiet="true"
+               deleteonexit="true"/>
+   </target>
+
+        
+    <target name="updateWCCMFiles"
+        description="Bootstrap WCCM Files"
+        depends="detectCurrentOSFamily,
+            setCurrentOSFamily,
+            detectServersInConfig,
+            checkIfResetJvmArgumentsNeeded,
+            checkApplicationsDir,
+            checkIfIsclite.earExists,
+            setOSFileSeparator,
+            setDefaultLocalHostName,
+            resolveWASHomeForOSShellScripts,
+            resolveWASHomeForPropertyFiles,
+            resolveWASProfileLocationForPropertyFiles,
+            resolveSetupCmdLineName,
+            zSetTransportHost,
+            zDetermineUpdateAdminAuthz,
+            checkServerName,         
+            zDoAdminAuthzEdit,
+            replaceAllNecessaryTokensWithRightValuesForAllWCCMFiles,
+            setNewProfileDefaultSDK,
+            replaceDefaultCellForIsclite,
+            replaceWASHomeForIEHS,
+            replaceAllNecessaryTokensWithRightValuesForAllWCCMFilesForServers,
+            replaceJvmArgumentsForSun,
+            replaceJvmArgumentsForHP,
+            zReplaceAllNecessaryTokensWithRightValuesForAllWCCMFiles,
+            zReplaceAllNecessaryTokensWithRightValuesForAllWCCMFilesForServers,
+            zGetBitMode,
+            zSetTo31bitIfRequested,
+            cleanOSGICacheDir"/>
+            
+            <!-- removed this, may need it later for z/OS..... 
+             ,
+            zUpdateConfiguredSystemName"/>  -->
+</project>

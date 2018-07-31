@@ -1,0 +1,356 @@
+<project name="executeManagedProfileSetup" default="executeManagedProfileSetup" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="resolveSetupCmdLineName">
+        <available property="setupCmdLineName"
+            value="setupCmdLine"
+            file="${WAS_HOME}/bin/setupCmdLine"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.bat"
+            file="${WAS_HOME}/bin/setupCmdLine.bat"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.sh"
+            file="${WAS_HOME}/bin/setupCmdLine.sh"/>
+
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>
+    
+    <target name="resolveADDNODEExecutableForTheCurrentPlatform"
+            description="Sets ADDNODE_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+        <condition property="ADDNODE_EXECUTABLE" value="${WAS_HOME}/bin/addNode">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="ADDNODE_EXECUTABLE" value="${WAS_HOME}/bin/addNode.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="ADDNODE_EXECUTABLE" value="${WAS_HOME}/bin/addNode.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <wscmtlog>addNode command set to: ${ADDNODE_EXECUTABLE}</wscmtlog>
+    </target>
+
+    <target name="shouldThisActionRun"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            
+        <condition property="DO_NOT_RUN" value="true">
+            <or>
+             <not>
+                <isset property="dmgrHost"/>
+              </not>
+            <not>
+                <isset property="dmgrPort"/>
+            </not>
+            <equals arg1="${federateLater}" arg2="true"/>
+            </or>
+        </condition>        
+    </target>
+
+    <target name="shouldThisActionRunWithPortsFile"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            
+        <condition property="RUN_WITH_PORTS_FILE_WIN" value="true">
+        	<and>
+        		<not><equals arg1="${DO_NOT_RUN}" arg2="true"/></not>
+        		<isset property="portsFile"/>
+	            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        	</and>
+        </condition>
+        <condition property="RUN_WITH_PORTS_FILE_OTHERS" value="true">
+        	<and>
+        		<not><equals arg1="${DO_NOT_RUN}" arg2="true"/></not>
+        		<isset property="portsFile"/>
+	                <not><equals arg1="${currentOSFamily}" arg2="windows"/></not>
+        	</and>
+        </condition>
+        <condition property="RUN_WITHOUT_PORTS_FILE" value="true">
+        	<and>
+        		<not><equals arg1="${DO_NOT_RUN}" arg2="true"/></not>
+        		<not><isset property="portsFile"/></not>
+        	</and>
+        </condition>
+        <wscmtlog> From shouldThisActionRunWithPortsFile RUN_WITH_PORTS_FILE_WIN=${RUN_WITH_PORTS_FILE_WIN} RUN_WITH_PORTS_FILE_OTHERS=${RUN_WITH_PORTS_FILE_OTHERS} RUN_WITHOUT_PORTS_FILE=${RUN_WITHOUT_PORTS_FILE} </wscmtlog>
+    </target>
+        <target name="shouldThisActionRunWithUsernamePassword"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            <wscmtlog> From shouldThisActionRunWithUsernamePassword dmgrAdminUserName=${dmgrAdminUserName} </wscmtlog>
+        <condition property="RUN_WITH_USERNAME_PASSWORD">
+        	<and>
+        	    <isset property="dmgrAdminUserName"/>
+	            <isset property="dmgrAdminPassword"/>
+        	</and>
+        </condition>
+	<wscmtlog>Leaving shouldThisActionRunWithUsernamePassword RUN_WITH_USERNAME_PASSWORD=${RUN_WITH_USERNAME_PASSWORD}
+	</wscmtlog>
+    </target>
+
+        <target name="shouldThisActionRunWithPortFileWinUsernamePassword"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            <wscmtlog> From shouldThisActionRunWithPortFileWinUsernamePassword </wscmtlog>
+        <condition property="RUN_WITH_PORTFILE_WIN_USERPASSWORD" value="true">
+        	<and>
+        	    <equals arg1="${RUN_WITH_PORTS_FILE_WIN}" arg2="true"/>
+        	    <equals arg1="${RUN_WITH_USERNAME_PASSWORD}" arg2="true"/>
+        	</and>
+        </condition>
+	<wscmtlog>Leaving shouldThisActionRunWithPortFileWinUsernamePassword RUN_WITH_PORTS_FILE_WIN=${RUN_WITH_PORTS_FILE_WIN} RUN_WITH_USERNAME_PASSWORD=${RUN_WITH_USERNAME_PASSWORD} RUN_WITH_PORTFILE_WIN_USERPASSWORD=${RUN_WITH_PORTFILE_WIN_USERPASSWORD}
+	</wscmtlog>
+    </target>
+
+        <target name="shouldThisActionRunWithPortFileOthersUsernamePassword"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            <wscmtlog> From shouldThisActionRunWithPortFileOthersUsernamePassword </wscmtlog>
+        <condition property="RUN_WITH_PORTFILE_OTHERS_USERPASSWORD" value="true">
+        	<and>
+        	    <equals arg1="${RUN_WITH_PORTS_FILE_OTHERS}" arg2="true"/>
+        	    <equals arg1="${RUN_WITH_USERNAME_PASSWORD}" arg2="true"/>
+        	</and>
+        </condition>
+	<wscmtlog>Leaving shouldThisActionRunWithPortFileOthersUsernamePassword RUN_WITH_PORTS_FILE_OTHERS=${RUN_WITH_PORTS_FILE_OTHERS} RUN_WITH_USERNAME_PASSWORD=${RUN_WITH_USERNAME_PASSWORD} RUN_WITH_PORTFILE_OTHERS_USERPASSWORD=${RUN_WITH_PORTFILE_OTHERS_USERPASSWORD}
+	</wscmtlog>
+    </target>
+
+        <target name="shouldThisActionRunWithoutPortFileWithUsernamePassword"
+            description="Implements the logic that disables the action from running if the properties it requires were not found">
+            <wscmtlog> From shouldThisActionRunWithoutPortFileWithUsernamePassword </wscmtlog>
+        <condition property="RUN_WITHOUT_PORTFILE_WITH_USERPASSWORD" value="true">
+        	<and>
+        	    <equals arg1="${RUN_WITHOUT_PORTS_FILE}" arg2="true"/>
+        	    <equals arg1="${RUN_WITH_USERNAME_PASSWORD}" arg2="true"/>
+        	</and>
+        </condition>
+	<wscmtlog>Leaving shouldThisActionRunWithoutPortFileWithUsernamePassword RUN_WITHOUT_PORTS_FILE=${RUN_WITHOUT_PORTS_FILE} RUN_WITH__USERNAME_PASSWORD=${RUN_WITH_USERNAME_PASSWORD} RUN_WITHOUT_PORTFILE_WITH_USERPASSWORD=${RUN_WITHOUT_PORTFILE_WITH_USERPASSWORD}
+	</wscmtlog>
+    </target>
+
+    <target name="echoActionWillNotRunIfRequiedInputIsMissing"
+            description="Logs or echos a message saying this action will not run if its required properties are missing"
+            if="DO_NOT_RUN">
+            
+        <wscmtlog>This action will not run as dmgrHost and dmgrPort were not specified or the federateLater was resolved to ${federateLater}</wscmtlog>
+    </target>
+
+    <target name="setDMGRPortToDefaultIfNoneSpecified"
+            description="Makes sure we use the default DMGR port if none was specified">
+            
+        <condition property="dmgrPort" value="8879">
+            <not>
+                <isset property="dmgrPort"/>
+            </not>
+        </condition>
+    </target>
+        
+    <target name="runAddNodeWithoutPortsFile"
+            description="Runs the addNode utility to federate the profile without ports file."
+            if="RUN_WITHOUT_PORTS_FILE" unless="RUN_WITH_USERNAME_PASSWORD">
+        <wscmtlog>Enter runAddNodeWithoutPortsFile, username=${dmgrAdminUserName}, password=***** </wscmtlog>
+
+        <echo message="Federating to ${dmgrHost}:${dmgrPort}, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+            
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+	<wscmtlog>jdh -- federated from runAddNodeWithoutPortsFile  </wscmtlog>
+	<property name="hasBeenFederated" value="true"/>
+
+    </target>
+    
+    <target name="runAddNodeWithoutPortsFileWithUsernamePassword"
+            description="Runs the addNode utility to federate the profile without ports file."
+            if="RUN_WITHOUT_PORTFILE_WITH_USERPASSWORD" unless="hasBeenFederated">
+        <wscmtlog>Enter runAddNodeWithoutPortsFileWithUsernamePassword,  username=${dmgrAdminUserName}, password=***** </wscmtlog>
+        <echo message="Federating to ${dmgrHost}:${dmgrPort} -username ${dmgrAdminUserName} -password ******, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <arg value="-username" />
+            <arg value="${dmgrAdminUserName}" />
+            <arg value="-password" />
+            <arg value="${dmgrAdminPassword}" />
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+	 <wscmtlog>Node was federated from runAddNodeWithoutPortsFileWithUsernamePassword  </wscmtlog>
+	 <property name="hasBeenFederated" value="true"/>
+    </target>
+
+
+    <target name="runAddNodeWithPortsFileOthers"
+            description="Runs the addNode utility to federate the profile with ports file."
+            if="RUN_WITH_PORTS_FILE_OTHERS" unless="RUN_WITH_USERNAME_PASSWORD">
+        <wscmtlog>Enter runAddNodeWithPortsFileOthers,  username=${dmgrAdminUserName}, password=***** </wscmtlog>
+
+        <wscmtlog>Federating to ${dmgrHost}:${dmgrPort}, the output will be recorded in: ${profilePath}/logs/runAddNode.log</wscmtlog>
+        <wscmtlog>The federateLater check was resolved to ${federateLater}</wscmtlog>
+            
+        <echo message="Federating to ${dmgrHost}:${dmgrPort}, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+        <echo message="portsFile=${portsFile}"/>
+            
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <arg value="-portprops"/>
+            <arg value="${portsFile}"/>          
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+         </exec>
+	 <wscmtlog>Node was federated from runAddNodeWithPortsFileOthers  </wscmtlog>
+	 <property name="hasBeenFederated" value="true"/>
+
+    </target>
+
+    <target name="runAddNodeWithPortsFileOthersWithUsernamePassword"
+            description="Runs the addNode utility to federate the profile with ports file."
+            if="RUN_WITH_PORTFILE_OTHERS_USERPASSWORD" unless="hasBeenFederated">
+        <wscmtlog>Enter runAddNodeWithPortsFileOthersWithUsernamePassword, username=${dmgrAdminUserName}, password=***** </wscmtlog>
+        <wscmtlog>Federating to ${dmgrHost}:${dmgrPort}  -username ${dmgrAdminUserName} -password ******, the output will be recorded in: ${profilePath}/logs/runAddNode.log</wscmtlog>
+        <wscmtlog>The federateLater check was resolved to ${federateLater}</wscmtlog>
+            
+        <echo message="Federating to ${dmgrHost}:${dmgrPort} -username ${dmgrAdminUserName} -password ******, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+        <echo message="portsFile=${portsFile}"/>
+            
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <arg value="-username" />
+            <arg value="${dmgrAdminUserName}" />
+            <arg value="-password" />
+            <arg value="${dmgrAdminPassword}" />
+            <arg value="-portprops"/>
+            <arg value="${portsFile}"/>
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+         </exec>
+	 <wscmtlog>Node was federated from runAddNodeWithPortsFileOthersWithUsernamePassword  </wscmtlog>
+	 <property name="hasBeenFederated" value="true"/>
+    </target>
+
+    <target name="runAddNodeWithPortsFileWin"
+            description="Runs the addNode utility to federate the profile with ports file."
+            if="RUN_WITH_PORTS_FILE_WIN" unless="RUN_WITH_USERNAME_PASSWORD">
+        <wscmtlog>Enter runAddNodeWithPortsFileWin, username=${dmgrAdminUserName}, password=***** </wscmtlog>
+
+        <wscmtlog>Federating to ${dmgrHost}:${dmgrPort}, the output will be recorded in: ${profilePath}/logs/runAddNode.log</wscmtlog>
+        <wscmtlog>The federateLater check was resolved to ${federateLater}</wscmtlog>
+            
+        <echo message="Federating to ${dmgrHost}:${dmgrPort}, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+        <echo message="portsFile=${portsFile}"/>
+            
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <arg value="-portprops"/>
+            <arg value="${portsFile}"/>
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+	<wscmtlog>Node was federated from runAddNodeWithPortsFileWin  </wscmtlog>
+	<property name="hasBeenFederated" value="true"/>
+    </target>
+
+        <target name="runAddNodeWithPortsFileWinWithUsernamePassword"
+            description="Runs the addNode utility to federate the profile with ports file."
+            if="RUN_WITH_PORTFILE_WIN_USERPASSWORD" unless="hasBeenFederated">
+        <wscmtlog>Enter runAddNodeWithPortsFileWin, username=${dmgrAdminUserName}, password=***** </wscmtlog>
+        <wscmtlog>Federating to ${dmgrHost}:${dmgrPort}  -username ${dmgrAdminUserName} -password ******, the output will be recorded in: ${profilePath}/logs/runAddNode.log</wscmtlog>
+        <wscmtlog>The federateLater check was resolved to ${federateLater}</wscmtlog>
+            
+        <echo message="Federating to ${dmgrHost}:${dmgrPort}  -username ${dmgrAdminUserName} -password ******, the output will be recorded in: ${profilePath}/logs/runAddNode.log"/>
+        <echo message="The federateLater check was resolved to ${federateLater}"/>
+        <echo message="portsFile=${portsFile}"/>
+            
+        <exec executable="${ADDNODE_EXECUTABLE}" failonerror="true"
+                output="${profilePath}/logs/runAddNode.log">
+            <arg value="${dmgrHost}"/>
+            <arg value="${dmgrPort}"/>
+            <arg value="-username" />
+            <arg value="${dmgrAdminUserName}" />
+            <arg value="-password" />
+            <arg value="${dmgrAdminPassword}" />
+            <arg value="-portprops"/>
+            <arg value="${portsFile}"/>
+            <env key="WAS_USER_SCRIPT" value="${profilePath}/bin/${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+	<wscmtlog>Node was federated from runAddNodeWithPortsFileWinWithUsernamePassword  </wscmtlog>
+	<property name="hasBeenFederated" value="true"/>
+    </target>
+
+
+    <target name="executeManagedProfileSetup"
+        description="Extra setup for a managed profile - addNode"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            resolveSetupCmdLineName,
+            resolveADDNODEExecutableForTheCurrentPlatform,
+            shouldThisActionRun,
+            shouldThisActionRunWithPortsFile,
+            shouldThisActionRunWithUsernamePassword,
+            shouldThisActionRunWithPortFileWinUsernamePassword,
+            shouldThisActionRunWithPortFileOthersUsernamePassword,
+            shouldThisActionRunWithoutPortFileWithUsernamePassword,
+            echoActionWillNotRunIfRequiedInputIsMissing,
+            setDMGRPortToDefaultIfNoneSpecified,
+            runAddNodeWithPortsFileWin,
+            runAddNodeWithPortsFileWinWithUsernamePassword,
+            runAddNodeWithPortsFileOthers,
+            runAddNodeWithPortsFileOthersWithUsernamePassword,
+            runAddNodeWithoutPortsFile,
+            runAddNodeWithoutPortsFileWithUsernamePassword"/>
+</project>

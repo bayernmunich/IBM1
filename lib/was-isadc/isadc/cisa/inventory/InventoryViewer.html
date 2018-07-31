@@ -1,0 +1,306 @@
+<html>
+<head>
+<script type="text/javascript">
+
+	function loadXMLDoc(dname) {
+		if (window.ActiveXObject) {
+			xmldoc = new ActiveXObject("Microsoft.XMLDOM");
+			xmldoc.async = false;
+			xmldoc.load(dname);
+			return xmldoc;
+		} else {
+			try {
+				xhttp = new XMLHttpRequest();
+				xhttp.open("GET", dname, false);
+				xhttp.send(null);
+				return xhttp.responseXML;
+			} catch (err) {
+				var unsupportedDiv = document.getElementById('unsupportedInfo');
+				unsupportedDiv.style.display = 'block';
+				document.getElementsByTagName('body')[0].style.background = 'white';
+			}
+		}
+	}
+
+	function displayResult() {
+		xml = loadXMLDoc("inventory_rcf.xml");
+		if (xml != undefined) {
+			xsl = loadXMLDoc("rcftransform.xsl");
+
+			// code for IE
+			if (window.ActiveXObject) {
+				ex = xml.transformNode(xsl);
+				document.getElementById("inventory").innerHTML = ex;
+			} else if (document.implementation
+					&& document.implementation.createDocument) {
+				// code for Mozilla, Firefox, Chrome, Opera, Safari
+				xsltProcessor = new XSLTProcessor();
+				xsltProcessor.importStylesheet(xsl);
+				resultDocument = xsltProcessor.transformToFragment(xml,
+						document);
+				document.getElementById("inventory")
+						.appendChild(resultDocument);
+			}
+		}
+	}
+</script>
+<style type="text/css">
+html,body,h1,h2,h3,h4,h5,h6,p,ol,ul,li,pre,code,address,variable,form,fieldset,blockquote
+	{
+	padding: 0;
+	margin: 0;
+	font-size: 100%;
+	font-weight: normal;
+}
+
+ol {
+	margin-left: 1.4em;
+	list-style: decimal;
+}
+
+ul {
+	margin-left: 1.4em;
+	list-style: square;
+}
+
+img {
+	border: 0;
+}
+
+html,body {
+	background: none repeat scroll 0 0 #CCC;
+	margin: 0;
+	font-family: arial, sans-serif;
+	text-align: center;
+}
+
+table {
+	table-layout: fixed;
+	border: 0;
+	width: 675px;
+	overflow: hidden;
+	word-wrap: break-word;
+}
+
+.ibm-first {
+	background-color: #7a96ac;
+	color: #f9ffff;
+	font-size: 1.0em;
+}
+
+a {
+	color: #293D6B;
+	text-decoration: none;
+	cursor: pointer;
+	cursor: hand;
+}
+
+h2 {
+	padding: 15px 0 10px 0;
+	font-size: 1.7em;
+	/*font-weight: bold; font-variant: small-caps; text-decoration: underline;*/
+}
+
+h3 {
+	padding: 10px 0 5px 0;
+	font-size: 1.3em;
+	text-decoration: underline;
+}
+
+#unsupportedInfo {
+	display: none;
+	position: absolute;
+	left: 50%;
+	top: 25%;
+	width: 400px;
+	height: 200px;
+	margin-left: -200px;
+	margin-top: -100px;
+	background: #F0F5FB;
+	border-radius: 10px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	padding: 12px;
+	border: solid 1px black;
+	font-size: 1.0em;
+	/* font-variant: small-caps; */
+	font-weight: normal;
+	-moz-box-shadow: 10px 10px 5px #888;
+	-webkit-box-shadow: 10px 10px 5px #888;
+	box-shadow: 10px 10px 5px #888;
+}
+
+#unsupportedInfo h1 {
+	text-decoration: underline;
+	margin-bottom: 20px;
+}
+
+#unsupportedInfo p {
+	margin-bottom: 20px;
+}
+
+#unsupportedInfo a {
+	font-family: Courier New, monospace;
+}
+
+#ibm-top {
+	margin: 0 auto;
+	width: 930px;
+	background: white;
+	text-align: left;
+}
+
+#ibm-masthead {
+	background-color: black;
+}
+
+#ibm-logo {
+	float: left;
+}
+
+#ibm-site-name {
+	font-weight: bold;
+	font-size: 0.7em;
+	color: #98B1C4;
+	display: block;
+	margin-left: 112px;
+	padding: 7px 2px 5px 10px;
+	width: 200px;
+}
+
+#ibm-masthead h1 {
+	float: right;
+	margin: -23px 0px 0px;
+	padding: 0px 10px;
+	font-size: 1em;
+	font-weight: bold;
+	color: #CCC;
+}
+
+#isadc-inventory-nav {
+	background-color: #c9d7e4;
+	float: left;
+	font-size: 0.7em;
+	margin-left: 10px; padding 0.8em 0 30px;
+	width: 180px;
+}
+
+#isadc-inventory-nav ul {
+	list-style-type: none;
+	margin-left: 0px;
+}
+
+#isadc-inventory-nav li {
+	border-bottom: 1px solid white;
+	padding: 5px 15px;
+	font-weight: bold;
+}
+
+#ibm-content-main {
+	width: auto;
+	position: relative;
+	margin-top: 20px;
+	min-height: 270px;
+}
+
+#isadc-inventory-info {
+	font-size: 0.8em; /* position: relative; */
+	padding-left: 215px;
+}
+
+#isadc-inventory-info table {
+	font-size: 11px;
+}
+
+#footer {
+	background-color: black;
+	color: #CCC;
+	font-size: 0.7em;
+	padding-left: 20px;
+	font-weight: bold;
+	margin: 20px 0;
+}
+
+.inventory-div {
+	margin-left: 20px;
+}
+
+.inventory-div h2 {
+	margin-left: -20px;
+}
+
+.inventory-props {
+	margin-left: 5px;
+}
+
+.key_identifier {
+	background-color: #c9d7e4;
+	border-bottom: 1px solid navy;
+	margin: 15px 10px 0 0;
+	padding-left: 5px;
+}
+
+.key_identifier a {
+	position: relative;
+	float: right;
+	padding-right: 10px;
+	font: normal 1.0em courier, monospace;
+	cursor: pointer;
+	cursor: hand;
+}
+</style>
+
+<script type="text/javascript">
+	var invSectionIds = [ "server-inventory", "os-inventory",
+			"software-inventory", "component-inventory", "tempfix-inventory",
+			"hardware-inventory" ];
+
+	function showSection(sectionName) {
+		if (sectionName == "all") {
+			for (i in invSectionIds) {
+				document.getElementById(invSectionIds[i]).style.display = 'block';
+			}
+		} else {
+			hideAllSections();
+			document.getElementById(sectionName).style.display = 'block';
+		}
+	}
+
+	function hideAllSections() {
+		for (i in invSectionIds) {
+			document.getElementById(invSectionIds[i]).style.display = 'none';
+		}
+	}
+
+	function toggleTable(element) {
+		var detailsTable = element.parentNode.nextSibling;
+		var jsMethod = "toggleTable(this)";
+
+		// create a new anchor element
+		newAnchor = document.createElement("a");
+		newAnchor.onclick = function() {
+			toggleTable(this);
+		};
+		if (detailsTable.style.display == 'none') {
+			detailsTable.style.display = 'block';
+			newAnchor.setAttribute("title", "Collapse section");
+			newAnchor.appendChild(document.createTextNode("[-]"));
+		} else {
+			detailsTable.style.display = 'none';
+			newAnchor.setAttribute("title", "Expand section");
+			newAnchor.appendChild(document.createTextNode("[+]"));
+		}
+		element.parentNode.replaceChild(newAnchor, element);
+	}
+</script>
+
+</head>
+<body onload="displayResult()">
+	<div id="unsupportedInfo">
+	<h1>IBM Support Assistant Data Collector</h1>
+	<p>Inventory viewing is not supported for this browser.  Please reference the IBM Support Assistant release notes for more information.</p>
+    <p>You can try opening the Inventory Viewer with another browser or open the <a href="./inventory_rcf.xml">inventory_rcf.xml</a> file directly to view the raw source</p>
+	</div>
+	<div id="inventory"></div>
+</body>
+</html>

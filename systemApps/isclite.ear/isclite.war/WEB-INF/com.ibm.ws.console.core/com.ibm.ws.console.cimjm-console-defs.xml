@@ -1,0 +1,133 @@
+<!--
+ * IBM Confidential OCO Source Material
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 (C) COPYRIGHT International Business Machines Corp. 2010
+ * The source code for this program is not published or otherwise divested
+ * of its trade secrets, irrespective of what has been deposited with the
+ * U.S. Copyright Office.
+-->
+
+<!DOCTYPE tiles-definitions PUBLIC
+    "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+    "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+
+<tiles-definitions>
+
+<!-- CIMJM Install Kits   -->
+    <definition name="CIMJM.install.kits" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cimjm.installkits.InstallKitsController">
+        <put name="contextType" value="CIMJM_InstallKits"/>
+        <put name="descTitle" value="CIMJM.install.kits"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.cimjm"/>
+        <put name="descText" value="CIMJM.install.kits.desc"/>
+        <put name="helpTopic" value="CIMJM_InstallKits"/>
+        <put name="roleFiltering" value="false"/>
+        <!-- <put name="bcHandler" value="com.ibm.ws.console.jobmanagement.find.FindBreadcrumbHandler"/> -->
+        <putList name="contentList">
+        <add value="CIMJM.install.kits.paging.extend"/>
+        <add value="CIMJM.install.kits.repository"/>
+        <add value="CIMJM.install.kits.quicksearch.extend"/>
+        <add value="CIMJM.install.kits.table"/> 
+        </putList>
+    </definition>
+
+    <definition name="CIMJM.install.kits.repository"
+                path="/com.ibm.ws.console.cimjm/CIMJMInstallKitsLayout.jsp">
+        <put name="installKitsForm" value="CIMJM_InstallKitsCollectionForm"/>
+    </definition>
+    
+    <definition name="CIMJM.install.kits.table" extends="collection.table.main">
+        <put name="iterationName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="formAction" value="installKitsCollection.do"/>
+        <put name="formName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.cimjm.installkits.InstallKitsControllerForm"/>
+        <put name="buttons" value="CIMJM.install.kits.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.cimjm.forwardCmd.do?forwardName=CIMJM.install.kits"/>
+        <put name="idColumn" value="name"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+         <item value="text:UI/Collections/CIMJM_InstallKits/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+         <item value="checkbox:UI/Collections/CIMJM_InstallKits/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="CIMJM.install.kits.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="CIMJM.install.kits.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="CIMJM.install.kits.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="installKitsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formAction" value="installKitsCollection.do"/>
+        <put name="formName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.cimjm.installkits.InstallKitsControllerForm"/>
+        <putList name="searchList">
+            <add value="CIMJM.install.kits.name:name"/>
+            <add value="CIMJM.install.kits.version:version"/>
+            <add value="CIMJM.install.kits.os:os"/>
+            <add value="CIMJM.install.kits.presentation:presentation"/>
+            <add value="CIMJM.install.kits.platform:platform"/>
+        </putList>
+    </definition>
+
+    <definition name="CIMJM.install.kits.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="CIMJM.install.kits"/>
+        <put name="collectionForm" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formAction" value="installKitsCollection.do"/>
+        <put name="formName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.cimjm.installkits.InstallKitsControllerForm"/>
+    </definition>
+    
+    <!--  CIMJM Install Kits - Delete Confirmation -->
+    <definition name="CIMJM.install.kits.delete.main" extends="detail.config.view">
+        <put name="contextType" value="CIMJM.install.kits.delete.confirmation"/>
+        <putList name="list">
+            <add value="CIMJM.install.kits.delete.confirmation.title"/>
+            <add value="CIMJM.install.kits.delete.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="CIMJM.install.kits.delete.confirmation.title" extends="detail.title">
+        <put name="formName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="objectTypeImage" value=""/>
+        <put name="titleKey" value="CIMJM.install.kits.confirm.delete"/>
+        <put name="collectionLink" value="com.ibm.ws.console.cimjm.forwardCmd.do?forwardName=CIMJM.install.kits"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="deleteTitle"/>
+        <put name="instanceDescription" value="CIMJM.install.kits.delete.desc"/>
+        <put name="displayName" value="CIMJM.install.kits.confirm.delete"/>
+    </definition>
+
+    <definition name="CIMJM.install.kits.delete.confirmation.detail" 
+                path="/com.ibm.ws.console.cimjm/CIMJMDeleteInstallKits.jsp">
+        <put name="formAction" value="installKitsCollection.do"/>
+        <put name="formName" value="CIMJM_InstallKitsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.cimjm.installkits.InstallKitsControllerForm"/>
+        <put name="column1Header" value="CIMJM.install.kits.name"/>
+    </definition>
+    
+    <!--  CIMJM Install Kits - Add Install Kits -->
+    <definition name="CIMJM.install.kits.add.main" path="/secure/layouts/contentLayout.jsp"
+                controllerClass="com.ibm.ws.console.cimjm.installkits.InstallKitsController">
+        <put name="contextType" value="CIMJM_InstallKits"/>
+        <put name="descTitle" value="CIMJM.install.kits.add"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.cimjm" />
+        <put name="descText" value="CIMJM.install.kits.add.desc"/>
+        <put name="helpTopic" value="CIMJM_InstallKits_Add"/>
+        <putList name="contentList">
+            <add value="CIMJM.add.detail"/>
+        </putList>
+    </definition>
+    
+    <definition name="CIMJM.add.detail"
+                path="/com.ibm.ws.console.cimjm/CIMJMAddInstallKits.jsp"/>
+                
+</tiles-definitions>
+
+

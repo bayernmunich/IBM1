@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @(#) 1.13 SERV1/ws/code/admin.liberty/src/properties/LibertyMetadata.xml, WAS.admin.liberty, WAS855.SERV1, cf131750.07 7/10/12 20:40:26 [12/17/17 20:52:00] -->
+<LibertyMetadata>
+	<InventoryData>
+		<listFiles>
+			<listFileCommand platform="unix">
+				find -L "${dir}"
+			</listFileCommand>
+			<listFileCommand platform="windows">
+				cmd /c dir /b /s "${dir}"
+			</listFileCommand>
+			<listFileCommand platform="os400">
+				find -L "${dir}"
+			</listFileCommand>
+		</listFiles>
+	</InventoryData>
+	<ServerCommands>
+		<serverStatus>
+			<serverStatusCommand platform="unix">
+				./server status:fast ${server};./was4d status:fast ${server}
+			</serverStatusCommand>
+			<serverStatusCommand platform="windows">
+				server.bat status:fast ${server};was4d.bat status:fast ${server}
+			</serverStatusCommand>
+			<serverStatusCommand platform="os400">
+				server status:fast ${server};was4d status:fast ${server}
+			</serverStatusCommand>
+		</serverStatus>
+		<startServer>
+			<startServerCommand platform="unix">
+				./server start ${server};./was4d start ${server}
+			</startServerCommand>
+			<startServerCommand platform="windows">
+				server.bat start ${server};was4d.bat start ${server}
+			</startServerCommand>
+			<startServerCommand platform="os400">
+				server start ${server};was4d start ${server}
+			</startServerCommand>
+		</startServer>
+		<stopServer>
+			<stopServerCommand platform="unix">
+				./server stop ${server};./was4d stop ${server}
+			</stopServerCommand>
+			<stopServerCommand platform="windows">
+				server.bat stop ${server};was4d.bat stop ${server}
+			</stopServerCommand>
+			<stopServerCommand platform="os400">
+				server stop ${server};was4d stop ${server}
+			</stopServerCommand>
+		</stopServer>
+	</ServerCommands>
+	<InstallResourcesConfig>
+		<SupportedProtocol>
+			<Protocol>ftp</Protocol>
+			<Protocol>file</Protocol>
+			<Protocol>http</Protocol>
+			<Protocol>https</Protocol>
+		</SupportedProtocol>
+	</InstallResourcesConfig>
+	<ResourceRelatedConfig>
+		<Resource>
+		
+			<!-- 
+				SDK: presence of <jre name>/jre/bin/java or <jre name>/bin/java
+			 -->
+			<XPath type="SDK">//node[@name='jre']/node[@name='bin']/node[@name='java' or @name='java.exe']</XPath>
+			<XPath type="SDK">//node[@name='bin']/node[@name='java' or @name='java.exe']</XPath>
+			
+			<!-- 
+				runtime: presences of <runtime name>/bin/was4d or <runtime name>/bin/was4d.bat. Everything under the directory is considered part of the runtime.
+			 -->
+			<XPath type="RT">//node[@name='bin']/node[@name='was4d' or @name='was4d.bat']/../..</XPath>
+			<XPath type="RT">//node[@name='bin']/node[@name='server' or @name='server.bat']/../..</XPath>
+		
+			<!-- 
+				liberty server:
+	    		* presences of <runtime name>/usr/servers/<server name>/server.xml if the server is embedded in the runtime, or
+	    		* presence of /servers/<server name>/bootstrap.properties to be used as working server
+	    		* presence of <server name>/server.xml, to be used as template (not supported yet), or
+			 -->
+			<XPath type="SERVER_EMBEDDED">//node[@name='usr']/node[@name='servers']/node/node[@name='server.xml']/..</XPath>
+			<XPath type="SERVER_WORKING">//node[@name='servers']/node/node[@name='server.xml']/..</XPath>
+			<!-- SERVER_TEMPLATE is not yet supported 
+			<XPath type="SERVER_TEMPLATE">//node[@name='server.xml']/..</XPath>
+			-->
+			<!-- 
+	 			applicationBinary:
+     			* If embedded within the runtime, presences of <runtime name>/usr/shared/apps/<appname>, where <appname> ends in .war or .ear.
+     			*    or the war/ear is under runtime directory
+     			* If embedded within the server, <server path>/dropins/*.war
+     			*    or the war/ear is under server directory
+     			* If not embedded within the runtime/server, presences of .war or .ear
+			 -->
+			<XPath type="APPBIN_RT">//node[@name='usr']/node[@name='shared']/node[@name='apps']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.WAR')]</XPath>
+			<XPath type="APPBIN_RT">//node[@name='usr']/node[@name='shared']/node[@name='apps']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.EAR')]</XPath>
+			<XPath type="APPBIN_SERV">//node[@name='dropins']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.WAR')]</XPath>
+			<XPath type="APPBIN_SERV">//node[@name='dropins']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.EAR')]</XPath>
+			<XPath type="APPBIN_SERV">//node[@name='apps']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.WAR')]</XPath>
+			<XPath type="APPBIN_SERV">//node[@name='apps']/node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.EAR')]</XPath>
+			<XPath type="APPBIN">//node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.WAR')]</XPath>
+			<XPath type="APPBIN">//node[contains(translate(@name,'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), '.EAR')]</XPath>
+		
+		</Resource>
+	</ResourceRelatedConfig>
+</LibertyMetadata>

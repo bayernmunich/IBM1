@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="EJB Container Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.EJB Container Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_EJB_Container_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="infocollectProblemType" value="was-ejb-container" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os,
+
+		was_stack_custom_init,
+		
+		generate_ejb_trace_string,
+		trace_setup_custom, 
+			         
+		execute_collector, 
+		execute_vce_info_for_was,
+		common_postamble_general_with_ftp">
+	</target>
+
+	<!-- generate the EJB trace string -->
+	<target name="generate_ejb_trace_string"
+	        description="Generate trace string depending on user problem">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			
+			<inputdialogtask> 
+				<fieldtask name="prompt1"
+	        		   label="Input_Required_WAS"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2"
+			           label="WS_EJB_FP_Question"
+	        		   type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.ejb.fp.installed"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	        		   label="select_one"
+			           list="3x:2x"
+			           listDetails="3x:2x"
+	        		   type="selectlist" />
+			</inputdialogtask>
+		
+			<condition property="ws.ejb.3x">
+				<equals arg1="3x" arg2="${ws.ejb.fp.installed}" />
+			</condition>
+			
+			<condition property="ws.ejb.2x">
+				<equals arg1="2x" arg2="${ws.ejb.fp.installed}" />
+			</condition>
+
+			<if isTrue="${ws.ejb.3x}" >
+				<property name="was.trace.string"
+				    value="*=info:EJBContainer=all:PMGR=all:JPA=all:openjpa=all" />
+			</if>
+			<if isTrue="${ws.ejb.2x}" >
+				<property name="was.trace.string"
+				    value="*=info:EJBContainer=all:PMGR=all" />
+			</if>				
+			
+		</if>
+
+		<!-- WAS v5 -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string"
+			          value="EJBContainer=all=enabled:PMGR=all=enabled" />
+
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;EJB Container Problem&lt;/h2&gt;&lt;p&gt;
+						This script will set the EJB Container Problem trace string on the application
+						server and allow the user to reproduce the problem.
+						After the problem has been reproduced the logs, configuration, and trace
+						files will be archived for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1244478" />
+		
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script will set the EJB Container Problem trace string on the 
+application server and allow the user to reproduce the problem. After the problem has been 
+reproduced the logs, configuration, and trace files will be archived for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="EJB Container Problem =>
+This script will set the EJB Container Problem trace string on the application
+server and allow the user to reproduce the problem.
+After the problem has been reproduced the logs, configuration, and trace
+files will be archived for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="wasexport" default="main" basedir="." >
+	<description>
+The wasexport.xml script drives the WebSphere Configuration
+Exporter for IBM Visual Configuration Explorer. To invoke the
+script, call the "main" target with the following parameters -
+		
+   -Dwas.root="install root of WebSphere installation" [REQUIRED]
+   -Dprofile.name="profile name of configuration" [OPTIONAL]
+      Defaults to default profile of WebSphere install
+   -Dwas.temp="path for temporary files" [OPTIONAL]
+      Defaults to wasexporter/temp
+   -Dwas.exp.dir="directory to save exported configuration" [OPTIONAL]
+      Defaults to wasexporter/output
+   -Dwas.exp.basename="base name for the exported configuration" [OPTIONAL]
+      Defaults to either "websphere" or profile.name if specified
+		
+	</description>
+	<target name="wasexport.init" if="was.root" >
+		<dirname property="cwd" file="${ant.file.wasexport}" />
+		<echo>Current directory is ${cwd}</echo>
+		<property name="was.temp" value="${cwd}${file.separator}temp" />
+		<property name="was.exp.dir" value="${cwd}${file.separator}output" />
+		<property name="os.windows"
+			value="Windows Vista,Windows 2003,Windows XP,Windows 2000,Windows 2000 (unknown),Windows 2003 (unknown),Windows XP (unknown),Windows Server 2003" />
+		<property name="os.unixkind"
+			value="Linux,AIX,SunOS,Solaris,HP-UX" />
+		<property name="os.zos" value="Z/OS,z/OS,OS/390" />
+		<property name="os.i5" value="i5/OS,OS/400" />
+		<mkdir dir="${was.exp.dir}"/>
+		<mkdir dir="${was.temp}"/>
+		<dirname property="was.exp.out" file="${was.exp.dir}${file.separator}file" />
+		<dirname property="was.exp.tmp" file="${was.temp}${file.separator}file" />
+	</target>
+	<target name="setBasenameToProfile" if="profile.name" >
+		<property name="exp.basename" value="${profile.name}" />
+	</target>
+	<target name="setBasenameToDefault" unless="profile.name" >
+		<property name="exp.basename" value="websphere" />
+		<property name="profile.name" value="" />
+	</target>
+	<target name="setWasExpBasename" depends="setBasenameToDefault,setBasenameToProfile" unless="was.exp.basename" if="was.root">
+		<property name="was.exp.basename" value="${exp.basename}" />
+	</target>
+	<target name="clean" if="was.root" >
+		<property name="exec.logfile" value="${was.exp.out}${file.separator}${was.exp.basename}.wasexport.log" />
+		<delete file="${exec.logfile}" quiet="true" />
+		<delete file="${was.exp.out}${file.separator}${was.exp.basename}.configuration" quiet="true" />
+		<delete file="${was.exp.out}${file.separator}${was.exp.basename}.log" quiet="true" />
+	</target>
+	<target name="main" depends="wasexport.init,setWasExpBasename,clean" if="was.root" >
+		<echo>Exported configuration will be saved to ${was.exp.out}${file.separator}${was.exp.basename}.configuration</echo>
+		<exec executable="${cwd}${file.separator}vceexport.bat" dir="${was.root}${file.separator}bin"
+			output="${exec.logfile}"
+			os="${os.windows}">
+			<arg line=' "${was.root}" "${was.exp.tmp}" "${was.exp.out}" "${was.exp.basename}" "${cwd}" ${profile.name}' />
+		</exec>
+		<exec executable="sh" dir="${cwd}"
+			output="${exec.logfile}"
+			os="${os.unixkind}">
+			<arg line=' ./vceexport.sh "${was.root}" "${was.exp.tmp}" "${was.exp.out}" "${was.exp.basename}" "${cwd}" ${profile.name}' />
+		</exec>
+		<exec executable="sh" dir="${cwd}"
+			output="${exec.logfile}"
+			os="${os.zos}">
+			<arg line=' ./vceexport.ebcdic.sh "${was.root}" "${was.exp.tmp}" "${was.exp.out}" "${was.exp.basename}" "${cwd}" ${profile.name}' />
+		</exec>
+		<exec executable="${cwd}${file.separator}vceexport.i5" dir="${cwd}"
+			output="${exec.logfile}"
+			os="${os.i5}">
+			<arg line=' "${was.root}" "${was.exp.tmp}" "${was.exp.out}" "${was.exp.basename}" "${cwd}" ${profile.name}' />
+		</exec>
+		<available file="${was.exp.out}${file.separator}${was.exp.basename}.configuration" property="success"/>
+		<fail message="Export failed. See logs at ${was.exp.out}.">
+		    <condition>
+		    	<isfalse value="${success}"/>
+		    </condition>
+		</fail>
+	</target>
+</project>

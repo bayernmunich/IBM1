@@ -1,0 +1,108 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="deleteProxyObjects" default="deleteProxyObjects" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+  	&importExternalLogs;             
+    <property name="serverName" value="server1"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+            description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+            
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+    </target>
+
+    <target name="runDeleteProxyObjectsJACLScript"
+            description="Runs the JACL script to delete proxy objects">
+            
+        <wscmtlog>Deleting proxy objects, the output will be recorded in: ${profilePath}/logs/deleteProxyObjects.log</wscmtlog>
+             <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->                          
+        <exec executable="${WSADMIN_EXECUTABLE}"
+                output="${profilePath}/logs/deleteProxyObjects.log" failonerror="false" resultproperty="rcProperty">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-f"/>
+            <arg value="${templatePath}${separatorFile}actions${separatorFile}scripts${separatorFile}deleteProxyObjects.jacl"/>
+            <env key="WAS_USER_SCRIPT" value="${profilePath}${separatorFile}bin${separatorFile}${setupCmdLineName}"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${profilePath}/logs/deleteProxyObjects.log" />
+            <param name="description" value="Deleting proxy objects" />
+            <param name="precondition" value="foetrue" />
+        </antcall>
+    </target>
+
+    <target name="resolveSetupCmdLineName">
+        <available property="setupCmdLineName"
+            value="setupCmdLine"
+            file="${WAS_HOME}/bin/setupCmdLine"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.bat"
+            file="${WAS_HOME}/bin/setupCmdLine.bat"/>
+
+        <available property="setupCmdLineName"
+            value="setupCmdLine.sh"
+            file="${WAS_HOME}/bin/setupCmdLine.sh"/>
+
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>
+    
+    <target name="deleteProxyObjects"
+        description="Delete proxy objects"
+        depends="detectCurrentOSFamily,
+                 setOSFileSeparator,
+                 resolveSetupCmdLineName,
+                 resolveWSADMINExecutableForTheCurrentPlatform,
+                 runDeleteProxyObjectsJACLScript"/>
+</project>

@@ -1,0 +1,99 @@
+<script>
+var isNav4   = false;
+var isIE     = false;
+var isDom    = false;
+var foropera = window.navigator.userAgent.toLowerCase();
+var itsopera = foropera.indexOf("opera",0) + 1;
+var itsgecko = foropera.indexOf("gecko",0) + 1;
+var itsmozillacompat = foropera.indexOf("mozilla",0) + 1;
+var itsmsie  = foropera.indexOf("msie",0) + 1;
+
+if (itsopera > 0) {
+    isNav4 = true
+}
+if (itsmozillacompat > 0){
+    if (itsgecko > 0) {
+        isIE= true
+        isDom = true
+        document.all = document.getElementsByTagName("*");
+    } else if (itsmsie > 0) {
+        isIE = true
+    } else {
+        if (parseInt(navigator.appVersion) < 5) {
+            isNav4 = true
+        } else {
+            isIE = true
+        }
+    }
+}
+
+// Added because Mozilla wants to use the TBODY and table-row-group to show/hide table rows
+if (isDom) {
+    showIt = "table-row-group";
+} else {
+    showIt = "block";
+}
+
+function showHideFilter() {
+    if (document.getElementById("filterTableImg").src.indexOf("wtable_filter_row_show") > 0) {
+        disFilter = "";
+        document.getElementById("filterTableImg").src = "images/wtable_filter_row_hide.gif";
+    } else {
+        document.getElementById("filterTableImg").src = "images/wtable_filter_row_show.gif";
+        disFilter = "none";
+    }
+    document.getElementById("filterControls").style.display = disFilter;
+}
+
+function selectAll(tmpForm) {
+//    if (isDom) {
+//          theForm = document.forms[tmpForm]
+//      } else { 
+          theForm = document.getElementById(tmpForm)
+//    }
+    for (i=0;i<theForm.length;i++) {
+        if ((theForm[i].type == "checkbox")) 
+            theForm[i].checked = true;
+    }
+}
+function deselectAll(tmpForm) {
+//    if (isDom) {
+//          theForm = document.forms[tmpForm]
+//      } else { 
+          theForm = document.getElementById(tmpForm)
+//    }
+    for (i=0;i<theForm.length;i++) {
+        if ((theForm[i].type == "checkbox")) 
+            theForm[i].checked = false;
+    }
+}
+
+function showHideSection(item, showText, showImg, hideText, hideImg) {
+    taskSet = document.getElementById(item);
+    taskImg = document.getElementById("img_"+item);
+    if (taskSet.style.display == "none") {
+        taskSet.style.display = showIt;
+        taskImg.src = "images/" + hideImg;
+        taskImg.title = hideText;
+        taskImg.alt = hideText;
+    } else {
+        taskSet.style.display = "none";
+        taskImg.src = "images/" + showImg;
+        taskImg.title = showText;
+        taskImg.alt = showText;
+    }
+}
+
+function showHideMessage(item) {
+   showHideSection(item,'<bean:message key="showMessage"/>','arrow_collapsed.gif','<bean:message key="hideMessage"/>','arrow_expanded.gif');
+}
+
+function showHidePrefs(item) {
+   showHideSection(item,'<bean:message key="showPref"/>','arrow_collapsed.gif','<bean:message key="hidePref"/>','arrow_expanded.gif');
+}
+
+function showHidePortlet(item) {
+   showHideSection(item,'<bean:message key="restore"/>','title_restore.gif','<bean:message key="minimize"/>','title_minimize.gif');
+}
+
+</script>

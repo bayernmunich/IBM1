@@ -1,0 +1,49 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="disableXDOnOS400" default="disableXDOnOS400" basedir=".">
+    
+    	<taskdef name="wscmtlog"
+        	classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+		
+	<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>   
+      		&importExternalLogs; 	
+    	<target name="checkIfOS400"
+            description="Check if it runs on OS400">     
+        <condition property="isOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+    </target>
+	
+    <target name="rundisableXDOnOS400Script"
+            description="Runs the Jython script to create new custom property on cell that disable XD functionality"
+            if="isOSOS400"> 
+        <wscmtlog>Disabling XD functionality, the output will be recorded in: "${WS_CMT_LOG_HOME}/${profileName}/disableXDOnOS400.log</wscmtlog>        
+        <wsadmin conntype="none"
+                failonerror="false"
+		returnproperty="rcProperty"
+              	tracefile="${WS_CMT_LOG_HOME}/${profileName}/disableXDOnOS400.log"
+                wasHome="${WAS_HOME}"
+                wasInstallRoot="${WAS_HOME}"
+                wasRepositoryRoot="${profilePath}/config"
+                userInstallRoot="${profilePath}"
+                localCell="${cellName}"
+                localNode="${nodeName}"
+                wsadminProps="${profilePath}/properties/wsadmin.properties"
+                script="${templatePath}/actions/scripts/disableXDOnOS400.py"
+                lang="jython"
+                ipcFilename="${profilePath}/temp/wsadmin"
+                >
+        </wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/disableXDOnOS400.log" />
+            <param name="description" value="Disabling XD functionality on OS/400" />
+            <param name="precondition" value="foetrue" />
+        </antcall>
+    </target>
+
+    <target name="disableXDOnOS400"
+        description="Disabling XD functionality on OS/400"
+        depends="checkIfOS400,
+	     rundisableXDOnOS400Script"/>
+</project>

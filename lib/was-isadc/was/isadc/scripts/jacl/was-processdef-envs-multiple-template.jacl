@@ -1,0 +1,17 @@
+set server [$AdminConfig getid /Cell:@CellName@/Node:@NodeName@/Server:@ServerName@/]
+set jc [$AdminConfig list JavaProcessDef $server]
+
+set names {@property.names@}
+set values {@property.values@}
+
+for {set n 0} {$n < [llength $names]} {incr n 1} {
+	set PropID [$AdminConfig getid /Property:[lindex $names $n]]
+
+	if { $PropID != "" } {
+		set PropValue [subst {{value [lindex $values $n]}}]
+		$AdminConfig modify $PropID $PropValue
+	} else {
+		$AdminConfig create Property $jc [subst {{name [lindex $names $n]} {value [lindex $values $n]} {required false}}]
+	}
+}
+$AdminConfig save

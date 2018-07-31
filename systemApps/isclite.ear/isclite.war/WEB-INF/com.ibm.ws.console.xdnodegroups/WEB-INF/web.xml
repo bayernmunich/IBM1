@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<!DOCTYPE web-app
+  PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.2//EN"
+  "http://java.sun.com/j2ee/dtds/web-app_2_2.dtd">
+
+<web-app>
+    <servlet>
+           <servlet-name>action</servlet-name>
+           <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+           <init-param>
+             <param-name>config</param-name>
+             <param-value>/WEB-INF/struts-config.xml</param-value>
+           </init-param>
+           <load-on-startup>2</load-on-startup>
+    </servlet>
+
+	<servlet>
+        <servlet-name>MaintModeStatusServlet</servlet-name>
+        <servlet-class>com.ibm.ws.console.nodegroups.servlet.MaintModeServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>ElasticityCustomActionServlet</servlet-name>
+		<display-name>ElasticityCustomActionServlet</display-name>
+		<servlet-class>com.ibm.ws.console.nodegroups.servlet.ElasticityCustomActionServlet</servlet-class>
+	</servlet>
+	
+    <servlet>
+		<servlet-name>ElasticityClassServlet</servlet-name>
+		<display-name>ElasticityClassServlet</display-name>
+		<servlet-class>com.ibm.ws.console.nodegroups.servlet.ElasticityClassServlet</servlet-class>
+	</servlet>
+	
+    <servlet-mapping>
+        <servlet-name>action</servlet-name>
+        <url-pattern>*.do</url-pattern>
+    </servlet-mapping>
+
+	<servlet-mapping>
+        <servlet-name>MaintModeStatusServlet</servlet-name>
+        <url-pattern>/maintstatus</url-pattern>
+    </servlet-mapping>
+	
+	<servlet-mapping>
+        <servlet-name>ElasticityCustomActionServlet</servlet-name>
+        <url-pattern>/elasticity</url-pattern>
+    </servlet-mapping> 
+	
+	<servlet-mapping>
+        <servlet-name>ElasticityClassServlet</servlet-name>
+        <url-pattern>/elasticityclass</url-pattern>
+    </servlet-mapping> 
+    
+	
+	 <security-constraint>
+      <web-resource-collection>
+         <web-resource-name>Protected Area</web-resource-name>
+         <url-pattern>/elasticityclass/*</url-pattern>
+         <http-method>DELETE</http-method>
+         <http-method>GET</http-method>
+         <http-method>POST</http-method>
+         <http-method>PUT</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+         <role-name>administrator</role-name>
+         <role-name>operator</role-name>
+         <role-name>configurator</role-name>
+         <role-name>monitor</role-name>
+      </auth-constraint>
+      <user-data-constraint>
+         <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint>
+   </security-constraint>
+	    
+    <security-constraint>
+      <web-resource-collection>
+         <web-resource-name>Protected Area</web-resource-name>
+         <url-pattern>/elasticity/*</url-pattern>
+         <http-method>DELETE</http-method>
+         <http-method>GET</http-method>
+         <http-method>POST</http-method>
+         <http-method>PUT</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+         <role-name>administrator</role-name>
+         <role-name>operator</role-name>
+         <role-name>configurator</role-name>
+         <role-name>monitor</role-name>
+      </auth-constraint>
+      <user-data-constraint>
+         <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint>
+   </security-constraint>
+	
+</web-app>

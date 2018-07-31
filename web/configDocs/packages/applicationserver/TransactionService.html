@@ -1,0 +1,780 @@
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>TransactionService</title>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h2>TransactionService</h2>
+
+<p>This type is a class for model objects.</p>
+
+<p>Configuration of the transaction service.</p>
+Package:&nbsp;<A HREF="../applicationserver/classes-frame.html" target="packageFrame">applicationserver</A><BR>
+Supertype:&nbsp;<A HREF="../process/Service.html">Service</A><BR>
+<BR>
+Classifier ID:&nbsp;&nbsp;-1
+<BR>
+Instance class name:&nbsp;&nbsp;* Unspecified *
+<BR>
+Instance class:&nbsp;&nbsp;* Unspecified *
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attributes Summary</B></FONT></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#transactionLogDirectory">transactionLogDirectory</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Specifies the name of a directory for this server where the transaction service stores log files for recovery.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#totalTranLifetimeTimeout">totalTranLifetimeTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+The maximum duration, in seconds, for transactions on this application server.  Any transaction that is not requested to complete before this timeout will be rolled back.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#clientInactivityTimeout">clientInactivityTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+The maximum duration, in seconds, between transactional requests from a remote client.  Any period of client inactivity that exceeds this timeout results in the transaction being rolled back in this application server.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#maximumTransactionTimeout">maximumTransactionTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 6.0.0
+Maximum time, in seconds, for any transactions that execute in the server. This constrains the upper limit of the transaction timeout for all transactions that execute on the server. This value should be greater than or equal to the total transaction timeout which is the default timeout for transactions started on the server. This limit will constrain timeout set programmatically by BMT beans and values imported with contexts received from foreign servers.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#heuristicRetryLimit">heuristicRetryLimit</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 6.0.0
+The number of times the Transaction Manager will retry a retriable completion signal (such as commit or rollback) following a transient exception from a Resource Manager/remote partner. A value of 0 (the default) means retry forever. If the retry is abandonned then the resource/partner administrator becomes responsible for ensuring that the resource/partner?s branch is completed appropriately. The Transaction Manager will raise, on the resource/partner?s behalf, an XAException indicating a HeuristicHazard. If a commit was requested, the transaction originator will receive an exception on the commit operation; if the transaction is container-initiated, then the container will return a RemoteException/EJBException to the EJB client.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#heuristicRetryWait">heuristicRetryWait</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 6.0.0
+The number of seconds the Transaction Manager will wait before retrying a retriable completion signal (such as commit or rollback) following a transient exception from a Resource Manager/remote partner. A value of 0 (the default) means that the Transaction Manager will determine the retry wait. The retry wait will be doubled each time there have been 10 failed retries.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#waitForCommitOutcome">waitForCommitOutcome</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 6.0.0
+Indicates whether the Transaction Manager should retry commit requests synchronously (true) or asynchronously (false) following a transient exception from a Resource Manager/remote partner. The default value of false (which is the unconfigurable behaviour of WebSphere Application Server 5.x and earlier) means that the retries will be asynchronous and the transaction originator can assume that the commit will succeed. A value of true means that the retries will be synchronous, blocking the processing of the commit request. If the heuristic retry limit is exceeded, then a HeuristicMixed exception will be returned to the transaction originator. If the transaction is container initiated, then the container will return a RemoteException/EJBException to the EJB client.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableLoggingForHeuristicReporting">enableLoggingForHeuristicReporting</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Enables logging for heuristic reporting (an advanced function available in the EEx add-on package). If applications are configured to allow one-phase resources to participate in two-phase transactions, reporting of heuristic outcomes that occur at application server failure requires extra information to be written to the transaction log. If enabled, one additional log write will be perfomed for any transaction that involves both one and two-phase resources. No additional records are written for transactions that do not involve a one-phase resource. Default=false
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#LPSHeuristicCompletion">LPSHeuristicCompletion</A></B></FONT>&nbsp;:&nbsp;<A HREF="../applicationserver/LPSHeuristicCompletionKind.html">LPSHeuristicCompletionKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 6.0.0
+The heuristic completion action to be taken by the Transaction Service in an LPS transaction when the outcome of the 1PC resource is unknown.  (EEx function only) The default behaviour is to rollback the 2PC resources.  A setting of MANUAL means the Transaction Service will take no action and leave the 2PC resources in-doubt pending and administrative completion (eg via the Admin Console).
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#propogatedOrBMTTranLifetimeTimeout">propogatedOrBMTTranLifetimeTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@for zOS only
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableFileLocking">enableFileLocking</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Enable NFS file locking
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enableProtocolSecurity">enableProtocolSecurity</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Enable security on transaction protocol messages
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#asyncResponseTimeout">asyncResponseTimeout</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Timeout in seconds for responses to WS-AT protocol messages
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#httpProxyPrefix">httpProxyPrefix</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Prefix of WS-Transaction Proxy for HTTP protocol
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#httpsProxyPrefix">httpsProxyPrefix</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+Prefix of WS-Transaction Proxy for HTTPS protocol
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#wstxURLPrefixSpecified">wstxURLPrefixSpecified</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0
+
+Flag to indicate whether at URL prefix has been specified for WS-TX endpoints
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#WSTransactionSpecificationLevel">WSTransactionSpecificationLevel</A></B></FONT>&nbsp;:&nbsp;<A HREF="../applicationserver/WSTransactionSpecificationLevel.html">WSTransactionSpecificationLevel</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#acceptHeuristicHazard">acceptHeuristicHazard</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@since 7.0
+Indication that LPS is enabled server-wide.
+</TD>
+</TR>
+
+</TABLE>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attribute Details</B></FONT></TD>
+</TR>
+</TABLE>
+
+
+<BR>
+<B><A name="transactionLogDirectory">transactionLogDirectory</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Specifies the name of a directory for this server where the transaction service stores log files for recovery.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="totalTranLifetimeTimeout">totalTranLifetimeTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;The maximum duration, in seconds, for transactions on this application server.  Any transaction that is not requested to complete before this timeout will be rolled back.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="clientInactivityTimeout">clientInactivityTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;The maximum duration, in seconds, between transactional requests from a remote client.  Any period of client inactivity that exceeds this timeout results in the transaction being rolled back in this application server.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="maximumTransactionTimeout">maximumTransactionTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 6.0.0
+Maximum time, in seconds, for any transactions that execute in the server. This constrains the upper limit of the transaction timeout for all transactions that execute on the server. This value should be greater than or equal to the total transaction timeout which is the default timeout for transactions started on the server. This limit will constrain timeout set programmatically by BMT beans and values imported with contexts received from foreign servers.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="heuristicRetryLimit">heuristicRetryLimit</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 6.0.0
+The number of times the Transaction Manager will retry a retriable completion signal (such as commit or rollback) following a transient exception from a Resource Manager/remote partner. A value of 0 (the default) means retry forever. If the retry is abandonned then the resource/partner administrator becomes responsible for ensuring that the resource/partner?s branch is completed appropriately. The Transaction Manager will raise, on the resource/partner?s behalf, an XAException indicating a HeuristicHazard. If a commit was requested, the transaction originator will receive an exception on the commit operation; if the transaction is container-initiated, then the container will return a RemoteException/EJBException to the EJB client.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="heuristicRetryWait">heuristicRetryWait</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 6.0.0
+The number of seconds the Transaction Manager will wait before retrying a retriable completion signal (such as commit or rollback) following a transient exception from a Resource Manager/remote partner. A value of 0 (the default) means that the Transaction Manager will determine the retry wait. The retry wait will be doubled each time there have been 10 failed retries.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="waitForCommitOutcome">waitForCommitOutcome</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 6.0.0
+Indicates whether the Transaction Manager should retry commit requests synchronously (true) or asynchronously (false) following a transient exception from a Resource Manager/remote partner. The default value of false (which is the unconfigurable behaviour of WebSphere Application Server 5.x and earlier) means that the retries will be asynchronous and the transaction originator can assume that the commit will succeed. A value of true means that the retries will be synchronous, blocking the processing of the commit request. If the heuristic retry limit is exceeded, then a HeuristicMixed exception will be returned to the transaction originator. If the transaction is container initiated, then the container will return a RemoteException/EJBException to the EJB client.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableLoggingForHeuristicReporting">enableLoggingForHeuristicReporting</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Enables logging for heuristic reporting (an advanced function available in the EEx add-on package). If applications are configured to allow one-phase resources to participate in two-phase transactions, reporting of heuristic outcomes that occur at application server failure requires extra information to be written to the transaction log. If enabled, one additional log write will be perfomed for any transaction that involves both one and two-phase resources. No additional records are written for transactions that do not involve a one-phase resource. Default=false
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="LPSHeuristicCompletion">LPSHeuristicCompletion</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 6.0.0
+The heuristic completion action to be taken by the Transaction Service in an LPS transaction when the outcome of the 1PC resource is unknown.  (EEx function only) The default behaviour is to rollback the 2PC resources.  A setting of MANUAL means the Transaction Service will take no action and leave the 2PC resources in-doubt pending and administrative completion (eg via the Admin Console).
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../applicationserver/LPSHeuristicCompletionKind.html">LPSHeuristicCompletionKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;ROLLBACK
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;ROLLBACK
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;COMMIT
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;MANUAL
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="propogatedOrBMTTranLifetimeTimeout">propogatedOrBMTTranLifetimeTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@for zOS only
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableFileLocking">enableFileLocking</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Enable NFS file locking
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="enableProtocolSecurity">enableProtocolSecurity</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Enable security on transaction protocol messages
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="asyncResponseTimeout">asyncResponseTimeout</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Timeout in seconds for responses to WS-AT protocol messages
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;30
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="httpProxyPrefix">httpProxyPrefix</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Prefix of WS-Transaction Proxy for HTTP protocol
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="httpsProxyPrefix">httpsProxyPrefix</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;Prefix of WS-Transaction Proxy for HTTPS protocol
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="wstxURLPrefixSpecified">wstxURLPrefixSpecified</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0
+
+Flag to indicate whether at URL prefix has been specified for WS-TX endpoints
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="WSTransactionSpecificationLevel">WSTransactionSpecificationLevel</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../applicationserver/WSTransactionSpecificationLevel.html">WSTransactionSpecificationLevel</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;WSTX_10
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;WSTX_10
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;WSTX_11
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;WSTX_12
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="acceptHeuristicHazard">acceptHeuristicHazard</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@since 7.0
+Indication that LPS is enabled server-wide.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EBoolean.html">EBoolean</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+<CENTER>
+<h4>(C) COPYRIGHT International Business Machines Corp. 1996-2006</h4>
+</CENTER>
+
+</body>
+
+</html>

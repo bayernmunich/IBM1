@@ -1,0 +1,1707 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<plugin id="com.ibm.ws.console.distmanagement"
+        name="distmanagement"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="distmanagement">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <!--<import plugin="com.ibm.ws.console.environment"/>-->
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.dynacache"/>
+</requires>
+
+<!-- Add a server / New server -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+		<task id="addaserver" icon="images/onepix.gif" label="nav.view.AddAServer" view="/AddNewServer.do?button.new=true" external="false" role="administrator,configurator" weight="1">
+           		<category id="servermanagement"/>
+		</task>
+	</tasks>
+</extension>
+<!-- End Add a server / New server -->
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <task id="ConfigureCell" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" label="Configure.Cell" view="/navigatorCmd.do?forwardName=Cell.config.view" external="false" weight="10">
+            <category id="systemadmin"/>
+        </task>
+        <task id="ManageCellAgent" label="manage.cell.agent" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" view="/navigatorCmd.do?forwardName=CellManager.config.view" external="false" weight="20">
+            <category id="systemadmin"/>
+        </task>
+        <task id="ManageNodes" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" label="Manage.Nodes" view="/navigatorCmd.do?forwardName=Node.content.main" external="false" weight="30">
+            <category id="systemadmin"/>
+        </task>
+        <task id="ManageNodeAgent" label="manage.node.agents" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" view="/navigatorCmd.do?forwardName=NodeAgent.content.main" external="false" weight="40">
+            <category id="systemadmin"/>
+        </task>
+        <!-- MOVED TO JMSSERVERMANAGEMENT -->
+        <!--<task id="jmsserver" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" label="nav.view.JMSServer" view="/navigatorCmd.do?forwardName=JMSServer.content.main" external="false" weight="20">
+            <category id="servermanagement"/>
+        </task>-->
+        <!-- MOVED TO CLUSTERING -->
+        <!--<task id="ManageClusters" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" label="Manage.Clusters" view="/navigatorCmd.do?forwardName=ServerCluster.content.main" external="false" weight="30">
+            <category id="servermanagement"/>
+        </task>
+        <task id="ViewClusterTopology" icon="/com.ibm.ws.console.distmanagement/images/onepix.gif" label="View.Cluster.Topology" view="/navigatorCmd.do?forwardName=ClusterTopology.content.main" external="false" weight="40">
+            <category id="clusters"/>
+        </task>-->
+    </tasks>
+</extension>
+
+<!-- start of webserver changes - Links for additional properties(ND) -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="web.WebServer1" contextType="WebServer">
+        <link
+              categoryId="additional.properties"
+              weight="30"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ProcessDef.webserver.config.view&amp;sfname=processDefinitions&amp;lastPage=WebServer.config.view">
+              <compatibility>
+                 <match key="com.ibm.ws.console.web.webserver.WebServerDetailForm.isManaged" value="true"/>
+              </compatibility>
+        </link>
+  </linkSet>
+</extension>
+<!-- end of webserver changes - Links for additional properties  -->
+
+<!-- start of webserver DetailTab  -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.detailTab1" contextType="ProcessDef.webserver.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- end of webserver DetailTab -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ApplicationServer.collection1" contextType="ApplicationServer">
+        <!-- LI 3388 changes -->
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="applicationServerCollection.do"
+              scope="Node"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="applicationServerCollection.do"
+              role="administrator,configurator">
+        </action>
+        <!-- LI1855 change -->
+        <action
+              enablesFor="Collection"
+              label="button.templates"
+              actionURI="applicationServerCollection.do"
+              role="administrator,configurator,operator,monitor">
+        </action>
+        <!-- LI1855 change -->
+        <!-- LI 3388 changes -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.restart"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <!-- Begin LIDB2775 zOS changes -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.immediateStop"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <!-- End LIDB2775 zOS changes -->
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- Begin LIDB2401 -->
+<!-- Removed this button for PK31676
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ServerCluster.detail1" contextType="ServerCluster">
+        <action
+              enablesFor="Detail"
+              perspective="Runtime"
+              role="administrator,operator"
+              label="button.exportRouteTable"
+              actionURI="serverClusterDetail.do">
+        </action>
+    </actionSet>
+</extension>
+-->
+<!-- End LIDB2401 -->
+
+<!-- Begin WAS.webui.admin -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.CellManager1" contextType="CellManager">
+        <link
+              categoryId="additional.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=CellManager.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=CellManager.config.view">
+        </link>
+        <!-- CMVC defect 292889 -->
+        <!-- <link  -->
+        <!--      categoryId="additional.properties"  -->
+        <!--      label="ServerManagement.TraceService.displayName"  -->
+        <!--      description="ServerManagement.TraceService.description" -->
+        <!--      actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=CellManager.config.view"> -->
+        <!-- </link>  end 292889 -->
+        <!-- CMVC defect 232156 -->
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=CellManager.config.view">
+          <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=CellManager.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+              <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=CellManager.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </link>
+        <!-- end CMVC defect 232156 -->
+        <link
+              categoryId="additional.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=CellManager.config.view">
+        </link>
+        <!-- Begin defect 206863 -->
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=CellManager.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=CellManager.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=CellManager.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="serverinfrastructure.properties"
+              label="InstalledSDKs.label"
+              description="InstalledSDKs.server.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.server.content.main">
+        </link>
+        <!-- End defect 206863 -->
+        <link
+              categoryId="administration.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=CellManager.config.view">
+        </link>
+
+        <!-- BEGIN LIDB1891-8.6 -->
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=CellManager.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+              <!-- END LIDB1891-8.6 -->
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=CellManager.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null">
+        </link>
+
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=CellManager.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+                           <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+            </compatibility>
+                    </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=CellManager.config.view&amp;origin=CellManager.config.view&amp;ServerDetailForm=com.ibm.ws.console.distmanagement.CellManagerDetailForm"
+              perspective="runtime">
+        </link>
+        <!-- 529464.3 -->
+        <link
+              categoryId="additional.properties"
+              label="JobManager.displayName"
+              description="JobManager.description"
+              actionURI="cellManagerDetail.do?sfname=jobManager">
+        </link>
+        <!-- 643681.3 -->
+        <link
+              categoryId="administration.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+
+    </linkSet>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CellManager.config.general.properties" contextType="CellManager">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 Begin -->
+        <field
+             attributeName="runIn64bitJVMMode"
+             perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+               <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 End-->
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.FileTransferService1" contextType="FileTransferService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.NodeAgent1" contextType="NodeAgent">
+        <link
+              categoryId="additional.properties"
+              label="NodeAgent.fileTransferService.displayName"
+              description="NodeAgent.fileTransferService.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=FileTransferService.config.view&amp;sfname=fileTransferService">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="NodeAgent.fileSynchronizationService.displayName"
+              description="NodeAgent.fileSynchronizationService.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ConfigSynchronizationService.config.view&amp;sfname=fileSynchronizationService">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=NodeAgent.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=NodeAgent.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=NodeAgent.config.view">
+        </link>
+
+        <!-- CMVC defect PK27714 -->
+	<link
+              categoryId="additional.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view_5&amp;lastPage=NodeAgent.config.view">
+          <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=NodeAgent.config.view">
+          <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=NodeAgent.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+              <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+          </compatibility>
+        </link>
+        
+        <!-- CMVC defect PK27714 -->
+
+        <!-- Begin defect 206863 -->
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.nodeagent.view&amp;sfname=processDefinitions&amp;lastPage=NodeAgent.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=NodeAgent.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+ 	          </compatibility>
+        </link>
+        <!-- End defect 206863 -->
+        <link
+              categoryId="administration.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=NodeAgent.config.view">
+        </link>
+        <link
+          categoryId="serverinfrastructure.properties"
+          label="InstalledSDKs.label"
+          description="InstalledSDKs.server.link.description"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.server.content.main">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=NodeAgent.config.view">
+              <compatibility>
+	            <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <!-- BEGIN LIDB1891-8.6 -->
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=NodeAgent.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+            <!-- END LIDB1891-8.6 -->
+        </link>
+        <!-- CMVC defect 232156 -->
+        <link
+              categoryId="additional.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=NodeAgent.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="NodeAgent.config.general.properties" contextType="NodeAgent">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 Begin -->
+        <field
+             attributeName="runIn64bitJVMMode"
+             perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+	           <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+            </compatibility>
+        </field >
+        <!-- LIDB2727 End-->
+        <!-- 518901 start -->
+        <field
+            attributeName="provisionComponents"
+            perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])).*"/>
+            </compatibility>
+        </field >
+        <!-- 518901 end -->
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.ConfigSynchronizationService1" contextType="ConfigSynchronizationService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.NodeAgent.collection1" contextType="NodeAgent">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="nodeAgentCollection.do">
+        </action>
+        <!-- Begin LIDB2775 zOS changes -->	
+        <!-- per zOS team, restart needs to be shown for all versions/platforms except v5 zoS -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.restart"
+              actionURI="nodeAgentCollection.do">
+        </action>
+        <!-- End LIDB2775 zOS changes -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.restartall"
+              actionURI="nodeAgentCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ConfigSynchronizationService.collection1" contextType="ConfigSynchronizationService">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="configSynchronizationServiceCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="configSynchronizationServiceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.FileTransferService.collection1" contextType="FileTransferService">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="fileTransferServiceCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="fileTransferServiceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.CellManager.detail1" contextType="CellManager">
+        <action
+              enablesFor="Detail"
+              role="administrator,operator"
+              label="button.stop"
+              scope="Cell"
+              actionURI="cellManagerDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.ConfigSynchronizationService.collectionItem1" contextType="ConfigSynchronizationService">
+        <item
+              attributeName="enable"
+              sortable="sort"
+              itemURI="configSynchronizationServiceCollection.do?EditAction=true"
+              label="Service.enable.displayName">
+        </item>
+        <item
+              attributeName="synchInterval"
+              sortable="sort"
+              itemURI=""
+              label="ConfigSynchronizationService.synchInterval.displayName">
+        </item>
+        <item
+              attributeName="autoSynchEnabled"
+              sortable="sort"
+              itemURI=""
+              label="ConfigSynchronizationService.autoSynchEnabled.displayName">
+        </item>
+        <item
+              attributeName="synchOnServerStartup"
+              sortable="sort"
+              itemURI=""
+              label="ConfigSynchronizationService.synchOnServerStartup.displayName">
+        </item>
+        <item
+              attributeName="exclusions"
+              sortable="sort"
+              itemURI=""
+              label="ConfigSynchronizationService.exclusions.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.FileTransferService.collectionItem1" contextType="FileTransferService">
+        <item
+              attributeName="enable"
+              sortable="sort"
+              itemURI="fileTransferServiceCollection.do?EditAction=true"
+              label="Service.enable.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.NodeAgent.collectionItem1" contextType="NodeAgent">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nodeAgentCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- Detail Tabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.NodeAgent.detailTab1" contextType="NodeAgent">
+        <tab
+              label="tab.runtime"
+              contentURI="NodeAgent.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="NodeAgent.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.CellManager.detailTab1" contextType="CellManager">
+        <tab
+              label="tab.runtime"
+              contentURI="CellManager.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="CellManager.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.ConfigSynchronizationService.detailTab1" contextType="ConfigSynchronizationService">
+        <tab
+              label="tab.configuration"
+              contentURI="ConfigSynchronizationService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.FileTransferService.detailTab1" contextType="FileTransferService">
+        <tab
+              label="tab.configuration"
+              contentURI="FileTransferService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.admin -->
+
+<!-- Begin WAS.webui.workloadmgmt -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.ServerCluster1" contextType="ServerCluster">
+        <link
+              categoryId="additional.properties"
+              label="ServerCluster.members.displayName"
+              description="ServerCluster.members.description"
+              weight="10" actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ClusterMember.content.main&amp;sfname=members"
+              summaryViewURI="ClusterMember.summary.view">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin backup cluster -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.BackupCluster1" contextType="ServerCluster">
+        <link
+              categoryId="additional.properties"
+              label="BackupCluster.pme.displayName"
+              description="BackupCluster.pme.link.description"
+              weight="20" actionURI="com.ibm.ws.console.distmanagement.topology.pme.forwardCmd.do?forwardName=BackupCluster.config.view&amp;sfname=backupCluster&amp;resourceUri=cluster-pme.xml&#38;lastPage=ServerCluster.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.distmanagement.topology.ServerClusterDetailForm.isZosNodeGroup"  value="false"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="ClusterPME_Link.EndPoint1" contextType="BackupCluster">
+        <link
+              categoryId="additional.properties"
+              label="BackupCluster.pme.domainBootstrapAddress.displayName"
+              description="EndPoint.pme.description"
+              actionURI="com.ibm.ws.console.distmanagement.topology.pme.forwardCmd.do?forwardName=PmeEndPoint.config.view&amp;sfname=domainBootstrapAddress">
+        </link>
+    </linkSet>
+    <linkSet id="ClusterPME_Link.BackupCluster_related1" contextType="PmeEndPoint">
+        <link
+              categoryId="related.items"
+              label="CoreGroupBridgeSettings.displayName"
+              description="CoreGroupBridgeSettings.description"
+              actionURI="navigatorCmd.do?forwardName=CoreGroupBridgeSettings.config.view">
+        </link>
+    </linkSet>
+</extension>
+<!-- End backup cluster -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ServerCluster.collection1" contextType="ServerCluster">
+    	<action
+              enablesFor="Collection"
+              scope="Cell"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="serverClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="serverClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="serverClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="serverClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.rippledstart"
+              actionURI="serverClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.immediateStop"
+              actionURI="serverClusterCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ServerCluster.config.general.properties" contextType="ServerCluster">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.distmanagement.topology.ServerClusterDetailForm.isZosNodeGroup"  value="true"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.distmanagement.topology.ServerClusterDetailForm.isZosNodeGroup"  value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ClusterMember.collection1" contextType="ClusterMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <!-- Begin LIDB4138-39 -->
+        <action
+              enablesFor="Collection"
+              scope="Cluster"
+              role="administrator,configurator,operator,monitor"
+              label="button.templates"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <!-- End LIDB4138-39 -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="clusterMemberCollection.do">
+        </action>
+		<!-- 408038.1 -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.restart"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <!-- Begin LIDB2775 zOS changes -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.immediateStop"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="clusterMemberCollection.do">
+        </action>
+        <!-- End LIDB2775 zOS changes -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.make.idle"
+              actionURI="clusterMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.ClusterMember.collectionItem1" contextType="ClusterMember">
+        <item
+              attributeName="memberName"
+              sortable="sort"
+              itemURI="clusterMemberCollection.do?EditAction=true"
+              label="ClusterMember.memberName.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Node.displayName">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName">
+        </item>
+        <item
+	      attributeName="nodeVersion"
+	      sortable="sort"
+	      itemURI=""
+	      label="node.version.displayName">
+        </item>
+        <item
+              attributeName="weight"
+              sortable="sort"
+              itemURI=""
+              label="ClusterMember.configweight.displayName"
+			  editable="true"
+              role="administrator,configurator">
+        </item>
+        <item
+              attributeName="runtimeWeight"
+              sortable="sort"
+              itemURI=""
+              label="ClusterMember.runtimeweight.displayName"
+			  editable="true"
+              role="administrator,operator">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- Added for 366276.3 -->
+<extension point="com.ibm.websphere.wsc.preferences">
+    <preferenceSet id="distmanagement.ClusterMember.preferenceSet1" contextType="ClusterMember">
+       <preference
+          label="collection.preferences.showStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ClusterMember/Preferences#showStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showImmStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ClusterMember/Preferences#showImmStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showTerminateConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ClusterMember/Preferences#showTerminateConf"
+          size="32"/>
+    </preferenceSet>
+</extension>
+<!-- End 366276.3 -->
+<!-- Begin LIDB4138-39 -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.ClusterMemberTemplate.collectionItem1" contextType="ClusterMemberTemplate">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="clusterMemberTemplateCollection.do?EditAction=true"
+              label="template.name">
+        </item>
+        <item
+              attributeName="platform"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.platform.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.version.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="template.description">
+        </item>
+    </collectionItem>
+</extension>
+<!-- End LIDB4138-39 -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.ServerCluster.collectionItem1" contextType="ServerCluster">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="serverClusterCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="ServerCluster.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.ClusterMember.detailTab1" contextType="ClusterMember">
+        <tab
+              label="tab.runtime"
+              contentURI="ClusterMember.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ClusterMember.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.ServerCluster.detailTab1" contextType="ServerCluster">
+        <tab
+              label="tab.runtime"
+              contentURI="ServerCluster.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ServerCluster.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="ServerCluster.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ClusterTopology.detailTab1" contextType="ClusterTopology">
+        <tab
+              label="tab.topology"
+              role="ignore"
+              contentURI="ClusterTopology.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Begin backup cluster -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ClusterPME_DetailTab.PmeEndPoint.detailTab1" contextType="PmeEndPoint">
+        <tab
+              label="tab.runtime"
+              contentURI="PmeEndPoint.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="PmeEndPoint.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ClusterPME_DetailTab.BackupCluster.detailTab1" contextType="BackupCluster">
+        <tab
+              label="tab.configuration"
+              contentURI="BackupCluster.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End backup cluster -->
+
+<!-- Begin LIDB3726-2 -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ClusterMember.config.general.properties" contextType="ClusterMember">
+         <field attributeName="developmentMode" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="parallelStartEnabled" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="internalClassesAccessMode" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductVersion"
+                       value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+              </compatibility>
+         </field>
+         <field attributeName="shortName" perspective="config">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+ 	        </compatibility>
+         </field >
+         <field attributeName="applicationClassLoaderPolicy"
+              perspective="config">
+         </field>
+         <field attributeName="runIn64bitJVMMode" perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+               <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+            </compatibility>
+        </field >
+
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ClusterMemberServer1" contextType="ClusterMember">
+        <categoryDefinition weight="10" id="clustermember.containers.properties" parent="root" label="addprops.category.label.containers"/>
+        <categoryDefinition weight="20" id="clustermember.webcontainer.properties" parent="clustermember.containers.properties" label="addprops.category.label.webcontainers"/>
+        <categoryDefinition weight="10" id="clustermember.application.properties" parent="root" label="category.application.management"/>
+        <categoryDefinition weight="30" id="clustermember.portletcontainer.properties" parent="clustermember.containers.properties" label="addprops.category.label.portletcontainers"/>
+        <categoryDefinition weight="40" id="clustermember.ejbcontainer.properties" parent="clustermember.containers.properties" label="addprops.category.label.ejbcontainers"/>
+        <categoryDefinition weight="50" id="clustermember.containerservices.properties" parent="clustermember.containers.properties" label="addprops.category.label.containerservices"/>
+        <categoryDefinition weight="60" id="clustermember.businessprocessservices.properties" parent="clustermember.containers.properties" label="addprops.category.label.businessprocessservices"/>
+        <categoryDefinition weight="20" id="clustermember.serverinfrastructure.properties" parent="root" label="addprops.category.label.serverinfrastructure"/>
+        <categoryDefinition weight="10" id="clustermember.javaprocessmanagement.properties" parent="clustermember.serverinfrastructure.properties" label="addprops.category.label.javaprocessmanagement"/>
+        <categoryDefinition weight="20" id="clustermember.administration.properties" parent="clustermember.serverinfrastructure.properties" label="addprops.category.label.administration"/>
+        <categoryDefinition weight="30" id="clustermember.communications.properties" parent="root" label="addprops.category.label.communications"/>
+        <categoryDefinition weight="20" id="clustermember.messaging.properties" parent="clustermember.communications.properties" label="addprops.category.label.messaging"/>
+        <categoryDefinition weight="40" id="clustermember.performance.properties" parent="root" label="addprops.category.label.performance"/>
+        <categoryDefinition weight="50" id="clustermember.security.properties" parent="root" label="addprops.category.label.security"/>
+        <categoryDefinition weight="60" id="clustermember.troubleshooting.properties" parent="root" label="addprops.category.label.troubleshooting"/>
+
+        <link
+              categoryId="clustermember.containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view&amp;resourceUri=server.xml">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </link>
+        <link
+          categoryId="clustermember.containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </link>
+        <link
+          categoryId="clustermember.containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5zos.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.containerservices.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="clustermember.webcontainer.properties"
+              label="ApplicationServer.components.WebContainer.displayName"
+              description="ApplicationServer.components.WebContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.AppserverWebContainer.do?sfname=components&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.webcontainer.properties"
+              label="webcontainer.threadpool.displayName"
+              description="webcontainer.threadpool.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=ClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.containers.properties" weight="10"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="clustermember.webcontainer.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=ClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.webcontainer.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=ClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.webcontainer.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ClusterMember.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390|os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.ejbcontainer.properties"
+              weight="10"
+              label="ApplicationServer.components.EJBContainer.displayName"
+              description="ApplicationServer.components.EJBContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBContainer.config.view&amp;sfname=components&amp;lastPage=ClusterMember.config.view">
+        </link>
+       <link
+              categoryId="clustermember.ejbcontainer.properties"
+              weight="20"
+              label="EJBCache.displayName"
+              description="EJBCache.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBCache.config.view&amp;sfname=cacheSettings&amp;lastPage=ClusterMember.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="clustermember.ejbcontainer.properties"
+              weight="30"
+              label="EJBTimer.displayName"
+              description="EJBTimer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBTimer.config.view&amp;#38;sfname=timerSettings&amp;lastPage=ClusterMember.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="clustermember.ejbcontainer.properties"
+              weight="40"
+              label="EJBAsync.displayName"
+              description="EJBAsync.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBAsync.config.view&amp;#38;sfname=asyncSettings&amp;lastPage=ClusterMember.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+			  <compatibility>
+			      <match key="com.ibm.websphere.baseProductMajorVersion" value="([8-9])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.containerservices.properties"
+              label="JavaPersistenceAPIService.displayName"
+              description="JavaPersistenceAPIService.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaPersistenceAPIService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([7-9])"/>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.troubleshooting.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;ClusterMember.config.view">
+          <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+             </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.troubleshooting.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=ClusterMember.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+              <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.troubleshooting.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view_5&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.troubleshooting.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.troubleshooting.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=ClusterMember.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.messaging.properties"
+              label="MessageListenerService.displayName"
+              description="MessageListenerService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MessageListenerService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.administration.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.administration.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.administration.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.administration.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="Classloader.displayName"
+              description="Classloader.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Classloader.content.main&amp;sfname=classloaders">
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+        	<compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="distributedcell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+        	<compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="zoscell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+        	<compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="mixedcell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.javaprocessmanagement.properties"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.security.properties"
+              label="ServerSecurity.displayName"
+              description="ServerSecurity.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerSecurity.config.view&amp;amp;lastPage=ClusterMember.config.view">
+          <compatibility>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.ApplicationServerDetailForm.SERVER_HAS_SECURITY" value="true"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.communications.properties"
+              weight="10"
+              label="NamedEndPoint.displayName"
+              description="NamedEndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=ClusterMember.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.DebugService.displayName"
+              description="Server.services.DebugService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=DebugService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view">
+        </link>
+        <!-- LIDB3477 portletcontainer, added under 309749 -->
+        <link categoryId="clustermember.portletcontainer.properties"
+              label="ApplicationServer.components.PortletContainer.displayName"
+              description="ApplicationServer.components.PortletContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.portletcontainer.forwardCmd.do?forwardName=PortletContainer.config.view&amp;sfname=components&amp;lastPage=ClusterMember.config.view">
+            <compatibility>
+                  <match key="com.ibm.websphere.baseProductVersion"
+                         value="((\d\d)|([7-9])|6\.[1-9]).*" />
+             </compatibility>
+        </link>
+    </linkSet>
+
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ClusterMember.runtime1" contextType="ClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5zos.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view"
+              perspective="runtime">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=ClusterMember.config.view&amp;origin=ClusterMember.config.view"
+              perspective="runtime">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="clustermember.servermanagement.threadpools.services" contextType="ClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+        </link>
+    </linkSet>
+</extension>
+<!-- End LIDB3726-2 -->
+<!-- End WAS.webui.workloadmgmt -->
+
+<!-- Begin WAS.webui.j2ee.applicationserver -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.additionalLink.ServerSecurity" contextType="ApplicationServer">
+    <link
+              categoryId="security.properties"
+              label="ServerSecurity.displayName"
+              description="ServerSecurity.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerSecurity.config.view&amp;amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.ApplicationServerDetailForm.SERVER_HAS_SECURITY" value="true"/>
+          </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ApplicationServer.collectionItem1" contextType="ApplicationServer">
+<!-- For LIDB3726-2.3 -->
+        <item
+              attributeName="clusterName"
+              sortable="sort"
+              itemURI=""
+              label="Server.clusterName.displayName"
+              weight="140">
+              <compatibility>
+                  <match key="com.ibm.ws.console.servermanagement.applicationserver.GenericServerCollectionForm.showClusterMembers"
+                         value="true"/>
+              </compatibility>
+        </item>
+<!-- End LIDB3726-2.3 -->
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName"
+              weight="150">
+        </item>
+    </collectionItem>
+</extension>
+<!-- For LIDB2775-158 done under defect 207132 -->
+<extension point="com.ibm.websphere.wsc.preferences">
+    <preferenceSet id="servermanagement.ApplicationServer.preferenceSet1" contextType="ApplicationServer">
+<!-- For LIDB3726-2.3 -->
+       <preference
+          label="collection.preferences.showClusterMembersLabel"
+          units=" "
+          description="collection.preferences.showClusterMembersDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showClusterMembers"
+          size="32"/>
+<!-- End LIDB3726-2.3 -->
+       <preference
+          label="collection.preferences.showStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showImmStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showImmStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showTerminateConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showTerminateConf"
+          size="32"/>
+    </preferenceSet>
+    <preferenceSet id="servermanagement.ApplicationServer.preferenceSet2"  contextType="DeploymentTargetMapping">
+       <preference
+          label="collection.preferences.showClusterMembersLabel"
+          units=" "
+          description="collection.preferences.showClusterMembersDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/DeploymentTargetMapping/Preferences#showClusterMembers"
+          size="32"/>
+     </preferenceSet>
+</extension>
+<!-- For LIDB2775-158 done under defect 207132 -->
+<!-- End WAS.webui.j2ee.applicationserver -->
+
+<!-- 452513 version must be 7.0.0 or higher -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="com.ibm.ws.console.distmanagement.ClusterMemberDetailForm" contextType="ClusterMember">
+        <field
+              attributeName="provisionComponents"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- Begin To Be Deleted -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.ForeignCell1" contextType="ForeignCell">
+        <link
+              categoryId="additional.properties"
+              label="ForeignCell.bootstrapAddress.displayName"
+              description="ForeignCell.bootstrapAddress.description"
+              actionURI="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=EndPoint.config.view&amp;sfname=bootstrapAddress&amp;lastPage=ForeignCell.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ForeignCell.detail1" contextType="ForeignCell">
+        <action
+              enablesFor="Detail"
+              label="button.delete"
+              actionURI="foreignCellCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="distmanagement.ForeignCell.collection1" contextType="ForeignCell">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="foreignCellCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="foreignCellCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="distmanagement.ForeignCell.collectionItem1" contextType="ForeignCell">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="foreignCellCollection.do?EditAction=true"
+              label="ForeignCell.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="distmanagement.ForeignCell.detailTab1" contextType="ForeignCell">
+        <tab
+              label="tab.configuration"
+              contentURI="ForeignCell.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End To Be Deleted -->
+
+<!-- Begin Unknown -->
+<!-- Added for the move from PME to base of dynacache -->
+<!--   and for ND only -->
+<extension point="com.ibm.ws.console.core.link">
+  <link id="cacheinstance.drs"
+        contextType="CacheInstance"
+        contextTypePluginId="com.ibm.ws.console.dynacache"
+        icon=""
+        label="DRSSettings.pme.displayName"
+        description="DRSSettings.pme.description"
+        actionView="com.ibm.ws.console.dynacache.forwardCmd.do?forwardName=PMEDynamicCacheDRSSettings.config.view&amp;sfname=cacheReplication&amp;resourceUri=resources-pme502.xml"/>
+</extension>
+<!-- End Unknown -->
+
+</plugin>
+

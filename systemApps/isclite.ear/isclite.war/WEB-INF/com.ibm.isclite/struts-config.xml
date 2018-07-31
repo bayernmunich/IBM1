@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<!DOCTYPE struts-config PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+          "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+
+<struts-config>
+    <form-beans>
+<form-bean name="navigationForm" type="com.ibm.isclite.runtime.form.NavigationForm"/>
+        <!--ISC  Login form bean -->
+
+        <form-bean name="loginForm" type="com.ibm.isclite.runtime.form.LoginForm"/>
+        <form-bean name="favoriteForm" type="com.ibm.isclite.runtime.form.FavoriteForm"/>
+        <form-bean name="errorForm" type="com.ibm.ws.console.core.form.ErrorForm"/>
+        <form-bean name="formPersistForm" type="com.ibm.isclite.runtime.form.FormPersistForm"/> <!-- 3196 -->
+
+    </form-beans>
+    <global-forwards>
+        <!-- ISC  global -forwards -->
+        <forward   name="login"                path="portal.login"/>
+        <forward   name="contentframe" path="/contentframe.do"/>
+        <forward   name="tile.manage.favorites" path="tile.manage.favorites"/>
+        <forward name="sessioninvalid" path="/unsecure/invalidSession.jsp"/>
+        <forward name="sessioninvalidsecure" path="/securecleanup"/>
+        <forward   name="console.content" path="console.content"/>
+        <!-- ISC end of global -forwards -->
+    </global-forwards>
+    <action-mappings>
+        <!-- ISC  action mappings -->
+        <action path    = "/login"
+        type        = "com.ibm.isclite.runtime.action.LoginAction"
+        name        = "loginForm"
+        scope       = "session"
+        input       = "/index.jsp"
+        unknown     = "false"
+        validate    = "true">
+            <forward name="failure" path="console.login"/>
+            <forward name="success" path="console.main"/>
+            <forward name="userExists" path="console.loginConflict"/>
+            <forward name="changesFound" path="console.loginChangesFound"/>
+            <forward name="wait" path="console.login"/>
+            <forward name="continue" path="console.login"/>
+            <forward name="logonError" path="console.login"/>
+            <forward   name="errorContent" path="error.content"/>
+            <forward   name="xLaunchAction" path="/xLaunch.do"/>   <!-- 3193 -->
+            <forward name="federation" path="/secure/isclite/tiles/federation.jsp"/>
+        </action>
+ 
+<!-- 3193
+       Added for external launch
+ -->
+        <action path    = "/xLaunch"
+        type        = "com.ibm.isclite.runtime.action.xLaunchAction"
+        scope       = "session">
+            <forward name="failure" path="/secure/isclite/tiles/xLaunchError.jsp"/>
+            <forward name="success" path="console.main"/>
+            <forward name="login" path="/login.do?action=secure"/>
+            <forward name="login.nonsecure" path="console.login"/>
+            <forward name="login.nonsecure.sso" path="/login.do"/>
+        </action>
+
+        <action path="/secure/securelogon"  name="loginForm" scope="session"
+        type="com.ibm.isclite.runtime.action.LoginAction">
+            <forward name="failure" path="console.login"/>
+            <forward name="success" path="console.main"/>
+            <forward name="userExists" path="console.loginConflict"/>
+            <forward name="changesFound" path="console.loginChangesFound"/>
+            <forward name="wait" path="/logon.jsp"/>
+            <forward name="continue" path="/logon.jsp"/>
+            <forward name="logonError" path="/logon.jsp"/>
+            <forward   name="xLaunchAction" path="/xLaunch.do"/>   <!-- 3193 -->
+            <forward name="federation" path="/secure/isclite/tiles/federation.jsp"/>            
+        </action>
+        <action path = "/logout" type = "com.ibm.isclite.runtime.action.LogoutAction">
+            <forward name="modsfound"    path="/syncworkspace.do?syncaction=list&#38;logoff=true"/>
+            <forward name="success"    path="/index.jsp"/>
+            <forward name="secure" path="ibm_security_logout?logoutExitPage=logon.jsp"/>
+        </action>
+
+        <action name="errorForm" path="/error" type="com.ibm.ws.console.core.action.ErrorAction">
+            <forward name="success" path="/error.jsp"/>
+            <forward name="failure" path="/error.jsp"/>
+        </action>
+
+        <action path = "/navigation" type = "com.ibm.isclite.runtime.action.NavigationAction">
+            <forward name="success" path="console.content"/>
+            <forward name="failure" path="access.content"/>
+        </action>
+        <action path = "/taskbar" type = "com.ibm.isclite.runtime.action.TaskBarAction">
+            <forward name="success" path="console.content"/>
+            <forward name="failure" path="access.content"/>
+            <forward name="update" path="tile.taskbar"/>
+        </action>
+        <action name="navigationForm" path="/filterNav" type="com.ibm.isclite.runtime.action.NavigationFilterAction">
+            <forward name="success" path="console.navigation"/>
+        </action>
+
+        <!-- change node state(expand/collapse -->
+        <action path="/nsc" type="com.ibm.isclite.runtime.action.NavNodeStateAction">
+            <forward name="success" path="console.navigation"/>
+            <forward name="navTreeToggle" path="console.main"/>
+        </action>
+
+        <action path="/home" type="com.ibm.isclite.runtime.action.HomeAction">
+            <forward name="wsc" path="console.content.main"/>
+            <forward name="default" path="console.content"/>
+        </action>
+
+        <!-- handling favorites -->
+        <action name="favoriteForm" path="/preference" type="com.ibm.isclite.runtime.action.PrefAction">
+            <forward name="OrganizeFavorites" path="tile.manage.favorites"/>
+            <forward name="success" path="console.content"/>
+        </action>
+
+        <!-- handling favorites -->
+        <action name="favoriteForm" path="/mfav" type="com.ibm.isclite.runtime.action.ManageFavorites">
+            <forward name="renameFavorites" path="console.favorites.rename"/>
+            <forward name="mangeFavorites" path="tile.manage.favorites"/>
+
+        </action>
+
+        <!-- close dynamic portlet -->
+        <action path="/cp" type="com.ibm.isclite.runtime.action.ClosePortletAction"/>
+        <!-- change window state -->
+        <action path="/cws" type="com.ibm.isclite.runtime.action.ChangeWindowStateAction">
+        </action>
+        <action path="/cwm" type="com.ibm.isclite.runtime.action.ChangeWindowModeAction">
+            <forward name="portlet.help.display" path="/html/isclite/PortletHelpDisplay.jsp"/>
+          </action>
+        <action path="/pa" type="com.ibm.isclite.runtime.action.PortletActionHandlerAction">
+        </action>
+
+        <action
+            name="loginForwardAction"
+            path="/index" type="com.ibm.isclite.runtime.action.ForwardAction">
+            <forward name="success" path="/index.jsp"/>
+        </action>
+        
+       <!-- 3196 -->
+       <!-- handling  form persistence -->
+	     <action 
+            name="formPersistForm" 
+            path="/fpa" 
+            scope="session" 
+            type="com.ibm.isclite.runtime.action.FormPersistAction">
+				    <forward name="success" path="/secure/isclite/formPersist.jsp"/>
+	     </action>
+	     <!-- 3196 -->
+	     
+		<!-- LI 2940 :  Provide JSR 168 based Portlet Refresh mode -->
+		<action 
+			name="portletFragmentAction" 
+			path="/pfa" 
+			scope="session" 
+			type="com.ibm.isclite.runtime.action.PortletFragmentAction">
+	     	<forward 
+	     		name="success" 
+	     		path="portlet.fragment"/>
+	     	<forward 
+	     		name="failure" 
+	     		path="portlet.empty"/>
+	 	</action>
+	 	<action 
+			name="portletRefreshAction" 
+			path="/pra" 
+			scope="session" 
+			type="com.ibm.isclite.runtime.action.PortletRefreshAction">
+	     	<forward 
+	     		name="dorefresh" 
+	     		path="/pfa.do"/>
+	     	<forward 
+	     		name="norefresh" 
+	     		path="portlet.empty"/>
+	 	</action>
+	 	<!-- LI 2940 :  Provide JSR 168 based Portlet Refresh mode -->
+
+       <!-- ISC  end of action mappings -->
+
+    </action-mappings>
+  
+
+
+
+    <!--ISC added a controller  -->
+
+    <controller debug="3"
+        multipartClass="com.ibm.isclite.container.controller.NLSDiskMultipartRequestHandler" processorClass="com.ibm.isclite.container.controller.InformationController"/>
+    <message-resources parameter="com.ibm.ws.console.core.resources.ConsoleAppResources"/>
+    <message-resources parameter="com.ibm.isclite.common.Messages" key="ISCMessages"/>
+    <message-resources parameter="com.ibm.isclite.common.MessagesExt" key="ISCMessagesExt"/>
+    <message-resources parameter="com.ibm.isclite.common.ISCStrutsMessages" key="StrutsMessages"/>  <!-- 3193 -->
+
+
+
+    <plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+        <set-property property="pathnames"
+                          value="/WEB-INF/com.ibm.ws.console.core/validation.xml"/>
+    </plug-in>
+
+    <plug-in className="org.apache.struts.tiles.TilesPlugin">
+        <set-property property="definitions-config"
+                         value="/WEB-INF/config/tiles-defs.xml"/>
+        <set-property property="definitions-debug" value="3"/>
+        <set-property property="moduleAware" value="false"/>
+        <set-property property="definitions-parser-details" value="3" />
+        <set-property property="definitions-parser-validate" value="true"/>
+        <!-- PERF Changes -->
+        <!-- indexing is set to true to enable indexing changes -->
+        <set-property property="indexing" value="true"/>
+        <!-- if developement mode is true, console-defs index file will be rebuilt if out-of-date. If set to false, index file will not be rebuilt. -->
+        <set-property property="developement" value="false"/>
+        <!-- usageCount is minimum usage count of the definition,definition is evicted from the cache if count is below this number -->
+        <set-property property="usageCount" value="10"/>
+        <!-- lifeTime, in minutes indicates life span of the definition before it is removed from the cache -->
+        <set-property property="lifeTime" value="30"/>
+        <!-- cacheTriggerInterval, in minutes indicates time interval for cache removal algorithm is triggered -->
+        <set-property property="cacheTriggerInterval" value="20"/>
+        <!-- PERF Changes -->
+    </plug-in>
+    <plug-in className="com.ibm.isclite.ISCPlugIn"/>
+
+</struts-config>

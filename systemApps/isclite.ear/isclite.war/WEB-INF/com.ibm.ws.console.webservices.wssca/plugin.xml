@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N01, 5722-WE2 (C) COPYRIGHT International Business Machines Corp. 2008
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.  -->
+
+<plugin id="com.ibm.ws.console.webservices.wssca"
+        name="wssca"
+        version="8.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="wssca">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.webservices.policyset"/>
+</requires>
+
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="SCAClientWSAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="SCAClientWSAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.WsadminPolicySet1" contextType="SCAProviderWSAdminDetail">
+        <tab
+              label="tab.configuration"
+              contentURI="SCAProviderWSAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+<!-- Begin SCA detail panel additional links -->
+<!--   Composition and WSDL links are dynamic, pulled from form by addPropLayoutDynamicLabel.jsp -->
+<!--   WSDL link is new version for SCA -->
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.SCAClientWS.linkset.id1" contextType="SCAClientWSAdminDetail">
+     <categoryDefinition id="wsadminApplicationPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.compositionunit.link"
+           description="WSAdmin.compositionunit.link.description"
+           weight="50"
+           actionURI="com.ibm.ws.console.blamanagement.forwardCmd.do?forwardName=BLAManagement.asset">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(scaj2ee)"/>
+           </compatibility>
+     </link>
+
+   </linkSet>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="wsadmin.SCAProviderWS.linkset.id1" contextType="SCAProviderWSAdminDetail">
+     <categoryDefinition id="wsadminApplicationPropertiesCategoryId" parent="root" label="WSAdmin.AdditionalProperties.category.displayName" weight="40"/>
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.compositionunit.link"
+           description="WSAdmin.compositionunit.link.description"
+           weight="50"
+           actionURI="com.ibm.ws.console.blamanagement.forwardCmd.do?forwardName=BLAManagement.asset">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(scaj2ee)"/>
+           </compatibility>
+     </link>
+
+
+     <link categoryId="wsadminApplicationPropertiesCategoryId"
+           label="WSAdmin.wsdl.document"
+           description="WSAdmin.wsdl.document.link.description"
+           weight="30"
+           actionURI="scaproviderWSAdminDetailPath.do?ViewWSDL=true">
+           <compatibility>
+             <match class="com.ibm.ws.console.webservices.wsadmin.form.WebservicesAdminDetailForm"
+                    key="com.ibm.ws.console.webservices.wsadmin.serviceType" value="(DISABLED)"/>
+           </compatibility>
+     </link>
+
+
+   </linkSet>
+</extension>
+<!-- End SCA detail panel additional links -->
+
+
+<!-- Begin Policy set and bindings links -->
+
+    <extension point="com.ibm.websphere.wsc.link">
+       <linkSet id="sca.policysetandbindings.links" contextType="CUDetail">
+
+        <link label="SCAPolicySetBindings.provider.displayName"
+            description="SCAPolicySetBindings.provider.link.description"
+            weight="40"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAProviderPolicySetAttachment.content.main&amp;attachmentScope=application&amp;attachmentType=application">
+
+            role="administrator,configurator">
+            <compatibility>
+                <match class="com.ibm.ws.console.webservices.wssca.SCAPolicySetAttachmentForm"
+                       key="com.ibm.ws.console.webservices.wssca.hasprovider" value="true"/>
+            </compatibility>
+         </link>
+    
+        <link label="SCAPolicySetBindings.client.displayName"
+            description="SCAPolicySetBindings.client.link.description"
+            weight="44"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAClientPolicySetAttachment.content.main&amp;attachmentScope=application&amp;attachmentType=client">
+            role="administrator,configurator">
+            <compatibility>
+                <match class="com.ibm.ws.console.webservices.wssca.SCAPolicySetAttachmentForm"
+                       key="com.ibm.ws.console.webservices.wssca.hasclient" value="true"/>
+            </compatibility>
+         </link>
+
+       </linkSet>            
+    </extension>
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="policyset.ClientPolicySetAttachment.collectionItem1" contextType="PolicySetAttachment">
+            <item
+                  attributeName="name"
+                  sortable="sort"
+                  label="policyset.andbinding.curesource.qname.displayName"
+                  itemURI="">
+                <compatibility>
+                    <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.IsCompositionUnit" value="true"/>
+                </compatibility>
+            </item>
+        </collectionItem>
+    </extension>
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="policyset.ClientPolicySetAttachment.collectionItem1" contextType="ClientPolicySetAttachment">
+            <item
+                  attributeName="name"
+                  sortable="sort"
+                  label="policyset.andbinding.curesource.qname.displayName"
+                  itemURI="">
+                <compatibility>
+                    <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.IsCompositionUnit" value="true"/>
+                </compatibility>
+            </item>
+        </collectionItem>
+    </extension>
+
+<!-- End Policy set and bindings links -->
+
+<!-- LIDB3796-41.2 Begin -->
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="policyset.PolicySet" contextType="PolicySet">
+       <link label="policyset.AttachedDeployedAssetsCollection.displayName"
+            description="policyset.AttachedDeployedAssetsCollection.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.wssca.forwardCmd.do?forwardName=AttachedDeployedAsset.content.main">
+       </link>
+   </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="policyset.PolicySet" contextType="DefaultPolicySet">
+       <link label="policyset.AttachedDeployedAssetsCollection.displayName"
+            description="policyset.AttachedDeployedAssetsCollection.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.wssca.forwardCmd.do?forwardName=AttachedDeployedAsset.content.main">
+       </link>
+   </linkSet>
+</extension>
+
+<!-- AttachedDeployedAsset collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.AttachedDeployedAsset.collection1" contextType="AttachedDeployedAsset">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.detachPolicySet"
+              actionURI="attachedDeployedAssetCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.replacePolicySet"
+              actionURI="attachedDeployedAssetCollection.do"
+              type="menu"
+              actionName="replacePolicySet"
+              optionValueList="policyset.policysets.values"
+              optionLabelList="policyset.policysets.labels"
+              translatable="false">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.AttachedDeployedAsset.collectionItem1" contextType="AttachedDeployedAsset">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="custom"
+              label="policyset.AttachedDeployedAssets.name.displayName">
+        </item>
+        <item
+              attributeName="displayType"
+              sortable="sort"
+              itemURI=""
+              label="policyset.AttachedDeployedAssets.type.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- LIDB3796-41.2 End -->
+
+</plugin>

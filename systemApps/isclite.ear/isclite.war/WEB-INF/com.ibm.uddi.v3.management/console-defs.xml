@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.UddiNodeCollectionController"
+        name="uddi.nodes.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="descTitle" value="uddi.main.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="descText" value="uddi.main.description"/>
+        <put name="contextType" value="UddiNode"/>
+        <putList name="contentList">
+            <add value="uddinode.collection.paging.extend"/>
+            <add value="uddinode.quicksearch.extend"/>
+            <add value="uddi.nodes.table"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="uddinode.quicksearch.extend">
+        <put name="selectUri" value="uddiNodeCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="uddiNodeCollectionForm"/>
+        <put name="formAction" value="uddiNodeCollection.do"/>
+        <put name="formName" value="uddiNodeCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiNodeCollectionForm"/>
+        <putList name="searchList">
+            <add value="uddi.id.columnName:nodeId"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="uddinode.collection.paging.extend">
+        <!-- The displayLabelKey appears not to be used anywhere in paging.main -->
+        <put name="displayLabelKey" value="textProperty.displayName"/>
+        <put name="collectionForm" value="uddiNodeCollectionForm"/>
+        <put name="formAction" value="uddiNodeCollection.do"/>
+        <put name="formName" value="uddiNodeCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiNodeCollectionForm"/>
+    </definition>
+    <definition name="uddi.nodes.table" path="/com.ibm.uddi.v3.management/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="uddiNodeCollectionForm"/>
+        <put name="formAction" value="uddiNodeCollection.do"/>
+        <put name="formName" value="uddiNodeCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiNodeCollectionForm"/>
+        <put name="buttons" value="uddi.nodes.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.nodes.main"/>
+        <put name="uniqueProperty" value="uniqueId"/>
+        <put name="uniquePropertyName" value="uniqueId"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="uddiNodeCollection.do?EditAction=true"
+                tooltip="uddi.id.columnName" value="nodeId:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.nodeDescription.columnName" value="description:"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.nodeAppLocation.columnName" value="application:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="uddi.nodeStatus.columnName" value="status:sort"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/UddiNode/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/UddiNode/Preferences#retainSearchCriteria:32"/>
+        </putList>
+        <putList name="contextList"/>
+    </definition>
+    <definition name="uddi.nodes.collection.buttons.panel" path="/com.ibm.uddi.v3.management/uddiButtonLayout.jsp">
+        <put name="hide" value="no"/>
+        <put name="includeForm" value="no"/>
+        <put name="formAction" value=""/>
+        <putList name="buttonList">
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.activate" value="uddi.button.activate:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.deactivate" value="uddi.button.deactivate:administrator:operator"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="uddi.node.detail.title">
+        <put name="formName" value="uddiNodeDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="nodeId"/>
+        <put name="instanceDescription" value="uddi.uddiNode.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.node.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="UddiNode"/>
+        <putList name="list">
+            <add value="uddi.node.detail.title"/>
+            <add value="uddi.node.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition name="uddi.node.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.node.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.node.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="uddi.node.detail.buttons.panel"/>
+            <add value="uddi.node.config.general.properties"/>
+            <add value="uddi.node.config.additional.properties"/>
+            <add value="uddi.node.config.policyGroupsForNodeDetail"/>
+            <!--<add value="uddi.node.config.related.items"/>-->
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.UddiNodeButtonController"
+        name="uddi.node.detail.buttons.panel" path="/com.ibm.uddi.v3.management/uddiButtonLayout.jsp">
+        <put name="includeForm" value="yes"/>
+        <put name="formAction" value="uddiNodeDetail.do"/>
+        <put name="hide" value="no"/>
+        <putList name="buttonList">
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.initialize" value="uddi.button.initialize:administrator:operator"/>
+        </putList>
+    </definition>
+    <definition name="uddi.node.config.general.properties" path="/com.ibm.uddi.v3.management/uddiPropertiesLayout.jsp">
+        <put name="formAction" value="uddiNodeDetail.do?EditAction=true"/>
+        <put name="formName" value="uddiNodeDetailForm"/>
+        <put name="formType" value="com.ibm.uddi.management.gui.forms.UddiNodeDetailForm"/>
+        <put name="iterationName" value="uddiNodeDetailForm"/>
+        <put name="iterationProperty" value="properties"/>
+        <put name="propertiesCollection" value="property"/>
+        <put name="indexedPropertyField" value="value"/>
+    </definition>
+    <definition name="uddi.node.config.policyGroups" path="/com.ibm.uddi.v3.management/policyGroupListLayout.jsp">
+        <put name="iterationName" value="uddiNodeDetailForm"/>
+        <put name="iterationProperty" value="policyGroups"/>
+        <put name="link" value="uddiNodeDetail.do?EditPolicyGroup=true"/>
+        <put name="iterationType" value="com.ibm.uddi.v3.management.gui.forms.UddiPolicyGroupDetailForm"/>
+        <put name="requestParam" value="policyGroupId"/>
+    </definition>
+    <definition extends="uddi.node.config.policyGroups" name="uddi.node.config.policyGroupsForNodeDetail">
+        <put name="forNodeDetail" value="true"/>
+    </definition>
+    <definition name="uddi.policyGroup.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="UddiNode"/>
+        <putList name="list">
+            <add value="uddi.policyGroup.detail.title"/>
+            <add value="uddi.policyGroup.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.PolicyGroupDetailController"
+        extends="detail.title" name="uddi.policyGroup.detail.title">
+        <put name="formName" value="uddiPolicyGroupDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="uddi.policyGroups.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.policyGroup.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.policyGroup.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.policyGroup.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <!--<add value="uddi.node.buttons.panel"/>-->
+            <add value="uddi.policyGroup.config.general.properties"/>
+            <add value="uddi.node.config.policyGroups"/>
+            <!--<add value="uddi.node.config.additional.properties"/>-->
+            <!--<add value="uddi.node.config.related.items"/>-->
+        </putList>
+    </definition>
+    <definition name="uddi.policyGroup.config.general.properties" path="/com.ibm.uddi.v3.management/uddiPropertiesLayout.jsp">
+        <put name="formAction" value="uddiPolicyGroupDetail.do?EditAction=true"/>
+        <put name="formName" value="uddiPolicyGroupDetailForm"/>
+        <put name="formType" value="com.ibm.uddi.management.gui.forms.UddiPolicyGroupDetailForm"/>
+        <put name="iterationName" value="uddiPolicyGroupDetailForm"/>
+        <put name="iterationProperty" value="policies"/>
+        <put name="propertiesCollection" value="policy"/>
+        <put name="indexedPropertyField" value="value"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.ValueSetStatusCollectionController"
+        name="uddi.valueSetStatus.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="descTitle" value="uddi.valueSetStatus.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="descText" value="uddi.valueSetStatus.collection.description"/>
+        <put name="contextType" value="ValueSetStatus"/>
+        <putList name="contentList">
+            <add value="valueSetStatus.collection.paging.extend"/>
+            <add value="valueSetStatus.quicksearch.extend"/>
+            <add value="uddi.valueSetStatus.table"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="valueSetStatus.collection.paging.extend">
+        <!-- The displayLabelKey appears not to be used anywhere in paging.main -->
+        <put name="displayLabelKey" value="textProperty.displayName"/>
+        <put name="collectionForm" value="valueSetStatusCollectionForm"/>
+        <put name="formAction" value="valueSetStatusCollection.do"/>
+        <put name="formName" value="valueSetStatusCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.ValueSetStatusCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="valueSetStatus.quicksearch.extend">
+        <put name="selectUri" value="valueSetStatusCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="valueSetStatusCollectionForm"/>
+        <put name="formAction" value="valueSetStatusCollection.do"/>
+        <put name="formName" value="valueSetStatusCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.ValueSetStatusCollectionForm"/>
+        <putList name="searchList">
+            <add value="uddi.valueSetName.columnName:name"/>
+            <add value="uddi.valueSetTModelKey.columnName:TModelKey"/>
+        </putList>
+    </definition>
+    <definition name="uddi.valueSetStatus.table" path="/com.ibm.uddi.v3.management/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="valueSetStatusCollectionForm"/>
+        <put name="formAction" value="valueSetStatusCollection.do"/>
+        <put name="formName" value="valueSetStatusCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.ValueSetStatusCollectionForm"/>
+        <put name="buttons" value="uddi.valueSetStatus.collection.button.panel"/>
+        <put name="parent" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.valueSetStatus.main"/>
+        <put name="uniqueProperty" value="TModelKey"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon=""
+                link="valueSetStatusCollection.do?EditAction=true"
+                tooltip="uddi.valueSetName.columnName" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.valueSetTModelKey.columnName" value="TModelKey:"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.valueSetSupported.columnName" value="supported:"/>
+        </putList>
+        <putList name="contextList">
+            <item classtype="com.ibm.uddi.v3.management.gui.ContextItem"
+                icon="" link="" tooltip="" value="uniqueId:uniqueId"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ValueSetStatus/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ValueSetStatus/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition name="uddi.valueSetStatus.collection.button.panel" path="/com.ibm.uddi.v3.management/uddiButtonLayout.jsp">
+        <put name="includeForm" value="no"/>
+        <put name="formAction" value=""/>
+        <put name="hide" value="no"/>
+        <putList name="buttonList">
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.support" value="uddi.button.support:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.unsupport" value="uddi.button.unsupport:administrator:operator"/>
+            <!-- <item value="uddi.valueSetButton.new:valueSetStatusCollection.do?action=newValueSet" link="" icon="" tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem"/>
+            <item value="uddi.valueSetButton.remove:valueSetStatusCollection.do?action=removeValueSet" link="" icon=""  tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem"/>-->
+        </putList>
+    </definition>
+    <definition name="uddi.node.config.additional.properties" path="/com.ibm.uddi.v3.management/linkLayout.jsp">
+        <put name="parentObjectName" value="uddiNodeDetailForm"/>
+        <putList name="linkList">
+            <item classtype="com.ibm.uddi.v3.management.gui.LinkItem"
+                icon="" link=""
+                tooltip="uddi.valueSetStatus.link.description" value="uddi.valueSetStatus.link.name:com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.valueSetStatus.main"/>
+            <item classtype="com.ibm.uddi.v3.management.gui.LinkItem"
+                icon="" link="" tooltip="uddi.uddiTier.link.description" value="uddi.uddiTier.link.name:com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.uddiTier.main"/>
+            <item classtype="com.ibm.uddi.v3.management.gui.LinkItem"
+                icon="" link="" tooltip="uddi.uddiUser.link.description" value="uddi.uddiUser.link.name:com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.uddiUser.main"/>
+        </putList>
+    </definition>
+    <definition name="uddi.placeholder" path="placeholder.jsp"/>
+    <definition name="uddi.valueSetStatus.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="ValueSetStatus"/>
+        <putList name="list">
+            <add value="uddi.valueSetStatus.detail.title"/>
+            <add value="uddi.valueSetStatus.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="uddi.valueSetStatus.detail.title">
+        <put name="formName" value="valueSetStatusDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="uddi.valueSetStatus.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.valueSetStatus.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <put name="selectUri" value="valueSetStatusDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="valueSetStatusDetailForm"/>
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.valueSetStatus.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.valueSetStatus.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="uddi.valueSetStatus.config.general.properties"/>
+        </putList>
+    </definition>
+    <definition name="uddi.valueSetStatus.config.general.properties" path="/com.ibm.uddi.v3.management/uddiPropertiesLayout.jsp">
+        <put name="formAction" value="valueSetStatusDetail.do?EditAction=true"/>
+        <put name="formName" value="valueSetStatusDetailForm"/>
+        <put name="formType" value="com.ibm.uddi.management.gui.forms.ValueSetStatusDetailForm"/>
+        <put name="iterationName" value="valueSetStatusDetailForm"/>
+        <put name="iterationProperty" value="valueSetProperties"/>
+        <put name="propertiesCollection" value="property"/>
+        <put name="indexedPropertyField" value="value"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.UddiTierCollectionController"
+        name="uddi.uddiTier.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="descTitle" value="uddi.uddiTier.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="descText" value="uddi.uddiTier.collection.description"/>
+        <put name="contextType" value="UddiTier"/>
+        <putList name="contentList">
+            <add value="uddi.uddiTier.collection.paging.extend"/>
+            <add value="uddi.uddiTier.quicksearch.extend"/>
+            <add value="uddi.uddiTier.table"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="uddi.uddiTier.collection.paging.extend">
+        <!-- The displayLabelKey appears not to be used anywhere in paging.main -->
+        <put name="displayLabelKey" value="textProperty.displayName"/>
+        <put name="collectionForm" value="uddiTierCollectionForm"/>
+        <put name="formAction" value="uddiTierCollection.do"/>
+        <put name="formName" value="uddiTierCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiTierCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="uddi.uddiTier.quicksearch.extend">
+        <put name="selectUri" value="uddiTierCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="uddiTierCollectionForm"/>
+        <put name="formAction" value="uddiTierCollection.do"/>
+        <put name="formName" value="uddiTierCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiTierCollectionForm"/>
+        <putList name="searchList">
+            <add value="uddi.uddiTier.name.columnName:name"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiTier.table" path="/com.ibm.uddi.v3.management/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="uddiTierCollectionForm"/>
+        <put name="formAction" value="uddiTierCollection.do"/>
+        <put name="formName" value="uddiTierCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiTierCollectionForm"/>
+        <put name="buttons" value="uddi.uddiTier.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.uddiTier.main"/>
+        <put name="uniqueProperty" value="id"/>
+        <put name="uniquePropertyName" value="id"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="uddiTierCollection.do?EditAction=true"
+                tooltip="uddi.uddiTier.name.columnName" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.uddiTier.description.columnName" value="description:"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/UddiTier/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/UddiTier/Preferences#retainSearchCriteria:32"/>
+        </putList>
+        <putList name="contextList"/>
+    </definition>
+    <definition name="uddi.uddiTier.collection.buttons.panel" path="/com.ibm.uddi.v3.management/uddiButtonLayout.jsp">
+        <put name="includeForm" value="no"/>
+        <put name="formAction" value=""/>
+        <put name="hide" value="no"/>
+        <putList name="buttonList">
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="button.new" value="button.new:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="button.delete" value="button.delete:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false"
+                tooltip="uddi.button.setDefaultTier" value="uddi.button.setDefaultTier:administrator:operator"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiTier.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="uddiTier"/>
+        <putList name="list">
+            <add value="uddi.uddiTier.detail.title"/>
+            <add value="uddi.uddiTier.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="uddi.uddiTier.detail.title">
+        <put name="formName" value="uddiTierDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="uddi.uddiTier.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.uddiTier.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.uddiTier.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiTier.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="uddi.uddiTier.config.general.properties"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiTier.config.general.properties" path="/com.ibm.uddi.v3.management/uddiPropertiesLayout.jsp">
+        <put name="formAction" value="uddiTierDetail.do?EditAction=true"/>
+        <put name="formName" value="uddiTierDetailForm"/>
+        <put name="formType" value="com.ibm.uddi.management.gui.forms.UddiTierDetailForm"/>
+        <put name="iterationName" value="uddiTierDetailForm"/>
+        <put name="iterationProperty" value="limits"/>
+        <put name="propertiesCollection" value="limit"/>
+        <put name="indexedPropertyField" value="value"/>
+    </definition>
+    <definition name="uddi.uddiUser.new.main" path="/com.ibm.uddi.v3.management/newUsersLayout.jsp">
+        <put name="formName" value="uddiUserDetailForm"/>
+        <put name="formAction" value="uddiUserDetail.do"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.uddi.v3.management.gui.controllers.UddiUserCollectionController"
+        name="uddi.uddiUser.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="descTitle" value="uddi.uddiUser.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="descText" value="uddi.uddiUser.collection.description"/>
+        <put name="contextType" value="UddiUser"/>
+        <putList name="contentList">
+            <add value="uddi.uddiUser.collection.paging.extend"/>
+            <add value="uddi.uddiUser.quicksearch.extend"/>
+            <add value="uddi.uddiUser.table"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="uddi.uddiUser.collection.paging.extend">
+        <!-- The displayLabelKey appears not to be used anywhere in paging.main -->
+        <put name="displayLabelKey" value="textProperty.displayName"/>
+        <put name="collectionForm" value="uddiUserCollectionForm"/>
+        <put name="formAction" value="uddiUserCollection.do"/>
+        <put name="formName" value="uddiUserCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiUserCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="uddi.uddiUser.quicksearch.extend">
+        <put name="selectUri" value="uddiUserCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="uddiUserCollectionForm"/>
+        <put name="formAction" value="uddiUserCollection.do"/>
+        <put name="formName" value="uddiUserCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiUserCollectionForm"/>
+        <putList name="searchList">
+            <add value="uddi.uddiUser.userName.columnName:userName"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiUser.table" path="/com.ibm.uddi.v3.management/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="uddiUserCollectionForm"/>
+        <put name="formAction" value="uddiUserCollection.do"/>
+        <put name="formName" value="uddiUserCollectionForm"/>
+        <put name="formType" value="com.ibm.uddi.v3.management.gui.forms.UddiUserCollectionForm"/>
+        <put name="buttons" value="uddi.uddiUser.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=uddi.uddiUser.main"/>
+        <put name="uniqueProperty" value="userName"/>
+        <put name="uniquePropertyName" value="userName"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="uddiUserCollection.do?EditAction=true"
+                tooltip="uddi.uddiUser.userName.columnName" value="userName:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="uddi.uddiUser.tierName.columnName" value="tierName:"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/UddiUser/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/UddiUser/Preferences#retainSearchCriteria:32"/>
+        </putList>
+        <putList name="contextList"/>
+    </definition>
+    <definition name="uddi.uddiUser.collection.buttons.panel" path="/com.ibm.uddi.v3.management/uddiButtonLayout.jsp">
+        <put name="includeForm" value="no"/>
+        <put name="formAction" value="test"/>
+        <put name="hide" value="no"/>
+        <putList name="buttonList">
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.new" value="uddi.button.new:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false"
+                tooltip="uddi.button.createPublishers" value="uddi.button.createPublishers:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="uddiUserCollectionForm.tierOptions" link="true"
+                tooltip="uddi.button.createPublishers" value="assignedTier:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="uddi.button.assignTier" value="uddi.button.assignTier:administrator:operator"/>
+            <item
+                classtype="com.ibm.uddi.v3.management.gui.UddiButtonItem"
+                icon="" link="false" tooltip="button.delete" value="button.delete:administrator:operator"/>
+        </putList>
+        <putList name="actionList"/>
+    </definition>
+    <definition name="uddi.newUddiUser.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="UddiNode"/>
+        <putList name="list">
+            <add value="uddi.newUddiUser.detail.title"/>
+            <add value="uddi.newUddiUser.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="uddi.newUddiUser.detail.title">
+        <put name="formName" value="uddiUserDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="userName"/>
+        <put name="instanceDescription" value="uddi.uddiUser.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.newUddiUser.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.newUddiUser.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.newUddiUser.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="uddi.newUddiUser.config.general.properties"/>
+        </putList>
+    </definition>
+    <definition name="uddi.newUddiUser.config.general.properties" path="/com.ibm.uddi.v3.management/newUsersLayout.jsp">
+        <put name="formName" value="uddiUserDetailForm"/>
+        <put name="formAction" value="uddiUserDetail.do"/>
+    </definition>
+    <definition name="uddi.uddiUser.config.view" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="uddiUser"/>
+        <putList name="list">
+            <add value="uddi.uddiUser.detail.title"/>
+            <add value="uddi.uddiUser.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="uddi.uddiUser.detail.title">
+        <put name="formName" value="uddiUserDetailForm"/>
+        <!-- FIXME  remove the ProcessDef values!!!-->
+        <put name="objectTypeImage" value="pluginId=com.ibm.uddi.v3.management"/>
+        <put name="titleKey" value="ProcessDef.displayName"/>
+        <put name="collectionLink" value="com.ibm.uddi.v3.management.gui.forwardCmd.do?forwardName=ProcessDef.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="userName"/>
+        <put name="instanceDescription" value="uddi.uddiUser.detail.description"/>
+        <put name="displayName" value="ProcessDef.displayName"/>
+    </definition>
+    <definition name="uddi.uddiUser.detail.tabsLayout" path="/com.ibm.uddi.v3.management/uddiTabsLayout.jsp">
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="uddi.uddiUser.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiUser.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="uddi.uddiUser.config.general.properties"/>
+        </putList>
+    </definition>
+    <definition name="uddi.uddiUser.config.general.properties" path="/com.ibm.uddi.v3.management/userLayout.jsp">
+        <put name="formName" value="uddiUserDetailForm"/>
+        <put name="formAction" value="uddiUserDetail.do"/>
+    </definition>
+</tiles-definitions>

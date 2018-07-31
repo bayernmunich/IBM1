@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+
+<project name="fixOsgiCfgInitScript" default="install" basedir=".">
+
+    <target name="install"
+            description="Fix osgiCfgInit on Windows 85+ to support blank space in profile paths"
+            depends="detectCurrentOSFamily,
+                    setOSFileSeparator,
+                    setOSScriptExtension,
+                    fileExist,
+                    replaceLineWin"/>
+
+
+    <target name="uninstall" description="No uninstall action necessary but this target is required."/>
+
+
+    <target name="detectCurrentOSFamily"
+            description="Detect the current OS family (UNIX or Windows) on this WAS installation">
+
+        <property name="unixBased" value="true"/>
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <!-- If not Unix-based, set OS as Windows-based -->
+        <condition property="unixBased" value="false">
+            <os family="windows"/>
+        </condition>
+
+        <!-- If Unix-based, set OS to be Unix-based(non-OS/400) -->
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                <not><equals arg1="${os.name}" arg2="OS/400"/></not>
+            </and>
+        </condition>
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+    </target>
+
+
+    <target name="setOSFileSeparator"
+            description="Set the current file separator for this O/S platform (file.separator is unreliable on ANT 1.5.4)">
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+
+    <target name="setOSScriptExtension"
+            description="Set the file extension for this O/S platform">
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+
+    <target name="fileExist"
+            description="Verify osgiCfgInit.bat exists in this WAS install">
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}osgiCfgInit${OSext}" property="osgiCfgInitExist"/>
+    </target>
+
+
+    <target name="checkScriptUpdated" 
+            description="Determine whether this update is already applied"
+            if="osgiCfgInitExist">
+        <loadfile property="scriptUpdated" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}osgiCfgInit${OSext}">
+            <filterchain>
+                <linecontains>
+                    <contains value="call &quot;%_PROFILESCRIPT:&quot;=%&quot;"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+        <echo>Check script updated: ${scriptUpdated}</echo>
+    </target>
+
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile"
+            description="Replace all instances of a token with a given value">
+        <replace file="${file}"
+                token="${token}"
+                value="${tokenValue}"/>
+    </target>
+
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory"
+            description="Replace all instances of a token with given value for given directory">
+        <replace dir="${dir}"
+                token="${token}"
+                value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>
+
+
+    <target name="replaceLineWin" 
+            depends="checkScriptUpdated"
+            description="Replace all instances of token in osgiCfgInit.bat on Windows"
+            unless="scriptUpdated">
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}osgiCfgInit${OSext}"
+                token="call &quot;%_PROFILESCRIPT%&quot;"
+                value="call &quot;%_PROFILESCRIPT:&quot;=%&quot;"/>
+    </target>
+
+</project>

@@ -1,0 +1,344 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createOTiSEnvironment" default="createOTiSEnvironment" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+       
+    <taskdef name="replaceStringRegExp"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>
+
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+      &importExternalLogs; 	
+    <target name="isServerType_JOB_MANAGER_OR_DEPLOYMENT_MANAGER"
+            description="check to see if this is JOB_MANGER or DMGR server type">
+            
+        <wscmtlog> serverType = ${serverType}</wscmtlog>
+        <condition property="isJobmgrOrDmgr" value="true">
+            <or>
+                 <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+                 <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+            </or>
+        </condition>
+            
+    </target>
+        
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+
+        <condition property="isOS400OrZos" value="true">
+          <or>
+            <equals arg1="${os.name}" arg2="OS/400"/>
+            <os family="z/os"/>
+          </or>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+	  <wscmtlog>Determined isOS400OrZos to be: ${isOS400OrZos}</wscmtlog>
+    </target>
+
+    <target name="resolvePathSeparatorForTheCurrentPlatform"
+            description="Sets path separator for the current platform">
+            
+        <condition property="PATH_SEPARATOR" value=":">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="PATH_SEPARATOR" value=":">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="PATH_SEPARATOR" value=";">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>Path separator interpretor set to: ${PATH_SEPARATOR}</wscmtlog>
+    </target>  
+
+
+    <target name="resolveWsadminScript">
+        <available property="setupWsadminName"
+            value="wsadmin"
+            file="${WAS_HOME}/bin/wsadmin"/>
+
+        <available property="setupWsadminName"
+            value="wsadmin.bat"
+            file="${WAS_HOME}/bin/wsadmin.bat"/>
+
+        <available property="setupWsadminName"
+            value="wsadmin.sh"
+            file="${WAS_HOME}/bin/wsadmin.sh"/>
+
+        <wscmtlog>Detected wsadmin script name to be: ${setupWsadminName}</wscmtlog>
+    </target>    
+
+
+    <target name="installOTiSEar"
+            description="installs OTiS ear file as systemApp">
+            
+        <wscmtlog>Install OTiS application on sysMgr server as systemApp Log is available in: ${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvironment.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+                <exec executable="${PROFILE_PATH_FOR_SQL_FILES}/bin/${setupWsadminName}"
+                        output="${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvInstall.log" failonerror="false" resultproperty="rcPropertyOTiSEar">
+                        <arg value="-connType"/>
+                        <arg value="NONE"/>
+                        <arg value="-lang"/>
+                        <arg value="jython"/>
+                        <arg value="-f"/>
+            <arg value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/installotisear.py"/>
+            <env key="WSADMIN_PROPERTIES" value="${PROFILE_PATH_FOR_SQL_FILES}/properties/wsadmin.properties"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvInstall.log" />
+            <param name="description" value="Install OTiS application on sysMgr server as systemApp" />
+            <param name="precondition" value="foetrue" />
+			<param name="rcProperty" value="${rcPropertyOTiSEar}" />
+        </antcall>	
+    </target>
+
+    <target name="configClassLoader"
+            description="Change ClassLoader from default multiple to single">
+            
+        <wscmtlog>Configure Classloader from multiple to single Log is available in: ${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvironment.log</wscmtlog>
+         <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+                <exec executable="${PROFILE_PATH_FOR_SQL_FILES}/bin/${setupWsadminName}"
+                        output="${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvClassLoadert.log" failonerror="false" resultproperty="rcPropertyClassLoader">
+                        <arg value="-connType"/>
+                        <arg value="NONE"/>
+                        <arg value="-lang"/>
+                        <arg value="jython"/>
+                        <arg value="-f"/>
+            <arg value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/configclassloader.py"/>
+            <env key="WSADMIN_PROPERTIES" value="${PROFILE_PATH_FOR_SQL_FILES}/properties/wsadmin.properties"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvClassLoadert.log" />
+            <param name="description" value="Configure Classloader from multiple to single" />
+            <param name="precondition" value="foetrue" />
+			<param name="rcProperty" value="${rcPropertyClassLoader}" />
+        </antcall>
+    </target>
+
+    <target name="installSchema"
+            description="create derby database schema"
+            depends="installSchemaForNonOS400OrZos, installSchemaForOS400OrZos">
+    </target>
+  
+    <target name="installSchemaForNonOS400OrZos"
+            description="create derby database for non os400 and non Zos"
+            unless="isOS400OrZos">
+
+		<wscmtlog>Executing installSchemaForNonOS400OrZos</wscmtlog>
+
+		<wscmtlog>Creating database schema for derby Log is available in: ${WS_CMT_LOG_HOME}/${profileName}/installSchema${sqlFileName}.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 --> 
+		<wsadmin conntype="none"
+			   failonerror="false"
+			   returnproperty="rcPropertynonos400zos"
+			   tracefile="${WS_CMT_LOG_HOME}/${profileName}/createOTiSinstallSchema${sqlFileName}.log"
+			   wasHome="${WAS_HOME}"
+			   wasInstallRoot="${WAS_HOME}"
+			   wasRepositoryRoot="${profilePath}/config"
+			   userInstallRoot="${profilePath}"
+			   wsadminProps="${profilePath}/properites/wsadmin.properties"
+			   script="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/installSchema.py"
+			   lang="jython"
+			   ipcFilename="${profilePath}/temp/wsadmin">
+			<arg value="-wsadmin_classpath"/>
+			<arg value="${WAS_HOME}/derby/lib/derby.jar${PATH_SEPARATOR}${WAS_HOME}/derby/lib/derbytools.jar"/>
+			<arg value="${PROFILE_PATH_FOR_SQL_FILES}"/>
+			<arg value="${sqlFullFileName}"/>
+			<arg value="${WS_CMT_LOG_HOME}/${profileName}"/>
+		</wsadmin>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createOTiSinstallSchema${sqlFileName}.log" />
+            <param name="description" value="Creating database schema for derby" />
+            <param name="precondition" value="foetrue" />
+			<param name="rcProperty" value="${rcPropertynonos400zos}" />
+        </antcall>
+
+    </target>
+
+    <target name="installSchemaForOS400OrZos"
+            description="create derby database schema"
+		if="isOS400OrZos">
+            
+        <wscmtlog>executing installSchemaForOS400OrZos</wscmtlog>
+
+        <wscmtlog>Creating database schema for derby Log is available in: ${WS_CMT_LOG_HOME}/${profileName}/installSchema${sqlFileName}.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 --> 
+                <exec executable="${PROFILE_PATH_FOR_SQL_FILES}/bin/${setupWsadminName}"
+                        output="${WS_CMT_LOG_HOME}/${profileName}/createOTiSinstallSchema${sqlFileName}.log" failonerror="false" resultproperty="rcPropertyforos400zos">
+                        <arg value="-connType"/>
+                        <arg value="NONE"/>
+                        <arg value="-lang"/>
+                        <arg value="jython"/>
+                        <arg value="-f"/>
+            <arg value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/installSchema.py"/>
+                        <arg value="-wsadmin_classpath"/>
+                        <arg value="${WAS_HOME}/derby/lib/derby.jar${PATH_SEPARATOR}${WAS_HOME}/derby/lib/derbytools.jar"/>
+                        <arg value="${PROFILE_PATH_FOR_SQL_FILES}"/>
+                        <arg value="${sqlFullFileName}"/>
+            <env key="WSADMIN_PROPERTIES" value="${PROFILE_PATH_FOR_SQL_FILES}/properties/wsadmin.properties"/>
+            <env key="PROFILE_CONFIG_ACTION" value="true"/>
+        </exec>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createOTiSinstallSchema${sqlFileName}.log" />
+            <param name="description" value="Creating database schema for derby" />
+            <param name="precondition" value="foetrue" />
+			<param name="rcProperty" value="${rcPropertyforos400zos}" />
+        </antcall>
+    </target>
+
+<!--
+    <target name="setdbNameFlagToDefaultIfNotSet"
+            description="Set the dbName Flag to default derby">
+                        <wscmtlog>Setting up db flag Log is available in: ${WS_CMT_LOG_HOME}/${profileName}/createOTiSEnvironment.log</wscmtlog>
+      <condition property="dbNameFlag" value="derby">
+        <not><isset property="dbNameFlag"/></not>
+      </condition>
+      <wscmtlog> db name flag is set to : ${dbNameFlag}</wscmtlog>
+    </target>
+-->
+
+<!--  This is for later when we have multiple database support
+        <target name="defineDBFlag"
+            description="Defines which database to configure">
+            
+        <condition property="dbName" value="true">
+            <equals arg1="${dbFlag}" arg2="derby"/>
+        </condition>
+
+        <condition property="dbName" value="true">
+            <equals arg1="${dbFlag}" arg2="db2"/>
+        </condition>
+        
+        <condition property="dbName" value="true">
+            <equals arg1="${dbFlag}" arg2="oracle"/>
+        </condition>
+           <wscmtlog>this will be used later</wscmtlog>
+    </target> 
+-->
+
+    <target name="createOTiSEnvironment"
+            description="Install the OTiS application and setup the databases"
+            depends="isServerType_JOB_MANAGER_OR_DEPLOYMENT_MANAGER,
+                     doCreateOTiSEnvironmentIfJobmgrOrDmgr">
+    </target> 
+    
+    <target name="doCreateOTiSEnvironmentIfJobmgrOrDmgr" if="isJobmgrOrDmgr"
+            description="Install the OTiS application and setup the databases only if this is JOB_MANAGER or DEPLOYMENT_MANAGER server type">
+        <antcall target="doCreateOTiSEnvironment"/>
+    </target>
+
+
+    <target name="resolveWASHomeForLib"
+            description="Sets the property WAS_HOME_FOR_LIB with slash characters etc. adjusted for lib files">        
+        
+        <replaceStringRegExp string="${WAS_HOME}"
+            regexp="\\"
+            value="/"
+            property="WAS_HOME_FOR_LIB"/>
+            
+        <replaceStringRegExp string="${WAS_HOME_FOR_LIB}"
+            regexp="/:"
+            value="\:/"
+            property="WAS_HOME_FOR_LIB_FILES"/>
+            
+        <wscmtlog>WAS_HOME for lib files was resolved to be: ${WAS_HOME_FOR_LIB_FILES}</wscmtlog>
+    </target> 
+
+    <target name="resolveTemplatePathForSQL"
+            description="Sets the property TEMP_PATH_FOR_SQL_FILES with slash characters etc. adjusted for template files">        
+        
+        <replaceStringRegExp string="${templatePath}"
+            regexp="\\"
+            value="/"
+            property="TEMP_PATH_FOR_SQL"/>
+            
+        <replaceStringRegExp string="${TEMP_PATH_FOR_SQL}"
+            regexp="/:"
+            value="\:/"
+            property="TEMP_PATH_FOR_SQL_FILES"/>
+            
+        <wscmtlog>TEMP_PATH for template files was resolved to be: ${TEMP_PATH_FOR_SQL_FILES}</wscmtlog>
+    </target> 
+
+    <target name="resolveProfilePathForSQL"
+            description="Sets the property PROFILE_PATH_FOR_SQL_FILES with slash characters etc. adjusted for template files">        
+        
+        <replaceStringRegExp string="${profilePath}"
+            regexp="\\"
+            value="/"
+            property="PROFILE_PATH_FOR_SQL"/>
+            
+        <replaceStringRegExp string="${PROFILE_PATH_FOR_SQL}"
+            regexp="/:"
+            value="\:/"
+            property="PROFILE_PATH_FOR_SQL_FILES"/>
+            
+        <wscmtlog>PROFILE_PATH for template files was resolved to be: ${PROFILE_PATH_FOR_SQL_FILES}</wscmtlog>
+    </target> 
+
+
+    <target name="doConvertTimePathReplacement"
+            description="Configure and install the database schema">
+        <wscmtlog>Entry:  doConvertTimePathReplacement--Changing the @OTISHOME@ token to correct path of OTiSConvertTime.jar.</wscmtlog>
+		<copy file="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/sql/ConvertTimeDerby.udf" todir="${PROFILE_PATH_FOR_SQL_FILES}/temp"/>
+        <replace file="${PROFILE_PATH_FOR_SQL_FILES}/temp/ConvertTimeDerby.udf" token="@OTISHOME@" value="${WAS_HOME_FOR_LIB_FILES}"/>
+        <wscmtlog>Exit:  doConvertTimePathReplacement</wscmtlog>
+    </target>
+
+
+    <target name="doInstallSchema"
+            description="Configure and install the database schema">
+        <wscmtlog>Entry:  doInstallSchema--Calling installSchema targets to execute the sql statements</wscmtlog>
+        <antcall target="installSchema">
+                        <param name="sqlFullFileName" value="${PROFILE_PATH_FOR_SQL_FILES}/temp/ConvertTimeDerby.udf"/>
+                        <param name="sqlFileName" value="ConvertTimeDerby"/>
+            </antcall>
+        <antcall target="installSchema">
+                        <param name="sqlFullFileName" value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/sql/TaskManagerSchema_derby.sql"/>
+                        <param name="sqlFileName" value="TaskManagerSchema_derby"/>
+            </antcall>
+        <antcall target="installSchema">
+                        <param name="sqlFullFileName" value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/sql/createOMADMTables_derby.sql"/>
+                        <param name="sqlFileName" value="createOMADMTables_derby"/>
+            </antcall>
+        <antcall target="installSchema">
+                        <param name="sqlFullFileName" value="${TEMP_PATH_FOR_SQL_FILES}/actions/scripts/sql/JobManagerExt_derby.sql"/>
+                        <param name="sqlFileName" value="JobManagerExt_derby"/>
+            </antcall>
+        <wscmtlog>Exit:  doInstallSchema</wscmtlog>
+    </target>
+
+    <target name="doCreateOTiSEnvironment"
+            description="Install the OTiS application and setup the databases"
+            depends="detectCurrentOSFamily,
+            resolvePathSeparatorForTheCurrentPlatform,
+            resolveWsadminScript,
+            resolveWASHomeForLib,
+            resolveTemplatePathForSQL,
+            resolveProfilePathForSQL,
+            doConvertTimePathReplacement,
+            doInstallSchema">
+    </target> 
+   
+</project>

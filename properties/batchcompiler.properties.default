@@ -1,0 +1,374 @@
+#   batchcompiler.properties.default -- example response file for the JSP Batch Compiler
+#
+#	** Tips and Tricks **
+#
+#   + The -jspCompileClasspath option can greatly speed up the java compilation phase.  See
+#     this option's description below for details.
+#   + To compile the JSPs in an EAR before deploying into WebSphere, use the -ear.path option.
+#     Use the -extractToDir option if the EAR is compressed.
+#   + Use the -forceCompilation option to ensure that all JSPs get translated and compiled.
+#   + Use the -removeTempDir option when batchcompiling a deployed Enterprise Application.
+#     This will ensure that the application's unused resources get removed.
+#   + Use the -keepgenerated option to retain the .java files that are generated in the 
+#     translation phase.
+#   + Use the -trackDependencies option to add dependency information to the .class files.
+#     Also set the JSP engine runtime parameter -trackDependencies to true in order for
+#     the JSP engine to reload a top-level JSP when any of its dependencies has changed.
+#	+ The public WebSphere Ant task JspC exposes all the batch compiler configuration options.
+#     It executes the batch compiler under the covers.  See the file JspCBuild.xml in {WAS_HOME}/bin 
+#     for more information.
+#
+# 	The batch compiler has twelve configuration parameters that have
+# 	equivalents in the WebSphere Application Server JSP Engine.  The JSP
+# 	Engine parameters, if present, act as defaults when the equivalent batch
+# 	compiler parameter is not given.
+# 	These parameters are:
+#
+# 	Batch Compiler Configuration Parameter  	JSP Engine Configuration Parameter
+# 	-jspCompileClasspath    					jspCompileClasspath
+# 	-keepgenerated  							keepgenerated
+# 	-verbose    								verbose
+# 	-deprecation    							deprecation
+#	-javaEncoding								javaEncoding
+# 	-compileWithAssert  						compileWithAssert
+# 	-trackDependencies  						trackDependencies
+# 	-usePageTagPool 							usePageTagPool
+# 	-useThreadTagPool   						useThreadTagPool
+# 	-useJikes   								useJikes
+# 	-jsp.file.extensions    					jsp.file.extensions
+#	-useFullPackageNames						useFullPackageNames
+#
+#   The batch compiler is aware of three groups of configuration parameters:
+#   1. Batch compiler command line configuration parameters.
+#      These are the parameters entered on the command line when running the batch compiler.
+#   2. Response file configuration parameters.
+#      These are the parameters that are found in a batch compiler response file.
+#   3. JSP Engine configuration parameters for a web module.
+#      These are the parameters that have been set for a particular web module's JSP support, usually within
+#      a deployed application.  For example, the keepgenerated parameter has been available for many releases
+#      of WebSphere Application Server to control the saving or deleting of the Java source that is generated 
+#      by the JSP Engine.
+#          JSP Engine configuration parameters are stored in a web module's configuration directory, in the 
+#          file WEB-INF/ibm-web-ext.xmi.
+#          An example of a configuration directory is
+#            {WAS_HOME}/profiles/profilename/config/cells/cellname/applications/enterpriseappname/deployments/deployedname/webmodulename
+#          If an application was deployed into WebSphere Application Server with the flag Use Binary Configuration 
+#          set to true, then the WEB-INF/ibm-web-ext.xmi file is looked for in a web module's binaries directory, 
+#          not in the configuration directory.
+#          An example of a binaries directory is:
+#            {WAS_HOME}/profiles/profilename/installedApps/nodename/EnterpriseAppName/WebModuleName/
+#          The entry in ibm-web-ext.xmi for a JSP Engine configuration parameter looks like the following example:
+#            <jspAttributes xmi:id="JSPAttribute_6" name="keepgenerated" value="true"/>
+#
+#   The batch compiler looks at all three groups of configuration parameters in order to determine which value for a 
+#      parameter should be used when compiling JSPs.  When resolving the value for a given parameter, the precedence is:
+#      1.  If the parameter is found on the command line, its value is used.  If the parameter is not found on the 
+#          command line, the batch compiler looks for
+#      2.  the parameter in a response file named on the command line. If no response file is named, or if the 
+#          parameter is not found therein, the batch compiler looks for the parameter in
+#      3.  the web module's JSP Engine configuration parameters.  
+#      If a configuration parameter is not found among these three groups, then a default value is used.  The default values are
+#        described below.
+#
+# 	The batch compiler does not create, or set the values of, equivalent JSP
+# 	Engine parameters.  This means that if a JSP in a deployed web module is
+# 	modified and is recompiled by the JSP Engine at runtime, the JSP
+# 	Engine's configuration parameters will determine the Engine's behavior.
+# 	If precompiled JSPs are never modified in a deployed web module then
+# 	this is not an issue.  If they are modified in a deployed web module,
+# 	then the Engine's parameters should be set to the same values used in
+# 	batch compilation.
+
+#   ****************  Batch Compiler Configuration Parameters  ****************
+
+# !!!!!!!!!!!!!!!!!!!!!!!! One of the following three options is required !!!!!!!!!!!!!!!!!!!!!!!!
+# Specify the full path to a single compressed or expanded enterprise 
+# application archive (EAR) to batch compile
+-ear.path=
+
+# Specify the full path to a single compressed or expanded web application
+# archive (WAR) to batch compile
+-war.path=
+
+# Specify the name of a single enterprise application that has been deployed into
+# a WebSphere server.  The server does not need to be running when this parameter is used.
+-enterpriseapp.name=
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!! Optional parameters !!!!!!!!!!!!!!!!!!!!!!!! 
+# Specify a file that contains parameters to be used by the Batch Compiler.
+# -response.file is only used if it is given on the command-line; it is ignored
+# if it is present in a response file.
+# (default: empty)
+#-response.file=
+
+# Specify a single webmodule to batch compile.  This parameter is used only
+# when ear.path or enterpriseapp.name is given, and the webmodule must be found
+# within the named EAR or enterprise application.  webmodule.name is ignored if war.path
+# is given.
+# (default: all webmodules in an EAR or enterprise application will be compiled.)
+-webmodule.name=
+
+# The name of a single JSP file that you want to compile.  The name is relative
+# to the context root of the web module.
+# Alternatively, if filename is set to the name of
+# a directory, only the JSP files in that directory and its subdirectories are compiled.
+# (default: all JSPs in a webmodule will be compiled.)
+-filename=
+
+# -recurse is used only when -filename gives the name of a directory.
+# Set -recurse to false when you want only the named directory to be compiled,
+# and not its subdirectories.
+# (default: true)
+-recurse=true
+
+# Indicates the location of the WebSphere configuration directory.
+# This argument is used only when enterpriseapp.name is given.
+# (default: obtained from setupCmdLine.[bat/sh] - typically $WAS_HOME\config)
+-config.root=
+
+# Indicates the cell name where this application is installed.
+# This argument is used only when enterpriseapp.name is given.
+# (default: obtained from setupCmdLine.[bat/sh] - typically cell name)
+-cell.name=
+
+# Indicates the node name where this application is installed.
+# This argument is used only when enterpriseapp.name is given.
+# (default: obtained from setupCmdLine.[bat/sh] - typically node name)
+-node.name=
+
+# Indicates the server name where this application is installed.
+# This argument is used only when enterpriseapp.name is given.
+# (default: server1)
+-server.name=server1
+
+# Set -translate to false if you do not want JSPs to be translated and compiled.  This
+# option must be used in conjunction with -removeTempDir to tell the batchcompiler to
+# only remove the temp directory and to do no further processing, as in this example:
+#	-removeTempDir	true
+#	-translate		false
+# Setting -translate to false has the effect of setting -compile to false as well.
+# (default: true)
+-translate=true
+
+# Set -compile to false if you do not want JSPs to go through the java compilation phase.
+# For example, if you only want JSPs to be syntax-checked, set -compile to false.  You can
+# set -keepgenerated to true if you want to see the .java files that are generated
+# during the translation phase.
+# (default: true)
+-compile=true
+
+# -removeTempDir can only be used when -enterpriseApp is given.
+# Set -removeTempDir to true if you want a web module's temp directory to be removed. 
+# The batchcompiler by default generates JSP class files into a web module's 
+# WEB-INF/classes directory.  JSP class files are generated into the temp directory
+# at runtime if a JSP is modified and JSP reloading is enabled.  By batchcompiling
+# all the JSPs in a web module and also removing the temp dir, disk resources are 
+# preserved.
+# (default: false)
+-removeTempDir=false
+
+# The directory into which predeployed Enterprise Application Archives (EARs)
+# and Web Application Archives (WARs) (indicated by the ear.path and war.path options)
+# will be extracted before the Batch Compiler operates on them.
+# This argument is ignored when enterpriseapp.name is given.
+# 1) If an expanded or compressed EAR or WAR is to be operated on and -extractToDir IS supplied,
+#    then the archive is extracted to extractToDir before being operated on.
+# 2) If a compressed EAR or WAR is to be operated on and if the -extractToDir is NOT supplied,
+#    then the Batch Compiler will extract the archive to the directory returned by
+#    the JVM property "java.io.tmpdir".
+# 3) If an expanded EAR or WAR is to be operated on and -extractToDir is NOT supplied,
+#    then the Batch Compiler operates on the EAR or WAR in place (does not extract it
+#    to another directory).
+# 4) If extractToDir is supplied and the batch compiler exits with no errors, it will compress
+#    the archive in place in the extractToDir, even if the original EAR or WAR was expanded.
+#    If errors are encountered during compilation, the EAR or WAR is left in the expanded
+#    state even if the original EAR or WAR was compressed.
+# (default: empty)
+-extractToDir=
+
+# The directory into which JSPs will be translated into Java sourcefiles and compiled into
+# classfiles.  This directory can be anywhere on the filesystem, but the default behavior
+# of the Batch Compiler is usually adequate.  The default behavior is:
+#   1) by default, the classfiles are compiled into a Web Module's WEB-INF/classes directory.
+#   2) if enterpriseApp.name is given, the classfiles can be compiled into the WebSphere temp
+#      directory (usually {WAS_HOME}/temp) by overriding the -compileToWebInf parameter, below.
+# (default: empty)
+-compileToDir=
+
+# Indicates that the target directory for the compiled JSP classfiles should be
+# the Web Module's WEB-INF/classes directory.
+# May be set to false only when enterpriseApp.name is given. This will force the
+# batch compiler to compile classfiles into the WebSphere temp directory (usually {WAS_HOME}/temp.
+# Recommendation: if compileToWebInf is set to false, set forceCompilation to true if
+# there are any JSP class files in the WEB-INF/classes directory of the web module.
+# Ignored if -extractToDir is given, or if either ear.path or war.path is given.
+# (default: true)
+# true|false
+-compileToWebInf=true
+
+# Forces the batch compiler to recompile all JSP resources regardless or whether or not the JSP is outdated.
+# (default: false)
+# true|false
+-forceCompilation=false
+
+# Tells the batchcompiler to generate full package names for JSP classes.  The default is to generate
+# all JSP classes in the same package. The JSP engine's classloader knows how to load JSP classes
+# when they are in the same package.
+# The default has the benefit of generating smaller file-system paths.
+# Full package names has the benefit of enabling the configuration of precompiled 
+# JSP classfiles as servlets in web.xml without use of the jsp-file attribute, resulting in a single
+# classloader (the webapp's classloader) being used to load all such JSP classes.  Similarly, when
+# the JSP engine's configuration attributes useFullPackageNames and disableJspRuntimeCompilation are
+# both true, a single classloader is used to load all JSP classes, even if the JSPs are not configured
+# as servlets in web.xml.
+# When useFullPackageNames is set to true, the batch compiler generates a file called
+# generated_web.xml in the web module's WEB-INF directory.  This file contains servlet configuration
+# information for each JSP that was successfully translated and compiled.  The information can optionally
+# be copied into the web module's web.xml file so that the JSPs are loaded as servlets by the
+# web container.  Note that if a JSP is configured as a servlet in this way, no reloading
+# of the JSP will be done at runtime if the JSP is modified.  This is because the JSP is treated
+# as a regular servlet and requests for it do not pass through the JSP engine.
+# (default: false)
+# true|false
+-useFullPackageNames=false
+
+# Tells the batchcompiler to recompile a JSP if any of its dependencies
+# have changed, even if the JSP itself has not changed.  The dependencies
+# tracked by WebSphere are
+#   1) files statically included in the JSP
+#   2) tag files used by the JSP (but only tag files that are not in JARs)
+#   3) TLD files used by the JSP (but only TLDs that are not in JARs)
+#(default: false)
+# true|false
+-trackDependencies=false
+
+# Indicates that the Java class files generated by the JSP compiler
+# should be compiled to generate all debugging information, as per JSR 45.
+# (default: false)
+# true|false
+-createDebugClassfiles=false
+
+# Indicates that the Java files generated by the JSP compiler
+# during the translation phase of the processing should be kept.
+# (default: false)
+# true|false
+-keepgenerated=false
+
+# Indicates that the class files generated by the JSP compiler
+# during the translation phase of the processing should be kept.
+# (default: true)
+# true|false
+-keepGeneratedclassfiles=true
+
+# Enables or disables the reuse of custom tag
+# handlers on an individual JavaServer Page basis.
+# (default: false)
+# true|false
+-usePageTagPool=false
+
+# Enables or disables the reuse of custom
+# tag handlers on a per request thread basis
+# per Web Application Archive (WAR)
+# (default: false)
+# true|false
+-useThreadTagPool=false
+
+# Search order for loading classes. Default is to
+# search parent classloader prior to application classloader.
+# (default: true)
+# true|false
+-classloader.parentFirst=true
+
+# Specify whether to use one classloader per
+# Enterprise Application Archive (EAR) or
+# one classloader per Web Application Archive (WAR)
+# (default: false)
+# true|false
+-classloader.singleWarClassloader=false
+
+# Specifies additional classpath entries to be used when parsing and 
+# compiling JSP pages.  Used only when war.path is given.  When war.path 
+# is the target, WebSphere Shared Libraries are not picked up by the 
+# batchcompiler.  Therefore, if your WAR relies on, for example, a 
+# JAR that is configured in WebSphere as a Shared Library then use this option 
+# to point to that JAR.   In addition, if you give war.path and also use the 
+# –extractToDir  parameter, then any JARs that are in the WAR's manifest 
+# class-path will not be added to the classpath (since the WAR has now 
+# been extracted  by itself outside the EAR in which it resides).  Use 
+# -additional.classpath in this case to point to the necessary jars.
+#
+# Add the full path to needed resources, separated by your system-dependent
+# path separator.
+# For example, on Windows:  -additional.classpath c:/mydir/x.jar;c:/mydir2/y.jar
+# (default: none)
+-additional.classpath=
+
+
+# This option instructs JSP engine to use a small classpath for the java compilation phase.  
+# The small classspath greatly speeds up the compilation process.  This small classpath is 
+# not used by default because it includes only a subset of WebSphere JARs. The small classpath 
+# excludes many WebSphere JARs, among which are those that contain WebSphere public APIs.  
+# If your JSPs do not use any WebSphere public APIs within scriptlets, you can enable the 
+# small classpath by using the jspCompileClasspath parameter with no value. If your JSPs do 
+# use WebSphere public APIs within scriptlets, then add those additional JARs to the 
+# jspCompileClasspath option. 
+# The entries are separated by spaces, and are assumed to be relative to the WebSphere Application 
+# Server installation root.
+# Example 1. to use the default optimized classpath plus two jars found in the WebSphere/lib directory: 
+# 	jspCompileClasspath = lib/jarOne.jar lib/jarTwo.jar
+# Example 2. to use the default optimized classpath:
+# 	jspCompileClasspath = 
+# Example 3. to NOT use the default optimized classpath, either remove or comment-out the option.
+#
+# (values:  space-separated list of JARS, relative to the WebSphere lib directory; or no value)
+# (default: this optimized classpath is not used by default)
+#-jspCompileClasspath=
+
+# Specify whether to output messages about what the compiler is doing
+# when the JSP is compiled
+# (default: false)
+# true|false
+-verbose=false
+
+# Specify whether deprecation warnings should be emitted
+# when the JSP is compiled
+# (default: false)
+# true|false
+-deprecation=false
+
+# Specify the encoding that will be used when the .java file is generated, and when 
+# it is compiled by the Java compiler.
+# Set this parameter when the page encoding of your JSP pages is not UTF-8 compatible.
+# When -javaEncoding is set, that encoding is passed to the java compiler via the -encoding argument.
+# Note that encoding is not supported by Jikes.
+# (default: UTF-8)
+-javaEncoding=UTF-8
+
+# Specify a list of strings to be passed on the java compiler command.
+# This is a space-separated list of the form  arg1 arg2 argn
+# (default: empty)
+-compilerOptions=
+
+# Specify whether the generated java classes should contain support for JDK 1.4 Assertions
+# (default: false)
+# true|false
+-compileWithAssert=false
+
+# Specify whether Jikes should be used for compiling Java sources.
+# NOTE: Jikes is not shipped with WebSphere Application Server.
+# (default: false)
+# true|false
+-useJikes=false
+
+# Specify the file extensions to be processed by the batch compiler.
+# This is a semicolon- or colon-separated list of the form  *.ext1;*.ext2:*.extn
+# (default: empty)
+-jsp.file.extensions=
+
+# Specify the level of logging that will be directed to the console
+# during batch compilation
+# SEVERE | WARNING | INFO | CONFIG | FINE | FINER | FINEST | OFF
+# (default: CONFIG)
+-log.level=CONFIG
+

@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Invoke RAS Collector" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Invoke RAS Collector}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml"/>
+
+
+	<property name="autopdProblem" value="RAS_Collect_Tool" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-ras" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+					query_pmrfilename,
+					default_banner, 
+					ask_for_middleware_root,version_level_setup,get_profiles,
+		
+		collect_was_information, 
+	
+		execute_collector,
+		analysis_file_collection,	
+		execute_vce_info_for_was,
+					
+		zip_autopd_log,
+		 
+		ftp_logs_to_ecurep, 
+		script_completed_v2">
+	</target>
+<!-- Task : 24231 - remove the following 3 targets 
+
+					initialize_middleware_static_environment,
+					version_level_setup,
+					ask_for_was_profile,
+--> 	
+	
+	<target name="get_profiles" >
+		<wasmultcomponents componentList="profileName"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+			component="profiles" attribute="name" delimiter=":" filterList=""
+			success="query.succeeded" />
+</target> 
+	
+	<target name="default_banner">
+		<!-- 24232 -->
+		<wsnlsecho key="Banner_Message_Def"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message="This script will collect problem determination data, such as logs, property files, configuration files, operating system and Java data, and the presence and level of the software installed on the system." 
+			console="true" />
+		<wsnlsecho message="" console="true" /> 
+
+	</target> 
+		
+	<target name="collect_was_information"
+	        description="Collect log tracing and other config information from Application Server">
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+				<!--
+				<include name="collector.jar" />
+				-->
+				<include name="autopd-collection-environment-v2.xml" />				
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="run_ras_collector" description="Run the collector tool" unless="wasnothere">
+
+				<exec executable="${was.enhanced.root}/bin/collector.bat"
+				      dir="${env.TMP}"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/collector.sh"
+				      dir="${env.HOME}"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind.exclude.iseries}">
+					<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+				</exec>
+			<exec executable="${was.enhanced.root}/bin/collector"
+			      dir="${env.HOME}"
+			      output="${autopd.echolog.instance}"
+		    	  append="true"
+		      	os="OS/400">
+				<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+			</exec>
+	
+	</target>
+	
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Invoke WebSphere RAS Collector&lt;/h2&gt;&lt;p&gt;
+				This problem category runs the WebSphere embedded 'RAS' collector. The RAS collector does a simple
+				set of log, configuration, and trace file read operations as well as collecting various information
+				about the system environment.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category runs the WebSphere embedded 'RAS' collector. 
+The RAS collector does a simple set of log, configuration, and trace file read operations 
+as well as collecting various information about the system environment." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Invoke WebSphere RAS Collector=>
+This problem category runs the WebSphere embedded 'RAS' collector. The RAS collector does a simple
+set of log, configuration, and trace file read operations as well as collecting various information
+about the system environment." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+				             validargs="OK"
+				             addproperty="run.current.script"
+				             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>
+

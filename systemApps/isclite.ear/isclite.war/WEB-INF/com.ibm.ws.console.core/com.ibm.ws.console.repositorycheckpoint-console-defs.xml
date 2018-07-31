@@ -1,0 +1,344 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!--
+     5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2005, 2012
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<tiles-definitions>
+
+    <definition name="repository.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.repositorycheckpoint.controller.RepositoryController">
+        <put name="contextType" value="Repository"/>
+        <putList name="list">
+            <add value="repository.detail.title"/>
+            <add value="repository.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="repository.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="titleKey" value="repository.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repository.config.view&#38;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="repository.description"/>
+        <put name="displayName" value="repository.displayName"/>
+    </definition>
+
+    <definition name="repository.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="RepositoryDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="repository.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="repository.config.general.properties"/>
+            <add value="repository.config.additional.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="repository.config.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="RepositoryDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"/>
+        <put name="formFocus" value="checkpointLocation"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- Label:AttributeName:isRequired:Type:Description:isReadOnly:ShowDescription:OptionalEnumValues:OptionalEnumDesc -->
+            <item value="repository.detail.repositoryLocation:repositoryLocation:yes:Text:repository.detail.repositoryLocation.description:yes:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="repository.detail.checkpointLocation:checkpointLocation:yes:Text:repository.detail.checkpointLocation.description:no:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="repository.detail.autoCheckpointEnabled:autoCheckpointEnabled:no:Checkbox:repository.detail.autoCheckpointEnabled.description:no:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="repository.detail.autoCheckpointDepth:autoCheckpointDepth:yes:Text:repository.detail.autoCheckpointDepth.description:no:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <definition name="repository.config.additional.properties" extends="detail.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryDetailForm"/>
+        <putList name="list">
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.repositorycheckpoint.controller.RepositoryCheckpointController">
+        <put name="contextType" value="repositorycheckpoint.content.main"/>
+        <put name="descTitle" value="repositorycheckpoint.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="descText" value="repositorycheckpoint.description"/>
+        <putList name="contentList">
+            <add value="repositorycheckpoint.paging.extend"/>
+            <add value="repositorycheckpoint.quicksearch.extend"/>
+            <add value="repositorycheckpoint.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="RepositoryCheckpointCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <putList name="searchList">
+            <add value="repositorycheckpoint.name.displayName:name"/>
+            <add value="repositorycheckpoint.checkpointType.displayName:checkpointType"/>
+            <add value="repositorycheckpoint.description.displayName:description"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="repositorycheckpoint.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+    </definition>
+
+    <definition name="repositorycheckpoint.collection.table.extend" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointCollectionForm"/>
+        <put name="buttons" value="repositorycheckpoint.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.content.main"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/RepositoryCheckpoints/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/RepositoryCheckpoints/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+   <definition name="repositorycheckpoint.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="4"/>
+        <put name="definitionName" value="repositorycheckpoint.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.repositorycheckpoint.controller.RepositoryCheckpointDetailsController">
+        <put name="contextType" value="repositorycheckpoint.detail.view"/>
+        <putList name="list">
+            <add value="repositorycheckpoint.detail.title"/>
+            <add value="repositorycheckpoint.detail.tabsLayout"/>
+            <add value="repositorycheckpoint.detail.quicksearch.extend"/>
+            <add value="repositorycheckpoint.detail.collection.table.extend"/>
+            <add value="repositorycheckpoint.detail.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="titleKey" value="repositorycheckpoint.detail.displayName"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="repositorycheckpoint.detail.description"/>
+        <put name="displayName" value="repositorycheckpoint.detail.displayName"/>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="RepositoryCheckpointDetail.do"/>
+        <put name="selectedPerspective" value="repositorycheckpoint.detail.tab"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="repositorycheckpoint.detail.type"/>
+            <add value="repositorycheckpoint.detail.sequence"/>
+            <add value="repositorycheckpoint.detail.timestamp"/>
+            <add value="repositorycheckpoint.detail.description"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.type" path="/secure/layouts/textFieldLayout.jsp">
+        <put name="label" value="repositorycheckpoint.checkpointType.displayName"/>
+        <put name="bean" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <put name="property" value="checkpointType"/>
+        <put name="isReadOnly" value="yes"/>
+        <put name="isRequired" value="yes"/>
+        <put name="size" value="15"/>
+        <put name="units" value=""/>
+        <put name="desc" value=""/>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.sequence" path="/secure/layouts/textFieldLayout.jsp">
+        <put name="label" value="repositorycheckpoint.sequence.displayName"/>
+        <put name="bean" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <put name="property" value="sequence"/>
+        <put name="isReadOnly" value="yes"/>
+        <put name="isRequired" value="yes"/>
+        <put name="size" value="15"/>
+        <put name="units" value=""/>
+        <put name="desc" value=""/>
+    </definition>
+    
+    <definition name="repositorycheckpoint.detail.timestamp" path="/secure/layouts/textFieldLayout.jsp">
+        <put name="label" value="repositorycheckpoint.timestamp.displayName"/>
+        <put name="bean" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <put name="property" value="timestamp"/>
+        <put name="isReadOnly" value="yes"/>
+        <put name="isRequired" value="yes"/>
+        <put name="size" value="15"/>
+        <put name="units" value=""/>
+        <put name="desc" value=""/>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.description" path="/secure/layouts/textFieldLayout.jsp">
+        <put name="label" value="repositorycheckpoint.description.displayName"/>
+        <put name="bean" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDetailForm"/>
+        <put name="property" value="description"/>
+        <put name="isReadOnly" value="yes"/>
+        <put name="isRequired" value="yes"/>
+        <put name="size" value="30"/>
+        <put name="units" value=""/>
+        <put name="desc" value=""/>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="RepositoryCheckpointDocsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointDocsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <putList name="searchList">
+            <add value="repositorycheckpoint.document.name.displayName:name"/>
+            <add value="repositorycheckpoint.document.uri.displayName:uri"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="repositorycheckpoint.detail.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointDocsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+    </definition>
+
+    <definition name="repositorycheckpoint.detail.collection.table.extend" extends="collection.table.main">
+        <put name="iterationName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formAction" value="RepositoryCheckpointDocsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocsCollectionForm"/>
+        <put name="buttons" value="repositorycheckpoint.detail.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.repositorycheckpoint.forwardCmd.do?forwardName=repositorycheckpoint.detail.view"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/RepositoryCheckpointDetails/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/RepositoryCheckpointDetails/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+   <definition name="repositorycheckpoint.detail.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="0"/>
+        <put name="definitionName" value="repositorycheckpoint.detail.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.new.config" extends="detail.config.view">
+        <put name="contextType" value="NewRepositoryCheckpoint"/>
+        <putList name="list">
+            <add value="repositorycheckpoint.new.title"/>
+            <add value="repositorycheckpoint.new.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.new.title" extends="detail.title">
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="titleKey" value="repositorycheckpoint.create.displayName"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="repositorycheckpoint.create.description"/>
+        <put name="displayName" value="repositorycheckpoint.create.displayName"/>
+    </definition>
+
+    <definition name="repositorycheckpoint.new.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="NewRepositoryCheckpoint.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.new.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="repositorycheckpoint.new.general.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.new.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="NewRepositoryCheckpoint.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.NewRepositoryCheckpointDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- Label:AttributeName:isRequired:Type:Description:isReadOnly:ShowDescription:OptionalEnumValues:OptionalEnumDesc -->
+            <item value="repositorycheckpoint.create.parameter.name.displayName:name:yes:Text:repositorycheckpoint.create.parameter.name.description:no:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="repositorycheckpoint.create.parameter.description.displayName:description:no:Text:repositorycheckpoint.create.parameter.description.description:no:no" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+    
+    <definition name="repositorycheckpoint.export.config.view" extends="detail.config.view">
+        <put name="contextType" value="ExportRepositoryCheckpoint"/>
+        <putList name="list">
+            <add value="repositorycheckpoint.export.title"/>
+            <add value="repositorycheckpoint.export.tab.view"/>
+        </putList>
+    </definition>
+    
+    <definition name="repositorycheckpoint.export.title" path="/secure/layouts/detailTitleLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"/>
+        <put name="objectTypeImage" value="Type.smallIcon:pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="titleKey" value="repositorycheckpoint.export.displayName"/>
+        <put name="collectionLink" value="none"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="breadcrumb"/>
+        <put name="instanceDescription" value="repositorycheckpoint.export.description"/>
+        <put name="displayName" value="repositorycheckpoint.export.displayName"/>
+        <put name="showHelpTopic" value="false"/>
+    </definition>
+    
+    <definition name="repositorycheckpoint.export.tab.view" path="/com.ibm.ws.console.repositorycheckpoint/exportLayout.jsp">
+        <put name="contextType" value="ExportRepositoryCheckpoint"/>
+        <put name="actionHandler" value="ExportRepositoryCheckpoint.do"/>
+        <put name="actionForm" value="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.ExportRepositoryCheckpointForm"/>
+    </definition>    
+
+    <definition  name="repositorycheckpoint.document.view" extends="detail.config.view">
+        <put name="contextType" value="repositorycheckpoint.document.view"/>
+        <putList name="list">
+            <add value="repositorycheckpoint.document.descLayout"/>
+            <add value="repositorycheckpoint.document.viewLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="repositorycheckpoint.document.descLayout" path="/secure/layouts/descLayout.jsp">
+        <put name="descTitle" value="repositorycheckpoint.document.name.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.repositorycheckpoint"/>
+        <put name="descText" value="logfile.view.description"/>
+    </definition>
+
+    <definition name="repositorycheckpoint.document.viewLayout" path="/com.ibm.ws.console.repositorycheckpoint/DocumentView.jsp">
+        <put name="label" value="repositorycheckpoint.document.name.displayName"/>
+        <put name="property" value="docContent"/>
+        <put name="formAction" value="RepositoryCheckpointDocsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocumentForm"/>
+        <put name="formType" value="com.ibm.ws.console.repositorycheckpoint.form.RepositoryCheckpointDocumentForm"/>
+    </definition>
+
+</tiles-definitions>

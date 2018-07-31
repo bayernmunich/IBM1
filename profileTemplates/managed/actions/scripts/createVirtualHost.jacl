@@ -1,0 +1,49 @@
+#------------------------------------------------------------------------------------------------
+# This JACL script creates a virtual host.
+#-- To create a virtual host at the wsadmin prompt:
+#-- Usage:
+#--
+#--
+#--  At the wsadmin prompt:  
+#--  $AdminConfig create VirtualHost cell01(cells/cell01|cell.xml#Cell_1) 
+#--     {{name proxy_host} {aliases { {{hostname *} {port 80}}{{hostname *} {port 443}} }}}
+#--
+#--  or
+#--
+#--   wsadmin -conntype none -f createVirtualHost.jacl
+#--
+#------------------------------------------------------------------------------------------------
+
+proc createVHost {args} {
+ 
+  global AdminConfig
+
+  set found false
+  set elements [$AdminConfig list Cell]
+
+  foreach element $elements {  
+
+     set vhosts [$AdminConfig list VirtualHost]
+
+     foreach vhost $vhosts {  
+         set vHostName [$AdminConfig showAttribute $vhost name]
+         if {($vHostName == "proxy_host")} {
+              set found true
+              break;
+         }
+      }
+    
+      if { !($found == "true")} {
+         $AdminConfig create VirtualHost $element {{name proxy_host} {aliases { {{hostname *} {port 80}}{{hostname *} {port 443}} }}}
+      }  
+  }
+
+}
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+
+createVHost 
+$AdminConfig save 
+

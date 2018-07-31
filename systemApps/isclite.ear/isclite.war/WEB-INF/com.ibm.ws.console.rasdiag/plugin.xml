@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N02, 5733-W70 (C) COPYRIGHT International Business Machines Corp. 1997, 2005
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+author schleus
+-->
+
+<plugin id="com.ibm.ws.console.rasdiag"
+        name="rasdiag"
+        version="7.0.0"
+        provider-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="rasdiag">
+
+	<requires>
+        <import plugin="com.ibm.ws.console.core"/>
+        <import plugin="com.ibm.ws.console.probdetermination"/>
+	</requires>
+
+	<extension point="com.ibm.ws.console.core.navigatorTask">
+    	<tasks>
+            <categoryDefinition id="rasdiag"
+                                parent="probmanagementcategory"
+                                icon="/images/onepix.gif"
+                                label="rasdiag.nav.title"
+                                weight="50"/>
+        	<task id="rasdiagTests"
+        		  icon="images/onepix.gif"
+                  label="rasdiag.nav.tests"
+                  view="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.topology.tests.content.main&amp;type=rasdiagTests"
+        		  external="false"
+        		  weight="10">
+                <category id="rasdiag"/>
+    	    </task>
+        	<task id="rasdiagState"
+        		  icon="images/onepix.gif"
+	        	  label="rasdiag.nav.state"
+                  view="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.topology.state.content.main&amp;type=rasdiagState"
+        		  external="false"
+                  weight="20">
+                <category id="rasdiag"/>
+    	    </task>
+        	<task id="rasdiagConfig"
+	        	  icon="images/onepix.gif"
+    	    	  label="rasdiag.nav.config"
+                  view="/com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.topology.config.content.main&amp;type=rasdiagConfig"
+        		  external="false"
+                  weight="30">
+                <category id="rasdiag"/>
+        	</task>
+    	</tasks>
+	</extension>
+
+    <!-- Collection items -->
+
+    <!-- DiagnosticProvidersCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DiagnosticProviders.collectionItem1" contextType="rasdiag.DiagnosticProviders">
+            <item
+               attributeName="diagnosticProviderName"
+               sortable="sort"
+               itemURI="diagnosticProvidersCollection.do?EditAction=true"
+               label="rasdiag.diagnostic.providers.name">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPTestsCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTests.collectionItem1" contextType="rasdiag.DPTests">
+            <item
+               attributeName="dPTestName"
+               sortable="sort"
+               itemURI="dPTestsCollection.do?DPTests=true"
+               label="rasdiag.dptests.collection.title1">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTests.collectionItem2" contextType="rasdiag.DPTests">
+            <item
+               attributeName="dPTestDescription"
+               sortable="false"
+               itemURI=""
+               label="rasdiag.dptests.collection.title2">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPTestResultsCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTestResults.collectionItem1" contextType="rasdiag.DPTestResults">
+            <item
+               attributeName="dPTestResultNode"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dptestrestuls.node">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTestResults.collectionItem2" contextType="rasdiag.DPTestResults">
+            <item
+               attributeName="dPTestResultServer"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dptestresults.server">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTestResults.collectionItem3" contextType="rasdiag.DPTestResults">
+            <item
+               attributeName="dPTestResultSeverity"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dptestresults.severity">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPTestResults.collectionItem4" contextType="rasdiag.DPTestResults">
+            <item
+               attributeName="dPTestResultDescription"
+               sortable="false"
+               itemURI="dPTestResultsCollection.do?DPTests=true"
+               label="rasdiag.dptestresults.message">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPSingleTestResultCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPSingleTestResult.collectionItem1" contextType="rasdiag.DPSingleTestResult">
+            <item
+               attributeName="dPTestName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpsingleresult.name">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPSingleTestResult.collectionItem2" contextType="rasdiag.DPSingleTestResult">
+            <item
+               attributeName="dPTestValue"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpsingleresult.value">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPSingleTestResult.collectionItem3" contextType="rasdiag.DPSingleTestResult">
+            <item
+               attributeName="dPTestDescription"
+               sortable="false"
+               itemURI=""
+               label="rasdiag.dpsingleresult.description.label">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPConfigDumpCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPConfigDump.collectionItem1" contextType="rasdiag.DPConfigDump">
+            <item
+               attributeName="dPNodeName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpconfigdump.node">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPConfigDump.collectionItem2" contextType="rasdiag.DPConfigDump">
+            <item
+               attributeName="dPServerName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpconfigdump.server">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPConfigDump.collectionItem3" contextType="rasdiag.DPConfigDump">
+            <item
+               attributeName="dPConfigPropertyName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpconfigdump.name">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPConfigDump.collectionItem4" contextType="rasdiag.DPConfigDump">
+            <item
+               attributeName="dPConfigPropertyValue"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpconfigdump.value">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPConfigDump.collectionItem5" contextType="rasdiag.DPConfigDump">
+            <item
+               attributeName="dPTestDescription"
+               sortable="false"
+               itemURI=""
+               label="rasdiag.dpconfigdump.description.label">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPStateDumpCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateDump.collectionItem1" contextType="rasdiag.DPStateDump">
+            <item
+               attributeName="dPNodeName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpstatedump.node">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateDump.collectionItem2" contextType="rasdiag.DPStateDump">
+            <item
+               attributeName="dPServerName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpstatedump.server">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateDump.collectionItem3" contextType="rasdiag.DPStateDump">
+            <item
+               attributeName="dPStatePropertyName"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpstatedump.name">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateDump.collectionItem4" contextType="rasdiag.DPStateDump">
+            <item
+               attributeName="dPStatePropertyValue"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpstatedump.value">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateDump.collectionItem5" contextType="rasdiag.DPStateDump">
+            <item
+               attributeName="dPTestDescription"
+               sortable="false"
+               itemURI=""
+               label="rasdiag.dpstatedump.description.label">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPStateSpecCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateSpec.collectionItem1" contextType="rasdiag.DPStateSpec">
+            <item
+               attributeName="diagnosticProviderName"
+               sortable="sort"
+               itemURI="dPStateSpecCollection.do?EditAction=true"
+               label="rasdiag.diagnostic.providers.name">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- DPStateSpecAttributesCollection -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateSpecAttribute.collectionItem1" contextType="rasdiag.DPStateSpecAttribute">
+            <item
+               attributeName="dPAttributeId"
+               sortable="sort"
+               itemURI=""
+               label="rasdiag.dpstatespec.attributes.attribute">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="rasdiag.DPStateSpecAttribute.collectionItem2" contextType="rasdiag.DPStateSpecAttribute">
+            <item
+               attributeName="dPAttributeDescription"
+               sortable="false"
+               itemURI=""
+               label="rasdiag.dpstatedump.description.label">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- Buttons for the DPTestResults panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPTestResults.collection1" contextType="rasdiag.DPTestResults">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.saveTo.button"
+                actionURI="dPTestResultsCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Buttons for the DPSingleTestResult panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPSingleTestResult.collection1" contextType="rasdiag.DPSingleTestResult">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.previous.button"
+                actionURI="dPSingleTestResultCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.saveTo.button"
+                actionURI="dPSingleTestResultCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Buttons for the DPStateDump panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPStateDump.collection1" contextType="rasdiag.DPStateDump">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.previous.button"
+                actionURI="dPStateDumpCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.saveTo.button"
+                actionURI="dPStateDumpCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.change.state.collection.spec"
+                actionURI="dPStateDumpCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Buttons for the DPConfigDump panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPConfigDump.collection1" contextType="rasdiag.DPConfigDump">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.previous.button"
+                actionURI="dPConfigDumpCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.saveTo.button"
+                actionURI="dPConfigDumpCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Buttons for the DPStateSpecCollectionPanel panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPStateSpec.collection1" contextType="rasdiag.DPStateSpec">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.button.addToSpec"
+                actionURI="dPStateSpecCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.button.deleteFromSpec"
+                actionURI="dPStateSpecCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Buttons for the DPStateSpecAttributesCollectionPanel panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="rasdiag_ActionSet.DPStateSpecAttribute.collection1" contextType="rasdiag.DPStateSpecAttribute">
+            <action
+                enablesFor="Collection"
+                label="rasdiag.button.addToSpec"
+                actionURI="dPStateSpecAttributesCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.button.deleteFromSpec"
+                actionURI="dPStateSpecAttributesCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+            <action
+                enablesFor="Collection"
+                label="rasdiag.button.done"
+                actionURI="dPStateSpecAttributesCollection.do"
+                role="administrator,configurator,operator">
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Tab items for the DPStateSpecCollectionPanel panel -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="rasdiag.DPStateSpec.detailTab1" contextType="rasdiag.DPStateSpec">
+            <tab
+                label="tab.configuration"
+                contentURI="rasdiag.DPStateSpec.runtime.tab.view">
+            </tab>
+            <tab
+                label="tab.runtime"
+                contentURI="rasdiag.DPStateSpec.config.tab.view">
+            </tab>
+        </detailTab>
+    </extension>
+
+    <!-- Tab items for the DPStateSpecAttributesCollectionPanel panel -->
+    <extension point="com.ibm.websphere.wsc.detailTab">
+        <detailTab id="rasdiag.DPStateSpecAttribute.detailTab1" contextType="rasdiag.DPStateSpecAttribute">
+            <tab
+                label="tab.configuration"
+                contentURI="rasdiag.DPStateSpecAttribute.runtime.tab.view">
+            </tab>
+            <tab
+                label="tab.runtime"
+                contentURI="rasdiag.DPStateSpecAttribute.config.tab.view">
+            </tab>
+        </detailTab>
+    </extension>
+
+    <!-- Link on the Application Server pages to the Diagnostic Provider Service -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="rasdiag.additional.properties.list" contextType="ApplicationServer">
+            <categoryDefinition
+                weight="10"
+                id="rasdiag.dpservice.properties"
+                parent="troubleshooting.properties"
+                label="rasdiag.nav.appserver.label"/>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.tests.label"
+                    description="rasdiag.nav.appserver.tests.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagTests"
+                    weight="10"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.state.label"
+                    description="rasdiag.nav.appserver.state.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagState"
+                    weight="20"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.config.label"
+                    description="rasdiag.nav.appserver.config.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagConfig"
+                    weight="30"
+                    perspective="runtime">
+                </link>
+        </linkSet>
+    </extension>
+
+    <!-- Link on the Cluster Member pages to the Diagnostic Provider Service -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="rasdiag.additional.properties" contextType="ClusterMember">
+            <categoryDefinition
+                weight="10"
+                id="rasdiag.dpservice.properties"
+                parent="troubleshooting.properties"
+                label="rasdiag.nav.appserver.label"/>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.tests.label"
+                    description="rasdiag.nav.appserver.tests.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagTests"
+                    weight="10"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.state.label"
+                    description="rasdiag.nav.appserver.state.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagState"
+                    weight="20"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.config.label"
+                    description="rasdiag.nav.appserver.config.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagConfig"
+                    weight="30"
+                    perspective="runtime">
+                </link>
+        </linkSet>
+    </extension>
+
+    <!-- Link on the Deployment Manager page to the Diagnostic Provider Service -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="rasdiag.additional.properties" contextType="CellManager">
+            <categoryDefinition
+                weight="10"
+                id="rasdiag.dpservice.properties"
+                parent="troubleshooting.properties"
+                label="rasdiag.nav.appserver.label"/>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.tests.label"
+                    description="rasdiag.nav.appserver.tests.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagTests"
+                    weight="10"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.state.label"
+                    description="rasdiag.nav.appserver.state.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagState"
+                    weight="20"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.config.label"
+                    description="rasdiag.nav.appserver.config.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagConfig"
+                    weight="30"
+                    perspective="runtime">
+                </link>
+        </linkSet>
+    </extension>
+
+    <!-- Link on the Node Agent pages to the Diagnostic Provider Service -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="rasdiag.additional.properties" contextType="NodeAgent">
+            <categoryDefinition
+                weight="10"
+                id="rasdiag.dpservice.properties"
+                parent="troubleshooting.properties"
+                label="rasdiag.nav.appserver.label"/>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.tests.label"
+                    description="rasdiag.nav.appserver.tests.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagTests"
+                    weight="10"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.state.label"
+                    description="rasdiag.nav.appserver.state.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagState"
+                    weight="20"
+                    perspective="runtime">
+                </link>
+                <link
+                    categoryId="rasdiag.dpservice.properties"
+                    label="rasdiag.nav.appserver.config.label"
+                    description="rasdiag.nav.appserver.config.desc"
+                    actionURI="com.ibm.ws.console.rasdiag.forwardCmd.do?forwardName=rasdiag.diagnostic.providers.content.main&amp;type=rasdiagConfig"
+                    weight="30"
+                    perspective="runtime">
+                </link>
+        </linkSet>
+    </extension>
+    
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+    
+</plugin>

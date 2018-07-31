@@ -1,0 +1,3542 @@
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp., 1997, 2015
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+change history
+6/15/09 philh pk83065 add adminidreadonly property for non-adminsecuritymanager role
+-->
+
+<plugin id="com.ibm.ws.console.security"
+        name="securitycenter"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="securitycenter">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.distmanagement"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+
+                 <!-- Security Center -->
+        <categoryDefinition id="SecurityCenter" parent="root" icon="/com.ibm.ws.console.security/images/Security.gif" label="Security.SecurityCenter.displayName" weight="40"/>
+
+                     <!-- Admin security -->
+       <task id="adminSecurity" icon="/com.ibm.ws.console.security/images/Security.gif" label="AdminSecurity.displayName" view="/navigatorCmd.do?forwardName=AdminSecurity.config.view" external="false" weight="20">
+            <category id="SecurityCenter"/>
+        </task>
+
+                    <!-- Communication security -->
+        <task id="communicationConfig" icon="/com.ibm.ws.console.security/images/SecureCommunication.gif" label="Security.communications.displayName" view="/navigatorCmd.do?forwardName=SecureCommunications.config.view" external="false" weight="30">
+            <category id="SecurityCenter"/>
+        </task>
+        
+        <!-- Administrative authorization groups -->    
+        <task id="authorizationgroups" icon="" label="nav.authorization.group" resourceType="ALL" view="/navigatorCmd.do?forwardName=AuthorizationGroup.content.main" external="false" weight="30" role="adminsecuritymanager">
+                <category id="SecurityCenter"/>
+         </task>
+        
+        <!-- Audit -->    
+        <task id="securityAudit" icon="" label="SecurityAudit.displayName" view="/navigatorCmd.do?forwardName=SecurityAudit.config.view" external="false" weight="40">
+                <category id="SecurityCenter"/>
+         </task>
+
+    </tasks>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Link to SSL config repertoire in server management HTTP transport -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="servermanagement.ServerSSLConfig"
+          contextType="HTTPTransport">
+    <link label="ServerSSLConfig.displayName"
+          description="ServerSSLConfig.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main"/>
+   </linkSet>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Link to security domain details in cluster -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="clustermanagement.SecurityDomainConfig" contextType="ServerCluster">
+    <link label="SecDomain.one.displayName"
+          description="SecDomain.one.description"
+          categoryId="additional.properties"
+          actionURI="secDomainLinkDetail.do?lastPage=ServerCluster.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([7-9]|[1-9][0-9])"/>
+          </compatibility>
+    </link>
+   </linkSet>
+</extension>
+
+<!-- Link to security domain details in server -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="servermanagement.SecurityDomainConfig" contextType="ApplicationServer">
+    <link label="SecDomain.one.displayName"
+          description="SecDomain.one.description"
+          categoryId="security.properties"
+          weight="10"
+          actionURI="secDomainLinkDetail.do?lastPage=ApplicationServer.config.view">
+          <compatibility>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.ApplicationServerDetailForm.SERVER_HAS_SECURITY" value="false"/>
+          </compatibility>
+    </link>
+   </linkSet>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Definition for generic custom properties widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="security.customProperty.collectionItem" contextType="security.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="Security.property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Security.property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Generic properties panel for admin edit only -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.Security.AdminOnly.Property.collection1" contextType="Security.AdminOnly.Property.content.main">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="secAdminPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="secAdminPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.Security.AdminOnly.Property.content.main1" contextType="Security.AdminOnly.Property.content.main">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAdminPropertyCollection.do?EditAction=true"
+                label="Security.property.name.displayName">
+          </item>
+          <item
+                attributeName="value"
+                sortable="sort"
+                itemURI=""
+                label="Security.property.value.displayName">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="Security.property.description.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<!-- ============================================================================================ -->
+<!-- Generic properties panel -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.Security.Property.collection1" contextType="Security.Property.content.main">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="secPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="secPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.Security.Property.content.main1" contextType="Security.Property.content.main">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secPropertyCollection.do?EditAction=true"
+                label="Security.property.name.displayName">
+          </item>
+          <item
+                attributeName="value"
+                sortable="sort"
+                itemURI=""
+                label="Security.property.value.displayName">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="Security.property.description.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Trust association -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.TrustAssociation" contextType="TrustAssociation">
+        <link label="TrustAssociation.interceptors.displayName"
+            description="TrustAssociation.interceptors.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TAInterceptor.content.main&#38;sfname=interceptors"/>
+     </linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Trust association interceptor -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.TAInterceptor.collection1" contextType="TAInterceptor">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="tAInterceptorCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="tAInterceptorCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.TAInterceptor1" contextType="TAInterceptor">
+          <item
+                attributeName="interceptorClassName"
+                sortable="sort"
+                itemURI="tAInterceptorCollection.do?EditAction=true"
+                label="TAInterceptor.interceptorClassName.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- CSIv2 and SAS -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIInbound.config.general.properties" contextType="CSIInbound">
+      <field attributeName="krb5AuthReadOnly" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="false"/>
+          </compatibility>
+      </field>
+      <field attributeName="krb5Auth" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="zosAlias" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.zOSAliasVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="alias" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.SSLVisible" value="old"/>
+          </compatibility>
+      </field>
+      <field attributeName="alias2" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.SSLVisible" value="new"/>
+          </compatibility>
+      </field>
+      <field attributeName="zosHeading" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.CSIiaDetailForm.zosAdditionalLinksVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="safIdentityAssertion" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.CSIiaDetailForm.zosAdditionalLinksVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="dnIdentityAssertion" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.CSIiaDetailForm.zosAdditionalLinksVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="certIdentityAssertion" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.CSIiaDetailForm.zosAdditionalLinksVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="safMapCertDN" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIInbound.safMapCertDNVisible" value="true"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIOutbound.config.general.properties" contextType="CSIOutbound">
+      <field attributeName="krb5AuthReadOnly" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="false"/>
+          </compatibility>
+      </field>
+      <field attributeName="krb5Auth" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="zosAlias" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(mixedcell)"/>
+         </compatibility>
+      </field>
+      <field attributeName="alias" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIocDetailForm.SSLVisible" value="old"/>
+          </compatibility>
+      </field>
+      <field attributeName="alias2" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIocDetailForm.SSLVisible" value="new"/>
+          </compatibility>
+      </field>
+      <field attributeName="realmsLink" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIoutDetailForm.TrustedRealmsVisible" value="true"/>
+          </compatibility>
+      </field>
+      <field attributeName="targetRealms" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIoutDetailForm.TrustedRealmsVisible" value="false"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIoc.config.general.properties" contextType="CSIoc">
+      <field attributeName="zosAlias" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(mixedcell)"/>
+         </compatibility>
+      </field>
+      <field attributeName="alias" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIocDetailForm.SSLVisible" value="old"/>
+          </compatibility>
+      </field>
+      <field attributeName="alias2" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIocDetailForm.SSLVisible" value="new"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIia.config.general.properties" contextType="CSIia">
+        <field attributeName="loginConfig" perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="isSubjectPropagation" perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="krb5AuthReadOnly" perspective="config">
+          <compatibility>
+              <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="false"/>
+              <!-- 7 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(([7-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="krb5Auth" perspective="config">
+          <compatibility>
+              <match key="com.ibm.ws.console.security.CSIiaDetailForm.krbAuthEnabled" value="true"/>
+              <!-- 7 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(([7-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.CSIiaAdditionalSettings1" contextType="CSIia">
+         <link
+               categoryId="additional.properties"
+               label="CSIiaAdditionalSettings.displayName"
+               description="CSIiaAdditionalSettings.shortDescription"
+               actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CSIiaAdditionalSettings.config.view&#38;sfname=propertie&#38;lastPage=CSIia.config.view">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.security.CSIiaDetailForm.zosAdditionalLinksVisible" value="true"/>
+               </compatibility>
+         </link>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIoa.config.general.properties" contextType="CSIoa">
+        <field 
+              attributeName="loginConfig"
+              perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field 
+              attributeName="rmiOutboundEnabled"
+              perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field 
+              attributeName="isSubjectPropagation"
+              perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field 
+              attributeName="targetRealms"
+              perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="krb5AuthReadOnly" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIoaDetailForm.krbAuthEnabled" value="false"/>
+              <!-- 7 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(([7-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="krb5Auth" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.ws.console.security.CSIoaDetailForm.krbAuthEnabled" value="true"/>
+              <!-- 7 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(([7-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.CSIoaAdditionalSettings1" contextType="CSIoa">
+         <link
+               categoryId="additional.properties"
+               label="CSIoaAdditionalSettings.displayName"
+               description="CSIoaAdditionalSettings.shortDescription"
+               actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CSIoaAdditionalSettings.config.view&#38;sfname=properties&#38;lastPage=CSIoa.config.view">
+              <compatibility>
+                  <match key="com.ibm.websphere.console.security.CSIoaDetailForm.zosAdditionalLinksVisible" value="true"/>
+               </compatibility>
+         </link>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CSIic.config.general.properties" contextType="CSIic">
+      <field attributeName="zosAlias" categoryId="SSLSettings.displayName" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.zOSAliasVisible" value="true"/>
+         </compatibility>
+      </field>
+      <field attributeName="alias" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.SSLVisible" value="old"/>
+          </compatibility>
+      </field>
+      <field attributeName="alias2" categoryId="SSLSettings.displayName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.security.CSIicDetailForm.SSLVisible" value="new"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Authentication mechanism -->
+<!--
+<extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="security.AuthMechanism" contextType="AuthMechanism">
+        <link label="KeyStore.security.displayName"
+            description="KeyStore.short.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyStore.content.main&#38;sfname=keyStores"/>
+      </linkSet>
+</extension>
+-->
+
+<!-- Authentication mechanism - Kerberos LIBD3486 -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KrbAuthMechanismGeneralProperties" contextType="KrbAuthMechanism">
+      <field attributeName="relatedIntro" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.spnegoAvailable" value="false"/>
+         </compatibility>
+      </field>
+      <field attributeName="spnegoReadOnly" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.spnegoAvailable" value="false"/>
+         </compatibility>
+      </field>
+      <field attributeName="spnegoConfigLink" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.spnegoAvailable" value="true"/>
+         </compatibility>
+      </field>
+      <field attributeName="LDAPRepositoryLink" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.repositoryVisible" value="ldap"/>
+          </compatibility>
+      </field>
+      <field attributeName="VMMRepositoryLink" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.repositoryVisible" value="wim"/>
+          </compatibility>
+      </field>
+      <field attributeName="useMapModule" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.KerberosDetailForm.repositoryVisible" value="local"/>
+             <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- SPNEGO -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.SPNEGO.collection" contextType="SPNEGOCollection">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="spnegoConfigDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="spnegoConfigDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.SPNEGO" contextType="SPNEGOCollection">
+          <item
+                attributeName="hostName"
+                sortable="sort"
+                itemURI="spnegoConfigDetail.do?EditSpnegoFilter=true"
+                label="SPNEGO.hostName.displayNameHL">
+          </item>
+          <item
+                attributeName="realmName"
+                sortable="sort"
+                itemURI=""
+                label="Kerberos.realm.displayNameHL">
+          </item>
+          <item
+                attributeName="filterCriteria"
+                sortable="sort"
+                itemURI=""
+                label="SPNEGO.filterCriteria.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Authorization provider -->
+
+<!-- ================================================================================================= -->
+<!-- Enable authorization provider -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="EnableAuthorizationProviderGeneralProperties" contextType="EnableAuthorizationProvider">
+       <field attributeName="updateIntro" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.JACCEnabled" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="updateApps" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.JACCEnabled" value="true"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- SAF properties -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SAFPropertiesGeneralProperties" contextType="SAFProperties">
+       <field attributeName="safMapDelRACMAP" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.SAFProperties.safMapDelRACMAPVisible" value="true"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- LDAP user registry and search filter -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.LDAPUserRegistry" contextType="LDAPUserRegistry">
+         <link label="LDAPSearchFilter.displayName"
+            description="LDAPSearchFilter.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPSearchFilter.config.view&#38;sfname=searchFilter"/>
+         <link label="SecTrustRealm.inbound.displayName"
+            description="SecTrustRealm.inbound.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustRealm.config.view&#38;direction=inbound&#38;lastPage=LDAPUserRegistry.config.view"/>
+		<link label="LDAPSearchQuery.displayName"
+            description="LDAPSearchQuery.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPTestQuery.config.view&#38;lastPage=LDAPUserRegistry.config.view"/>
+      </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="LDAPUserRegistryGeneralProperties" contextType="LDAPUserRegistry">
+       <field attributeName="adminId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="true"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+         </compatibility>
+      </field>
+        <field attributeName="adminIdReadOnly" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="false"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="specifyId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="realm" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="sslEnabled" 
+             categoryId="LDAPUserRegistry.sslSettings.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="sslConfig" 
+             categoryId="LDAPUserRegistry.sslSettings.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="customProperty" 
+             categoryId="Security.property.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPUserRegistry.detail" contextType="LDAPUserRegistry">
+        <action
+              enablesFor="Detail"
+              role="administrator"
+              label="LDAPUserRegistry.testConnection.button"
+              actionURI="lDAPUserRegistryDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="LDAPSearchFilter.config.general.properties" contextType="LDAPSearchFilter">
+        <field 
+              attributeName="recursiveSearch"
+              perspective="config">
+          <compatibility>
+              <!-- 5.1.1 and higher, should display -->
+              <match key="com.ibm.websphere.baseProductVersion"
+                     value="(5\.[1-9]\.[1-9].*)|(([6-9]|[1-9][0-9]).*)"/>
+          </compatibility>
+        </field >
+        <field attributeName="kerberosAttributeReadOnly" perspective="config">
+          <compatibility>
+		   <match key="com.ibm.ws.console.security.LDAPSearchFilterDetailForm.krbAuthEnabled" value="false"/>
+          </compatibility>
+        </field>
+        <field attributeName="kerberosAttribute" perspective="config">
+          <compatibility>
+		   <match key="com.ibm.ws.console.security.LDAPSearchFilterDetailForm.krbAuthEnabled" value="true"/>
+          </compatibility>
+        </field>
+    </form>
+</extension>
+<!-- Definition for LDAP failover host/port widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="security.customProperty.collectionItem" contextType="security.ldapHosts">
+        <item
+              attributeName="name"
+              editable="true"
+              label="LDAPUserRegistry.host.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="LDAPUserRegistry.port.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Local OS user registry -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.LocalOSUserRegistry" contextType="LocalOSUserRegistry">
+         <link label="SecTrustRealm.inbound.displayName"
+            description="SecTrustRealm.inbound.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustRealm.config.view&#38;direction=inbound&#38;lastPage=LocalOSUserRegistry.config.view"/>
+      </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="LocalOSUserRegistry.config.general.properties" contextType="LocalOSUserRegistry">
+      <field attributeName="adminId" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="true"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+         </compatibility>
+      </field>
+        <field attributeName="adminIdReadOnly" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="false"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="specifyId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="realm" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="true"/>
+         </compatibility>
+      </field>
+      <field attributeName="ignoreCase" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+         </compatibility>
+      </field>
+      <field attributeName="serverId" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(distributedcell|distributedbase)"/>
+         </compatibility>
+      </field>
+      <field attributeName="serverPassword" perspective="config">
+         <compatibility>
+             <match key="com.ibm.websphere.cellType" value="(distributedcell|distributedbase)"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Custom user registry -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.CustomUserRegistry" contextType="CustomUserRegistry">
+         <link label="SecTrustRealm.inbound.displayName"
+            description="SecTrustRealm.inbound.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustRealm.config.view&#38;direction=inbound&#38;lastPage=CustomUserRegistry.config.view"/>
+      </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CustomUserRegistry.config.general.properties" contextType="CustomUserRegistry">
+      <field attributeName="adminId" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="true"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+         </compatibility>
+      </field>
+        <field attributeName="adminIdReadOnly" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="false"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="specifyId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="realm" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="true"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Trusted Realms -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TrustRealm.properties" contextType="TrustRealm">
+      <field attributeName="SecRealm.paging.extend" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.TrustRealmDetailForm.trustCollection" value="some"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.Realms.collection1" contextType="SecRealm">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SecTrustRealm.ADD.displayName"
+              actionURI="trustRealmDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SecTrustRealm.TRUST.displayName"
+              actionURI="trustRealmDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SecTrustRealm.NOTRUST.displayName"
+              actionURI="trustRealmDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.Realms" contextType="SecRealm">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI=""
+                label="SecTrustRealm.name.displayName">
+          </item>
+          <item
+                attributeName="trusted"
+                sortable="sort"
+                itemURI=""
+                label="SecTrustRealm.inboundTrust.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Identity Manager : Virtual Realm -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="VirtualRealm.config.general.properties" contextType="VirtualRealm">
+      <field attributeName="adminId" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="true"/> 
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+         </compatibility>
+      </field>
+        <field attributeName="adminIdReadOnly" perspective="config">
+         <compatibility>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.safEnabled" value="false"/>
+             <match key="com.ibm.ws.console.security.UserRegistryDetailForm.isUserAdminSecurityManager" value="false"/>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+         </compatibility>
+      </field>
+       <field attributeName="specifyId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="useGlobalSchema" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.security.DomainContext" value="true"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="security.VirtualRealm1" contextType="VirtualRealm">
+         <link label="IdMgr.VR.LA.displayName"
+            description="IdMgr.VR.LA.short.description"
+            categoryId="additional.properties"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LookasideDB.config.view&#38;lastPage=VirtualRealm.config.view"/>
+         <link label="IdMgr.VR.Fed.displayName"
+            description="IdMgr.VR.Fed.short.description"
+            categoryId="additional.properties"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=FederationDB.config.view&#38;lastPage=VirtualRealm.config.view"/>
+         <link label="IdMgr.VR.Entity.displayName"
+            description="IdMgr.VR.Entity.description"
+            categoryId="additional.properties"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=EntityType.content.main&#38;lastPage=VirtualRealm.config.view"/>
+         <link label="IdMgr.VR.URAm.displayName"
+            description="IdMgr.VR.URAm.short.description"
+            categoryId="additional.properties"
+            weight="35"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=URAttributeMapping.config.view&#38;lastPage=VirtualRealm.config.view"/>
+        <link label="Security.property.displayName"
+            description="Security.property.short.description"
+            categoryId="additional.properties"
+            weight="40"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SimpleProperty.config.view&#38;lastPage=VirtualRealm.config.view">
+        </link>
+	   <link label="IdMgr.RepositoryConfig.displayName"
+            description="IdMgr.RepositoryConfig.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=RepositoryConfig.content.main&#38;lastPage=VirtualRealm.config.view"/>
+         <link label="SecTrustRealm.inbound.displayName"
+            description="SecTrustRealm.inbound.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustRealm.config.view&#38;direction=inbound&#38;lastPage=VirtualRealm.config.view"/>
+   </linkSet>
+</extension>
+<!--  Identity Manager: RepoReferenceCollection -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.RepoReference.action1" contextType="VirtualRealm">
+         <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="IdMgr.VR.Add.displayName"
+              actionURI="virtualRealmDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="IdMgr.VR.UseBuiltin.displayName"
+              actionURI="virtualRealmDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="IdMgr.VR.Remove.displayName"
+              actionURI="virtualRealmDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.RepoReference" contextType="VirtualRealm">
+          <item
+                attributeName="baseEntry"
+                sortable="false"
+                itemURI="virtualRealmDetail.do?action=BaseEntryLink&#38;lastPage=VirtualRealm.config.view"
+                label="IdMgr.BaseEntry.displayNameHL">
+          </item>
+          <item
+                attributeName="id"
+                sortable="false"
+                itemURI="virtualRealmDetail.do?action=RepoIdLink&#38;lastPage=VirtualRealm.config.view"
+                label="IdMgr.RepositoryId.displayNameHL">
+          </item>
+          <item
+                attributeName="repositoryTypeDisplay"
+                sortable="false"
+                itemURI=""
+                label="IdMgr.RepositoryType.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.EntityType" contextType="EntityType">
+          <item
+                attributeName="type"
+                sortable="sort"
+                itemURI="entityTypeCollection.do?EditAction=true"
+                label="IdMgr.Entity.Type.displayNameHL">
+          </item>
+          <item
+                attributeName="parent"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.Entity.Parent.displayNameHL">
+          </item>
+          <item
+                attributeName="rdn"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.Entity.RDN.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="URAttributeMapping.collectionItem" contextType="URAttributeMapping">
+        <item
+              attributeName="attribute"
+              editable="false"
+              label="IdMgr.URAm.attribute.displayName">
+        </item>
+        <item
+              attributeName="propertyIn"
+              editable="true"
+              label="IdMgr.URAm.propertyForInput.displayName">
+        </item>
+        <item
+              attributeName="propertyOut"
+              editable="true"
+              label="IdMgr.URAm.propertyForOutput.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPRepository.action1" contextType="LDAPRepository">
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="lDAPRepositoryDetail.do"
+              role="administrator,configurator">
+        </action>
+     </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="security.LDAPRepository" contextType="LDAPRepository">
+        <item
+              attributeName="failoverHost"
+              sortable="false"
+              itemURI=""
+              label="IdMgr.LDAP.FailoverHost.displayNameHL">
+        </item>
+        <item
+              attributeName="failoverPort"
+              sortable="false"
+              itemURI=""
+              label="IdMgr.LDAP.FailoverPort.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.RepositoryConfig.collection" contextType="RepositoryConfig">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.add"
+              actionURI="repositoryConfigCollection.do"
+              type="menu"
+              actionName="newRepository"
+              optionValueList="security.idMgrRepoTypes.values"
+              optionLabelList="security.idMgrRepoTypes.labels">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="repositoryConfigCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.RepositoryConfig" contextType="RepositoryConfig">
+          <item
+                attributeName="id"
+                sortable="sort"
+                itemURI="repositoryConfigCollection.do?EditAction=true"
+                label="IdMgr.Repo.Id.displayNameHL">
+          </item>
+          <item
+                attributeName="type"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.Repo.Type.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="security.LDAPRepository1" contextType="LDAPRepository">
+         <link label="IdMgr.LDAP.Performance.displayName"
+            description="IdMgr.LDAP.Performance.short.description"
+            categoryId="additional.properties"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPPerformance.config.view&#38;lastPage=LDAPRepository.config.view"/>
+         <link label="IdMgr.LDAP.EntityType.displayName"
+            description="IdMgr.LDAP.EntityType.description"
+            categoryId="additional.properties"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPEntityType.content.main&#38;lastPage=LDAPRepository.config.view"/>
+         <link label="IdMgr.LDAPGroup.displayName"
+            description="IdMgr.LDAPGroup.short.description"
+            categoryId="additional.properties"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPGroupDef.config.view&#38;lastPage=LDAPRepository.config.view"/>
+         <link label="IdMgr.LDAPAttrs.displayName"
+            description="IdMgr.LDAPAttrs.short.description"
+            categoryId="additional.properties"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPAttr.content.main&#38;lastPage=LDAPRepository.config.view"/>
+		<link label="LDAPSearchQuery.displayName"
+            description="LDAPSearchQuery.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPTestQuery.config.view&#38;lastPage=LDAPRepository.config.view"/>			
+			
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="security.LDAPGroupDef" contextType="LDAPGroupDef">
+        <link label="IdMgr.LDAPGroup.MemberAttribute.displayName"
+            description="IdMgr.LDAPGroup.MemberAttribute.description"
+            categoryId="additional.properties"
+            weight="10"
+       	actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPGroupMember.content.main&#38;lastPage=LDAPGroupDef.config.view"/>
+        <link label="IdMgr.LDAPGroup.DynamicMemberAttribute.displayName"
+            description="IdMgr.LDAPGroup.DynamicMemberAttribute.description"
+            categoryId="additional.properties"
+            weight="20"
+       	actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=LDAPDynamicGroupMember.content.main&#38;lastPage=LDAPGroupDef.config.view"/>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPGroupMember.collection" contextType="LDAPGroupMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="lDAPGroupMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="lDAPGroupMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.LDAPGroupMember" contextType="LDAPGroupMember">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="lDAPGroupMemberCollection.do?EditAction=true"
+                label="IdMgr.LDAPGroup.Name.displayName">
+          </item>
+          <item
+                attributeName="scope"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.LDAPGroup.Scope.displayName">
+          </item>
+          <item
+                attributeName="objClass"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.LDAPGroup.ObjectClass.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPDynamicGroupMember.collection" contextType="LDAPDynamicGroupMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="lDAPDynamicGroupMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="lDAPDynamicGroupMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.LDAPDynamicGroupMember" contextType="LDAPDynamicGroupMember">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="lDAPDynamicGroupMemberCollection.do?EditAction=true"
+                label="IdMgr.LDAPGroup.Name.displayName">
+          </item>
+          <item
+                attributeName="objClass"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.LDAPGroup.ObjectClass.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.LDAPEntityType" contextType="LDAPEntityType">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="lDAPEntityTypeCollection.do?EditAction=true"
+                label="IdMgr.LDAPEntity.Type.displayNameHL">
+          </item>
+          <item
+                attributeName="objectClasses"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.LDAPEntity.ObjClasses.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPEntityType.collection" contextType="LDAPEntityType">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="lDAPEntityTypeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="lDAPEntityTypeCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.LDAPAttr.collection" contextType="LDAPAttr">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.add"
+              actionURI="lDAPAttrCollection.do"
+              type="menu"
+              actionName="newAttr"
+              optionValueList="security.idMgrLDAPAttrTypes.values"
+              optionLabelList="security.idMgrLDAPAttrTypes.labels">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="lDAPAttrCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.LDAPAttr" contextType="LDAPAttr">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="lDAPAttrCollection.do?EditAction=true"
+                label="IdMgr.LDAPAttrs.nameOrPropName.displayName">
+          </item>
+          <item
+                attributeName="displayType"
+                sortable="sort"
+                itemURI=""
+                label="IdMgr.LDAPAttrs.type.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="LDAPAttr.config.general.properties" contextType="LDAPAttr">
+      <field attributeName="name" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="(supported|external)"/>
+          </compatibility>
+      </field>
+      <field attributeName="propertyName" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="(supported)"/>
+          </compatibility>
+      </field>
+      <field attributeName="propertyNameRqd" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="unsupported"/>
+          </compatibility>
+      </field>
+      <field attributeName="syntax" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="(supported|external)"/>
+          </compatibility>
+      </field>
+      <field attributeName="defaultValue" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="supported"/>
+          </compatibility>
+      </field>
+      <field attributeName="defaultAttr" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="supported"/>
+          </compatibility>
+      </field>
+      <field attributeName="wimGenerate" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.LDAPRepository.attrVisible" value="external"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="FileRepository.config.general.properties" contextType="FileRepository">
+      <field attributeName="baseDirectory" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.fileRepository.defaultFileVisible" value="false"/>
+          </compatibility>
+      </field>
+      <field attributeName="fileName" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.fileRepository.defaultFileVisible" value="false"/>
+          </compatibility>
+      </field>
+      <field attributeName="adapterClassName" perspective="config">
+          <compatibility>
+		     <match key="com.ibm.websphere.console.security.fileRepository.defaultFileVisible" value="false"/>
+          </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- JAAS configuration -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.JAASConfigurationEntry.collection1" contextType="JAASConfigurationEntry">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="jAASConfigurationEntryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="jAASConfigurationEntryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.JAASConfigurationEntry1" contextType="JAASConfigurationEntry">
+          <item
+                attributeName="alias"
+                sortable="sort"
+                itemURI="jAASConfigurationEntryCollection.do?EditAction=true"
+                label="JAASConfigurationEntry.alias.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- JAAS login module -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.JAASLoginModule.collection1" contextType="JAASLoginModule">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="jAASConfigurationEntryDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="jAASConfigurationEntryDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.setOrder"
+              actionURI="jAASConfigurationEntryDetail.do">
+              <compatibility>
+                  <match key="com.ibm.ws.console.security.JAASConfigEntry.orderEnabled" value="true"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.JAASLoginModule1" contextType="JAASLoginModule">
+          <item
+                attributeName="moduleClassName"
+                sortable="sort"
+                itemURI="jAASConfigurationEntryDetail.do?EditLoginModule=true"
+                label="JAASLoginModule.moduleClassName.displayNameHL">
+          </item>
+          <item
+                attributeName="authenticationStrategy"
+                sortable="sort"
+                itemURI=""
+                label="JAASLoginModule.authenticationStrategy.displayNameHL">
+          </item>
+          <item
+                attributeName="moduleOrder"
+                sortable="sort"
+                itemURI=""
+                label="JAASLoginModule.moduleOrder.displayNameHL">
+              <compatibility>
+                  <match key="com.ibm.ws.console.security.JAASConfigEntry.orderEnabled" value="true"/>
+              </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- JAAS auth data -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.JAASAuthData.collection1" contextType="JAASAuthData">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="jAASAuthDataCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="jAASAuthDataCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.JAASAuthData1" contextType="JAASAuthData">
+          <item
+                attributeName="alias"
+                sortable="sort"
+                itemURI="jAASAuthDataCollection.do?EditAction=true"
+                label="JAASAuthData.alias.displayName">
+          </item>
+          <item
+                attributeName="userId"
+                sortable="sort"
+                itemURI=""
+                label="JAASAuthData.userId.displayName">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="JAASAuthData.description.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Authentication provider -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuthProvider.collection1" contextType="AuthProvider">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="authProviderCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="authProviderCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuthProvider" contextType="AuthProvider">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="authProviderCollection.do?EditAction=true"
+                label="AuthenticationProvider.name.displayNameHL">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="AuthenticationProvider.desc.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Authentication module -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuthModule.collection1" contextType="ServerAuthModule">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="authProviderDetail.do?moduleType=server">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="authProviderDetail.do?moduleType=server">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuthModule.collection1" contextType="ClientAuthModule">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="authProviderDetail.do?moduleType=client">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="authProviderDetail.do?moduleType=client">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuthModule1" contextType="ClientAuthModule">
+          <item
+                attributeName="order"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                label="AuthenticationModule.order.displayName">
+          </item>
+          <item
+                attributeName="name"
+                editable="false"
+                sortable="sort"
+                itemURI="authProviderDetail.do?EditModule=true&#38;moduleType=client"
+                label="AuthenticationModule.name.displayNameHL">
+          </item>
+          <item
+                attributeName="classname"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                label="AuthenticationModule.classname.displayNameHL">
+          </item>
+          <item
+                attributeName="requestPolicy"
+                type="select"
+                param1="authModuleReqPolicyValue"
+                param2="authModuleReqPolicyDesc"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                label="AuthenticationModule.requestPolicy.displayNameHL">
+          </item>
+          <item
+                attributeName="responsePolicy"
+                type="select"
+                param1="authModuleRespPolicyValue"
+                param2="authModuleRespPolicyDesc"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                label="AuthenticationModule.responsePolicy.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuthModule1" contextType="ServerAuthModule">
+          <item
+                attributeName="order"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                width="1%"
+                label="AuthenticationModule.order.displayName">
+          </item>
+          <item
+                attributeName="name"
+                editable="false"
+                sortable="sort"
+                itemURI="authProviderDetail.do?EditModule=true&#38;moduleType=server"
+                width="18%"
+                label="AuthenticationModule.name.displayNameHL">
+          </item>
+          <item
+                attributeName="classname"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                width="50%"
+                label="AuthenticationModule.classname.displayNameHL">
+          </item>
+          <item
+                attributeName="requestPolicy"
+                type="select"
+                param1="authModuleReqPolicyValue"
+                param2="authModuleReqPolicyDesc"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                width="15%"
+                label="AuthenticationModule.requestPolicy.displayNameHL">
+          </item>
+          <item
+                attributeName="responsePolicy"
+                type="select"
+                param1="authModuleRespPolicyValue"
+                param2="authModuleRespPolicyDesc"
+                editable="true"
+                sortable="sort"
+                itemURI=""
+                width="15%"
+                label="AuthenticationModule.responsePolicy.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- ========================== Secure Communications ================================================ -->
+<!-- ================================================================================================= -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.SecureCommunications" contextType="SecureCommunications">
+        <link label="SSLConfig.displayName"
+            description="SSLConfig.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main&#38;sfname=repertoire&#38;mgmtScope=all"/>            
+        <link label="DynamicSSLConfig.displayName"
+            description="DynamicSSLConfig.short.description"
+            categoryId="related.items"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=DynamicSSLConfig.content.main&#38;sfname=dynamicSSLConfigSelections&#38;mgmtScope=all"/>            
+        <link label="KeyStore.security.displayName"
+            description="KeyStore.short.description"
+            categoryId="related.items"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyStore.content.main&#38;sfname=keyStores&#38;mgmtScope=all&#38;filterSetting=SSLKeys"/>            
+        <link label="WSKeySet.displayName"
+            description="WSKeySet.short.description"
+            categoryId="related.items"
+            weight="40"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeySet.content.main&#38;sfname=keySets&#38;mgmtScope=all"/>            
+        <link label="WSKeySetGenerator.displayName"
+            description="WSKeySetGenerator.short.description"
+            categoryId="related.items"
+            weight="50"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeySetGroup.content.main&#38;sfname=keySetGroups&#38;mgmtScope=all"/>            
+        <link label="KeyManager.displayName"
+            description="KeyManager.short.description"
+            categoryId="related.items"
+            weight="60"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyManager.content.main&#38;sfname=keyManagers&#38;mgmtScope=all"/>            
+        <link label="TrustManager.displayName"
+            description="TrustManager.short.description"
+            categoryId="related.items"
+            weight="70"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustManager.content.main&#38;sfname=trustManagers&#38;mgmtScope=all"/>            
+        <link label="CAClient.link.displayName"
+            description="CAClient.link.description"
+            categoryId="related.items"
+            weight="80"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CAClient.content.main&#38;mgmtScope=all"/>            
+     </linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- FIPS -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.Fips" contextType="Fips">
+        <link label="FipsConvert.displayName"
+            description="FipsConvert.short.description"
+            categoryId="related.items"
+            weight="10"
+            role="administrator"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=FipsConvert.config.view"/>            
+     </linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- SSL configuration -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.SSLConfig" contextType="SSLConfig">
+        <link label="QoP.displayName"
+            description="QoP.short.description"
+            categoryId="additional.properties"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=QoP.config.view&#38;sfname=setting"/>
+        <link label="TrustKeyManagers.displayName"
+            description="TrustKeyManagers.short.description"
+            categoryId="additional.properties"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustKeyManagers.config.view">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+        </link>
+        <link label="SecureSocketLayer.properties.displayName"
+            description="SecureSocketLayer.properties.description"
+            categoryId="additional.properties"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=Security.AdminOnly.Property.content.main&#38;sfname=properties"/>
+        <link label="KeyStore.security.displayName"
+            description="KeyStore.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyStore.content.main&#38;sfname=keyStores&#38;filterSetting=SSLKeys">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+        </link>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.SSLConfig.collection" contextType="SSLConfig">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="sSLConfigCollection.do">
+             <compatibility>
+                 <match key="com.ibm.websphere.cellType" value="(distributedcell|distributedbase)"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SSL.newJSSE"
+              actionURI="sSLConfigCollection.do">
+             <compatibility>
+                 <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SSL.newSSSL"
+              actionURI="sSLConfigCollection.do">
+             <compatibility>
+                 <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="sSLConfigCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.SSLConfig" contextType="SSLConfig">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="sSLConfigCollection.do?EditAction=true"
+                label="SSLConfig.name.displayName">
+          </item>
+          <item
+              attributeName="type"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.type.displayName">
+             <compatibility>
+                 <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+             </compatibility>
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SSLConfigGeneralProperties" contextType="SSLConfig">
+       <field attributeName="trustStore" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+       </field>
+       <field attributeName="keyStore" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+       </field>
+       <field attributeName="certAlias" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+       </field>
+       <field attributeName="clientCertAlias" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+       </field>
+       <field attributeName="mgmtScope" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="new"/>
+             </compatibility>
+       </field>
+       <field attributeName="keyring" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="system"/>
+             </compatibility>
+       </field>
+       <field attributeName="v3Timeout" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="system"/>
+             </compatibility>
+       </field>
+       <field attributeName="keyFileName" categoryId="SecureSocketLayer.keyFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+       <field attributeName="displayKeyFilePassword" categoryId="SecureSocketLayer.keyFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+       <field attributeName="keyFileFormat" categoryId="SecureSocketLayer.keyFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+       <field attributeName="trustFileName" categoryId="SecureSocketLayer.trustFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+       <field attributeName="displayTrustFilePassword" categoryId="SecureSocketLayer.trustFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+       <field attributeName="trustFileFormat" categoryId="SecureSocketLayer.trustFile.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SSLConfigDetailForm.panelVersionVisible" value="pre61"/>
+             </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Quality of Protection (QoP) -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="QoPGeneralProperties" contextType="QoP">
+       <field attributeName="securityLevel" 
+             categoryId="QoP.cipherSuitesSettings.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="cipherSuites" 
+             categoryId="QoP.cipherSuitesSettings.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="protocol" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.QoPDetailForm.isProtocolVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="protocolReadOnly" perspective="config">
+           <compatibility>
+		   <match key="com.ibm.ws.console.security.QoPDetailForm.isProtocolReadOnly" value="true"/>
+           </compatibility>
+       </field>
+       <field attributeName="provider" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.QoPDetailForm.systemSSLConfigVisible" value="false"/>
+             </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Trust and key managers -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.TrustKeyManagers" contextType="TrustKeyManagers">
+        <link label="TrustManager.displayName"
+            description="TrustManager.short.description"
+            categoryId="related.items"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustManager.content.main"/>
+        <link label="KeyManager.displayName"
+            description="KeyManager.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyManager.content.main"/>
+     </linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Dynamic endpoint SSL configuration -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.DynamicSSLConfig.collection" contextType="DynamicSSLConfig">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="dynamicSSLConfigCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="dynamicSSLConfigCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.DynamicSSLConfig" contextType="DynamicSSLConfig">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="dynamicSSLConfigCollection.do?EditAction=true"
+                label="DynamicSSLConfig.name.displayName">
+          </item>
+          <item
+              attributeName="selectInfo"
+              sortable="sort"
+              itemURI=""
+              label="DynamicSSLConfig.selectInfo.displayNameHL">
+          </item>
+          <item
+              attributeName="sslConfig"
+              sortable="sort"
+              itemURI=""
+              label="DynamicSSLConfig.sslConfig.displayNameHL">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="security.DynamicSSLConfig" contextType="DynamicSSLConfig">
+    <link label="SSLConfig.displayName"
+          description="SSLConfig.short.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main"/>
+   </linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Secure Endpoint -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="security.SecureEndpointTree" contextType="SecureEndpointTree">
+        <tab
+              label="tab.topology"
+              contentURI="SecureEndpoint.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.SecureEndpoint" contextType="SecureEndpoint">
+        <link label="SSLConfig.displayName"
+            description="SSLConfig.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main&#38;sfname=repertoire"/>            
+        <link label="DynamicSSLConfig.displayName"
+            description="DynamicSSLConfig.short.description"
+            categoryId="related.items"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=DynamicSSLConfig.content.main&#38;sfname=dynamicSSLConfigSelections"/>            
+        <link label="KeyStore.security.displayName"
+            description="KeyStore.short.description"
+            categoryId="related.items"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyStore.content.main&#38;sfname=keyStores&#38;filterSetting=SSLKeys"/>            
+        <link label="WSKeySet.displayName"
+            description="WSKeySet.short.description"
+            categoryId="related.items"
+            weight="40"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeySet.content.main&#38;sfname=keySets"/>            
+        <link label="WSKeySetGenerator.displayName"
+            description="WSKeySetGenerator.short.description"
+            categoryId="related.items"
+            weight="50"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeySetGroup.content.main&#38;sfname=keySetGroups"/>            
+        <link label="KeyManager.displayName"
+            description="KeyManager.short.description"
+            categoryId="related.items"
+            weight="60"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyManager.content.main&#38;sfname=keyManagers"/>            
+        <link label="TrustManager.displayName"
+            description="TrustManager.short.description"
+            categoryId="related.items"
+            weight="70"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=TrustManager.content.main&#38;sfname=trustManagers"/>            
+        <link label="CAClient.link.displayName"
+            description="CAClient.link.description"
+            categoryId="related.items"
+            weight="80"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CAClient.content.main"/>            
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.SecureEndpoint" contextType="SecureEndpoint">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="sSLConfigCollection.do?EditAction=true"
+                label="SSLConfig.name.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecureEndpointGeneralProperties" contextType="SecureEndpoint">
+       <field attributeName="inheritedSSLConfig" categoryId="SecureEndpoint.inherited.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SecureEndpointDetailForm.topNodeVisible" value="false"/>
+             </compatibility>
+       </field>
+       <field attributeName="inheritedCertAlias" categoryId="SecureEndpoint.inherited.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SecureEndpointDetailForm.topNodeVisible" value="false"/>
+             </compatibility>
+       </field>
+       <field attributeName="override" categoryId="SecureEndpoint.overrideCategory.displayName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.SecureEndpointDetailForm.topNodeVisible" value="false"/>
+             </compatibility>
+       </field>
+       <field attributeName="sslConfig" categoryId="SecureEndpoint.overrideCategory.displayName" perspective="config">
+       </field>
+       <field attributeName="certAlias" categoryId="SecureEndpoint.overrideCategory.displayName" perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Key store and action panels -->
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="security.KeyStore" contextType="KeyStore">
+		<link label="PersonalCerts.displayName"
+			description="PersonalCerts.short.description"
+			categoryId="additional.properties"
+			weight="20"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=PersonalCerts.content.main&#38;sfname=personalCerts"/>
+		<link label="SignerCerts.displayName"
+			description="SignerCerts.short.description"
+			categoryId="additional.properties"
+			weight="10"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SignerCerts.content.main&#38;sfname=signerCerts"/>
+		<link label="PersonalCertRequests.displayName"
+			description="PersonalCertRequests.short.description"
+			categoryId="additional.properties"
+			weight="30"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CertRequest.content.main&#38;sfname=certRequests"/>
+		<link label="Security.property.displayName"
+			description="Security.property.short.description"
+			categoryId="additional.properties"
+			weight="40"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=Security.AdminOnly.Property.content.main&#38;sfname=additionalKeyStoreAttrs"/>
+	</linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="security.KeyStore" contextType="KeyStoreEdit">
+		<link label="PersonalCerts.displayName"
+			description="PersonalCerts.short.description"
+			categoryId="additional.properties"
+			weight="20"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=PersonalCerts.content.main&#38;sfname=personalCerts"/>
+		<link label="SignerCerts.displayName"
+			description="SignerCerts.short.description"
+			categoryId="additional.properties"
+			weight="10"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SignerCerts.content.main&#38;sfname=signerCerts"/>
+		<link label="PersonalCertRequests.displayName"
+			description="PersonalCertRequests.short.description"
+			categoryId="additional.properties"
+			weight="30"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=CertRequest.content.main&#38;sfname=certRequests"/>
+		<link label="Security.property.displayName"
+			description="Security.property.short.description"
+			categoryId="additional.properties"
+			weight="40"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=Security.AdminOnly.Property.content.main&#38;sfname=additionalKeyStoreAttrs"/>
+	</linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.KeyStore.collection" contextType="KeyStore">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="keyStoreCollection.do">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.keystoreUsage" value="(all|SSLKeys|KeySetKeys)"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="keyStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="KeyStore.changePassword"
+              actionURI="keyStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="KeyStore.exchangeSigners"
+              actionURI="keyStoreCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.KeyStore" contextType="KeyStore">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="keyStoreCollection.do?EditAction=true"
+                label="KeyStore.security.name.displayName">
+          </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="KeyStore.description.displayName">
+        </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+        <item
+              attributeName="path"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="KeyStore.security.path.displayName">
+        </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KeyStoreGeneralProperties" contextType="KeyStore">
+       <field attributeName="managed" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(distributedcell|mixedcell|zoscell)"/>
+              </compatibility>
+       </field>
+       <field attributeName="crUser" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+              </compatibility>
+       </field>
+       <field attributeName="srUser" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+              </compatibility>
+       </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KeyStoreEditGeneralProperties" contextType="KeyStoreEdit">
+       <field attributeName="managed" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(distributedcell|mixedcell|zoscell)"/>
+              </compatibility>
+       </field>
+       <field attributeName="crUser" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+              </compatibility>
+       </field>
+       <field attributeName="srUser" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+              </compatibility>
+       </field>
+       <field attributeName="keyringHeading" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.console.security.KRKeyStoreHeadingVisible" value="true"/>
+              </compatibility>
+       </field>
+       <field attributeName="crKeystoreLink" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.console.security.CRKeyStoreLinkVisible" value="true"/>
+              </compatibility>
+       </field>
+       <field attributeName="srKeystoreLink" perspective="config">
+              <compatibility>
+                  <match key="com.ibm.websphere.console.security.SRKeyStoreLinkVisible" value="true"/>
+              </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Key set -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.KeySet" contextType="KeySet">
+        <link label="WSKeySet.activeKeyHistory.displayName"
+            description="WSKeySet.activeKeyHistory.short.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyHistory.content.main&#38;sfname=keyReference"/>
+         <link label="KeyStore.security.displayName"
+            description="KeyStore.short.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeyStore.content.main&#38;filterSetting=KeySetKeys"/>            
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.KeySet.collection" contextType="KeySet">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="keySetCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="keySetCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.KeySet" contextType="KeySet">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="keySetCollection.do?EditAction=true"
+                label="WSKeySet.name.displayNameHL">
+          </item>
+          <item
+                attributeName="keyStoreAlias"
+                sortable="sort"
+                itemURI="keyStoreCollection.do?EditAction=true&#38;lastPage=KeySet.content.main"
+                label="WSKeySet.keyStoreAlias.displayNameHL">
+          </item>
+          <item
+                attributeName="aliasPrefix"
+                sortable="sort"
+                itemURI=""
+                label="WSKeySet.aliasPrefix.displayName">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Active Key history -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.KeySet.collection" contextType="KeyHistory">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="WSKeySet.activeKeyHistory.addRefButton.displayName"
+              actionURI="keyHistoryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="keyHistoryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="WSKeySet.activeKeyHistory.genKeyButton.displayName"
+              actionURI="keyHistoryCollection.do">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.KeyHistoryCollectionForm.generateButtonVisible" value="true"/>
+             </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.KeyHistory" contextType="KeyHistory">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI=""
+                label="WSKeySet.activeKeyHistory.addRefName.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Key set Group -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.KeySetGroup"  contextType="KeySetGroup">
+         <link label="WSKeySet.displayName"
+            description="WSKeySet.short.description"
+            categoryId="related.items"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=KeySet.content.main"/>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.KeySetGroup.collection1" contextType="KeySetGroup">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="keySetGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="keySetGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="WSKeySetGenerator.genKeyButton.displayName"
+              actionURI="keySetGroupCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.KeySetGroup" contextType="KeySetGroup">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="keySetGroupCollection.do?EditAction=true"
+                label="WSKeySetGenerator.name.displayNameHL">
+          </item>
+          <item
+                attributeName="autoGenerate"
+                sortable="sort"
+                itemURI=""
+                label="WSKeySetGenerator.autoGenerate.displayNameHL">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="KeySetGroupGeneralProperties" contextType="KeySetGroup">
+       <field attributeName="autoGenerate" 
+             categoryId="WSKeySetGenerator.keyGenSettings.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="schedule" 
+             categoryId="WSKeySetGenerator.keyGenSettings.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Personal certificates and action panels -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.PersonalCerts.collection" contextType="PersonalCerts">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCerts.newButton.displayName"
+              actionURI="personalCertsCollection.do"
+              type="menu"
+              actionName="addCert"
+              optionValueList="security.certTypes.values"
+              optionLabelList="security.certTypes.labels">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="PersonalCerts.newSelfSigned.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,auditor"
+              label="button.delete"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.userInCertsRole" value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCerts.receiveButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCerts.replaceButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCerts.extractButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,auditor"
+              label="PersonalCerts.importButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.userInCertsRole" value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,auditor"
+              label="PersonalCerts.exportButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.userInCertsRole" value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCerts.revokeButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,auditor"
+              label="PersonalCerts.renewButton.displayName"
+              actionURI="personalCertsCollection.do">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.userInCertsRole" value="true"/>
+             </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.PersonalCerts" contextType="PersonalCerts">
+        <item
+              attributeName="iconTag"
+              sortable="nosort"
+              itemURI=""
+              htmlFilter="false"
+              label="PersonalCerts.empty.message">
+        </item>
+        <item
+              attributeName="alias"
+              sortable="nosort"
+              itemURI="personalCertsCollection.do?EditAction=true"
+              label="PersonalCerts.alias.displayName">
+        </item>
+        <item
+              attributeName="issuedTo"
+              sortable="nosort"
+              itemURI=""
+              label="PersonalCerts.issuedTo.displayNameHL">
+        </item>
+        <item
+              attributeName="issuedBy"
+              sortable="nosort"
+              itemURI=""
+              label="PersonalCerts.issuedBy.displayNameHL">
+        </item>
+        <item
+              attributeName="serial"
+              sortable="nosort"
+              itemURI=""
+              label="PersonalCerts.serial.displayNameHL">
+        </item>
+        <item
+              attributeName="validity"
+              sortable="nosort"
+              itemURI=""
+              label="PersonalCerts.expiration.displayName">
+        </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PersonalCertsGeneralProperties" contextType="PersonalCerts">
+       <field attributeName="signatureAlg" 
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.auditCerts" value="false"/>
+             </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Signer certificates and action panels -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.SignerCerts.collection" contextType="SignerCerts">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SignerCerts.addButton.displayName"
+              actionURI="signerCertsCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="signerCertsCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SignerCerts.extractButton.displayName"
+              actionURI="signerCertsCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SignerCerts.unmanagedButton.displayName"
+              actionURI="signerCertsCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.SignerCerts" contextType="SignerCerts">
+          <item
+                attributeName="alias"
+                sortable="sort"
+                itemURI="signerCertsCollection.do?EditAction=true"
+                label="SignerCerts.alias.displayName">
+          </item>
+        <item
+              attributeName="issuedTo"
+              sortable="sort"
+              itemURI=""
+              label="SignerCerts.issuedTo.displayName">
+        </item>
+        <item
+              attributeName="fingerprint"
+              sortable="sort"
+              itemURI=""
+              label="SignerCerts.fingerprint.displayNameHL">
+        </item>
+        <item
+              attributeName="validity"
+              sortable="sort"
+              itemURI=""
+              label="PersonalCerts.expiration.displayName">
+        </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SignerCertsUnmanagedGeneralProperties" contextType="SignerCertsUnmanaged">
+       <field attributeName="serial" 
+             categoryId="SignerCerts.retrieved.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SignerCertsActionDetailForm.retrievedInfoVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="validity" 
+             categoryId="SignerCerts.retrieved.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SignerCertsActionDetailForm.retrievedInfoVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="issuedTo" 
+             categoryId="SignerCerts.retrieved.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SignerCertsActionDetailForm.retrievedInfoVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="issuedBy" 
+             categoryId="SignerCerts.retrieved.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SignerCertsActionDetailForm.retrievedInfoVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="fingerprint" 
+             categoryId="SignerCerts.retrieved.displayName"
+             perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SignerCertsActionDetailForm.retrievedInfoVisible" value="true"/>
+             </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Certificate requests -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.CertReqest.collection" contextType="CertRequest">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="certRequestCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="certRequestCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCertRequests.extractButton.displayName"
+              actionURI="certRequestCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PersonalCertRequests.queryButton.displayName"
+              actionURI="certRequestCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.CertRequest" contextType="CertRequest">
+          <item
+                attributeName="alias"
+                sortable="sort"
+                itemURI="certRequestCollection.do?EditAction=true"
+                label="PersonalCertRequests.keyLabel.displayNameHL">
+          </item>
+        <item
+              attributeName="requestedBy"
+              sortable="sort"
+              itemURI=""
+              label="PersonalCertRequests.requestedBy.displayName">
+        </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CertRequestGeneralProperties" contextType="CertRequest">
+       <field attributeName="alias" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="signatureAlg" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="keysizeJScript" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="keySize" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="commonName" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="organization" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="ou" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="locality" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="state" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="zip" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+       <field attributeName="country" 
+             categoryId="PersonalCertRequests.certInfo.displayName"
+             perspective="config">
+       </field>
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Key manager -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.KeyManager.collection" contextType="KeyManager">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="keyManagerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="keyManagerCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.KeyManager" contextType="KeyManager">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="keyManagerCollection.do?EditAction=true"
+                label="KeyManager.name.displayName">
+          </item>
+          <item
+                attributeName="className"
+                sortable="sort"
+                itemURI=""
+                label="KeyManager.className.displayNameHL">
+          </item>
+          <item
+                attributeName="algorithm"
+                sortable="sort"
+                itemURI=""
+                label="KeyManager.algorithm.displayName">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="security.KeyManager" contextType="KeyManager">
+		<link label="Security.property.displayName"
+			description="Security.property.short.description"
+			categoryId="additional.properties"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=Security.AdminOnly.Property.content.main&#38;sfname=additionalKeyManagerAttrs"/>
+	</linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Trust manager -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.TrustManager.collection" contextType="TrustManager">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="trustManagerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="trustManagerCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.TrustManager" contextType="TrustManager">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="trustManagerCollection.do?EditAction=true"
+                label="TrustManager.name.displayName">
+          </item>
+          <item
+                attributeName="className"
+                sortable="sort"
+                itemURI=""
+                label="TrustManager.className.displayNameHL">
+          </item>
+          <item
+                attributeName="algorithm"
+                sortable="sort"
+                itemURI=""
+                label="TrustManager.algorithm.displayName">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="security.TrustManager" contextType="TrustManager">
+		<link label="Security.property.displayName"
+			description="Security.property.short.description"
+			categoryId="additional.properties"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=Security.AdminOnly.Property.content.main&#38;sfname=additionalTrustManagerAttrs"/>
+	</linkSet>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Certificate expiration monitor -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="security.CertExpMonitor" contextType="CertExpMonitor">
+        <link label="WSNotification.displayName"
+            description="WSNotification.short.description"
+            categoryId="related.items"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecurityNotification.content.main&#38;sfname=wsNotifications"/>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.CertExpMonitor.detail" contextType="CertExpMonitor">
+        <action
+              enablesFor="Detail"
+              role="administrator"
+              label="CertExpMonitor.button.startNow"
+              actionURI="certExpMonitorDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="CertExpMonitorGeneralProperties" contextType="CertExpMonitor">
+    </form>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- Notification -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.Notification.collection" contextType="SecurityNotification">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="securityNotificationCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="securityNotificationCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.Notification" contextType="SecurityNotification">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="securityNotificationCollection.do?EditAction=true"
+                label="WSNotification.name.displayNameHL">
+          </item>
+          <item
+                attributeName="systemOut"
+                sortable="sort"
+                itemURI=""
+                label="WSNotification.systemOut.displayNameHL">
+          </item>
+          <item
+                attributeName="email"
+                sortable="sort"
+                itemURI=""
+                label="WSNotification.emailSent.displayNameHL">
+          </item>
+          <item
+                attributeName="emailList"
+                type="email"
+                sortable="sort"
+                itemURI=""
+                label="WSNotification.emailList.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ================================================================================================= -->
+<!-- CA Client -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.CAClient.collection" contextType="CAClient">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="caClientCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="caClientCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.CAClient" contextType="CAClient">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="caClientCollection.do?EditAction=true"
+                label="CAClient.name.displayName">
+          </item>
+          <item
+                attributeName="className"
+                sortable="sort"
+                itemURI=""
+                label="CAClient.className.displayNameHL">
+          </item>
+          <item
+              attributeName="mgmtScope"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="SSLConfig.mgmtScope.displayNameHL">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.showMgmtScopeColumn" value="true"/>
+             </compatibility>
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Audit -->
+<extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="security.SecurityAudit" contextType="SecurityAudit">
+        <link label="SecAuditFilter.displayName"
+            description="SecAuditFilter.short.description"
+            categoryId="related.items"
+            weight="10"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditFilter.content.main"/>
+        <link label="SecAuditProvider.displayName"
+            description="SecAuditProvider.short.description"
+            categoryId="related.items"
+            weight="20"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditProvider.content.main"/>
+        <link label="SecAuditFactory.displayName"
+            description="SecAuditFactory.short.description"
+            categoryId="related.items"
+            weight="30"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditFactory.content.main"/>
+        <link label="SecAuditKeyStore.displayName"
+            description="SecAuditKeyStore.short.description"
+            categoryId="related.items"
+            weight="40"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditKeyStore.content.main">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="false"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditKeyStore.noLink.displayName"
+            description="SecAuditKeyStore.short.description"
+            categoryId="related.items"
+            weight="40"
+            actionURI="">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="true"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditEncrypt.displayName"
+            description="SecAuditEncrypt.short.description"
+            categoryId="related.items"
+            weight="50"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditEncrypt.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="false"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditEncrypt.noLink.displayName"
+            description="SecAuditEncrypt.short.description"
+            categoryId="related.items"
+            weight="50"
+            actionURI="">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="true"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditSign.displayName"
+            description="SecAuditSign.short.description"
+            categoryId="related.items"
+            weight="60"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditSign.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="false"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditSign.noLink.displayName"
+            description="SecAuditSign.short.description"
+            categoryId="related.items"
+            weight="60"
+            actionURI="">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditDetailForm.onlySMFVisible" value="true"/>
+             </compatibility>
+        </link>
+        <link label="SecAuditMonitor.displayName"
+            description="SecAuditMonitor.short.description"
+            categoryId="related.items"
+            weight="70"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecAuditMonitor.config.view"/>
+      </linkSet>
+</extension>
+
+<!-- Audit factory -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuditFactory.collection" contextType="SecAuditFactory">
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.new"
+              actionURI="secAuditFactoryCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.delete"
+              actionURI="secAuditFactoryCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuditFactory" contextType="SecAuditFactory">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAuditFactoryCollection.do?EditAction=true"
+                label="SecAuditFactory.name.displayName">
+          </item>
+          <item
+                attributeName="type"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditFactory.type.displayName">
+          </item>
+          <item
+                attributeName="className"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditFactory.className.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<!--
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecAuditFactory.general.properties" contextType="SecAuditFactory">
+      <field attributeName="filters" categoryId="SecAuditFactory.filters.displayName" perspective="config">
+      </field>
+    </form>
+</extension>
+-->
+
+<!-- Audit provider -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuditProvider.collection" contextType="SecAuditProvider">
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="SecAuditProvider.NEW.displayName"
+              actionURI="secAuditProviderCollection.do"
+              type="menu"
+              actionName="newProvider"
+              optionValueList="security.auditProviderTypes.values"
+              optionLabelList="security.auditProviderTypes.labels">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.delete"
+              actionURI="secAuditProviderCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuditProvider" contextType="SecAuditProvider">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAuditProviderCollection.do?EditAction=true"
+                label="SecAuditProvider.name.displayName">
+          </item>
+          <item
+                attributeName="typeDisplay"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditProvider.type.displayName">
+          </item>
+          <item
+                attributeName="formatClassName"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditProvider.formatClassName.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecAuditProvider.general.properties" contextType="SecAuditProvider">
+      <field attributeName="formatClassName" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="binary"/>
+             </compatibility>
+      </field>
+      <field attributeName="file" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="binary"/>
+             </compatibility>
+      </field>
+      <field attributeName="size" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="binary"/>
+             </compatibility>
+      </field>
+      <field attributeName="numFiles" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="binary"/>
+             </compatibility>
+      </field>
+      <field attributeName="wrapLog" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="binary"/>
+             </compatibility>
+      </field>
+      <field attributeName="formatClassNameRqd" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="thirdparty"/>
+             </compatibility>
+      </field>
+      <field attributeName="className" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="thirdparty"/>
+             </compatibility>
+      </field>
+      <field attributeName="customProperty" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditProviderDetailForm.emitterTypeVisible" value="thirdparty"/>
+             </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Audit filter -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuditFilter.collection" contextType="SecAuditFilter">
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.new"
+              actionURI="secAuditFilterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.delete"
+              actionURI="secAuditFilterCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuditFilter" contextType="SecAuditFilter">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAuditFilterCollection.do?EditAction=true"
+                label="SecAuditFilter.name.displayName">
+          </item>
+          <item
+                attributeName="enabled"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditFilter.enabled.displayName">
+          </item>
+          <item
+                attributeName="eventsAndOutcomes"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditFilter.eventsAndOutcomes.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecAuditFilter.general.properties" contextType="SecAuditFilter">
+      <field attributeName="outcomes" categoryId="SecAuditFilter.outcome.displayName" perspective="config">
+      </field>
+      <field attributeName="events" categoryId="SecAuditFilter.event.displayName" perspective="config">
+      </field>
+      <field attributeName="enabled" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecAuditFilterDetailForm.actionVisible" value="Edit"/>
+             </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Audit keystores -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuditKeyStore.collection" contextType="SecAuditKeyStore">
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.new"
+              actionURI="secAuditKeyStoreCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.delete"
+              actionURI="secAuditKeyStoreCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuditKeyStore" contextType="SecAuditKeyStore">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAuditKeyStoreCollection.do?EditAction=true"
+                label="SecAuditKeyStore.name.displayName">
+          </item>
+          <item
+                attributeName="path"
+                type="filepath"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditKeyStore.path.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="security.AuditKeyStore" contextType="SecAuditKeyStore">
+		<link label="PersonalCerts.displayName"
+			description="PersonalCerts.short.description"
+			categoryId="additional.properties"
+			weight="10"
+			actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=PersonalCerts.content.main&#38;sfname=personalCerts"/>
+	</linkSet>
+</extension>
+
+<!-- Audit signing -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecAuditSign.general.properties" contextType="SecAuditSign">
+    </form>
+</extension>
+
+<!-- Audit encryption -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecAuditEncrypt.general.properties" contextType="SecAuditEncrypt">
+    </form>
+</extension>
+
+<!-- Audit monitor -->
+<extension point="com.ibm.websphere.wsc.link">
+      <linkSet id="security.SecAuditMonitor" contextType="SecAuditMonitor">
+        <link label="WSNotification.displayName"
+            description="WSNotification.short.description"
+            categoryId="related.items"
+            weight="50"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SecurityNotification.content.main&#38;sfname=wsNotifications"/>
+      </linkSet>
+</extension>
+
+<!-- Audit notifications -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.AuditNotify.collection" contextType="SecAuditNotify">
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.new"
+              actionURI="secAuditMonitorDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="auditor"
+              label="button.delete"
+              actionURI="secAuditMonitorDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.AuditNotify" contextType="SecAuditNotify">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secAuditMonitorDetail.do?EditAction=true"
+                label="SecAuditNotify.name.displayNameHL">
+          </item>
+          <item
+                attributeName="systemOut"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditNotify.messageLog.displayNameHL">
+          </item>
+          <item
+                attributeName="email"
+                sortable="sort"
+                itemURI=""
+                label="WSNotification.emailSent.displayNameHL">
+          </item>
+          <item
+                attributeName="emailList"
+                type="email"
+                sortable="sort"
+                itemURI=""
+                label="SecAuditNotify.emailList.displayNameHL">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Domains -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="security.Domain.collection" contextType="SecDomain">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="secDomainCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="secDomainCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SecDomain.copySelected.button"
+              actionURI="secDomainCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="SecDomain.copyGlobal.button"
+              actionURI="secDomainCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="security.Domain" contextType="SecDomain">
+          <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="secDomainCollection.do?EditAction=true"
+                label="SecDomain.name.displayName">
+          </item>
+          <item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="SecDomain.description.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="SecDomain.additional.properties" contextType="SecDomain">
+        <categoryDefinition id="domainAdditional.properties" label="SecDomain.webService.category" parent="root"/>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SecDomain.general.properties" contextType="SecDomain">
+      <field attributeName="domainDetail" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.actionVisible" value="Edit"/>
+             </compatibility>
+      </field>
+      <field attributeName="app" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="java2" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="userRealm" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="trustAssoc" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="spnego" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="rmiIIOP" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="jaasAppLog" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="jaasSysLog" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="j2c" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="authProvider" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="ltpa" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="customPropsLink" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+      <field attributeName="globalDesc1" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="true"/>
+             </compatibility>
+      </field>
+      <field attributeName="globalDesc2" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="true"/>
+             </compatibility>
+      </field>
+      <field attributeName="zos" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.actionVisible" value="Edit"/>
+                 <match key="com.ibm.websphere.cellType" value="(zoscell|mixedcell|zosbase)"/>
+                 <match key="com.ibm.ws.console.security.SecDomainDetailForm.globalVisible" value="false"/>
+             </compatibility>
+      </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treecontroller">
+    <tree id="secdomaintree" class="com.ibm.ws.console.security.Domain.Tree.ResourceTreeController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="secdomaintree" id="com.ibm.cell" name="SecDomainTree.cell.name" parent="root" controller="com.ibm.ws.console.security.Domain.Tree.CellController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="secdomaintree" id="com.ibm.nodes" weight="10" name="auth.tree.nodes.name" parent="com.ibm.cell" controller="com.ibm.ws.console.security.Domain.Tree.NodeController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="secdomaintree" id="com.ibm.appservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.security.Domain.Tree.AppServerController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="secdomaintree" id="com.ibm.clusters" weight="20" name="auth.tree.clusters.name" parent="com.ibm.cell" controller="com.ibm.ws.console.security.Domain.Tree.ClusterController"/>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="secdomaintree" id="com.ibm.clustermembers" name="SecDomainTree.clusterMembers.name" parent="com.ibm.clusters" controller="com.ibm.ws.console.security.Domain.Tree.ClusterMemberController"/>
+</extension>
+
+<!-- ================================== z/OS specific panels =============================================================== -->
+<!-- z/OS security options -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ZosSecurityOptionsGeneralProperties" contextType="ZosSecurityOptions">
+       <field attributeName="remoteIdentity" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.ZosSecurityOptionsDetailForm.pre61NodesVisible" value="true"/>
+             </compatibility>
+       </field>
+       <field attributeName="localIdentity" perspective="config">
+             <compatibility>
+                 <match key="com.ibm.websphere.console.security.ZosSecurityOptionsDetailForm.pre61NodesVisible" value="true"/>
+             </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- Definition for cookie configuration widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="security.cookieConfig.collectionItem" contextType="security.cookieConfig">
+        <item
+              attributeName="cookieDomain"
+              editable="true"
+              label="CookieConfig.domain.displayName"
+              desc="CookieConfig.domain.description">
+        </item>
+        <item
+              attributeName="cookieName"
+              editable="true"
+              label="CookieConfig.name.displayName"
+              desc="CookieConfig.name.description">
+        </item>
+        <item
+              attributeName="cookiePath"
+              type="filepath"
+              editable="true"
+              label="CookieConfig.path.displayName"
+              desc="CookieConfig.path.description">
+        </item>
+    </collectionItem>
+</extension>
+
+</plugin>

@@ -1,0 +1,372 @@
+<project name="configXDFirstSteps" default="runMe" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="charset" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.DefineHTMLCharSetTask"/>
+    <taskdef name="convertencoding" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.FileEncodingAntTask"/>
+    <taskdef name="detectlocale" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.DetectLocaleAntTask"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <!-- the following step is no needed any more. -->     
+    <target name="setWASVersionFlags"
+            description="Sets the WAS Version flags">
+
+        <condition property="isWAS7" value="true">
+        	<or>
+            <available file="${WAS_HOME}/properties/version/WASND0700.sys2"/>
+            <available file="${WAS_HOME}/properties/version/WASBASE0700.sys2"/>
+          </or>
+        </condition>
+        <condition property="isWAS8" value="true">
+        	<or>
+            <available file="${WAS_HOME}/properties/version/WASND0800.sys2"/>
+            <available file="${WAS_HOME}/properties/version/WASBASE0800.sys2"/>
+          </or>
+        </condition>       
+        <wscmtlog>Set isWAS7 to: ${isWAS7}</wscmtlog>      
+        <wscmtlog>Set isWAS8 to: ${isWAS8}</wscmtlog>       
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+        <replace dir="${dir}"
+            token="${token}"
+            value="${tokenValue}">
+            <include name="**/*.${fileType}"/>
+        </replace>
+    </target>
+
+    <target name="setFirstStepsHome">
+        <property name="dir.profile.xd.firststeps" value="${profilePath}${separatorFile}firststeps${separatorFile}VE"/>
+        <property name="dir.profileCreator" value="${WAS_HOME}/bin/ProfileManagement"/>
+    </target>
+
+    <target name="copyFirstStepsFileSet" unless="configOS400">
+            <mkdir dir="${dir.profile.xd.firststeps}"/>
+            <copy todir="${dir.profile.xd.firststeps}">
+                 <fileset dir="${WAS_HOME}${separatorFile}properties${separatorFile}version${separatorFile}install.ve${separatorFile}firststeps">
+    	              <include name="*.*"/>
+    	         </fileset>
+    	         <fileset dir="${profilePath}${separatorFile}firststeps">
+    	              <include name="*.html"/>
+    	              <include name="*.gif"/>		
+    	         </fileset>
+    	         <fileset dir="${WAS_HOME}${separatorFile}firststeps${separatorFile}VE${separatorFile}html">
+    	              <include name="*.jpg"/>
+    	         </fileset>
+            </copy>
+            <wscmtlog>Copying FirstSteps file set to: ${dir.profile.xd.firststeps}</wscmtlog>
+    </target>
+
+    <target name="setUnixShellScriptPermissions"
+            description="Set permissions for *.sh to 755 on unix systems"
+            if="configUNIX">
+		<chmod dir="${dir.profile.xd.firststeps}" perm="ugo-rwx,ugo+rx,u+w" includes="**/*.sh"/>
+    </target>
+
+    <target name="replaceTokensForFirstStepsScriptUnix"
+            description="Configure WAS and java path to fully qualified directory on unix"
+            if="configUNIX">
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${JAVAROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}/java/jre/bin/java"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${profilePath}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${HTMLSHELLJAR}"/>
+			<param name="tokenValue" value="${WAS_HOME}/lib/htmlshell.jar"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${XDHTMLSHELLJAR}"/>
+			<param name="tokenValue" value="${WAS_HOME}/lib/xd_htmlshell.jar"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.sh"/>
+			<param name="token" value="${CELLNAME}"/>
+			<param name="tokenValue" value="${WS_CMT_CELL_NAME}"/>
+	    </antcall>   	    	    	    	    	
+    </target>
+
+    <target name="replaceTokensForFirstStepsScriptWindows"
+            description="Configure WAS and java path to fully qualified directory on windows"
+            if="configWindows">
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.bat"/>
+			<param name="token" value="${JAVAWROOT}"/>
+			<param name="tokenValue" value="&quot;${WAS_HOME}\java\jre\bin\javaw&quot;"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.bat"/>
+			<param name="token" value="${PROFILEROOT}"/>
+			<param name="tokenValue" value="${profilePath}"/>
+	    </antcall>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.bat"/>
+			<param name="token" value="${HTMLSHELLJAR}"/>
+			<param name="tokenValue" value="&quot;${WAS_HOME}\lib\htmlshell.jar&quot;"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.bat"/>
+			<param name="token" value="${XDHTMLSHELLJAR}"/>
+			<param name="tokenValue" value="&quot;${WAS_HOME}\lib\xd_htmlshell.jar&quot;"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+			<param name="file" value="${dir.profile.xd.firststeps}${separatorFile}firststeps.bat"/>
+			<param name="token" value="${WASROOT}"/>
+			<param name="tokenValue" value="${WAS_HOME}"/>
+	    </antcall>
+	
+  	    	    	
+    </target>
+
+    <target name="replaceTokensForFirstStepsHTML"
+            description="Replaces tokens for First Steps HTML(s)"
+            if="isWAS7">
+            <charset property="currentCharSet"/>
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="&quot;load://${profilePath}/firststeps/"/>
+			<param name="tokenValue" value="&quot;load://${dir.profile.xd.firststeps}/"/>
+			<param name="fileType" value="html"/>
+	    </antcall>    	    	    	    	    	    	    	    	    	
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="http://publib.boulder.ibm.com/infocenter/wasinfo/v6r1/index.jsp"/>
+			<param name="tokenValue" value="http://publib.boulder.ibm.com/infocenter/wveinfo/v7r0/index.jsp"/>
+			<param name="fileType" value="html"/>
+	    </antcall>
+	                <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=compass&amp;product=&amp;topic="/>
+			<param name="tokenValue" value="http://publib.boulder.ibm.com/infocenter/wveinfo/v7r0/index.jsp"/>
+			<param name="fileType" value="html"/>
+	    </antcall>  
+	    
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="&lt;a href=&quot;exec://${WAS_HOME}/bin/migration.sh"/>
+			<param name="tokenValue" value="&lt;!--a href=&quot;exec://${WAS_HOME}/bin/migration.sh"/>
+			<param name="fileType" value="html"/>
+	    </antcall>
+	    <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="{FirstStepsResourceBundle,FirstSteps.migrationWizard.description}"/>
+			<param name="tokenValue" value="{FirstStepsResourceBundle,FirstSteps.migrationWizard.description} --&gt;"/>
+			<param name="fileType" value="html"/>
+	    </antcall>	        	     	     	       	    		    		
+    </target>
+
+    <target name="replaceTokensForFirstStepsHTMLWAS8"
+            description="Replaces tokens for First Steps HTML(s)"
+            if="isWAS8">
+            <charset property="currentCharSet"/>
+            <!-- replace the profile first steps path -->
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="&quot;load://${profilePath}/firststeps/"/>
+			<param name="tokenValue" value="&quot;load://${dir.profile.xd.firststeps}/"/>
+			<param name="fileType" value="html"/>
+	      </antcall>
+
+            <!-- remove the admin console entry -->
+            <!--
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="&lt;a href=&quot;#&quot;"/>
+			<param name="tokenValue" value="&lt;!xxa href=&quot;\#&quot;"/>
+			<param name="fileType" value="html"/>
+	      </antcall>
+	      <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="{FirstStepsResourceBundle,FirstSteps.adminConsole.description}&lt;"/>
+			<param name="tokenValue" value="{FirstStepsResourceBundle,FirstSteps.adminConsole.description}xx&gt;&lt;"/>
+			<param name="fileType" value="html"/>
+	      </antcall>	 
+            -->
+
+            <!-- update pmt text -->
+	      <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="FirstStepsResourceBundle,FirstSteps.customizationToolbox.hover"/>
+			<param name="tokenValue" value="FirstStepsResourceBundle,FirstSteps.profileWizard.description"/>
+			<param name="fileType" value="html"/>
+	      </antcall>  
+	      <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="FirstStepsResourceBundle,FirstSteps.customizationToolbox"/>
+			<param name="tokenValue" value="FirstStepsResourceBundle,FirstSteps.profileWizard"/>
+			<param name="fileType" value="html"/>
+	      </antcall>  
+   	    	   
+            <!-- update the VE infoCenter link --> 	    	    	    	    	    	    	
+	      <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=matt&amp;product=&amp;topic="/>
+			<param name="tokenValue" value="http://publib.boulder.ibm.com/infocenter/wveinfo/v7r0/index.jsp"/>
+			<param name="fileType" value="html"/>
+	      </antcall>  
+
+            <!-- remove the education link -->
+            <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="&lt;a href=&quot;http://www14.software.ibm.com/webapp/wsbroker/redirect?version=matt&amp;product=was-nd-mp&amp;topic=ieduasst"/>
+			<param name="tokenValue" value="&lt;!--a href=&quot;http://www14.software.ibm.com/webapp/wsbroker/redirect?version=matt&amp;product=was-nd-mp&amp;topic=ieduasst"/>
+			<param name="fileType" value="html"/>
+	      </antcall>
+	      <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+			<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+			<param name="token" value="{FirstStepsResourceBundle,FirstSteps.educationAssistant.description}&lt;"/>
+			<param name="tokenValue" value="{FirstStepsResourceBundle,FirstSteps.educationAssistant.description}--&gt;&lt;"/>
+			<param name="fileType" value="html"/>
+	      </antcall>	    	        	     	     	       	    		    		
+    </target>
+
+    <target name="convertToUnixStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+        <pathconvert targetos="unix"
+            property="WAS_HOME_UNIX_STYLE"
+            refid="id.was.home"/>
+        <path id="id.profile.home">
+            <pathelement location="${profilePath}"/>
+        </path>
+        <pathconvert targetos="unix"
+            property="profilePath_UNIX_STYLE"
+            refid="id.profile.home"/>
+        <wscmtlog>WAS_HOME is ${WAS_HOME}</wscmtlog>
+        <wscmtlog>WAS_HOME_UNIX_STYLE is ${WAS_HOME_UNIX_STYLE}</wscmtlog>
+    </target>		
+
+      <!-- defect 329727 -->
+    <target name="defineLocale"
+            description="Defines locale">
+        <detectlocale property="currentLocale"/>
+        <condition property="localeFlag" value="true">
+              <equals arg1="${currentLocale}" arg2="ko_KR"/>
+        </condition>
+    </target>
+    <target name="adjustFontAndSize" if="localeFlag">
+    	<charset property="currentCharSet"/>
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+		<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+		<param name="token" value="&lt;style"/>
+		<param name="tokenValue" value="&lt;!--style"/>
+		<param name="fileType" value="html"/>
+	</antcall>
+	<antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+		<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+		<param name="token" value="&lt;/style&gt;"/>
+		<param name="tokenValue" value="&lt;/style--&gt;"/>
+		<param name="fileType" value="html"/>
+	</antcall>
+	<antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenDirectory">
+		<param name="dir" value="${dir.profile.xd.firststeps}${separatorFile}"/>
+		<param name="token" value="&lt;/head&gt;"/>
+		<param name="tokenValue" value="&lt;link href=&quot;firststeps_ko_KR.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;&gt;&lt;/head&gt;"/>
+		<param name="fileType" value="html"/>
+	</antcall>	
+    </target>
+
+    <target name="CheckIfXDFSPresent"
+	    description="Prepare and determine whether to config XD First Steps"
+	    depends="detectCurrentOSFamily,
+           	 setOSFileSeparator,
+           	 defineOSSpecificConfigFlag,
+           	 setFirstStepsHome">
+	<available file="${dir.profile.xd.firststeps}" type="dir" property="xd.firststeps.present"/>
+    </target>	
+
+    <target name="IfXDFirstStepsPresent"
+	    description="Config XD First Steps"
+	    if="xd.firststeps.present">
+	<wscmtlog>XD First steps is present.</wscmtlog>
+    </target>
+
+    <target name="IfNotPresentConfigXDFirstSteps"
+	    description="Config XD First Steps"
+	    unless="xd.firststeps.present">
+        <wscmtlog>Start to set up XD First steps...</wscmtlog>
+	<antcall target="copyAndSetupXDFSFiles"/>
+    </target>	
+
+    <target name="copyAndSetupXDFSFiles"
+        description="Set firststeps batch and shell scripts to account for server installed"
+        depends="setWASVersionFlags,
+            copyFirstStepsFileSet,
+            replaceTokensForFirstStepsScriptUnix,
+            replaceTokensForFirstStepsScriptWindows,
+            replaceTokensForFirstStepsHTML,
+            replaceTokensForFirstStepsHTMLWAS8,
+            defineLocale,
+            adjustFontAndSize,
+            setUnixShellScriptPermissions"/>
+
+    <target name="runMe" depends="CheckIfXDFSPresent,IfXDFirstStepsPresent,IfNotPresentConfigXDFirstSteps"/>
+	
+</project>

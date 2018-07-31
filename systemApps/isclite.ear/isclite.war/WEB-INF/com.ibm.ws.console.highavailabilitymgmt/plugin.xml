@@ -1,0 +1,905 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.--> 
+
+
+<plugin id="com.ibm.ws.console.highavailabilitymgmt" 
+		name="highavailabilitymgmt"
+		version="1.0.0" 
+		vendor-name="IBM Corp. - WebSphere Server Group"
+		embedded="true" 
+		context-root="highavailabilitymgmt">
+
+  <requires>
+    <import plugin="com.ibm.ws.console.core" />
+    <import plugin="com.ibm.ws.console.servermanagement" />
+    <import plugin="com.ibm.ws.console.distmanagement" />
+	<import plugin="com.ibm.ws.console.pme.resources" />
+  </requires>
+
+  <!-- Add a link under server navigator panel -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+   <tasks>
+        <categoryDefinition id="coregroupcategory" parent="servermanagement"  
+         					icon="images/onepix.gif" label="CoreGroup.displayName" 
+         					weight="50"/>
+         <task id="HACoreGroupResource" 
+	    icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" 
+	    label="CoreGroupSettings.displayName" 
+	    view="/navigatorCmd.do?forwardName=CoreGroup.content.main" 
+	    external="false" 
+	    weight="145">
+	    <category id="coregroupcategory"/>
+         </task>
+   </tasks>    
+</extension>   
+
+<!-- Begin LI2505 changes -->
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.cellmgr" contextType="CellManager">
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.displayName"
+              description="HAManagerService.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;lastPage=CellManager.config.view&amp;resourceUri=hamanagerservice.xml">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.nodeagent" contextType="NodeAgent">
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.displayName"
+              description="HAManagerService.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;lastPage=NodeAgent.config.view&amp;resourceUri=hamanagerservice.xml">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.appserver" contextType="ApplicationServer">
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.displayName"
+              description="HAManagerService.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;resourceUri=hamanagerservice.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([6-9])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin LIDB3726-2 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.clustermember" contextType="ClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.displayName"
+              description="HAManagerService.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;lastPage=ClusterMember.config.view&amp;resourceUri=hamanagerservice.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([6-9])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- End LIDB3726-2 -->
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.HAManagerService" contextType="HAManagerService">
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.threadPool.displayName"
+              description="HAManagerService.threadPool.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=HAManagerService.config.view">
+        </link>        
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"              
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=HAManagerService.config.view">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="HAManagerService.config.general.properties" contextType="HAManagerService">
+      <!-- Only show this field on 6+ -->
+      <field attributeName="enable" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductVersion"
+                   value="(([6-9]|[1-9][0-9]).*)" />
+         </compatibility>
+      </field>
+      <!--  495446 Do not show this field beginning with version 70 -->
+      <field attributeName="transportBufferSize" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductVersion"
+                   value="(6.*)" />
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.resources.CoreGroup" 	contextType="CoreGroup">
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.coreGroupServers.displayName"
+              description="CoreGroup.coreGroupServers.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=CoreGroupServer.content.main&amp;sfname=coreGroupServers&amp;lastPage=CoreGroup.config.view">
+        </link>
+<!-- LIDB4295-2 BEGIN -->        
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.liveness.displayName"
+              description="CoreGroup.liveness.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=CoreGroupLivenessProperties.config.view&amp;sfname=liveness&amp;lastPage=CoreGroup.config.view&amp;resourceUri=coregroup.xml">
+        </link>
+<!-- LIDB4295-2 END -->
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.policies.displayName"
+              description="CoreGroup.policies.flyover.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerPolicy.content.main&amp;sfname=policies">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.customProperties.displayName"
+              description="CoreGroup.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="PreferredCoordinatorServer.displayName"
+              description="PreferredCoordinatorServer.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=PreferredCoordinatorServer.config.view&amp;sfname=preferredCoordinatorServers">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.resources.CoreGroup.related1" contextType="CoreGroup">
+		 <link
+              categoryId="related.items"
+              label="nav.view.CoreGroupBridgeSettings"
+              description="CoreGroupBridgeSettings.description"
+              actionURI="navigatorCmd.do?forwardName=CoreGroupBridgeSettings.config.view">  
+        </link>
+    </linkSet>
+</extension> 
+
+<!-- readonly -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.resources.CoreGroup" 	contextType="CoreGroupReadOnly">
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.coreGroupServers.displayName"
+              description="CoreGroup.coreGroupServers.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=CoreGroupServer.content.main&amp;sfname=coreGroupServers"> 
+        </link>
+<!-- LIDB4295-2 BEGIN -->        
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.liveness.displayName"
+              description="CoreGroup.liveness.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=CoreGroupLivenessProperties.config.view&amp;sfname=liveness&amp;lastPage=CoreGroup.config.view&amp;resourceUri=coregroup.xml">
+        </link>
+<!-- LIDB4295-2 END -->
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.policies.displayName"
+              description="CoreGroup.policies.flyover.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerPolicy.content.main&amp;sfname=policies">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.customProperties.displayName"
+              description="CoreGroup.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="PreferredCoordinatorServer.displayName"
+              description="PreferredCoordinatorServer.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=PreferredCoordinatorServer.config.view&amp;sfname=preferredCoordinatorServers">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.resources.CoreGroupReadOnly.related1" contextType="CoreGroupReadOnly">
+		 <link
+              categoryId="related.items"
+              label="nav.view.CoreGroupBridgeSettings"
+              description="CoreGroupBridgeSettings.description"
+              actionURI="navigatorCmd.do?forwardName=CoreGroupBridgeSettings.config.view">  
+        </link>
+    </linkSet>
+</extension> 
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.CoreGroupServer1" contextType="CoreGroupServer">
+        <link
+              categoryId="additional.properties"
+              label="CoreGroupServer.customProperties.displayName"
+              description="CoreGroupServer.customProperties.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+
+	</link>
+    </linkSet>
+</extension>
+
+<!-- LIDB4295-2 BEGIN -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.CoreGroupLivenessProperties1" contextType="CoreGroupLivenessProperties">
+        <link
+              categoryId="additional.properties"
+              label="CoreGroup.customProperties.displayName"
+              description="Coregroup.liveness.customProperties.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+    </linkSet>
+</extension>
+<!-- LIDB4295-2 END -->
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.HAManagerPolicy1" contextType="HAManagerPolicy">
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.AllActivePolicy1" contextType="AllActivePolicy">    
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.NoOpPolicy1" contextType="NoOpPolicy">    
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.StaticPolicy1" contextType="StaticPolicy">
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="StaticPolicy.servers.displayName"
+              description="StaticPolicy.servers.link.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=StaticGroupServer.config.view&amp;sfname=servers">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.OneOfNPolicy1" contextType="OneOfNPolicy">    
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="PreferredServerPolicy.preferredServers.displayName"
+              description="PreferredServerPolicy.preferredServers.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=PreferredServer.config.view&amp;lastPage=OneOfNPolicy.config.view&amp;sfname=preferredServers">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager_Link.MOfNPolicy1" contextType="MOfNPolicy">
+        <link
+              categoryId="additional.properties"
+              label="MatchCriteria.displayName"
+              description="MatchCriteria.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=SimpleCriteria.content.main&amp;sfname=MatchCriteria">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerPolicy.customProperties.displayName"
+              description="HAManagerPolicy.customProperties.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="PreferredServerPolicy.preferredServers.displayName"
+              description="PreferredServerPolicy.preferredServers.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=PreferredServer.config.view&amp;lastPage=MOfNPolicy.config.view&amp;sfname=preferredServers">
+        </link>
+    </linkSet>
+</extension>
+
+ 
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager.resources.CoreGroup.ActionSet.collection1" 	contextType="CoreGroup">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="coreGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="coreGroupCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager_ActionSet.CoreGroupServer.collection1" contextType="CoreGroupServer">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="CoreGroupServer.button.move"
+              actionURI="coreGroupServerCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager_ActionSet.HAManagerPolicy.collection1" contextType="HAManagerPolicy">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="hAManagerPolicyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="hAManagerPolicyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager_ActionSet.SimpleCriteria.collection1" contextType="SimpleCriteria">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="simpleCriteriaCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="simpleCriteriaCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+        
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager_ActionSet.HAGroupsRuntime.collection1" contextType="HAGroups.runtime">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroups.runtime.button.enable"
+              actionURI="hAGroupsRuntimeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroups.runtime.button.disable"
+              actionURI="hAGroupsRuntimeCollection.do">
+        </action>        
+<!-- Defect 234103.1. There is the potential for this button to come back 
+     in a future release ... so it will just be commented out. 
+       <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroups.runtime.button.balance"
+              actionURI="hAGroupsRuntimeCollection.do">
+        </action>        
+-->
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="hamanager_ActionSet.HAGroup.collection1" contextType="HAGroup">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroup.button.enable"
+              actionURI="hAGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroup.button.disable"
+              actionURI="hAGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroup.button.activate"
+              actionURI="hAGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="HAGroup.button.deactivate"
+              actionURI="hAGroupCollection.do">
+        </action>
+    </actionSet>
+</extension>
+        
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager.resources.CoreGroup.CollectionItem.collectionItem1" contextType="CoreGroup">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="coreGroupCollection.do?EditAction=true"
+              label="CoreGroup.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="CoreGroup.description.displayName">
+        </item>
+		<item
+              attributeName="connectedServers"
+              sortable="sort"
+              itemURI=""
+              label="CoreGroup.bridge.connected.servers.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager.resources.CoreGroup.ShowServers.CollectionItem.collectionItem1" contextType="ShowServers">
+        <item
+              attributeName="server"
+              sortable="sort"
+              itemURI="showServersCollection.do?EditAction=true"
+              label="ShowServers.server.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="ShowServers.node.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="ShowServers.version.displayName">
+        </item>
+        <item
+              attributeName="count"
+              sortable="sort"
+              itemURI=""
+              label="ShowServers.count.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager_CollectionItem.CoreGroupServer.collectionItem1" contextType="CoreGroupServer">
+        <item
+              attributeName="serverName"
+              sortable="sort"
+              itemURI="coreGroupServerCollection.do?EditAction=true"
+              label="CoreGroupServer.serverName.displayName">
+        </item>
+        <item
+              attributeName="nodeName"
+              sortable="sort"
+              itemURI=""
+              label="CoreGroupServer.nodeName.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>        
+        <item
+              attributeName="serverType"
+              sortable="sort"
+              itemURI=""
+              label="Server.type.displayName">
+        </item>
+        <item
+              attributeName="clusterName"
+              sortable="sort"
+              itemURI=""
+              label="Server.clusterName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager_CollectionItem.HAManagerPolicy.collectionItem1" contextType="HAManagerPolicy">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="hAManagerPolicyCollection.do?EditAction=true"
+              label="HAManagerPolicy.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="HAManagerPolicy.description.displayName">
+        </item>
+        <item
+              attributeName="policyType"
+              sortable="sort"
+              itemURI=""
+              label="HAManagerPolicy.type">
+        </item>        
+		<item
+              attributeName="matchCriteriaDisplay"
+              sortable="sort"
+              itemURI=""
+              label="MatchCriteria.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager_CollectionItem.SimpleCriteria.collectionItem1" contextType="SimpleCriteria">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="simpleCriteriaCollection.do?EditAction=true"
+              label="SimpleCriteria.name.displayName">
+        </item>
+        <!-- Currently, operator is not exposed on the admin console
+        <item
+              attributeName="operator"
+              sortable="sort"
+              itemURI=""
+              label="SimpleCriteria.operator.displayName">
+        </item>
+        -->
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="SimpleCriteria.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="SimpleCriteria.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager_CollectionItem.HAGroupsRuntime.collectionItem1" contextType="HAGroups.runtime">
+        <item
+              attributeName="haGroupName"
+              sortable="sort"
+              itemURI="hAGroupsRuntimeCollection.do?EditAction=true"
+              label="HAGroup.runtime.name.displayName">
+        </item>
+        <item
+              attributeName="quorum"
+              sortable="sort"
+              itemURI=""
+              label="HAGroup.runtime.quorum.displayName">
+        </item>
+        <item
+              attributeName="policy"
+              sortable="sort"
+              itemURI=""
+              label="HAGroup.runtime.policy.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="HAGroup.runtime.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="hamanager_CollectionItem.HAGroup.collectionItem1" contextType="HAGroup">
+        <item
+              attributeName="serverName"
+              sortable="sort"
+              itemURI=""
+              label="HAGroup.runtime.serverName.displayName">
+        </item>
+        <item
+              attributeName="nodeName"
+              sortable="sort"
+              itemURI=""
+              label="CoreGroupServer.nodeName.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager.resources.CoreGroup.DetailTab.detailTab1" contextType="CoreGroup">
+        <tab
+              label="tab.configuration"
+              contentURI="CoreGroup.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- readonly -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager.resources.CoreGroup.DetailTab.detailTabReadOnly" contextType="CoreGroupReadOnly">
+        <tab
+              label="tab.runtime"
+              contentURI="CoreGroup.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="CoreGroupReadOnly.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.HAManagerService.detailTab1" contextType="HAManagerService">
+        <tab
+              label="tab.configuration"
+              contentURI="HAManagerService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.CoreGroupServer.config.view.detailTab1" contextType="CoreGroupServer">
+        <tab
+              label="tab.configuration"
+              contentURI="CoreGroupServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.MoveCoreGroupServer.config.view.detailTab1" contextType="MoveCoreGroupServer">
+        <tab
+              label="tab.configuration"
+              contentURI="MoveCoreGroupServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.HAManagerPolicy.config.view.detailTab1" contextType="HAManagerPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="HAManagerPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.AllActivePolicy.config.view.detailTab1" contextType="AllActivePolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="AllActivePolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.NoOpPolicy.config.view.detailTab1" contextType="NoOpPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="NoOpPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.StaticPolicy.config.view.detailTab1" contextType="StaticPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="StaticPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.OneOfNPolicy.config.view.detailTab1" contextType="OneOfNPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="OneOfNPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.MOfNPolicy.config.view.detailTab1" contextType="MOfNPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="MOfNPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.HAManagerPolicyTemplate.detailTab1" contextType="HAManagerPolicyTemplate">
+        <tab
+              label="tab.configuration"
+              contentURI="HAManagerPolicyTemplate.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.SimpleCriteria.config.view.detailTab1" contextType="SimpleCriteria">
+        <tab
+              label="tab.configuration"
+              contentURI="SimpleCriteria.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- PreferredServers config.view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.PreferredServer.config.view.detailTab1" contextType="PreferredServer">
+        <tab
+              label="tab.configuration"
+              contentURI="PreferredServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- StaticGroupServer config.view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.StaticGroupServer.config.view.detailTab1" contextType="StaticGroupServer">
+        <tab
+              label="tab.configuration"
+              contentURI="StaticGroupServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- PreferredCoordinatorServer config.view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.PreferredCoordinatorServer.config.view.detailTab1" contextType="PreferredCoordinatorServer">
+        <tab
+              label="tab.configuration"
+              contentURI="PreferredCoordinatorServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- LIDB4295-2 CoreGroupLivenessProperties config.view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.CoreGroupLivenessProperties.config.view.detailTab1" contextType="CoreGroupLivenessProperties">
+        <tab
+              label="tab.configuration"
+              contentURI="CoreGroupLivenessProperties.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.HAGroupsRuntime.config.view.detailTab1" contextType="HAGroups.runtime"> 
+        <tab
+              label="tab.configuration"
+              contentURI="HAGroupsRuntime.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hamanager_DetailTab.HAGroup.detailTab1" contextType="HAGroup">
+    </detailTab>
+</extension>
+<!-- End LI2505 changes -->
+  
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+</plugin>
+

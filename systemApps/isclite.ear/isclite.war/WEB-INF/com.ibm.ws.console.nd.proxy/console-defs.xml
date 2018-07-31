@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <!-- Start Proxy Clustering -->
+    <!-- BEGIN LIDB3726-2.1 -->
+    <definition name="ProxyClusterMember.summary.view" path="/com.ibm.ws.console.proxy/ProxyClusterMemberSummary.jsp"/>
+    <!-- END LIDB3726-2.1 -->
+    <!-- ClusterMember Collection   -->
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.ProxyClusterMemberController"
+        name="ProxyClusterMember.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <put name="descTitle" value="ServerCluster.members.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.proxy"/>
+        <put name="descText" value="ProxyClusterMember.cluster.panel.description"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMember.paging.extend"/>
+            <add value="ProxyClusterMember.quicksearch.extend"/>
+            <add value="ProxyClusterMember.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="ProxyClusterMember.quicksearch.extend">
+        <put name="selectUri" value="proxyClusterMemberCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formAction" value="proxyClusterMemberCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <putList name="searchList">
+            <add value="ClusterMember.memberName.displayName:memberName"/>
+            <add value="nodes.displayName:node"/>
+            <add value="node.version.displayName:nodeVersion"/>
+            <add value="Server.status.displayName:status:ExecutionState.STARTED,ExecutionState.STOPPED,ExecutionState.UNAVAILABLE"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="ProxyClusterMember.paging.extend">
+        <put name="displayLabelKey" value="ServerCluster.members.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formAction" value="proxyClusterMemberCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.main.update" name="ProxyClusterMember.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formAction" value="proxyClusterMemberCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberCollectionForm"/>
+        <put name="buttons" value="ProxyClusterMember.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyClusterMember.content.main"/>
+        <put name="statusType" value="ClusterMember"/>
+        <!-- this attribute,if false displays html special chars -->
+        <put name="htmlFilter" value="false"/>
+        <putList name="statusCols">
+            <add value="memberName"/>
+            <add value="node"/>
+        </putList>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ClusterMember/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ClusterMember/Preferences#retainSearchCriteria:32"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" value="list:UI/Collections/ClusterMember/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator,deployer:role.all.label,role.administrator,role.operator,role.monitor,role.configurator,role.deployer"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ProxyClusterMember.collection.buttons.panel">
+        <!-- Begin LIDB2775 zOS changes -->
+        <put name="buttonCount" value="6"/>
+        <!-- End LIDB2775 zOS changes -->
+        <put name="definitionName" value="ProxyClusterMember.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition name="ProxyClusterMember.stop.conf.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <put name="descTitle" value="desc.stop.conf.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="desc.stop.conf.text"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMember.stop.conf.page"/>
+        </putList>
+    </definition>
+    <definition name="ProxyClusterMember.stop.conf.page" path="/com.ibm.ws.console.servermanagement/StopServerConfirmation.jsp">
+        <put name="action" value="proxyClusterMemberCollection.do"/>
+        <put name="confirmAction" value="confirmStop"/>
+    </definition>
+    <definition name="ProxyClusterMember.immstop.conf.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <put name="descTitle" value="desc.immstop.conf.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="desc.immstop.conf.text"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMember.immstop.conf.page"/>
+        </putList>
+    </definition>
+    <definition name="ProxyClusterMember.immstop.conf.page" path="/com.ibm.ws.console.servermanagement/StopServerConfirmation.jsp">
+        <put name="action" value="proxyClusterMemberCollection.do"/>
+        <put name="confirmAction" value="confirmImmStop"/>
+    </definition>
+    <definition name="ProxyClusterMember.terminate.conf.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <put name="descTitle" value="desc.terminate.conf.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="desc.terminate.conf.text"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMember.terminate.conf.page"/>
+        </putList>
+    </definition>
+    <definition name="ProxyClusterMember.terminate.conf.page" path="/com.ibm.ws.console.servermanagement/StopServerConfirmation.jsp">
+        <put name="action" value="proxyClusterMemberCollection.do"/>
+        <put name="confirmAction" value="confirmTerminate"/>
+    </definition>
+    <definition name="ProxyClusterMember.stop.feedback.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <put name="descTitle" value="desc.stopserver.feedback.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="desc.stopserver.feedback.text"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMember.stop.statuspage"/>
+        </putList>
+    </definition>
+    <definition name="ProxyClusterMember.stop.statuspage" path="/com.ibm.ws.console.servermanagement/ServerStatus.jsp">
+        <put name="action" value="proxyClusterMemberCollection.do"/>
+    </definition>
+    <!-- ClusterMember Detail   -->
+    <definition extends="detail.config.view" name="ProxyClusterMember.config.view">
+        <put name="contextType" value="ProxyClusterMember"/>
+        <putList name="list">
+            <add value="ProxyClusterMember.detail.title"/>
+            <add value="ProxyClusterMember.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="ProxyClusterMember.detail.title">
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.proxy"/>
+        <put name="titleKey" value="ServerCluster.members.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyClusterMember.content.main&amp;noChange=true"/>
+        <put name="instanceDetails" value="memberName"/>
+        <put name="instanceDescription" value="ProxyCluster.members.description"/>
+        <put name="displayName" value="ClusterMember.displayName"/>
+    </definition>
+    <definition name="ProxyClusterMember.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="proxyClusterMemberDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="ProxyClusterMember.config.tab.view">
+        <putList name="list">
+            <add value="ProxyClusterMember.detail.buttons.panel"/>
+            <add value="ProxyClusterMember.config.general.properties"/>
+            <add value="ProxyClusterMember.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ProxyClusterMember.detail.buttons.panel">
+        <put name="buttonCount" value="3"/>
+        <put name="definitionName" value="ProxyClusterMember.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties" name="ProxyClusterMember.config.general.properties">
+        <put name="formAction" value="proxyClusterMemberDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <put name="formFocus" value="memberName"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="onReset" value="changeMode()"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ClusterMember.memberName.displayName:memberName:yes:Text:ClusterMember.memberName.description:yes:yes"/>
+            <!-- Begin LIDB3726-2 -->
+            <!-- Begin LIDB2775 zOS changes  -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.member.shortName.displayName:shortName:yes:Text:Cluster.member.shortName.description:no:yes"/>
+            <!-- End LIDB2775 zOS changes  -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.JvmMode.displayName:runIn64bitJVMMode:no:Checkbox:Server.JvmMode.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.developmentMode.displayName:developmentMode:no:Checkbox:Server.developmentMode.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.parallelStart.displayName:parallelStartEnabled:no:Checkbox:Server.parallelStart.description:no:yes"/>
+            <!-- End LIDB3726-2 -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.provisionComponents.displayName:provisionComponents:no:Checkbox:Server.provisionComponents.description:no:yes"/>
+        </putList>
+    </definition>
+    <!-- Begin LIDB3726-2 -->
+    <definition name="ProxyClusterMember.config.additional.properties" path="/com.ibm.ws.console.servermanagement/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <!-- End LIDB3726-2 -->
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.ProxyClusterMemberRuntimeController"
+        name="ProxyClusterMember.runtime.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="ProxyClusterMember.runtime.generic.properties"/>
+            <!-- Begin LIDB3726-2 -->
+            <add value="ProxyClusterMember.runtime.additional.properties"/>
+            <!-- End LIDB3726-2 -->
+        </putList>
+    </definition>
+    <!-- Begin LIDB3726-2 -->
+    <definition name="ProxyClusterMember.runtime.additional.properties" path="/com.ibm.ws.console.servermanagement/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <!-- End LIDB3726-2 -->
+    <definition extends="detail.runtime.general.generic.properties" name="ProxyClusterMember.runtime.generic.properties">
+        <put name="formAction" value="proxyClusterMemberRuntime.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberRuntimeForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterMemberRuntimeForm"/>
+        <put name="formFocus" value="memberName"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="propertyLabel" value="config.general.properties"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ClusterMember.memberName.displayName:memberName:yes:Text:ClusterMember.memberName.description:yes:yes"/>
+            <!-- Begin LIDB3726-2 -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.mbean.pid.displayName:pid:no:Text:Server.mbean.pid.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.mbean.cellName.displayName:cellName:no:Text:Server.mbean.cellName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.mbean.nodeName.displayName:nodeName:no:Text:Server.mbean.nodeName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.mbean.state.displayName:state:no:Text:Server.mbean.state.description:yes:yes"/>
+            <!-- End LIDB3726-2 -->
+        </putList>
+    </definition>
+    <definition name="ProxyClusterMember.topology.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list"/>
+    </definition>
+    <!-- BEGIN LIDB4138-39 -->
+    <!-- ClusterMemberTemplate Collection   -->
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateController"
+        name="ProxyClusterMemberTemplate.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyClusterMemberTemplate"/>
+        <put name="descTitle" value="ClusterMemberTemplate.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.proxy"/>
+        <put name="descText" value="ClusterMemberTemplate.cluster.panel.description"/>
+        <put name="bcHandler" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionBreadcrumbHandler"/>
+        <putList name="contentList">
+            <add value="ProxyClusterMemberTemplate.paging.extend"/>
+            <add value="ProxyClusterMemberTemplate.quicksearch.extend"/>
+            <add value="ProxyClusterMemberTemplate.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="ProxyClusterMemberTemplate.quicksearch.extend">
+        <put name="selectUri" value="proxyClusterMemberTemplateCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="formAction" value="proxyClusterMemberTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <putList name="searchList">
+            <add value="template.name:name"/>
+            <add value="ServerTemplate.platform.displayName:platform"/>
+            <add value="ServerTemplate.version.displayName:version"/>
+            <add value="template.description:description"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="ProxyClusterMemberTemplate.paging.extend">
+        <put name="displayLabelKey" value="ClusterMemberTemplate.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="formAction" value="clusterMemberTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.main" name="ProxyClusterMemberTemplate.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="formAction" value="proxyClusterMemberTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.templates.ProxyClusterMemberTemplateCollectionForm"/>
+        <put name="buttons" value="ProxyClusterMemberTemplate.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyClusterMemberTemplate.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ClusterMemberTemplate/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ClusterMemberTemplate/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ProxyClusterMemberTemplate.collection.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="ProxyClusterMemberTemplate.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <!-- END LIDB4138-39 -->
+    <!-- ServerCluster Collection   -->
+    <definition name="collection.table.proxy" path="/com.ibm.ws.console.proxy/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="idColumn" value=""/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.ProxyClusterController"
+        name="ProxyCluster.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ProxyCluster"/>
+        <put name="descTitle" value="ProxyCluster.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.proxy"/>
+        <put name="descText" value="ProxyCluster.panel.description"/>
+        <putList name="contentList">
+            <add value="ProxyCluster.paging.extend"/>
+            <add value="ProxyCluster.quicksearch.extend"/>
+            <add value="ProxyCluster.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="ProxyCluster.quicksearch.extend">
+        <put name="selectUri" value="proxyClusterCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formAction" value="proxyClusterCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <putList name="searchList">
+            <add value="ManagedObject.name.displayName:name"/>
+            <add value="ProxyServer.transport.protocol.displayName:protocol"/>
+            <add value="ServerCluster.status.displayName:status:ExecutionState.STARTED,ExecutionState.STOPPED,ExecutionState.PARTIAL_START,ExecutionState.PARTIAL_STOP,ExecutionState.UNAVAILABLE"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="ProxyCluster.paging.extend">
+        <put name="displayLabelKey" value="ProxyCluster.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formAction" value="proxyClusterCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.proxy" name="ProxyCluster.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formAction" value="proxyClusterCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterCollectionForm"/>
+        <put name="buttons" value="ProxyCluster.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyCluster.content.main"/>
+        <put name="idColumn" value="name"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ServerCluster/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ServerCluster/Preferences#retainSearchCriteria:32"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" value="list:UI/Collections/ServerCluster/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator,deployer:role.all.label,role.administrator,role.operator,role.monitor,role.configurator,role.deployer"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ProxyCluster.collection.buttons.panel">
+        <put name="buttonCount" value="6"/>
+        <put name="definitionName" value="ProxyCluster.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <!-- ServerCluster Detail   -->
+    <definition extends="detail.config.view" name="ProxyCluster.config.view">
+        <put name="contextType" value="ProxyCluster"/>
+        <putList name="list">
+            <add value="ProxyCluster.detail.title"/>
+            <add value="ProxyCluster.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="ProxyCluster.detail.title">
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.proxy"/>
+        <put name="titleKey" value="ProxyCluster.displayName"/>
+        <put name="collectionLink" value="navigatorCmd.do?forwardName=ProxyCluster.content.main&amp;noChange=true"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="ProxyCluster.description"/>
+        <put name="displayName" value="ProxyCluster.displayName"/>
+    </definition>
+    <definition name="ProxyCluster.detail.tabsLayout" path="/com.ibm.ws.console.servermanagement/tabsLayout.jsp">
+        <put name="selectUri" value="proxyClusterDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="ProxyCluster.config.tab.view">
+        <putList name="list">
+            <add value="ProxyCluster.config.general.properties"/>
+            <add value="ProxyCluster.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ProxyCluster.detail.buttons.panel">
+        <put name="buttonCount" value="6"/>
+        <put name="definitionName" value="ProxyCluster.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties" name="ProxyCluster.config.general.properties">
+        <put name="formAction" value="proxyClusterDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.mbean.clusterName.displayName:name:yes:Text:Cluster.mbean.clusterName.description:yes:yes"/>
+            <!-- Begin LIDB2775 zOS changes -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.shortName.displayName:shortName:no:Text:Cluster.shortName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.uniqueId.displayName:uniqueId:no:Text:Cluster.uniqueId.description:yes:yes"/>
+            <!-- End LIDB2775 zOS changes -->
+            <!-- Begin LIDB2303  -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.NodeGroupName.displayName:nodeGroupName:no:DynamicSelect:Cluster.NodeGroupName.description:no:yes:com.ibm.ws.console.proxy.topology.nodeGroupVal:com.ibm.ws.console.proxy.topology.nodeGroupVal"/>
+            <!-- End LIDB2303 -->
+        </putList>
+    </definition>
+    <definition extends="detail.config.additional.properties" name="ProxyCluster.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeController"
+        name="ProxyCluster.runtime.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <put name="formAction" value="proxyClusterDetail.do"/>
+        <putList name="list">
+            <!-- Begin LIDB2401  -->
+            <add value="ProxyCluster.detail.buttons.panel"/>
+            <!-- End LIDB2401  -->
+            <add value="ProxyCluster.runtime.generic.properties"/>
+        </putList>
+    </definition>
+    <!-- Begin LIDB2401  -->
+    <definition extends="buttons.panel" name="ProxyCluster.detail.buttons.panel">
+        <put name="buttonCount" value="1"/>
+        <put name="definitionName" value="ProxyCluster.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <!-- End LIDB2401  -->
+    <definition extends="detail.runtime.general.generic.properties" name="ProxyCluster.runtime.generic.properties">
+        <put name="formAction" value="proxyClusterDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeForm"/>
+        <put name="formFocus" value="clusterName"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="propertyLabel" value="config.general.properties"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.mbean.clusterName.displayName:clusterName:yes:Text:Cluster.mbean.clusterName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                link="" tooltip="" value="Cluster.mbean.state.displayName:state:no:Text:Cluster.mbean.state.description:yes:yes"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.TopologyController"
+        name="ProxyCluster.topology.tree.view" path="/secure/layouts/treeLayout.jsp">
+        <put name="rootName" value="local.clusterTopology.root.displayName"/>
+        <put name="rootImage" value="images/s_group.gif"/>
+        <putList name="treeList"/>
+    </definition>
+    <definition name="ProxyCluster.topology.tab.view" path="/secure/layouts/topologyLayout.jsp">
+        <put name="treeView" value="ProxyCluster.topology.tree.view"/>
+    </definition>
+    <!-- Wizards -->
+    <definition name="proxy.cluster.new.wizard" path="/secure/layouts/stepsLayout.jsp">
+        <put name="titleKey" value="distmanagement.cluster.create.new"/>
+        <put name="descKey" value="distmanagement.cluster.create.new"/>
+        <put name="stepArraySessionKey" value="default_STEPARRAY"/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value=""/>
+        <put name="formType" value=""/>
+        <put name="disableStepsLink" value=""/>
+        <putList name="stepsList"/>
+    </definition>
+    <definition extends="proxy.cluster.new.wizard" name="proxy.cluster.wizard.steps">
+        <put name="contextType" value="proxy.cluster.wizard.steps"/>
+        <put name="stepArraySessionKey" value="PROXYCLUSTER_STEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/CreateProxyCluster" value="proxy.cluster.new.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/CreateFirstProxyClusterMember" value="proxy.cluster.new.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/CreateAdditionalProxyClusterMembers" value="proxy.cluster.new.step3"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/ProxyClusterSummary" value="proxy.cluster.new.step4"/>
+        </putList>
+    </definition>
+    <definition extends="proxy.cluster.wizard.steps" name="proxy.cluster.new.step1">
+        <put name="actionHandler" value="createProxyCluster"/>
+        <put name="actionForm" value="CreateProxyClusterForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.CreateProxyClusterForm"/>
+        <put name="helpTopic" value="ClusterWizard.basic"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition extends="proxy.cluster.wizard.steps" name="proxy.cluster.new.step2">
+        <put name="actionHandler" value="createFirstProxyClusterMember"/>
+        <put name="actionForm" value="CreateFirstProxyClusterMemberForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.CreateFirstProxyClusterMemberForm"/>
+        <put name="helpTopic" value="ClusterWizard.firstmember"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition extends="proxy.cluster.wizard.steps" name="proxy.cluster.new.step3">
+        <put name="actionHandler" value="createAdditionalProxyClusterMembers"/>
+        <put name="actionForm" value="CreateAdditionalProxyClusterMembersForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.CreateAdditionalProxyClusterMembersForm"/>
+        <put name="helpTopic" value="ClusterWizard.additionalmembers"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition extends="proxy.cluster.wizard.steps" name="proxy.cluster.new.step4">
+        <put name="actionHandler" value="proxyClusterSummary"/>
+        <put name="actionForm" value="ProxyClusterSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.ProxyClusterSummaryForm"/>
+        <put name="helpTopic" value="ClusterWizard.summary"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition name="proxyClusterMember.new.wizard" path="/secure/layouts/stepsLayout.jsp">
+        <put name="titleKey" value="distmanagement.clusterMember.create.new"/>
+        <put name="descKey" value="distmanagement.clusterMember.create.new.description"/>
+        <put name="stepArraySessionKey" value="default_STEPARRAY"/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value=""/>
+        <put name="formType" value=""/>
+        <put name="disableStepsLink" value=""/>
+        <putList name="stepsList"/>
+    </definition>
+    <definition extends="proxyClusterMember.new.wizard" name="proxyClusterMember.wizard.steps">
+        <put name="contextType" value="proxyClusterMember.wizard.steps"/>
+        <put name="stepArraySessionKey" value="PROXYCLUSTERMEMBER_STEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/CreateFirstProxyClusterMember" value="proxyClusterMember.new.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/CreateAdditionalProxyClusterMembers" value="proxyClusterMember.new.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/ProxyClusterSummary" value="proxyClusterMember.new.step3"/>
+        </putList>
+    </definition>
+    <definition extends="proxyClusterMember.wizard.steps" name="proxyClusterMember.new.step1">
+        <put name="actionHandler" value="createFirstProxyClusterMember"/>
+        <put name="actionForm" value="CreateFirstProxyClusterMemberForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.CreateFirstProxyClusterMemberForm"/>
+        <put name="helpTopic" value="ClusterWizard.firstmember"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition extends="proxyClusterMember.wizard.steps" name="proxyClusterMember.new.step2">
+        <put name="actionHandler" value="createAdditionalProxyClusterMembers"/>
+        <put name="actionForm" value="CreateAdditionalProxyClusterMembersForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.wizard.CreateAdditionalProxyClusterMembersForm"/>
+        <put name="helpTopic" value="ClusterWizard.additionalmembers"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <definition extends="proxyClusterMember.wizard.steps" name="proxyClusterMember.new.step3">
+        <put name="actionHandler" value="proxyClusterSummary"/>
+        <put name="actionForm" value="ProxyClusterSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.toplogy.wizard.ProxyClusterSummaryForm"/>
+        <put name="helpTopic" value="ClusterWizard.summary"/>
+        <put name="pluginId" value="com.ibm.ws.console.proxy"/>
+    </definition>
+    <!-- End Proxy Clustering -->
+</tiles-definitions>

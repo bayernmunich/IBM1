@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+
+<cheatsheet title="Route requests through a Web server to an application server">
+<intro 
+		href="webserver_intro.htm">
+<description>
+This guided activity assists you in configuring the Web server plug-in to route requests for dynamic content, such as servlets, to an application server.  
+It is assumed that the Web server is "remote" from the application server in that the Web server and the application server are on different machines. It is also assumed that the Web server software is installed.
+
+&lt;br/&gt;
+&lt;br/&gt;
+
+To continue, click &lt;strong&gt;Start&lt;/strong&gt;.
+        </description>
+	
+</intro>
+
+
+<item
+    href=""
+    title="Install Web server plug-in">
+    <action
+        class=""/>
+    <description>
+&lt;A HREF="javascript:showHideList('othersWeb')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="othersWebImg" ALIGN="left" BORDER="0" style="margin-left:-0.25em"/&gt;
+&lt;/A&gt;
+Distributed and zOS
+&lt;br/&gt;
+&lt;TABLE id="othersWebList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+
+Install the binary plug-in module using the Plug-ins installation wizard. 
+The Plug-ins installation wizard installs the plug-in module and configures the Web server 
+to communicate with the application server. Complete the following steps:
+
+&lt;ol&gt; 
+&lt;li&gt;
+Stop the Web server while you are configuring the plug-in to work with it.
+&lt;/li&gt;
+&lt;li&gt;
+On the machine where the Web server is installed, select the Plug-ins installation wizard from the launchpad or change directories to the plugin directory on the product disc. You can also issue the &lt;b&gt;install&lt;/b&gt; command using the downloaded installation image.
+&lt;/li&gt;
+&lt;li&gt;
+Follow the instructions on the Plug-ins installation wizard and select the &lt;strong&gt; Web server machine (remote)&lt;/strong&gt; option.
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+&lt;br/&gt;
+&lt;A HREF="javascript:showHideList('OS/400Web')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="OS/400WebImg" ALIGN="left" BORDER="0" style="margin-left:-0.25em"/&gt;
+&lt;/A&gt;
+i5/OS
+&lt;br/&gt;
+&lt;TABLE id="OS/400WebList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+
+Install the Web Server Plugins feature. The WebSphere Application Server V6.1 for i5/OS installation CD allows you to install just the Web Server Plugins. Follow the steps below to install only the Web Server Plugins feature:
+&lt;br/&gt;
+&lt;br/&gt;
+
+&lt;b&gt;Remote install from Windows workstation&lt;/b&gt;
+&lt;br/&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+Ensure that the host servers are started on your i5 server:
+STRHOSTSVR *ALL
+&lt;/li&gt;
+
+&lt;li&gt;
+Stop the Web server or Domino server while you are configuring the plug-in to work with it. 
+For IHS Web servers use: ENDTCPSVR SERVER(*HTTP) HTTPSVR(Web_server_name). 
+For DOMINO servers use: ENDDOMSVR SERVER(Domino_server_name). 
+The user may use the i5 WebAdmin GUI to accomplish the above.
+&lt;/li&gt;
+
+&lt;li&gt;
+Insert the install CD into the CD-ROM drive of the Windows workstation. 
+Note: If autorun is not enabled, change directory to cd_drive:\plugin and execute install.exe.
+&lt;/li&gt;
+
+&lt;li&gt;
+The login screen is displayed. Enter a valid userid and password for the i5 server where you want to install. The userid must have *ALLOBJ and *SECADM special authorities
+&lt;/li&gt;
+
+&lt;li&gt;
+Follow the instructions in the installation wizard. 
+&lt;/li&gt;
+
+&lt;/ol&gt;
+
+&lt;/ol&gt;
+
+&lt;b&gt;Local install from Qshell&lt;/b&gt;
+
+&lt;ol&gt;
+
+&lt;li&gt;
+Ensure that the host servers are started on your i5 server:
+STRHOSTSVR *ALL
+&lt;/li&gt;
+
+&lt;li&gt;
+Stop the Web server or Domino server while you are configuring the plug-in to work with it. 
+For IHS Web servers use: ENDTCPSVR SERVER(*HTTP) HTTPSVR(Web_server_name). 
+For DOMINO servers use: ENDDOMSVR SERVER(Domino_server_name). 
+The user may use the i5 WebAdmin GUI to accomplish the above.
+&lt;/li&gt;
+
+&lt;li&gt;
+Insert the Plug-ins install CD into the CD-ROM drive of your i5 server.
+&lt;/li&gt;
+
+&lt;li&gt;
+Copy the RESPONSEFILE located under the /QOPT/WEBSPHERE/PLUGIN directory to an IFS directory. For example,
+&lt;br&gt;
+CPY OBJ('/QOPT/WEBSPHERE/PLUGIN/RESPONSEFILE.TXT') TODIR('/tmp')
+&lt;/li&gt;
+
+&lt;li&gt;
+Edit the copy of the RESPONSEFILE.TXT (for example, using the EDTF command) and make the following changes:
+
+&lt;ol&gt;
+
+&lt;li&gt;
+Change the value of the -OPT silentInstallLicenseAcceptance.value property to true. 
+&lt;/li&gt;
+
+&lt;li&gt;
+Change other optional parameters as appropriate.
+&lt;/li&gt;
+
+&lt;/ol&gt;
+
+&lt;li&gt;
+Start a Qshell session:
+&lt;br&gt;
+STRQSH
+&lt;/li&gt;
+
+&lt;li&gt;
+Change directory to /QOPT/WEBSPHERE/PLUGIN
+&lt;br&gt;
+cd /QOPT/WEBSPHERE/PLUGIN
+&lt;/li&gt;
+
+&lt;li&gt;
+Invoke the "install" command as follows:
+&lt;br&gt;
+INSTALL -options path/RESPONSEFILE.TXT
+&lt;br&gt;
+For example,
+&lt;br&gt;
+INSTALL -options /tmp/RESPONSEFILE.TXT
+&lt;/li&gt;
+
+
+&lt;/ol&gt;
+
+
+&lt;/li&gt;
+&lt;/ol&gt;
+
+
+
+For more information, see 
+&lt;a target="help" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=phil&amp;product=was-express-iseries&amp;topic=tins_webplugins"&gt;Install of Web server plug-in for i5/OS&lt;/a&gt;
+&lt;br/&gt;
+
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+&lt;br/&gt;
+&lt;br/&gt;
+
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+
+    </description>
+</item>
+
+
+<item
+    href=""
+    title="Run the Web server configuration script">
+    <action
+        class=""/>
+    <description>
+
+
+&lt;A HREF="javascript:showHideList('distWeb')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="distWebImg" ALIGN="left" BORDER="0" style="margin-left:-0.25em"/&gt;
+&lt;/A&gt;
+Distributed
+&lt;br/&gt;
+&lt;TABLE id="distWebList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+
+The Plug-ins installation wizard creates a script file with a name of &lt;i&gt;configureWeb_server_{web server name}&lt;/i&gt; (batch or shell depending upon operating system of the machine) in the &lt;i&gt;plug-ins_installation_root&lt;/i&gt;/bin/ directory on the machine where the plug-in is installed. 
+
+&lt;ol&gt; 
+&lt;li&gt;
+Copy the &lt;i&gt;configure{web server name}&lt;/i&gt; batch or shell script from the machine with the Web server to the &lt;i&gt;was_install_root&lt;/i&gt;/bin directory on the machine with the application server. 
+&lt;/li&gt;
+&lt;li&gt;
+Start the application server. 
+&lt;/li&gt;
+&lt;li&gt;
+On the machine with the application server, run the batch or shell script to create the Web server definition in the configuration for the application server.  
+&lt;/li&gt;
+&lt;li&gt;
+On the machine with the Web server, start the Web server service by following the instructions that came with your Web server installation.   
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+&lt;/li&gt;
+
+&lt;br/&gt;
+
+&lt;A HREF="javascript:showHideList('OS/4001Web')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="OS/4001WebImg" ALIGN="left" BORDER="0" style="margin-left:-0.25em"/&gt;
+&lt;/A&gt;
+i5/OS
+&lt;br/&gt;
+&lt;TABLE id="OS/4001WebList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+
+In the information below, the following terms are used:&lt;BR&gt;
+&lt;b&gt;plugins_install_root&lt;/b&gt;:  This refers to the IFS directory in which the Web Server Plugins were installed. By default, this is /QIBM/ProdData/WebSphere/Plugins/V61/webserver. 
+&lt;BR&gt;
+&lt;b&gt;appserver_profile_root&lt;/b&gt;: This refers to the location of your WebSphere Application Server profile. For the default WebSphere Application Server install, the profile root of the profile myProfile is /QIBM/UserData/WebSphere/AppServer/V61/&lt;i&gt;edition&lt;/i&gt;/profiles/myProfile where &lt;i&gt;edition&lt;/i&gt; is Express,
+Base or ND.
+&lt;BR&gt;
+&lt;b&gt;http_profile_root&lt;/b&gt;: This refers to the location of your http profile. For the default Web Server Plugins install, the default &lt;i&gt;http_profile_root&lt;/i&gt; is /QIBM/UserData/WebSphere/Plugins/V61/webserver/profiles/http.
+&lt;BR&gt;
+&lt;b&gt;product_lib&lt;/b&gt;: This refers to the product library which contains the service program objects for the web server plugins. For the default Web Server Plugins install, this is QWAS61A. If you install the Web Server Plugins, multiple times, the &lt;i&gt;product_lib&lt;/i&gt; is QWAS61c where c is B, C, D, .... The &lt;i&gt;plugins_install_root&lt;/i&gt;/properties/product.properties contains the value for the product library.
+
+&lt;ol&gt;
+
+&lt;li&gt;
+Create an HTTP profile on i5/OS:
+&lt;br&gt;
+Please note, when the Web Server plugins feature is installed on i5/OS, a default http profile named &lt;i&gt;http&lt;/i&gt; is created. If you choose to use the default http profile, proceed to step 2 now.
+&lt;br&gt;
+&lt;br&gt;
+Run the manageprofiles Qshell command to create an http profile. (Note: http profiles are the 6.1 equivalent of 5.0/5.1 remote instances.) For example, run this command from Qshell: 
+&lt;br&gt;
+&lt;i&gt;plugins_install_root&lt;/i&gt;/bin/manageprofiles -create -profileName myHttpProfile -templatePath http 
+&lt;br&gt;
+where myHttpProfile is the name of the HTTP profile.
+&lt;br&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+Create a web server instance.  Please refer to your web server&apos;s documentation or the WebSphere Application Server documentation for details. 
+&lt;/li&gt;
+
+&lt;li&gt;
+&lt;b&gt;(IHS)&lt;/b&gt; 
+
+&lt;ol&gt;
+&lt;li&gt;
+Point your browser to "http://hostName:2001" where hostName is the Web server machine, and click the "IBM Web Administration for iSeries link". 
+&lt;/li&gt;  
+&lt;li&gt;
+Click the HTTP Servers tab, and in the dropdown box labelled "Server" select the web server instance from step 2. 
+&lt;/li&gt;
+&lt;li&gt;
+Click the "WebSphere Application Server" link in the left sidebar, then select the "WebSphere Application Server, V6.1" radio button. 
+&lt;/li&gt;
+&lt;li&gt;
+In the pulldown menu select the HTTP profile from step 1 and click OK. 
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;br&gt;
+
+&lt;b&gt;(DOMINO)&lt;/b&gt;
+
+&lt;ol&gt;
+&lt;li&gt;
+Run the configureOs400WebServerDefinition script on the http profile from step 1, for example: 
+&lt;br&gt;
+configureOs400WebServerDefinition -profileName myHttpProfile -webserver.name DOMSRV01 
+  -webserver.type DOMINO -webserver.port 80
+&lt;/li&gt;
+
+&lt;li&gt;
+Using the WRKDOMSVR command to update the notes.ini file of your Domino server, insert the following directive: 
+&lt;br&gt;
+WebSphereInit=&lt;i&gt;http_profile_root&lt;/i&gt;/config/&lt;i&gt;webServerName&lt;/i&gt;/plugin-cfg.xml
+&lt;/li&gt;
+
+&lt;li&gt;
+From the Lotus Notes client connected to the Domino server, click the internet protocols
+    tab and then click the HTTP tab. Under DSAPI filter names add the following:
+&lt;br&gt;
+/QSYS.LIB/&lt;i&gt;product_lib&lt;/i&gt;/LIBDOMINO.SRVPGM
+&lt;/li&gt;
+
+&lt;li&gt;
+Save your changes and restart the Domino server. 
+&lt;/li&gt;
+
+
+&lt;/ol&gt;
+
+&lt;/li&gt;
+
+&lt;li&gt;
+Copy the script named &lt;i&gt;http_profile_root&lt;/i&gt;/config/&lt;i&gt;webServerName&lt;/i&gt;/configure&lt;i&gt;webServerName&lt;/i&gt;  to the &lt;i&gt;appserver_profile_root&lt;/i&gt;/bin directory on your application server machine using your favorite method, such as FTP or mapped drives.
+&lt;/li&gt;
+
+&lt;li&gt;
+Start the application server and run the script you copied in the previous step. For example, run the following commands from Qshell: 
+&lt;ol&gt;
+&lt;li&gt;
+&lt;i&gt;appserver_profile_root&lt;/i&gt;/bin/startServer 
+&lt;/li&gt;
+&lt;li&gt;
+cd &lt;i&gt;appserver_profile_root&lt;/i&gt;/bin
+&lt;/li&gt;
+&lt;li&gt;
+./configure&lt;i&gt;webServerName&lt;/i&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+
+&lt;li&gt;
+
+&lt;b&gt;(IHS)&lt;/b&gt; To enable automatic propagation of the plugin-cfg.xml file as well as other features, update the IHS Remote Administration Server's user ID and password in the Web server configuration:
+
+
+&lt;ol&gt;
+&lt;li&gt;
+Open the administrative console to your was profile on the application server machine. 
+&lt;/li&gt;
+&lt;li&gt;
+Expand Servers --> Web servers. 
+&lt;/li&gt;
+&lt;li&gt;
+Click on the Web server definition to view the details screen. 
+&lt;/li&gt;
+&lt;li&gt;
+Click the "Remote web server management" link. 
+&lt;/li&gt;
+&lt;li&gt;
+Enter the user ID and password to authenticate to the Web server machine. The authorities required by this profile are the same as that required to access the i5 WebAdmin GUI. 
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;br/&gt;
+
+&lt;b&gt;(DOMINO)&lt;/b&gt; Copy the plugin-cfg.xml from the application server machine to the &lt;i&gt;http_profile_root&lt;/i&gt;/config/&lt;i&gt;webServerName&lt;/i&gt; directory on the web server machine. The plugin-cfg.xml file is generated in the directory named &lt;i&gt;appserver_profile_root&lt;/i&gt;/config/cells/&lt;i&gt;cell_name&lt;/i&gt;/nodes/&lt;i&gt;node_name&lt;/i&gt;/servers/&lt;i&gt;webServerName&lt;/i&gt; on the application server machine.
+&lt;br&gt;
+&lt;/li&gt;
+
+
+
+&lt;/ol&gt;
+
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+&lt;br/&gt;
+
+	&lt;A HREF="javascript:showHideList('zOSWeb')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="zOSWebImg" ALIGN="left" BORDER="0" style="margin-left:-0.25em"/&gt;
+&lt;/A&gt;
+zOS
+&lt;br/&gt;
+&lt;TABLE id="zOSWebList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+
+There is a Customization Dialog that queries for system information. After the information is collected, a series of jobs are generated along with a set of instructions.  These instructions give information about each job and the order in which to run them.  There is a job generated to configure the Web server plug-in that can be run at a specific time during the configuration process.
+
+&lt;ol&gt;
+&lt;li&gt;
+Perform the required customization steps in the article entitled, &lt;a target="help" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=phil&amp;product=was-nd-zos&amp;topic=tins_configpostinstallz"&gt;Configuring the product after installation&lt;/a&gt; within the information center.
+
+&lt;/li&gt;
+&lt;li&gt;
+Submit the job to configure the Web server plug-in in the correct order based on the set of instructions that are generated.
+&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;/li&gt;
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+&lt;/li&gt;
+
+&lt;br/&gt;
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+
+    </description>
+</item>
+
+
+
+	<item
+		href=""
+		title="Map the application modules to servers">
+		<action
+			class="navigatorCmd.do?forwardName=ApplicationDeployment.content.main"/>
+		<description>
+In WebSphere Application Server Administration Console, you can map an application or modules to the Web server after the application is installed or during application installation.  
+&lt;dl&gt;
+&lt;li&gt; When the application is already installed, complete the following steps: 
+&lt;ol&gt;
+                
+        &lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the Applications collection panel&lt;/li&gt;.
+	&lt;li&gt;Click the name of the application to map to the Web server.&lt;/li&gt;
+        &lt;li&gt;On &lt;strong&gt;Modules&lt;/strong&gt;, click &lt;strong&gt;Managed Modules&lt;/strong&gt;. &lt;/li&gt;
+        &lt;li&gt;Select the appropriate Clusters and Servers from  list, select the application module checkbox that you want targeted to those servers, and click on &lt;strong&gt;Apply.&lt;/strong&gt;&lt;/li&gt;
+        &lt;li&gt;When you are finished targeting all of the application modules, click &lt;strong&gt;OK&lt;/strong&gt;.
+	&lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the Applications collection panel&lt;/li&gt;.
+	&lt;li&gt;Click the name of the application that has been mapped to the Web server.&lt;/li&gt;
+        &lt;li&gt;On &lt;strong&gt;Detail Properties&lt;/strong&gt;, click &lt;strong&gt;Target specific application status&lt;/strong&gt; and you will see the Application server, cluster and Web server to which your application is targeted. &lt;/li&gt;
+    
+&lt;/ol&gt;
+&lt;/li&gt; 
+
+ &lt;li&gt;To map the application to the Web server during application installation,
+ select the appropriate Cluster and Servers during the &lt;strong&gt;Manage Modules&lt;/strong&gt; step. &lt;/li&gt;
+        select the application module checkbox that you want targeted to those servers,, 
+        and click on &lt;strong&gt;apply.&lt;/strong&gt;&lt;/li&gt;
+
+&lt;/dl&gt;
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+
+
+		</description>
+	</item>
+
+	<item
+		href=""
+		title="Save and synchronize configuration">
+		<action
+			class=""/>
+		<description>
+Click &lt;strong&gt;Save&lt;/strong&gt; in the message at the top of the console panel to update the configuration in the master repository.
+
+&lt;br/&gt;
+&lt;br/&gt;
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+		</description>
+	</item>
+
+
+	<item
+		href="com.ibm.ws.console.web/guidedactivity/cheatsheets/nl/lang/webserver_generate_plugin.htm"
+		title="Generate plug-in configuration">
+
+		<action
+        class="navigatorCmd.do?forwardName=WebServer.content.main"/>
+		<description>
+The Web server plug-in configuration service monitors the changes to the product configuration and 
+regenerates the plug-in file automatically when changes are made that affect the plug-in. This service is enabled by 
+default so typically you can skip this step.     
+&lt;br/&gt;
+&lt;br/&gt;
+&lt;A HREF="javascript:showHideList('pluginserviceconditions')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="pluginserviceconditionsImg" ALIGN="left" BORDER="0"/&gt;
+&lt;/A&gt;
+When does the plug-in configuration service regenerate the plugin?
+&lt;br/&gt;
+&lt;TABLE id="pluginserviceconditionsList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+When the Web server plug-in configuration service is enabled and any of the following conditions occur, the plug-in configuration file is automatically generated: 
+&lt;dl&gt;
+			&lt;li&gt;When the Web server is created or saved&lt;/li&gt; 
+			&lt;li&gt;When an application is installed&lt;/li&gt; 
+			&lt;li&gt;When an application is uninstalled &lt;/li&gt;
+			&lt;li&gt;When the virtual host definition is updated &lt;/li&gt;
+&lt;/dl&gt;
+
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+&lt;br/&gt;
+
+
+&lt;A HREF="javascript:showHideList('pluginserviceenabled')"&gt;
+&lt;IMG SRC="/ibm/console/images/arrow_collapsed.gif" ALT="" ID="pluginserviceenabledImg" ALIGN="left" BORDER="0"/&gt;
+&lt;/A&gt;
+Should I keep the plug-in configuration service enabled or should I disable it?
+&lt;br/&gt;
+&lt;TABLE id="pluginserviceenabledList" style="font-size:100%;margin-left:1em;display:none"&gt;
+&lt;TR&gt;
+&lt;TD&gt;
+Consider enabling this service if any of the following conditions apply: 
+&lt;dl&gt;
+&lt;li&gt;You expect infrequent application installation or uninstallation. For example, this situation might apply in a production environment.&lt;/li&gt;
+&lt;li&gt;You can tolerate the performance impact of generating and  distributing the plug-in configuration file each time any of the previously mentioned conditions occur.&lt;/li&gt;
+&lt;/dl&gt;
+&lt;/br&gt;&lt;br/&gt;
+If you are making a series of simultaneous changes such as installing numerous applications, then you might want the configuration service disabled until 
+you make the last change.
+&lt;/br&gt;
+&lt;/br&gt;
+To disable the service, 
+click &lt;strong&gt;Application Servers > {server name} > Administration Services > Web server plug-in configuration service&lt;/strong&gt; and uncheck the option
+ &lt;strong&gt;Enable automated Web server configuration processing&lt;/strong&gt;. 
+&lt;/TD&gt;
+&lt;/TR&gt;
+&lt;/TABLE&gt;
+
+&lt;br/&gt;
+To manually generate the plug-in file
+&lt;ol&gt;                        
+    &lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the Web servers collection panel.&lt;/li&gt;
+	&lt;li&gt;Select the Web server from the list. &lt;/li&gt;
+	&lt;li&gt;Click &lt;strong&gt;Generate Plug-in&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+
+To continue, click &lt;strong&gt;Next step&lt;/strong&gt;.
+</description>
+ 	</item>
+
+    <item
+       href="com.ibm.ws.console.web/guidedactivity/cheatsheets/nl/lang/webserver_propogate_plugin.htm"
+       title="Propagate plug-in configuration">
+       <action
+       class="navigatorCmd.do?forwardName=WebServer.content.main"/>
+       <description>
+The plug-in configuration file (&lt;code&gt;plugin-cfg.xml&lt;/code&gt;) can be automatically propagated to the Web server 
+when the Web server plug-in configuration service is enabled and if one of the following conditions is true:
+
+&lt;dl&gt;
+			&lt;li&gt;You are using a local Web server, that is, there is an Application Server on the same computer as the Web server.&lt;/li&gt; 
+			&lt;li&gt;You are using a remote IBM HTTP Server (IHS), Version 6 or higher, with a running IHS administrative server.&lt;/li&gt; 
+&lt;/dl&gt;
+
+In this guided activity, the assumption is that the Web server is remote.  Therefore, if the Web server is not an IBM HTTP Server (IHS), Version 6 or higher, you must manually copy the &lt;code&gt;plugin-cfg.xml&lt;/code&gt; file to the install location for the remote Web server.  
+&lt;br/&gt;
+&lt;br/&gt;
+
+To propagate the plug-in file
+&lt;ol&gt;
+&lt;li&gt;Create a user ID and password for IHS Admin Server. This user ID and password is used by Websphere Application Server to remotely administer the Web server. To create a user ID and password in the &lt;code&gt;IHS_HOME\conf\admin.passwd&lt;/code&gt; file, run the following command: &lt;code&gt;IHS_HOME\bin\htpasswd -cb IHS_HOME\conf\admin.passwd adminUser adminPassword&lt;/code&gt;, where adminUser is a system user ID and adminPassword is the adminUser password. &lt;/li&gt;
+&lt;li&gt;Start the IHS Admin Server.  On Windows start the 'IBM HTTP Administration 6.1' service on the IHS machine. On Linux or UNIX, run the following command: &lt;code&gt;IHS_HOME/bin/adminctl start&lt;/code&gt;. &lt;/li&gt;
+&lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the Web servers collection panel.&lt;/li&gt;
+&lt;li&gt;Select the name of your Web server and click the link &lt;strong&gt;Remote Web server management&lt;/strong&gt;. &lt;/li&gt; 
+&lt;li&gt;Enter the Port as 8008, User ID as the adminUser from the previous instruction and Password as the adminPassword from the previous instruction.&lt;/li&gt;
+&lt;li&gt;Click &lt;strong&gt;Apply&lt;/strong&gt; and then save your changes.&lt;/li&gt;
+&lt;li&gt;Set the correct read/write permissions for the httpd.conf file and the plugin-cfg.xml file on the web server machine.&lt;/li&gt;
+&lt;li&gt;Click &lt;strong&gt;Click to perform&lt;/strong&gt; to load the Web servers collection panel again.&lt;/li&gt;
+&lt;li&gt;Check the box next to the Web server name and then click &lt;strong&gt;Propagate Plug-in&lt;/strong&gt;.&lt;/li&gt;
+
+&lt;br/&gt;
+&lt;br/&gt;    
+To continue, click &lt;strong&gt; Next step&lt;/strong&gt;.
+       </description>
+   </item>
+
+
+    <item
+       href=""
+       title="Verify Web server request routing">
+       <action
+       class=""/>
+       <description>
+
+
+    Open a browser and enter the URL for the snoop servlet (for example, http://Host_name_of_Web_server_machine/snoop) to verify the ability of the Web server to retrieve an application from the Application Server.    
+&lt;br/&gt; 
+&lt;br/&gt;
+ 
+If the above test is not successful, see the information center article entitled, &lt;a target="help" href="http://www14.software.ibm.com/webapp/wsbroker/redirect?version=phil&amp;product=was-nd-dist&amp;topic=tins_webplugins"&gt;Troubleshooting Web server plug-ins installation and removal&lt;/a&gt; for more information.
+
+
+
+
+       </description>
+   </item>
+
+
+
+
+</cheatsheet>

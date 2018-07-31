@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2006
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<plugin id="com.ibm.ws.console.middlewarenodes"
+        name="middlewarenodes"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere XD"
+        embedded="true"
+        context-root="middlewarenodes">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.systemadmin"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <task id="middlewarenodes"
+              icon="images/onepix.gif"
+              label="nav.view.MiddlewareNodes"
+              view="/navigatorCmd.do?forwardName=MiddlewareNode.content.main"
+              external="false"
+              weight="30">
+            <category id="systemadmin"/>
+        </task>
+     </tasks>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="middlewarenodes.MiddlwareNode.collection1" contextType="MiddlewareNode">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.perform"
+              actionURI="middlewareNodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,operator"
+              label="button.run"
+              actionURI="middlewareNodeCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,operator"
+              label="button.setMode"
+              actionURI="middlewareNodeCollection.do">
+             <compatibility>
+               <match key="com.ibm.websphere.wxdopProductVersion" value="(([6-9]|[1-9][0-9]).*)"/>
+             </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="middlewarenodes.MiddlewareNode.collectionItem1" contextType="MiddlewareNode">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="middlewareNodeCollection.do?EditAction=true"
+              label="environment.label.name">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="syncStatus"
+              sortable="sort"
+              itemURI=""
+              label="Node.synchronization.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Node.status.displayName">
+        </item>
+        <item
+        	  label="Node.mode.displayName"
+        	  attributeName="maintStatus"
+        	  sortable="sort"
+        	  statusServlet="/ibm/console/maintstatus"
+        	  weight="530">
+		    <compatibility>
+                      <match key="com.ibm.websphere.baseProductVersion" value="(([6-9]|[1-9][0-9]).*)"/>
+                      <match key="com.ibm.websphere.wxdopProductVersion" value="(([6-9]|[1-9][0-9]).*)"/>
+	 	    </compatibility>
+	    </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="middlewarenode.Node.ext" contextType="Node">
+        <categoryDefinition weight="20" id="nodeagent.properties" parent="root" label="NodeAgent.displayName"/>
+            <link
+              categoryId="nodeagent.properties"
+              label="NodeAgent.displayName"
+              description="NodeAgent.description"
+              actionURI="middlewareNodeCollection.do?ShowNodeAgent=true">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="middlewarenode.UnmanagedNode.ext" contextType="NodeUnmanaged">
+        <categoryDefinition weight="20" id="nodeagent.properties" parent="root" label="NodeAgent.displayName"/>
+        <link
+              categoryId="nodeagent.properties"
+              label="XDAgent.displayName"
+              description="XDAgent.description"
+              actionURI="middlewareNodeCollection.do?ShowXDAgent=true">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="XDAgent.additional" contextType="XDAgent">
+         <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.nodeagent.view&amp;sfname=processDefinitions&amp;lastPage=XDAgent.config.view">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+ 	          </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=XDAgent.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+            <!-- END LIDB1891-8.6 -->
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=XDAgent.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=XDAgent.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin Node Installation Properties -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="environment.NodeUnmanaged1" contextType="NodeUnmanaged">
+         <link
+	      categoryId="additional.properties"
+	      label="environment.nodeproperties.displayName"
+	      description="environment.nodeproperties.description"
+	      actionURI="com.ibm.ws.console.middlewarenodes.forwardCmd.do?forwardName=MiddlewareNodeProperties.props.main_contained">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- copy from BASE WEBUI\ws\code\webui.environment\src\environment\WEB-INF\plugin.xml -->
+<!-- The reason to copy is because we want to have the 'Back' button to go back to the Unmanaged node detail page -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="environment.MiddlewareNodeProperties.props.collection1" contextType="MiddlewareNodeProperties.props.content.main_contained">
+        <action
+              enablesFor="Detail"
+              label="environment.nodeproperties.button.back"
+              actionURI="middlewareNodePropertiesCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="environment.MiddlewareNodeProperties.props.content.main_contained.collectionItem1" contextType="MiddlewareNodeProperties.props.content.main_contained">
+        <item
+              attributeName="nodePropName"
+              sortable="sort"
+              itemURI=""
+              label="environment.nodePropName.displayName">
+        </item>
+        <item
+              attributeName="nodePropValue"
+              sortable="sort"
+              itemURI=""
+              label="environment.nodePropValue.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="test.MiddlewareNodeProperties.props.detailTab1" contextType="MiddlewareNodeProperties.props">
+        <tab
+              label="tab.configuration"
+              contentURI="MiddlewareNodeProperties.props.config.tab.view_contained">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End Node Installation Properties -->
+
+</plugin>
+

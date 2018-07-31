@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="was-memory-solaris">
+
+	<dirname property="was.memory.solaris.basedir" file="${ant.file.was-memory-solaris}"/>
+	<dirname property="was.memory.solaris.parentdir" file="${was.memory.solaris.basedir}"/>
+	<dirname property="was.memory.solaris.grandparentdir" file="${was.memory.solaris.parentdir}"/>
+	<dirname property="was.memory.solaris.bundle.basedir" file="${was.memory.solaris.grandparentdir}"/>
+
+
+	<target name="run_solaris_memory_script" if="isSunOS">
+	
+		<property name="logfile" value="${autopdtmp}/memory_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1145349/1104470" />
+		<!-- Prompt user for sleep interval (default 600) -->
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="600" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	
+		<exec executable="${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/Solaris_ps.sh" spawn="true" os="${os.unixkind}">
+			<arg line=" ${sleeptime}" />			
+		</exec>
+
+		<exec executable="${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/Solaris_pmap.sh" spawn="true" os="${os.unixkind}">
+			<arg line=" ${sleeptime} ${was.java.process.id}" />			
+		</exec>
+		
+	</target>
+	
+	<target name="kill_solaris_memory_script" if="isSunOS">
+		<echo message="Cleanup: Kill Sun memory script" />
+
+		<!--  kill memory script -->
+		<copy file="${was.memory.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-template.sh" tofile="${was.memory.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-9" />			
+				<filter token="searchString" value="/was/shell/solaris" />
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${was.memory.solaris.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${was.memory.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" />
+		</exec>
+		
+	</target>
+	
+	<target name="solaris_configurations" if="isSunOS">
+		
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Configuration_Setup" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="config.label" label="Set the following heap size parameters" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="heapsize" label="heap_size" defaultValue="512m" type="plaintext" accessibilityName="heapsize" accessibilityDesc="heapsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="permsize" label="perm_size" defaultValue="128m" type="plaintext" accessibilityName="permsize" accessibilityDesc="permsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="newsize" label="new_size" defaultValue="128m" type="plaintext" accessibilityName="newsize" accessibilityDesc="newsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+
+		<property name="genericJvmArguments" value="-Xmx${heapsize} -XX:MaxPermSize=${permsize} -XX:MaxNewSize=${newsize} -server -XX:+DisableExplicitGC" />			
+		
+		<copy file="${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-template.sh" tofile="${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="ulimit-c" value="LD_LIBRARY_PATH=%LD_LIBRARY_PATH%;/usr/lib/lwp" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${ServerName}" />
+			</filterset>
+		</copy>
+		<!-- 
+		
+		-XX:MaxPermSize=128m
+		
+		-XX:MaxNewSize=128m
+		
+		Run in HotSpot Server mode (-server). 
+		
+		-XX:+DisableExplicitGC
+		
+		LD_LIBRARY_PATH to include /usr/lib/lwp before starting jvm
+		
+		 -->
+		 	<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.memory.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" />
+			</exec>
+			
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+				
+			<autopdinput message="Did problem get fixed" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" validargs="yes,no" addproperty="problem.fixed"/>
+					
+			<if isTrue="${problem.fixed}">
+				<echo message="hello"/>
+			</if>
+	</target>
+	
+	<target name="collect_was_memory_solaris" if="isSunOS">
+		<!-- jtc*.log -->
+		<zip encoding="UTF8" destfile="${pmrfilename_heapdump}" update="true">
+			<zipfileset dir="${was.enhanced.root}" prefix="autopdzip/${was.enhanced.root}" >
+				<include name="jtc*.*" />
+			</zipfileset>						
+			<zipfileset dir="${autopdtmp}" prefix="autopdzip/autopd" >
+				<include name="jtc*.*" />
+			</zipfileset>						
+		</zip>
+	</target>
+	
+</project>

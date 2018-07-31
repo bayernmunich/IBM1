@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<project name="adjustWsdbgenASMClasspath" default="install" basedir=".">
+
+    <!-- ========================================================== -->
+    <target name="install"
+            description="Install Config Action"
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+                     checkIfWsdbgenScriptUpdated,
+                     updateWsdbgenScript"/>
+
+
+    <!-- ========================================================== -->
+    <target name="uninstall"
+            description="Uninstall Config Action."
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+                     checkIfWsdbgenScriptUpdated,
+                     removeWsdbgenScriptUpdate"/>
+
+
+    <!-- == Detect Operating System on WAS Installation =========== -->
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="os/400">
+            <os family="os/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                <not>
+                    <equals arg1="${os.name}" arg2="OS/400"/>
+                </not>
+            </and>
+        </condition>
+
+        <condition property="isWindows" value="true">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="isUnix" value="true">
+            <not>
+                <os family="windows"/>
+            </not>
+        </condition>
+
+        <!-- Output detected OS Family -->
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+
+    </target>
+
+    <!-- == Specify file separator, based on detected OS ========== -->
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="fileSeparator" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="fileSeparator" value="/">
+            <equals arg1="${currentOSFamily}" arg2="z/os"/>
+        </condition>
+
+        <condition property="fileSeparator" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <condition property="fileSeparator" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+    </target>
+
+    <!-- == Specify file extension for script on detected OS ====== -->
+    <target name="setOSScriptExtension"
+            description="Sets the current file extension for this platform.">
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="z/os"/>
+        </condition>
+
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <condition property="OSext" value="">
+                <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+    </target>
+
+
+    <!-- == Verifies existence of files in WAS install ============ -->
+    <target name="filesExists">
+        <available file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}"  property="WsdbgenExist"/>
+    </target>
+
+
+    <!-- ========================================================== -->
+    <target name="checkIfWsdbgenScriptUpdated"
+            if="WsdbgenExist">
+
+        <loadfile property="LoadedWsdbgenScript"
+                  srcfile="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}" />
+
+        <condition property="applyWsdbgenScriptUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${LoadedWsdbgenScript}" substring="SET PROVIDER_CLASSPATH=%PROVIDER_CLASSPATH%;%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar" />
+                </not>
+                <not>
+                    <contains string="${LoadedWsdbgenScript}" substring="PROVIDER_CLASSPATH=$${PROVIDER_CLASSPATH}:$${WAS_HOME}/plugins/com.ibm.ws.prereq.asm.jar" />
+                </not>
+            </and>
+        </condition>
+
+    </target>
+
+    <!-- ========================================================== -->
+    <!-- == wsdbgen.sh/.bat updates =============================== -->
+    <target name="updateWsdbgenScript"
+            description=""
+            if="applyWsdbgenScriptUpdate">
+
+        <antcall target="updateWindowsWsdbgenScript" />
+        <antcall target="updateUnixWsdbgenScript"    />
+    </target>
+
+    <!-- ========================================================== -->
+    <target name="updateWindowsWsdbgenScript"
+            description=""
+            if="isWindows">
+
+        <echo>Updating ${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}</echo>
+        <replaceregexp file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}"
+               match="(SET PROVIDER_CLASSPATH=.*;%WAS_HOME%\\plugins\\com.ibm.ws.prereq.commons-collections.jar)"
+               replace="\1${line.separator}SET PROVIDER_CLASSPATH=%PROVIDER_CLASSPATH%;%WAS_HOME%\\\\plugins\\\\com.ibm.ws.prereq.asm.jar"
+               byline="false"
+        />
+
+    </target>
+
+    <!-- ========================================================== -->
+    <target name="updateUnixWsdbgenScript"
+            description=""
+            if="isUnix">
+
+        <echo>Updating ${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}</echo>
+        <replaceregexp file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}"
+               match="(PROVIDER_CLASSPATH=.*:\$\{WAS_HOME\}/plugins/com.ibm.ws.prereq.commons-collections.jar)"
+               replace="\1${line.separator}PROVIDER_CLASSPATH=$\{PROVIDER_CLASSPATH\}:$\{WAS_HOME\}/plugins/com.ibm.ws.prereq.asm.jar"
+               byline="false"
+        />
+
+        <antcall target="modifyWsdbgenPermissions"/>
+
+    </target>
+
+    <!-- ========================================================== -->
+    <target name="removeWsdbgenScriptUpdate"
+            description=""
+            if="LoadedWsdbgenScript">
+
+        <echo>Reverting wsdbgen${OSext} updates.</echo>
+
+        <replaceregexp file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}"
+               match="${line.separator}SET PROVIDER_CLASSPATH=%PROVIDER_CLASSPATH%;%WAS_HOME%\\plugins\\com.ibm.ws.prereq.asm.jar"
+               replace=""
+               byline="false"
+        />
+
+        <replaceregexp file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}"
+               match="${line.separator}PROVIDER_CLASSPATH=\$\{PROVIDER_CLASSPATH\}:\$\{WAS_HOME\}/plugins/com.ibm.ws.prereq.asm.jar"
+               replace=""
+               byline="false"
+        />
+
+        <antcall target="modifyWsdbgenPermissions"/>
+
+    </target>
+
+    <!-- ========================================================== -->
+    <target name="modifyWsdbgenPermissions">
+        <chmod file="${WAS_HOME}${fileSeparator}bin${fileSeparator}wsdbgen${OSext}" perm="a+x"/>
+    </target>
+
+</project>

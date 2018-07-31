@@ -1,0 +1,127 @@
+<!-- Licensed Material - Property of IBM                               -->
+<!--                                                                   -->
+<!-- 5724-J37 Copyright IBM Corp. 2010                                 -->
+<!-- All Rights Reserved.                                              -->
+<!-- U.S. Government users - RESTRICTED RIGHTS - Use, Duplication, or  -->
+<!-- Disclosure restricted by GSA-ADP schedule contract with IBM Corp. -->
+<!-- Status = JEJO610                                                  -->
+
+<project name="updateDefaultzosODRTemplate" default="main" basedir=".">
+
+    <target name="detectDmgrProfile">
+		<condition property="isDmgrProfile" value="true">
+            <equals arg1="${XD_MIGRATION_IS_DMGR_PROFILE}" arg2="${XD_MIGRATION_TRUE}"/>
+        </condition>
+    </target>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)"
+	     if="isDmgrProfile">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+		
+		 <!-- Determine OS family -->
+		<condition property="isZOS" value="true">
+			<os family="z/os"/>
+		</condition>
+		
+		<echo> ${isZOS} </echo>
+
+    <echo>Detected isZOS to be: ${isZOS}</echo>
+
+
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+    </target>
+
+    <target name="convertWASHomeToUNIXStylePath"
+	     if="isDmgrProfile">
+        <path id="id.was.home">
+            <pathelement location="${XD_MIGRATION_TARGET_WAS_HOME}"/>
+        </path>
+
+        <pathconvert targetos="unix"
+            property="WAS_HOME_UNIX_STYLE"
+            refid="id.was.home"/>
+    </target>
+
+    <target name="setScriptExtension"
+            description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="scriptExtension" value="sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="scriptExtension" value="bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+
+    <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+            description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform"
+	     if="isDmgrProfile">
+
+        <condition property="WSADMIN_EXECUTABLE" value="${XD_MIGRATION_TARGET_PROFILE_PATH}/bin/wsadmin.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="WSADMIN_EXECUTABLE" value="${XD_MIGRATION_TARGET_PROFILE_PATH}/bin/wsadmin.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <echo>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</echo>
+    </target>
+
+	
+	 <target name="main" description="Update the default ODR templates on z/OS" 
+			depends="detectDmgrProfile,
+            detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+			
+			<antcall target="all"></antcall>
+				
+		 
+	</target>
+	
+	<target name="all" if="isZOS">
+				<antcall target="updateDefaultXDZOStemplate"></antcall>
+				<antcall target="removeHeapDetectCode"></antcall>
+		 <echo> complete </echo>
+	</target>
+	
+	 <!-- Update default z/OS XD template for 64 bit mode -->
+  <target name="updateDefaultXDZOStemplate" if="isDmgrProfile">
+
+  	<echo>${XD_MIGRATION_TARGET_PROFILE_PATH}</echo>
+  	<echo>update defaultXDZOS template</echo>
+  	    <replace encoding="ISO8859-1" dir="${XD_MIGRATION_TARGET_PROFILE_PATH}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultXDZOS/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+          <replace encoding="ISO8859-1" dir="${XD_MIGRATION_TARGET_PROFILE_PATH}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr_zos/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+
+  </target>
+	
+  <target name="removeHeapDetectCode" description="Convert from 31 to 64 bit">
+  	<echo message="profile path=${XD_MIGRATION_TARGET_PROFILE_PATH}"/>
+  	<echo message="Convert from 31 to 64 bit"/>  	
+
+  	<replace encoding="ISO8859-1" dir="${XD_MIGRATION_TARGET_PROFILE_PATH}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+  		   	<replacefilter token="-agentlib:HeapDetect64" value=""/>
+			<replacefilter token="-agentlib:HeapDetect" value=""/>
+  	</replace>
+  	
+ </target>
+
+</project>

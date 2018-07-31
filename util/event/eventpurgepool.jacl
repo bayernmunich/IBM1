@@ -1,0 +1,56 @@
+###############################################################################
+#
+# Licensed Materials - Property of IBM
+# (C) Copyright IBM Corp. 2004, 2010.  ALL RIGHTS RESERVED 
+# 5724-I63, 5724-H88, 5655-N02, 5733-W70
+# US Government Users Restricted Rights - Use, duplication, or disclosure
+# restricted by GSA ADP Schedule Contract with IBM Corp.
+#
+###############################################################################
+#
+# JACL script that purges the connection pool. The connection pool needs to be
+# purged after the fast purge is executed for Informix because the cached 
+# PreparedStatement instances are no longer valid and need to be reprepared.
+#
+# Usage:
+# Invoke wsadmin and supply the name of this script on the -f parameter.
+# wsadmin -conntype rmi -port <port> -f eventpurgepool.jacl
+#                           help                                            
+#-----------------------------------------------------------------------------
+set rc 0
+
+#The name of the event data source
+set dsName "event"
+
+set process ""
+set state 0
+
+foreach {argOpt} $argv  \
+{
+  if {$state == 1} {
+    set process $argOpt
+    set state 2
+  }
+  
+  if {$state == 0} {
+    if {[string compare $argOpt "-serverName"] == 0} {
+      set state 1
+    }
+  }
+}
+
+if {[string compare $process ""] == 0} {
+  set ds [$AdminControl queryNames type=DataSource,name=$dsName,*]
+} else {
+  set ds [$AdminControl queryNames type=DataSource,name=$dsName,process=$process,*]
+}
+
+#The event data source does not exist
+if {[llength $ds] == 0} {
+  puts stdout "Data Source $dsName does not exist"
+  set rc 2
+} else {
+  $AdminControl invoke $ds purgePoolContents normal
+}
+
+exit $rc

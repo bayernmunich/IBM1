@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:cei="http://www.ibm.com/websphere/appserver/schemas/5.1/cei.xmi" xmlns:resources="http://www.ibm.com/websphere/appserver/schemas/5.0/resources.xmi" xmlns:resources.env="http://www.ibm.com/websphere/appserver/schemas/5.0/resources.env.xmi" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.ibm.com/websphere/appserver/schemas/5.1/cei.xmi">
+  <xsd:annotation>
+    <xsd:documentation>Resources-level configuration settings for the Common Event Infrastructure (resources-cei.xml).</xsd:documentation>
+  </xsd:annotation>
+  <xsd:import namespace="http://www.ibm.com/websphere/appserver/schemas/5.0/resources.xmi" schemaLocation="resources.xsd"/>
+  <xsd:import namespace="http://www.ibm.com/websphere/appserver/schemas/5.0/resources.env.xmi" schemaLocation="env.xsd"/>
+  <xsd:import namespace="http://www.omg.org/XMI" schemaLocation="XMI.xsd"/>
+  <xsd:complexType name="EventInfrastructureProvider">
+    <xsd:annotation>
+      <xsd:documentation>This object provides access to the EventInfrastructure resources.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvironmentProvider"/>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="EventInfrastructureProvider" type="cei:EventInfrastructureProvider">
+    <xsd:annotation>
+      <xsd:documentation>This object provides access to the EventInfrastructure resources.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="FilterFactoryProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the properties of a filter. The filter uses the filter configuration string to determine whether an event will be passed to the bus. This must be a valid XPath expression.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="filterConfigurationString" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The filter configuration string is used by the filter to filter events. The configuration string must be a valid XPATH expression.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="FilterFactoryProfile" type="cei:FilterFactoryProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the properties of a filter. The filter uses the filter configuration string to determine whether an event will be passed to the bus. This must be a valid XPath expression.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="EventServerProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the properties of an event server.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="enableEventDistribution" type="xsd:boolean">
+          <xsd:annotation>
+            <xsd:documentation>Determines whether event distribution is enabled. If set to false the events will not be distributed to consumers.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="enableDataStore" type="xsd:boolean">
+          <xsd:annotation>
+            <xsd:documentation>Determines whether the data store is enabled. If set to false the events will not be persisted in the data store.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="dataStoreJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The JNDI name of the data store.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="EventServerProfile" type="cei:EventServerProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the properties of an event server.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="JMSTransmissionProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines a JMS queue entry into the event bus. It defines the JNDI names for a JMS Queue and Queue Connection Factory.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="queueJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The JNDI name of the JMS queue. </xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="queueConnectionFactoryJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The JNDI name for the JMS queue connection factory. </xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="JMSTransmissionProfile" type="cei:JMSTransmissionProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines a JMS queue entry into the event bus. It defines the JNDI names for a JMS Queue and Queue Connection Factory.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="EmitterFactoryProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the options for the Event Emitter.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="preferredTransactionMode" type="xsd:boolean">
+          <xsd:annotation>
+            <xsd:documentation>Defines the preferred transactionality. If set to true the transaction type is REQUIRES_NEW resulting in the event bus processing the event in a new transaction , otherwise the event is processed in the caller's transaction.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="preferredSynchronizationMode" type="xsd:boolean">
+          <xsd:annotation>
+            <xsd:documentation>Defines the preferred transmission mode. If set to true the preferred transmission mode for sending events to the bus is synchronous. If false the preferred mode is asynchronous.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="filterFactoryJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>Defines the filter factory JNDI name. The emitter obtains the filter from the filter factory to determine whether an event will be passed to the bus.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="asynchronousTransmissionProfileJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>Defines the asynchronous transmission profile JNDI name. This is used by the emitter to send events to the bus asynchronously.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="synchronousTransmissionProfileJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>Defines the synchronous transmission profile JNDI name. This is used by the emitter to send events to the bus synchronously.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="filteringEnabled" type="xsd:boolean">
+          <xsd:annotation>
+            <xsd:documentation>Determines whether the filtering is enabled.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="EmitterFactoryProfile" type="cei:EmitterFactoryProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the options for the Event Emitter.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="DistributionQueue">
+    <xsd:annotation>
+      <xsd:documentation>A description of the queues used for event distribution.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+      <xsd:element ref="xmi:Extension"/>
+    </xsd:choice>
+    <xsd:attribute ref="xmi:id"/>
+    <xsd:attributeGroup ref="xmi:ObjectAttribs"/>
+    <xsd:attribute name="queueJNDIName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The JNDI name of the JMS queue.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="queueConnectionFactoryJNDIName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The JNDI name of the queue connection factory.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
+  <xsd:element name="DistributionQueue" type="cei:DistributionQueue">
+    <xsd:annotation>
+      <xsd:documentation>A description of the queues used for event distribution.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="EventGroupProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines a list of events which are determined through selector expressions. 
+
+JMS queues and a JMS topic can be associated with each event group. If the event server distribution service is enabled and an event matches an event group the event is distributed to any topic or queues configured for that particular event group.
+</xsd:documentation>
+    </xsd:annotation>
+    <xsd:choice maxOccurs="unbounded" minOccurs="0">
+      <xsd:element name="distributionQueues" type="cei:DistributionQueue">
+        <xsd:annotation>
+          <xsd:documentation>List of JMS Queue configurations used for event distribution</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="propertySet" type="resources:J2EEResourcePropertySet">
+        <xsd:annotation>
+          <xsd:documentation>A set of properties describing a resource provider configuration.</xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element ref="xmi:Extension"/>
+    </xsd:choice>
+    <xsd:attribute ref="xmi:id"/>
+    <xsd:attributeGroup ref="xmi:ObjectAttribs"/>
+    <xsd:attribute name="eventGroupName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The name of the event group profile.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="eventSelectorString" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The selector string used to define an event group. This must be a valid XPath expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="topicJNDIName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The JNDI name of the JMS topic.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="topicConnectionFactoryJNDIName" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>The JNDI name of the JMS topic connection factory.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
+  <xsd:element name="EventGroupProfile" type="cei:EventGroupProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines a list of events which are determined through selector expressions. 
+
+JMS queues and a JMS topic can be associated with each event group. If the event server distribution service is enabled and an event matches an event group the event is distributed to any topic or queues configured for that particular event group.
+</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="DataStoreProfile">
+    <xsd:annotation>
+      <xsd:documentation>Defines properties used by the default event data store. The default data store is the data store supplied by the event infrastructure.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="queryThreshold" type="xsd:int">
+          <xsd:annotation>
+            <xsd:documentation>The maximum number of events that can be read in a single queryEvents call. This setting is required to protect the integrity of the system. If a query attempts to read too many events from the database, an excessive amount of Java and RDBMS resources may be consumed. If this threshold is reached, the QueryThreshholdExceededException exception is thrown.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="sqlCacheSize" type="xsd:int">
+          <xsd:annotation>
+            <xsd:documentation>The maximum number of transformed XPath expressions that will be cached in memory. Once the threshold is reached, the least recently used expression is removed from the cache.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="maxConnectionRetries" type="xsd:int">
+          <xsd:annotation>
+            <xsd:documentation>The maximum number of times that the data store will attempt to obtain a connection from the connection pool.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="maxPurgeTransactionSize" type="xsd:int">
+          <xsd:annotation>
+            <xsd:documentation>When purging events from the database, the maximum number of events that can be deleted in a single transaction.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="schemaName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The database schema that contains the CEI tables.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="DataStoreProfile" type="cei:DataStoreProfile">
+    <xsd:annotation>
+      <xsd:documentation>Defines properties used by the default event data store. The default data store is the data store supplied by the event infrastructure.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="EventBusTransmissionProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the EJB entry into the event bus.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:attribute name="eventBusJNDIName" type="xsd:string">
+          <xsd:annotation>
+            <xsd:documentation>The JNDI name of the event bus EJB.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="EventBusTransmissionProfile" type="cei:EventBusTransmissionProfile">
+    <xsd:annotation>
+      <xsd:documentation>This profile defines the EJB entry into the event bus.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:complexType name="EventGroupProfileList">
+    <xsd:annotation>
+      <xsd:documentation>Defines all the event group profiles.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexContent>
+      <xsd:extension base="resources.env:ResourceEnvEntry">
+        <xsd:choice maxOccurs="unbounded" minOccurs="0">
+          <xsd:element name="eventGroupProfiles" type="cei:EventGroupProfile">
+            <xsd:annotation>
+              <xsd:documentation>An optional List of EventGroupProfile objects managed by this resource factory.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="EventGroupProfileList" type="cei:EventGroupProfileList">
+    <xsd:annotation>
+      <xsd:documentation>Defines all the event group profiles.</xsd:documentation>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

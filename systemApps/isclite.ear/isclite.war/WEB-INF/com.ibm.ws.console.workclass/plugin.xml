@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin id="com.ibm.ws.console.workclass"
+        name="workclass"
+        version="6.0.0"
+        provider-name="IBM Corp. - WebSphere XD"
+        embedded="true"
+        context-root="workclass">  
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+        <import plugin="com.ibm.ws.console.appmanagement"/>
+        <import plugin="com.ibm.ws.console.blamanagement"/>
+    </requires>
+
+<!--
+  Plugin to the App Mgmt Detail, Addtl Properties
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="appmanagement.cloneworkclass" 
+             contextType="ApplicationDeployment">
+
+       <apptask label="workclass.installwizard.appedition"
+                description="workclass.installwizard.description"
+                actionURI="CloneWorkClassClientTaskForm:com.ibm.ws.console.workclass.forwardCmd.do?forwardName=appmanagement.workclass.appedition"/>
+   </linkSet>
+</extension>
+-->
+
+<!--
+  Plugin to the App Install Wizard
+   name        This is the tile definition that needs to be created.
+   jspName     This attribute form the jsp file that has to be inserted for the particular tile definition
+   controller  The controller class name associated to the tiles definition given.
+
+    name="appinstall.workclass.appedition"
+    contextType="websphere.appmanagement.appinstall"
+-->
+<extension point="com.ibm.ws.console.core.wizardStep">
+       <step name="workclass.installwizard.CloneWorkClassClientTask" 
+             jspName="/com.ibm.ws.console.workclass/CloneWorkClassClientTask"
+             contextType="websphere.appmanagement.appinstall"
+             controller="com.ibm.ws.console.workclass.controller.CloneWorkClassClientTaskController" />
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="workclass.detailTab" contextType="ApplicationDeployment">
+	 <tab label="tab.workclass" 
+          contentURI="workclass.content.main">
+	 </tab>
+   </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="workclass.router.detailTab" contextType="ApplicationDeployment">
+	 <tab label="tab.workclass.router" 
+          contentURI="workclass.content.main">
+	 </tab>
+   </detailTab>
+</extension>
+
+	<extension point="com.ibm.ws.console.core.help">
+		<toc file="toc.xml" primary="true" />
+	</extension>
+
+	<extension point="com.ibm.websphere.wsc.actionSet">
+	    <actionSet id="Rule.Builder.Collection.Actions" contextType="WorkClass.RuleBuilder.Collection">
+	        <action
+	              enablesFor="Collection"
+	              role="administrator,configurator"
+	              label="button.add"
+	              actionURI="RuleBuilderConditionCollection.do">
+	        </action>
+	        <action
+	              enablesFor="Collection"
+	              role="administrator,configurator"
+	              label="button.remove"
+	              actionURI="RuleBuilderConditionCollection.do">
+	        </action>
+	        <action
+	              enablesFor="Collection"
+	              role="administrator,configurator"
+	              label="button.clear"
+	              actionURI="RuleBuilderConditionCollection.do">
+	        </action>
+	        <action
+	              enablesFor="Collection"
+	              role="administrator,configurator"
+	              label="button.cancel"
+	              actionURI="RuleBuilderConditionCollection.do">
+	        </action>
+	        <action
+	              enablesFor="Collection"
+	              role="administrator,configurator"
+	              label="button.ok"
+	              actionURI="RuleBuilderConditionCollection.do">
+	        </action>
+	    </actionSet>
+	</extension>
+
+
+   <extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Rule.Builder.collection" contextType="WorkClass.RuleBuilder.Collection">
+		<item
+              attributeName="ruleText"
+              sortable="sort"
+              itemURI="RuleBuilderConditionDetail.do?Action=Edit"
+              label="workclass.matchrule.condition.display" >
+        </item>
+    </collectionItem>
+	</extension>
+
+
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="workclass.detailTab" contextType="MiddlewareApps">
+	 		<tab label="tab.workclass" contentURI="workclass.content.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="workclass.router.detailTab" contextType="MiddlewareApps">
+	 		<tab label="tab.workclass.router" contentURI="workclass.content.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+
+<!-- start of cu detail policies -->
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="BLAManagement.CUDetail" contextType="CUDetail">
+            <link
+                categoryId="additional.properties"
+        	label="tab.workclass.router"
+                description="workclass.routing.description"
+                actionURI="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.routing.content.main&amp;contextType=CUDetail&amp;sfname=processDefinitions&amp;policyType=routing&amp;lastPage=CUDetail.config.view">
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="BLAManagement.CUDetail" contextType="CUDetail">
+            <link
+                categoryId="additional.properties"
+        	label="tab.workclass"
+                description="workclass.service.description"
+                actionURI="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.service.content.main&amp;contextType=CUDetail&amp;sfname=processDefinitions&amp;policyType=service&amp;lastPage=CUDetail.config.view">
+            </link>
+        </linkSet>
+    </extension>
+
+<!-- end of cu detail policies -->
+	
+</plugin>
+

@@ -1,0 +1,42 @@
+Licensed Materials - Property of IBM 
+IBM Support Assistant
+(C) Copyright IBM Corp. 2008 All Rights Reserved.
+
+Stop a Node
+
+set na [$AdminControl queryNames type=NodeAgent,node=mynode,*]
+$AdminControl invoke $na stopNode
+
+
+Migrating - Pinging running servers for the current state
+
+set servers [$AdminConfig list Server]
+foreach server $servers {
+   set objName [$AdminConfig getObjectName $server]
+   if {[llength $objName] == 0} {
+      puts "server $server is not running"
+   } else {
+      set result [$AdminControl getAttribute $objName state]
+      puts "state for server $server: $result" 
+   }
+}
+
+Start Deployment Manager
+./startManager.sh
+
+Stop Deployment Manager
+./stopManager.sh -user name -password password
+
+Start Node:
+./startNode.sh
+
+Stop Node
+./stopNode.sh -user name -password password
+
+Start Server
+./startServer.sh server1
+
+Stop server
+./stopServer.sh server1 -user name -password password
+
+

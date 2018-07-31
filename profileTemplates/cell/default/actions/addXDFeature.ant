@@ -1,0 +1,85 @@
+<project name="addXDFeatureProject" default="main" basedir=".">
+
+    <property environment="env"/>
+
+	<target name="detectZOS">
+		<condition property="isZOS" value="true">
+			<os family="z/os"/>
+		</condition>
+	</target>
+
+    <target name="VEConsole">
+		<condition property="excludeVEConsole" value="true">
+		    <or>
+		       <equals arg1="${env.LargeTopologyOptimization_console}" arg2="disable"/>
+                       <equals arg1="${os.name}" arg2="OS/400"/>
+		    </or>
+		</condition>
+
+		<condition property="includeVEConsole" value="true">
+		  <and>
+		     <not>
+   		        <equals arg1="${env.LargeTopologyOptimization_console}" arg2="disable"/>
+		     </not>
+		     <not>
+                        <equals arg1="${os.name}" arg2="OS/400"/>
+		     </not>
+		  </and>
+		</condition>
+    </target>
+
+    <target name="addXDFeature"
+            description="adds the XD feature"
+	    unless="includeVEConsole">
+
+         <replace encoding="ISO8859-1" dir="${profilePath}/config">
+
+
+            <include name="**/node-metadata.properties"/>
+
+            <!-- remove existing occurences to make this script idempotent -->
+            <replacefilter token=",com.ibm.ws.xd.base_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.base_6.0.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.xd.nd_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.nd_6.0.0.0," value="" />
+            <replacefilter token="com.ibm.ws.taskmanagement_6.1.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.taskmanagement_6.1.0.0" value="" />
+
+
+            <!-- always add the XD base feature -->
+            <replacefilter token="com.ibm.websphere.deployed.features=" value="com.ibm.websphere.deployed.features=com.ibm.ws.xd.base_6.0.0.0," />
+
+         </replace>
+
+    </target>
+
+    <target name="addXDFeature2" description="adds the XD feature" unless="excludeVEConsole">
+
+         <replace encoding="ISO8859-1" dir="${profilePath}/config">
+
+            <include name="**/node-metadata.properties"/>
+
+            <!-- remove existing occurences to make this script idempotent -->
+            <replacefilter token=",com.ibm.ws.xd.base_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.base_6.0.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.xd.nd_6.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.xd.nd_6.0.0.0," value="" />
+            <replacefilter token="com.ibm.ws.taskmanagement_6.1.0.0," value="" />
+            <replacefilter token=",com.ibm.ws.taskmanagement_6.1.0.0" value="" />
+
+            <!-- add the XD ND feature when ND is deployed -->
+            <replacefilter token="com.ibm.ws.nd_6.0.0.0" value="com.ibm.ws.nd_6.0.0.0,com.ibm.ws.taskmanagement_6.1.0.0,com.ibm.ws.xd.nd_6.0.0.0" />
+         </replace>
+
+    </target>          
+    
+    <target name="copyFeature" description="copies the XD feature files">
+         <mkdir dir="${profilePath}/properties/version" />
+         <copy toDir="${profilePath}/properties/version"
+               file="${WAS_HOME}/properties/version/nif/config.ve/install/wxdop.augment" />
+    </target>
+	
+    <target name="main"
+    	depends="detectZOS, VEConsole, addXDFeature2, copyFeature"/>
+    	
+</project>

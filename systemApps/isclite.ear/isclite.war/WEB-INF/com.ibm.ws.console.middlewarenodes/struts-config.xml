@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2006
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<struts-config>
+    <form-beans>
+        <form-bean name="com.ibm.ws.console.middlewarenodes.MiddlewareNodeCollectionForm" type="com.ibm.ws.console.middlewarenodes.topology.MiddlewareNodeCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.middlewarenodes.XDAgentDetailForm" type="com.ibm.ws.console.middlewarenodes.topology.XDAgentDetailForm"/>
+    </form-beans>
+    <action-mappings>
+        <action name="com.ibm.ws.console.middlewarenodes.forwardCmd"
+            path="/com.ibm.ws.console.middlewarenodes.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="MiddlewareNode.content.main" path="MiddlewareNode.content.main"/>
+            <forward name="XDAgent.config.view" path="XDAgent.config.view"/>
+            <forward name="MiddlewareNodeProperties.props.main_contained" path="MiddlewareNodeProperties.props.main_contained"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.middlewarenodes.MiddlewareNodeCollectionForm"
+            path="/middlewareNodeCollection" type="com.ibm.ws.console.middlewarenodes.topology.MiddlewareNodeCollectionAction">
+            <forward name="success" path="Node.config.view"/>
+            <forward name="unmanaged" path="Node.unmanaged.config.view"/>
+            <forward name="middlewareNodeCollection" path="MiddlewareNode.content.main"/>
+            <forward name="add.node.wizard" path="add.node.create"/>
+            <forward name="remove.middlewarenode.confirmation" path="remove.middlewarenode.confirmation"/>
+            <forward name="authenticate.agent.action" path="authenticate.agent.action"/>
+            <forward name="force.remove.middlewarenode.confirmation" path="force.remove.middlewarenode.confirmation"/>
+            <forward name="xdagent.config" path="XDAgent.config.view"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.middlewarenodes.XDAgentDetailForm"
+            path="/XDAgentDetail" type="com.ibm.ws.console.middlewarenodes.topology.XDAgentDetailAction" input="XDAgent.config.view">
+            <forward name="error" path="XDAgent.config.view"/>
+            <forward name="success" path="navigatorCmd.do?forwardName=MiddlewareNode.content.main"/>
+            <forward name="samePage" path="XDAgent.config.view"/>
+        </action>
+
+        <action name="com.ibm.ws.console.middlewarenodes.MiddlewareNodeCollectionForm"
+                path="/removeMiddlewareNode"
+                type="com.ibm.ws.console.middlewarenodes.topology.MiddlewareNodeCollectionAction">
+            <forward name="success" path="MiddlewareNode.content.main"/>
+            <forward name="middlewareNodeCollection" path="MiddlewareNode.content.main"/>
+            <forward name="cancel" path="MiddlewareNode.content.main"/>
+            <forward name="add.node.wizard" path="add.node.wizard"/>
+            <forward name="remove.middlewarenode.confirmation" path="remove.middlewarenode.confirmation"/>
+            <forward name="force.remove.middlewarenode.confirmation" path="force.remove.middlewarenode.confirmation"/>
+        </action>
+        <action name="com.ibm.ws.console.middlewarenodes.MiddlewareNodeCollectionForm"
+                path="/authenticateAgentAction"
+                type="com.ibm.ws.console.middlewarenodes.topology.MiddlewareNodeCollectionAction">
+            <forward name="success" path="MiddlewareNode.content.main"/>
+            <forward name="middlewareNodeCollection" path="MiddlewareNode.content.main"/>
+            <forward name="cancel" path="MiddlewareNode.content.main"/>
+            <forward name="add.node.wizard" path="add.node.wizard"/>
+            <forward name="authenticate.agent.action" path="authenticate.agent.action"/>
+        </action>
+    </action-mappings>
+
+      <!-- Begin Node Installation Properties -->
+      <!-- copy from BASE WEBUI\ws\code\webui.environment\src\environment\WEB-INF\struts-config.xml -->
+      <!-- The reason to copy is because we want to have the 'Back' button to go back to the Unmanaged node detail page -->
+        <action name="com.ibm.ws.console.environment.NodePropertiesCollectionForm" path="/middlewareNodePropertiesCollection"
+			            type="com.ibm.ws.console.environment.topology.NodePropertiesCollectionAction">
+			            <forward name="MiddlewareNodeProperties.props.main_contained" path="MiddlewareNodeProperties.props.main_contained"/>
+			            <forward name="nodePropertiesCollection" path="MiddlewareNodeProperties.props.main_contained"/>
+			            <forward name="back" path="Node.unmanaged.config.view"/>
+                                   <!-- forward name="back" path="navigatorCmd.do?forwardName=MiddlewareNode.content.main"/ -->
+		</action>
+     	
+       <!-- End Node Installation Properties -->
+</struts-config>

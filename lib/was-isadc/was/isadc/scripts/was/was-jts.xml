@@ -1,0 +1,302 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS JTS Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS JTS Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+	<property name="taxonomy" value="SSEQTP" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+	
+	<property name="autopdProblem" value="WAS_JTS_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-jts" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+
+		
+		was_stack_custom_init,	
+		jts_collect_info, 
+		jts_generate_trace_string,			         
+		trace_setup_custom,	
+					
+		execute_collector, 
+		execute_vce_info_for_was,
+		common_postamble_general_with_ftp">
+	</target>
+	
+	<target name="jts_generate_trace_string" description="Enable JTS tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+
+		<inputdialogtask> 
+			<fieldtask name="prompt1"
+	       		   label="Input_Required_WAS"
+		           type="prompt"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt2"
+		           label="WS_JTS_Problem_Type"
+	       		   type="label"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jts.problem.type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	       		   label="select_one"
+		           list="Transactions:ActivityService/Sessions:Compensations and Business Activity:Web Service Addressing"
+		           listDetails="Transactions:ActivityService/Sessions:Compensations and Business Activity:Web Service Addressing"
+	       		   type="selectlist" />
+			</inputdialogtask>
+			
+			
+		<echo message="Problem type selected for WAS JTS Problem : ${ws.jts.problem.type}"/>
+		
+		<condition property="jts.transactions">
+			<equals arg1="Transactions" arg2="${ws.jts.problem.type}" />
+		</condition>
+		
+		<condition property="jts.activity">
+			<equals arg1="ActivityService/Sessions" arg2="${ws.jts.problem.type}" />
+		</condition>
+
+		<condition property="jts.compensations">
+			<equals arg1="Compensations and Business Activity" arg2="${ws.jts.problem.type}" />
+		</condition>
+			
+		<condition property="jts.webservices">
+			<equals arg1="Web Service Addressing" arg2="${ws.jts.problem.type}" />
+		</condition>
+					
+		<if isTrue="${jts.transactions}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				
+				<inputdialogtask> 
+					<fieldtask name="prompt1"
+		        		   label="Input_Required_WAS"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+				           label="WS_JTS_WS_AT"
+		        		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="ws.jts.ws.at"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        		   label="select_one"
+				           list="No:Yes"
+				           listDetails="No:Yes"
+		        		   type="selectlist" />
+				</inputdialogtask>
+			
+				<condition property="ws.jts.at">
+					<equals arg1="Yes" arg2="${ws.jts.ws.at}" />
+				</condition>
+				
+				<if isTrue="${ws.jts.at}" >
+					<property name="was.trace.string" 
+						value="Transaction=all:EJBContainer=all:WAS.j2c=all:WAS.database=all:RRA=all:com.ibm.ws.webservices.trace.MessageTrace=all" />
+				</if>
+				<if isNotTrue="${ws.jts.at}" >
+					<property name="was.trace.string" 
+						value="Transaction=all:EJBContainer=all:WAS.j2c=all:WAS.database=all:RRA=all" />
+				</if>				
+			</if>
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" 
+					value="com.ibm.ejs.container.*=all=enabled:com.ibm.ejs.csi.*=all=enabled:com.ibm.ejs.persistence.*=all=enabled:com.ibm.ejs.cm.*=all=enabled:WAS.j2c=all=enabled:WAS.database=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.Transaction.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+			</if>
+		</if>
+		
+		<if isTrue="${jts.activity}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="Transaction=all:ActivityService=all:ActivitySession=all" />
+			</if>
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" 
+					value="com.ibm.websphere.ActivitySession.*=all=enabled:com.ibm.ws.ActivitySession.*=all=enabled:com.ibm.ws.javax.activity.*=all=enabled:com.ibm.ws.activity.*=all=enabled " />
+			</if>
+		</if>
+		
+		<if isTrue="${jts.compensations}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<inputdialogtask> 
+					<fieldtask name="prompt1"
+		        		   label="Input_Required_WAS"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+				           label="WS_JTS_WS_BA"
+		        		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="ws.jts.ws.ba"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        		   label="select_one"
+				           list="No:Yes"
+				           listDetails="No:Yes"
+		        		   type="selectlist" />
+				</inputdialogtask>
+			
+				<condition property="ws.jts.ba">
+					<equals arg1="Yes" arg2="${ws.jts.ws.ba}" />
+				</condition>
+				
+				<if isTrue="${ws.jts.ba}" >
+					<property name="was.trace.string" 
+						value="Transaction=all:ActivityService=all:ActivitySession=all:CScope=all:com.ibm.ws.webservices.trace.MessageTrace=all" />
+				</if>
+				<if isNotTrue="${ws.jts.at}" >
+					<property name="was.trace.string" 
+						value="Transaction=all:ActivityService=all:ActivitySession=all:CScope=all" />
+				</if>				
+				
+			</if>
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+			</if>
+		</if>
+		
+		<if isTrue="${jts.webservices}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="com.ibm.ws.wsaddressing.*=all:com.ibm.ws.webservices.trace.MessageTrace=all" />								
+			</if>
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+			</if>
+		</if>
+
+		
+		<!-- WAS v6 -->
+	<if isTrue="${isWASVersion6}">
+		<property name="was.trace.string" 
+			value="Transaction=all:EJBContainer=all:WAS.j2c=all:WAS.database=all:RRA=all" />
+	</if>
+
+	<!-- WAS v5 -->
+	<if isTrue="${isWASVersion5}">
+		<property name="was.trace.string" 
+			value="com.ibm.ejs.container.*=all=enabled:com.ibm.ejs.csi.*=all=enabled:com.ibm.ejs.persistence.*=all=enabled:com.ibm.ejs.cm.*=all=enabled:WAS.j2c=all=enabled:WAS.database=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.Transaction.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+	</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<target name="jts_collect_info" > 
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_information_for_the_jts_specific_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the JTS problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1123"
+		           level="info" />
+		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jts.question1"
+			           label="JTS_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jts.question2"
+			           label="JTS_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jts.question3"
+			           label="JTS_Q3"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jts.question4"
+			           label="JTS_Q4"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Detailed description of when the problem scenario occurs${line.separator}
+					${ws.jts.question1}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Is the resource (data source, J2C Connector, or a Message handling queue) starting the transaction a one-phase or two-phase (XA) commit?${line.separator}
+					${ws.jts.question2}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What is the application server's transaction timeout and transaction inactivity timeout?${line.separator}
+					${ws.jts.question3}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Are there any third-party Resource Managers involved (for example: Tuxedo, CICS Transaction Manager, Unisys Transaction Manager, and so forth)?${line.separator}
+					${ws.jts.question4}${line.separator}
+		</concat>
+		
+	</target> 
+		
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere JTS Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the JTS
+					problem. It will set the appropriate trace string.
+					After the problem has been reproduced the logs, configuration,
+					and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1153216" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the JTS 
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration, and trace 
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere JTS Problem =>
+This problem category is run on the managed node experiencing the JTS 
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration,
+and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+</project>

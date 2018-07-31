@@ -1,0 +1,223 @@
+<project name="reviseLaunchScriptsForJava8" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask" />
+
+	<property name="filePathWCTWindows" value="${WAS_HOME}/bin/ProfileManagement/wct.bat"/>
+	<property name="filePathWCTUnix" value="${WAS_HOME}/bin/ProfileManagement/wct.sh"/>
+
+	<property name="filePathPMTWindows" value="${WAS_HOME}/bin/ProfileManagement/pmt.bat"/>
+	<property name="filePathPMTUnix" value="${WAS_HOME}/bin/ProfileManagement/pmt.sh"/>
+	
+    <target name="detectPlatform"
+            description="Detects the current OS family">
+        
+		<condition property="isCurrentPlatformOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="isCurrentPlatformZOS" value="true">
+            <os family="z/os"/>
+        </condition>
+		
+        <condition property="isCurrentPlatformWindows" value="true">
+            <os family="windows"/>
+        </condition>
+		
+		<condition property="isCurrentPlatformUnix" value="true">
+         <and>
+            <os family="unix"/>
+            <and>
+                <not>
+                   <isset property="isCurrentPlatformZOS"/>
+                </not>
+                <not>
+                    <isset property="isCurrentPlatformOS400"/>
+                </not>
+            </and>
+        </and>
+       </condition>
+
+        <wscmtlog>Current platform is: ${os.name}</wscmtlog>
+		<echo>Current platform is: ${os.name}</echo>
+    </target>
+
+	<target name="doesFileExistWindows" description="checks whether the ${filePathWCTWindows} and ${filePathPMTWindows} exists" if="isCurrentPlatformWindows">
+		<condition property="fileExistsWindows">
+			<and>
+				<available file="${filePathWCTWindows}" type="file"/>
+				<available file="${filePathPMTWindows}" type="file"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="isAlreadyChangedWindows" description="checks whether the ${filePathWCTWindows} and ${filePathPMTWindows} has been changed" depends="doesFileExistWindows" if="fileExistsWindows">
+		<loadfile property="wctWindows" srcFile="${filePathWCTWindows}">
+		</loadfile>
+		<loadfile property="pmtWindows" srcFile="${filePathPMTWindows}">
+		</loadfile>
+		
+		<condition property="changeWindowsNeeded">
+			<or>
+				<contains string="${wctWindows}" substring="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%">
+				</contains>
+				<contains string="${pmtWindows}" substring="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%">
+				</contains>
+			</or>
+		</condition>	
+		
+		<condition property="removeWindowsNeeded">
+			<or>
+				<contains string="${wctWindows}" substring="if %COMMAND_SDK:32=%==%COMMAND_SDK%">
+				</contains>
+				<contains string="${pmtWindows}" substring="if %COMMAND_SDK:32=%==%COMMAND_SDK%">
+				</contains>
+			</or>
+		</condition>
+		
+		<wscmtlog>Need to modify ${filePathWCTWindows} and ${filePathPMTWindows}: ${changeWindowsNeeded}</wscmtlog>
+		<wscmtlog>Are ${filePathWCTWindows} and ${filePathPMTWindows} already modified: ${removeWindowsNeeded}</wscmtlog>
+		<echo>Need to modify ${filePathWCTWindows} and ${filePathPMTWindows}: ${changeWindowsNeeded}</echo>
+		<echo>Are ${filePathWCTWindows} and ${filePathPMTWindows} already modified: ${removeWindowsNeeded}</echo>
+		
+	</target>	
+	
+	<target name="doesFileExistUnix" description="checks whether the ${filePathWCTUnix} and ${filePathPMTUnix} exists" if="isCurrentPlatformUnix">
+		<condition property="fileExistsUnix">
+			<and>
+				<available file="${filePathWCTUnix}" type="file"/>
+				<available file="${filePathPMTUnix}" type="file"/>
+			</and>
+		</condition>
+	</target>
+	
+	<target name="isAlreadyChangedUnix" description="checks whether the ${filePathWCTUnix} and ${filePathPMTUnix} has been changed" depends="doesFileExistUnix" if="fileExistsUnix">
+		<loadfile property="wctUnix" srcFile="${filePathWCTUnix}">
+		</loadfile>
+		<loadfile property="pmtUnix" srcFile="${filePathPMTUnix}">
+		</loadfile>
+		
+		<condition property="changeUnixNeeded">
+			<or>
+				<contains string="${wctUnix}" substring="*32) ${binDir}/eclipse32/wct.sh">
+				</contains>
+				<contains string="${wctUnix}" substring="*64) ${binDir}/eclipse64/wct.sh">
+				</contains>
+				<contains string="${pmtUnix}" substring="*32) ${binDir}/eclipse32/pmt.sh">
+				</contains>
+				<contains string="${pmtUnix}" substring="*64) ${binDir}/eclipse64/pmt.sh">
+				</contains>
+			</or>
+		</condition>	
+		
+		<condition property="removeUnixNeeded">
+			<or>
+				<contains string="${wctUnix}" substring="*32*) ${binDir}/eclipse32/wct.sh">
+				</contains>
+				<contains string="${wctUnix}" substring="*64*) ${binDir}/eclipse64/wct.sh">
+				</contains>
+				<contains string="${pmtUnix}" substring="*32*) ${binDir}/eclipse32/pmt.sh">
+				</contains>
+				<contains string="${pmtUnix}" substring="*64*) ${binDir}/eclipse64/pmt.sh">
+				</contains>
+			</or>
+		</condition>
+		<wscmtlog>Need to modify ${filePathWCTUnix} and ${filePathPMTUnix}: ${changeUnixNeeded}</wscmtlog>
+		<wscmtlog>Are ${filePathWCTUnix} and ${filePathPMTUnix} already modified: ${removeUnixNeeded}</wscmtlog>
+		<echo>Need to modify ${filePathWCTUnix} and ${filePathPMTUnix}: ${changeUnixNeeded}</echo>
+		<echo>Are ${filePathWCTUnix} and ${filePathPMTUnix} already modified: ${removeUnixNeeded}</echo>
+	</target>
+	
+	<target name="changeWindows" description="changes ${filePathWCTWindows} and ${filePathPMTWindows}" depends="isAlreadyChangedWindows" if="changeWindowsNeeded">
+		<replaceTokenInFile path="${filePathPMTWindows}" token="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%" 
+		value="@REM If COMMAND_SDK doesn't contain 32 then run from eclipse64, otherwise run from eclipse32${line.separator}@REM %COMMAND_SDK:32=% replaces 32 with nothing${line.separator}if %COMMAND_SDK:32=%==%COMMAND_SDK% (${line.separator}set PMT_ECLIPSE_DIR=eclipse64) else (${line.separator}set PMT_ECLIPSE_DIR=eclipse32)" 
+		property="isReplacedPMTWindows" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathWCTWindows}" token="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%" 
+		value="@REM If COMMAND_SDK doesn't contain 32 then run from eclipse64, otherwise run from eclipse32${line.separator}@REM %COMMAND_SDK:32=% replaces 32 with nothing${line.separator}if %COMMAND_SDK:32=%==%COMMAND_SDK% (${line.separator}set PMT_ECLIPSE_DIR=eclipse64) else (${line.separator}set PMT_ECLIPSE_DIR=eclipse32)" 
+		property="isReplacedWCTWindows" ignorecase="false" />
+		<wscmtlog>Did ${filePathPMTWindows} get modified:  ${isReplacedPMTWindows} </wscmtlog>
+		<echo>Did ${filePathPMTWindows} get modified:  ${isReplacedPMTWindows} </echo>
+		<wscmtlog>Did ${filePathWCTWindows} get modified:  ${isReplacedWCTWindows} </wscmtlog>
+		<echo>Did ${filePathWCTWindows} get modified:  ${isReplacedWCTWindows} </echo>
+	</target>
+	
+	<target name="changeUnix" description="changes ${filePathPMTUnix} and ${filePathWCTUnix}" depends="isAlreadyChangedUnix" if="changeUnixNeeded">
+		   <replaceTokenInFile path="${filePathPMTUnix}" token="*32) ${binDir}/eclipse32/pmt.sh" value="*32*) ${binDir}/eclipse32/pmt.sh" property="isChangedPMTUnix1" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathPMTUnix}" token="*64) ${binDir}/eclipse64/pmt.sh" value="*64*) ${binDir}/eclipse64/pmt.sh" property="isChangedPMTUnix2" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathWCTUnix}" token="*32) ${binDir}/eclipse32/wct.sh" value="*32*) ${binDir}/eclipse32/wct.sh" property="isChangedWCTUnix1" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathWCTUnix}" token="*64) ${binDir}/eclipse64/wct.sh" value="*64*) ${binDir}/eclipse64/wct.sh" property="isChangedWCTUnix2" ignorecase="false" />
+		   
+		   <wscmtlog>Did ${filePathPMTUnix} get modified:  ${isChangedPMTUnix1} and ${isChangedPMTUnix2}</wscmtlog>
+		   <echo>Did ${filePathPMTUnix} get modified:  ${isChangedPMTUnix1} and ${isChangedPMTUnix2}</echo>
+		   <wscmtlog>Did ${filePathWCTUnix} get modified:  ${isChangedWCTUnix1} and ${isChangedWCTUnix2}</wscmtlog>
+		   <echo>Did ${filePathWCTUnix} get modified:  ${isChangedWCTUnix1} and ${isChangedWCTUnix2}</echo>
+	</target>
+	
+	<target name="removeWindows" description="removes changes ${filePathWCTWindows} and ${filePathPMTWindows}" depends ="isAlreadyChangedWindows" if="removeWindowsNeeded">
+		<replaceTokenInFile path="${filePathWCTWindows}" 
+		token="@REM If COMMAND_SDK doesn't contain 32 then run from eclipse64, otherwise run from eclipse32" 
+		value="" property="isRemovedWCTWindows1" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathWCTWindows}" 
+		token="@REM %COMMAND_SDK:32=% replaces 32 with nothing" 
+		value="" property="isRemovedWCTWindows2" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathWCTWindows}" 
+		token="if %COMMAND_SDK:32=%==%COMMAND_SDK% (" 
+		value="" property="isRemovedWCTWindows3" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathWCTWindows}" 
+		token="set PMT_ECLIPSE_DIR=eclipse64) else (" 
+		value="" property="isRemovedWCTWindows4" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathWCTWindows}" 
+		token="set PMT_ECLIPSE_DIR=eclipse32)" 
+		value="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%" property="isRemovedWCTWindows5" ignorecase="false" />
+		
+		
+		
+		<replaceTokenInFile path="${filePathPMTWindows}" 
+		token="@REM If COMMAND_SDK doesn't contain 32 then run from eclipse64, otherwise run from eclipse32" 
+		value="" property="isRemovedPMTWindows1" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathPMTWindows}" 
+		token="@REM %COMMAND_SDK:32=% replaces 32 with nothing" 
+		value="" property="isRemovedPMTWindows2" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathPMTWindows}" 
+		token="if %COMMAND_SDK:32=%==%COMMAND_SDK% (" 
+		value="" property="isRemovedPMTWindows3" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathPMTWindows}" 
+		token="set PMT_ECLIPSE_DIR=eclipse64) else (" 
+		value="" property="isRemovedPMTWindows4" ignorecase="false" />
+		
+		<replaceTokenInFile path="${filePathPMTWindows}" 
+		token="set PMT_ECLIPSE_DIR=eclipse32)" 
+		value="set PMT_ECLIPSE_DIR=eclipse%COMMAND_SDK:~-2%" property="isRemovedPMTWindows5" ignorecase="false" />
+		
+		<wscmtlog>Did modifications to ${filePathWCTWindows} get removed: ${isRemovedWCTWindows1} and ${isRemovedWCTWindows2} and ${isRemovedWCTWindows3} and ${isRemovedWCTWindows4} and ${isRemovedWCTWindows5}</wscmtlog>
+		<echo>Did modifications to ${filePathWCTWindows} get removed: ${isRemovedWCTWindows1} and ${isRemovedWCTWindows2} and ${isRemovedWCTWindows3} and ${isRemovedWCTWindows4} and ${isRemovedWCTWindows5}</echo>
+		<wscmtlog>Did modifications to ${filePathPMTWindows} get removed: ${isRemovedPMTWindows1} and ${isRemovedPMTWindows2} and ${isRemovedPMTWindows3} and ${isRemovedPMTWindows4} and ${isRemovedPMTWindows5}</wscmtlog>
+		<echo>Did modifications to ${filePathPMTWindows} get removed: ${isRemovedPMTWindows1} and ${isRemovedPMTWindows2} and ${isRemovedPMTWindows3} and ${isRemovedPMTWindows4} and ${isRemovedPMTWindows5}</echo>
+	</target>
+	
+	<target name="removeUnix" description="removes changes to ${filePathWCTUnix} and ${filePathPMTUnix}" depends="isAlreadyChangedUnix" if="removeUnixNeeded">
+		   <replaceTokenInFile path="${filePathPMTUnix}" token="*32*) ${binDir}/eclipse32/pmt.sh" value="*32) ${binDir}/eclipse32/pmt.sh" property="isRemovedPMTUnix1" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathPMTUnix}" token="*64*) ${binDir}/eclipse64/pmt.sh" value="*64) ${binDir}/eclipse64/pmt.sh" property="isRemovedPMTUnix2" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathWCTUnix}" token="*32*) ${binDir}/eclipse32/wct.sh" value="*32) ${binDir}/eclipse32/wct.sh" property="isRemovedWCTUnix1" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathWCTUnix}" token="*64*) ${binDir}/eclipse64/wct.sh" value="*64) ${binDir}/eclipse64/wct.sh" property="isRemovedWCTUnix2" ignorecase="false" />
+		   
+		   <wscmtlog>Did ${filePathPMTUnix} get modified:  ${isChangedPMTUnix1} and ${isChangedPMTUnix2}</wscmtlog>
+		   <echo>Did ${filePathPMTUnix} get modified:  ${isChangedPMTUnix1} and ${isChangedPMTUnix2}</echo>
+		   <wscmtlog>Did ${filePathWCTUnix} get modified:  ${isChangedWCTUnix1} and ${isChangedWCTUnix2}</wscmtlog>
+		   <echo>Did ${filePathWCTUnix} get modified:  ${isChangedWCTUnix1} and ${isChangedWCTUnix2}</echo>
+	</target>
+	
+    <target name="install" depends="detectPlatform, changeWindows, changeUnix">	
+	</target>
+	
+	<target name="uninstall" depends="detectPlatform, removeWindows, removeUnix">
+	</target>
+</project>

@@ -1,0 +1,375 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Synchronization Problem Deployment Manager" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.ynchronization Problem Deployment Manager}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_Synchronization_Problem_on_Deployment_Manager" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="need.dmgr.properties" value="true" />
+	<property name="infocollectProblemType" value="was-synchronization" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="query.secure.type.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="set_was_problem_type,
+		 		setup_autopd, 
+		 		validate_os,
+				usage,
+		 		was_dmgr_general_init,
+		    	recovery_needed,
+				sync_check1,
+					 sync_with_trace,
+					 sync_check2,
+					 sync_with_more_trace,
+					 gen_history_report,  
+		   
+					 wait_for_collection_directive,
+		    		 					
+					 collect_was_synchronization,
+		    		 was_restore_server.xml,					 
+			         recovery_completed,  
+			         
+					 common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+			         collect_was_synchronization_recovery, 
+			         was_recovery_server.xml, 
+			         recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed" />
+	</target>
+
+
+	<!-- This is target is used to rename the WSAS properties for Deployment Manager
+	-->
+
+	<target name="rename_was_dmgr_properties" description="">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_renaming_properties_of_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Renaming properties of Deployment Manager"
+		           replace="${autopdts};;${step.count}" />
+		<autopdproperty name="CellName" value="${dmgr.CellName}" />
+		<autopdproperty name="NodeName" value="${dmgr.NodeName}" />
+		<autopdproperty name="ServerName" value="${dmgr.ServerName}" />
+		<echo message="CellName: ${CellName}" />
+		<echo message="NodeName: ${NodeName}" />
+		<echo message="ServerName: ${ServerName}" />
+	</target>
+
+	<!-- This target is used to have first try to check if you still have the synchronization problem -->
+
+	<target name="sync_check1"
+	        description="A first approach to check if you still have the synchronization problem">
+		<autopdinput message="Do_you_still_have_the_synchronization_problem"
+		             validargs="Yes,No"
+		             addproperty="needSync1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="doSync1">
+			<equals arg1="Yes" arg2="${needSync1}" />
+		</condition>
+		<if isTrue="${doSync1}">
+			<property name="need.dmgr.properties" value="true" />
+		</if>
+
+	</target>
+
+
+	<!-- This target is used to set the trace for deployment manager and recycle the deployment manager -->
+
+	<target name="sync_with_trace"
+	        description="A full synchronization process with enabling trace"
+	        if="doSync1">
+		<!-- dmgr trace -->
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_reset_tracing_level_of_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Resetting tracing level of Deployment Manager"
+		           replace="${autopdts};;${step.count}" />
+
+		<autopdproperty name="was.trace.string" value="com.ibm.ws.management.*=all:com.ibm.websphere.management.*=all" />
+
+		<copy file="${bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${dmgr.CellName}" />
+				<filter token="NodeName" value="${dmgr.NodeName}" />
+				<filter token="ServerName" value="${dmgr.ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}  -conntype NONE" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Recycling_Deployment_Manager_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Recycling Deployment Manager server"
+		           replace="${autopdts};;${step.count}" />
+
+
+		<autopdinput message="Please_proceed_to_recycle_deployment_manager_manually"
+		             validargs="OK,Quit"
+		             addproperty="recycleDmgr1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.sync.abort1">
+			<equals arg1="Quit" arg2="${recycleDmgr1}" />
+		</condition>
+		<fail if="do.sync.abort1">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+		<autopdinput message="I_have_finished_recycling_Deployment_Manager_Server"
+		             validargs="OK,Skip"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<autopdinput message="Please_proceed_with_remaining_steps_of_the_collection_process_in_the_master_script"
+		             validargs="OK"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+	<!-- This target is used to ask for user's input about if you have the synchronization problem -->
+
+	<target name="sync_check2"
+	        description="A second approach to check if you still have the synchronization problem"
+	        if="doSync1">
+		<autopdinput message="Do_you_still_have_the_synchronization_problem"
+		             validargs="Yes,No"
+		             addproperty="needSync2"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="doSync2">
+			<equals arg1="Yes" arg2="${needSync2}" />
+		</condition>
+
+	</target>
+
+	<!-- This target is used to set the trace for deployment manager and recycle the deployment manager -->
+	<target name="sync_with_more_trace"
+	        description="A full synchronization process with enabling more trace"
+	        if="doSync2">
+		<!-- dmgr trace -->
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_reset_tracing_level_of_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Resetting tracing level of Deployment Manager"
+		           replace="${autopdts};;${step.count}" />
+		<autopdproperty name="was.trace.string" value="Sync=all:Admin=all" />
+		<copy file="${bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${dmgr.CellName}" />
+				<filter token="NodeName" value="${dmgr.NodeName}" />
+				<filter token="ServerName" value="${dmgr.ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}  -conntype NONE" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Recycling_Deployment_Manager_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Recycling Deployment Manager Server"
+		           replace="${autopdts};;${step.count}" />
+
+
+		<autopdinput message="Please_proceed_to_recycle_the_deployment_manager_manually"
+		             validargs="OK,Quit"
+		             addproperty="recycleDmgr2"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.sync.abort2">
+			<equals arg1="Quit" arg2="${recycleDmgr2}" />
+		</condition>
+		<fail if="do.sync.abort2">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+		<autopdinput message="I_have_finished_recycling_Deployment_Manager_Server"
+		             validargs="OK,Skip"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<autopdinput message="Please_proceed_with_remaining_steps_of_the_collection_process_in_the_master_script"
+		             validargs="OK"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+
+	<target name="wait_for_collection_directive"
+	        description="Waiting for the directives to do collection from master scripts">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Waiting_for_directives_from_the_master_script"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Waiting for directives from primary script"
+		           replace="${autopdts};;${step.count};;${autopdProblem}" />
+
+		<autopdinput message="Waiting_for_the_directives_to_collect_trace_and_config_information_from_the_master_script"
+		             validargs="OK,Quit"
+		             addproperty="recycleDmgr3"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.sync.abort3">
+			<equals arg1="Quit" arg2="${recycleDmgr3}" />
+		</condition>
+		<fail if="do.sync.abort3">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+		<autopdinput message="Proceed_to_collect_trace_and_config_information"
+		             validargs="OK"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_synchronization"
+	        description="Collect log tracing and other config information from Application Server">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for {2}"
+		           replace="${autopdts};;${step.count};;${autopdProblem}" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+
+
+	<!-- This target lies on the alternate path invoked when the script is entered
+		at the "autopdmainrecovery" target. 
+	-->
+	<target name="collect_was_synchronization_recovery"
+	        description="Collect log tracing and other config information for recovery from Portal Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Portal Server trace information for {2}"
+		           replace="${autopdts};;${step.count};;${autopdProblem}" />
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Step 2 of 2: Synchronization Problem (Deployment Manager)&lt;/h2&gt;&lt;p&gt;
+						This script is a 'slave' script and should be run after the Synchronization Problem on Node Agent
+						script has been run. Please run that script first. Once the master script (Synchronization Problem on Node Agent)
+						has been run, this script will be run to set the trace and allow the user to reproduce the 
+						synchronization problem between the Deployment Manager and the Node Agent. After the problem is
+						reproduced, the logs, configuration, and trace files will be collected.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script is a 'slave' script and should be run after the 
+Synchronization Problem on Node Agent script has been run. Please run that script first. 
+Once the master script (Synchronization Problem on Node Agent) has been run, this script will be run 
+to set the trace and allow the user to reproduce the synchronization problem between the Deployment 
+Manager and the Node Agent. After the problem is reproduced, the logs, configuration, and trace 
+files will be collected." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Step 2 of 2: Synchronization Problem (Deployment Manager) => 
+				This script is a 'slave' script and should be run after the Synchronization Problem on Node Agent
+				script has been run. Please run that script first. Once the master script (Synchronization Problem on Node Agent)
+				has been run, this script will be run to set the trace and allow the user to reproduce the 
+				synchronization problem between the Deployment Manager and the Node Agent. After the problem is
+				reproduced, the logs, configuration, and trace files will be collected." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

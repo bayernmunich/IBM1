@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N02, 5733-W70 (C) COPYRIGHT International Business Machines Corp. 1997, 2005
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp. 
+-->
+
+
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    <form-beans>
+		<!-- SipProxy settings -->
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.ProxySettingsDetailForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.ProxySettingsDetailForm"/> 
+			
+		<!-- RoutingRule settings -->	
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleCollectionForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleDetailForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleDetailForm"/>
+
+		<!-- RoutingRuleOrder settings -->
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.order.RoutingRuleOrderDetailForm"
+             type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.order.RoutingRuleOrderDetailForm"/>			
+                     
+		<!-- RoutingRuleCondition settings -->	
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionCollectionForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionDetailForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionDetailForm"/>
+
+		<!-- External Domain settings -->	
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainCollectionForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainDetailForm" 
+			type="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainDetailForm"/>			
+		
+    </form-beans>
+    
+    <global-forwards>
+    </global-forwards>
+
+    <action-mappings>
+		<action name="com.ibm.ws.console.sipproxy.forwardCmd"
+		    path="/com.ibm.ws.console.sipproxy.forwardCmd"
+		    type="com.ibm.ws.console.core.action.ForwardAction">
+		    <forward name="SipProxySettings.config.view" path="SipProxySettings.config.view"/>
+		    <forward name="SipExternalDomain.content.main" path="SipExternalDomain.content.main"/>
+		    <forward name="SipRoutingRule.content.main" path="SipRoutingRule.content.main"/>
+		    <forward name="SipRoutingRuleCondition.content.main" path="SipRoutingRuleCondition.content.main"/>
+		    <forward name="SipRoutingRuleOrder.config.view" path="SipRoutingRuleOrder.config.view"/>
+		    <forward name="Property.content.main" path="Property.content.main"/>
+		</action>
+		
+		<!-- SipProxy settings -->        
+        <action input="SipProxySettings.config.view"
+            name="com.ibm.ws.console.sipproxy.proxysettings.ProxySettingsDetailForm"
+            path="/sipProxySettingsDetail" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.ProxySettingsDetailAction">
+            <forward name="error" path="SipProxySettings.config.view"/>
+            <forward name="success" path="Proxy.config.view"/>
+        </action>
+        
+        <!-- SipExternalDomain settings -->
+    	<action
+            name="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainCollectionForm"
+            path="/sipExternalDomainCollection" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainCollectionAction">
+            <forward name="failure" path="/error.jsp"/>            
+            <forward name="success" path="SipExternalDomain.config.view"/>
+            <forward name="externalDomainCollection" path="SipExternalDomain.content.main"/>
+        </action>
+        
+        <action input="SipExternalDomain.config.view"
+            name="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainDetailForm"
+            path="/sipExternalDomainDetail" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.externaldomain.ExternalDomainDetailAction">
+            <forward name="error" path="SipExternalDomain.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipExternalDomain.content.main"/>
+        </action>
+                
+ 		<!-- SipRoutingRule settings -->
+        <action
+            name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleCollectionForm"
+            path="/sipRoutingRuleCollection" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="SipRoutingRule.config.view"/>
+            <forward name="routingRuleCollection" path="SipRoutingRule.content.main"/>
+            <forward name="sipRoutingRuleOrder2" path="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRuleOrder.config.view"/> 
+        </action>
+        
+        <action input="SipRoutingRule.config.view"
+            name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleDetailForm"
+            path="/sipRoutingRuleDetail" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.RoutingRuleDetailAction">
+            <forward name="error" path="SipRoutingRule.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRule.content.main"/>
+        </action>
+
+        <!-- SipRoutingRuleConditon settings -->
+    	<action
+            name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionCollectionForm"
+            path="/sipRoutingRuleConditionCollection" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionCollectionAction">
+            <forward name="failure" path="/error.jsp"/>            
+            <forward name="success" path="SipRoutingRuleCondition.config.view"/>
+            <forward name="routingRuleConditionCollection" path="SipRoutingRuleCondition.content.main"/>
+        </action>
+        
+        <action input="SipRoutingRuleCondition.config.view"
+            name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionDetailForm"
+            path="/sipRoutingRuleConditionDetail" 
+            type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.condition.RoutingRuleConditionDetailAction">
+            <forward name="error" path="SipRoutingRuleCondition.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRuleCondition.content.main"/>
+        </action> 
+                
+        <!-- Routing Rule Set Order -->
+        <!-- Begin Routing Rule Set Order using Detail JSP -->
+        <action input="SipRoutingRuleOrder.config.view"
+            name="com.ibm.ws.console.sipproxy.proxysettings.routingrule.order.RoutingRuleOrderDetailForm"
+            path="/sipRoutingRuleOrderDetail"
+            type="com.ibm.ws.console.sipproxy.proxysettings.routingrule.order.RoutingRuleOrderDetailAction">
+            <forward name="error" path="SipRoutingRuleOrder.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRule.content.main&#38;sfname=routingRules"/>
+        </action>    
+    </action-mappings>
+</struts-config>

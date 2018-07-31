@@ -1,0 +1,58 @@
+<project name="copyCellLevelSecurityFilesFromDmgrToNode" default="copyCellLevelSecurityFilesFromDmgrToNode" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <!-- These targets are necessary to copy security.xml from dmgr to node directory once both profiles are created.  -->
+    <target name="checkIfBothProfilesCreated" 
+	    description="Check to see that both profile paths exist and determine which profile type this is.">
+       <wscmtlog>start of check</wscmtlog>
+       
+       <condition property="copy.dmgr.props" value ="true" >
+                <and>
+	             <isset property="profilePath"/>
+                     <isset property="nodeProfilePath"/>
+                     <available file="${profilePath}" type="dir"/>
+                     <available file="${nodeProfilePath}" type="dir"/>
+		</and>
+       </condition>
+
+       <condition property="copy.node.props" value ="true" >
+                <and>
+	             <isset property="profilePath"/>
+                     <isset property="dmgrProfilePath"/>
+                     <available file="${profilePath}" type="dir"/>
+                     <available file="${dmgrProfilePath}" type="dir"/>
+		</and>
+       </condition>
+
+       <wscmtlog>Copy during DMGR creation? ${copy.dmgr.props}</wscmtlog>
+       <wscmtlog>Copy during NODE creation? ${copy.node.props}</wscmtlog>
+        
+       <wscmtlog>end of check</wscmtlog>
+    </target>
+
+    <target name="copySecurityFilesDuringNodeProfileCreation" 
+	    description="copy security.xml to node profile since keystore password might have changed, otherwise node will not start" if="copy.node.props">
+       <wscmtlog>Start of copy security.xml from dmgr to node cell-level directory during NODE profile creation. </wscmtlog>
+       <wscmtlog>Copy from:  ${dmgrProfilePath}/config/cells/${cellName}/security.xml </wscmtlog>
+       <wscmtlog>Copy to dir:  ${profilePath}/config/cells/${cellName} </wscmtlog>
+       <copy file="${dmgrProfilePath}/config/cells/${cellName}/security.xml" todir="${profilePath}/config/cells/${cellName}" overwrite="true"/>       
+       <wscmtlog>end of copy</wscmtlog>
+    </target>
+
+    <target name="copySecurityFilesDuringDmgrProfileCreation" 
+	    description="copy security.xml to node profile since keystore password might have changed, otherwise node will not start" if="copy.dmgr.props">
+       <wscmtlog>Start of copy security.xml from dmgr to node cell-level directory during DMGR profile creation. </wscmtlog>
+       <wscmtlog>Copy from:  ${profilePath}/config/cells/${cellName}/security.xml </wscmtlog>
+       <wscmtlog>Copy to dir:  ${nodeProfilePath}/config/cells/${cellName} </wscmtlog>
+       <copy file="${profilePath}/config/cells/${cellName}/security.xml" todir="${nodeProfilePath}/config/cells/${cellName}" overwrite="true"/>       
+       <wscmtlog>end of copy</wscmtlog>
+    </target>
+
+    <target name="copyCellLevelSecurityFilesFromDmgrToNode"
+        description="Copys files if necessary from dmgr to node cell level directory"
+        depends="checkIfBothProfilesCreated,
+                 copySecurityFilesDuringDmgrProfileCreation,
+                 copySecurityFilesDuringNodeProfileCreation"/>
+</project>

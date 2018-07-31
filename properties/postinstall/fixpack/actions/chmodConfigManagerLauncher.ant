@@ -1,0 +1,33 @@
+<project name="chmodConfigManagerLauncher.ant" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+   
+    <target name="detectPlatform"
+            description="Detects the current OS family">
+        
+        <condition property="isCurrentPlatformUnix" value="true">
+            <os family="unix"/>
+        </condition>
+		
+		<condition property="isCurrentPlatformUnix" value="true">
+            <os family="z/os"/>
+	    </condition>
+
+        <wscmtlog>Current platform is: ${os.name}</wscmtlog>
+		<echo>Current platform is: ${os.name}</echo>
+    </target>
+
+	<target name="runChmod" if="isCurrentPlatformUnix">
+		<exec executable="sh">
+            <arg value="-c"/>
+            <arg value="chmod a+x &quot;${WAS_HOME}&quot;/util/configManagerLauncher.sh"/>
+        </exec>
+		<wscmtlog>ran chmod a+x "${WAS_HOME}"/util/configManagerLauncher.sh"</wscmtlog>
+		<echo>ran chmod a+x "${WAS_HOME}"/util/configManagerLauncher.sh}</echo>
+	</target>
+
+    <target name="install" depends="detectPlatform, runChmod">	
+	</target>
+
+	<target name="uninstall">
+	</target>
+</project>

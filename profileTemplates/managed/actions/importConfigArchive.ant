@@ -1,0 +1,265 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="importConfigArchive" default="importConfigArchive" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    <taskdef name="checkForOmittedApps" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.CheckForOmittedApps"/>
+    &importExternalLogs;                     
+    <property name="defaultConfigArchivePath"   value="${templatePath}/configArchives/AppSrv.car"/>
+    <property name="developerConfigArchivePath" value="${templatePath}/configArchives/AppSrvDev.car"/>
+    <property name="devNoAppsConfigArchivePath" value="${templatePath}/configArchives/NoAppsSrvDev.car"/>
+    <property name="managedConfigArchivePath"   value="${templatePath}/configArchives/Managed.car"/>
+    <property name="noAppsConfigArchivePath"    value="${templatePath}/configArchives/NoAppsSrv.car"/>
+    
+    <target name="getTemplateType">
+      <basename property="templateType" file="${templatePath}"/>
+      <wscmtlog>templateType = ${templateType}</wscmtlog>
+    </target>
+
+    <target name="checkOS">
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+        <wscmtlog>Value of isCurrentOSzOS = ${isCurrentOSzOS}</wscmtlog>
+    </target>
+
+    
+    <target name="checkOmittedApps">
+        <checkForOmittedApps appToCheck="All" property="isAppOmitted"/>
+  
+        <condition property="allAppsOmitted" value="true">
+           <equals arg1="${isAppOmitted}" arg2="true"/>
+        </condition>
+
+        <checkForOmittedApps appToCheck="samplesInstallAndConfig" property="isSampleOmitted"/>
+
+        <condition property="samplesAreOmitted" value="true">
+            <equals arg1="${isSampleOmitted}" arg2="true"/>
+        </condition>
+
+        <wscmtlog>Value of allAppsOmitted    = ${allAppsOmitted}</wscmtlog>
+        <wscmtlog>Value of samplesAreOmitted = ${samplesAreOmitted}</wscmtlog>
+
+    </target>
+
+    <target name="detectProductLevel">
+      <!-- The existance of the WAS.product file tells us we are on a full WAS Base install.
+           Otherwise we are on the Embed product.  EWAS.product should exist instead. -->
+      <condition property="isEmbed">
+         <not>
+            <available file="${WAS_HOME}/properties/version/WAS.product"/>
+         </not>
+      </condition>
+      
+   </target>
+    
+    <target name="setConfigArchivePath" 
+            description="Sets the path to the config archive">       
+
+        <!--  THE MANAGED TEMPLATE - ONLY ONE CAR FILE TO CHOOSE -->
+
+        <condition property="configArchivePath" value="${managedConfigArchivePath}">
+         <and> 
+            <equals arg1="${templateType}" arg2="managed"/>
+         </and>
+
+        </condition>
+
+        <condition property="configArchivePath" value="${developerConfigArchivePath}">
+         <and>
+		  <not>
+			<equals arg1="${applyPerfTuningSetting}" arg2="standard"/>
+		  </not>
+		  <not>
+			<equals arg1="${applyPerfTuningSetting}" arg2="peak"/>
+		  </not>
+		  <or>
+			<isset property="isDeveloperServer"/>
+			<equals arg1="${applyPerfTuningSetting}" arg2="development"/>
+		  </or>
+          <not>
+             <os family="z/os"/>
+          </not>
+          <not>
+              <equals arg1="${allAppsOmitted}" arg2="true"/>
+          </not>
+          <not>
+             <isset property="configArchivePath"/>
+          </not>
+         </and>
+        </condition>
+
+        <condition property="configArchivePath" value="${devNoAppsConfigArchivePath}">
+         <and>
+			<not>
+				<equals arg1="${applyPerfTuningSetting}" arg2="standard"/>
+			</not>
+		    <not>
+				<equals arg1="${applyPerfTuningSetting}" arg2="peak"/>
+			</not>
+			<or>
+				<isset property="isDeveloperServer"/>
+				<equals arg1="${applyPerfTuningSetting}" arg2="development"/>
+			</or>
+             <equals arg1="${allAppsOmitted}" arg2="true"/>
+             <not>
+               <os family="z/os"/>
+             </not>
+             <not>
+                <isset property="configArchivePath"/>
+             </not>
+         </and>
+        </condition>
+
+		
+        <condition property="configArchivePath" value="${noAppsConfigArchivePath}">
+         <and>
+             <equals arg1="${allAppsOmitted}" arg2="true"/>
+         </and>
+        </condition>
+
+        <condition property="configArchivePath" value="${noAppsConfigArchivePath}">
+         <and>
+             <isset property="isEmbed"/>
+          <not>
+             <isset property="configArchivePath"/>
+          </not>
+         </and>
+        </condition>
+
+        <condition property="configArchivePath" value="${defaultConfigArchivePath}">
+        <not>
+          <isset property="configArchivePath"/>
+        </not>
+        </condition>
+		
+       <wscmtlog> ImportConfigArchive file = ${configArchivePath}</wscmtlog>
+    </target>
+
+    <target name="testArchiveExists" description="Check that archive file exists. Fail if it's missing." >
+        <property name="message.if.configarchive.missing"
+            value="Error. Missing required configuration archive file: ${configArchivePath}."/>                  
+
+        <property name="message.if.configarchiveWithSamples.missing"
+            value="Error. Missing required configuration archive file with samples: ${configArchivePath}. Samples may not be installed."/>                  
+
+        <condition property="message.configarchive.missing" 
+            value="${message.if.configarchiveWithSamples.missing}"  
+            else="${message.if.configarchive.missing}" >
+            <or>
+                <equals arg1="${configArchivePath}" arg2="${defaultConfigArchivePath}"/>
+                <equals arg1="${configArchivePath}" arg2="${developerConfigArchivePath}"/>
+            </or>
+        </condition>        
+
+        <available file="${configArchivePath}" property="configarchive.file.exists"/>
+        <fail message="${message.configarchive.missing}" 
+            unless="configarchive.file.exists" />
+    </target>
+    
+    <target name="doImportConfigArchive" depends="testArchiveExists"
+            description="Import a Config Archive into a profile">
+                <wscmtlog>Importing Config Archive: ${configArchivePath} into profile</wscmtlog>
+                <wscmtlog>Additional information will be logged in file ${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->   
+        <wsadmin conntype="none"
+                 failonerror="false"
+				 returnproperty="rcProperty"
+                 lang="jacl"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminTask importWasprofile { -archive  &quot;${configArchivePath}&quot; -options &quot; { { resolvePorts false} { reDeployApps false } } &quot; }"
+                 ipcFilename="${profilePath}/temp/wsadmin" >
+        </wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/importConfigArchive.log" />
+            <param name="description" value="Importing Config Archive: ${configArchivePath} into profile" />
+            <param name="precondition" value="foetrue" />
+        </antcall>   
+        <wscmtlog>Import of Config Archive finished</wscmtlog>
+
+    </target>
+
+    <!-- Begin: Defect 488406 -->
+    <target name="checkForDefaultAppOmitted"
+            description="Set the flags so the right server scope resources.xml can be used">
+
+        <checkForOmittedApps appToCheck="defaultAppDeployAndConfig" property="isAppOmitted"/>
+        <wscmtlog> Value of isAppOmitted = ${isAppOmitted} </wscmtlog>
+
+        <!-- AppSrv.car and AppSrvDev.car and omit default app installation -->
+        <condition property="isDefaultAppOmittedForAppSrvCar" value="true">
+           <and>
+               <equals arg1="${isAppOmitted}" arg2="true"/>
+               <or>
+                   <equals arg1="${configArchivePath}" arg2="${defaultConfigArchivePath}"/>
+                   <equals arg1="${configArchivePath}" arg2="${developerConfigArchivePath}"/>
+               </or>
+           </and>
+        </condition>
+        <wscmtlog> Value of isDefaultAppOmittedForAppSrvCar = ${isDefaultAppOmittedForAppSrvCar}</wscmtlog>
+
+        <!-- AppSrv.car and AppSrvDev.car and no omit default app installation -->
+        <condition property="isDefaultAppNotOmittedForAppSrvCar" value="true">
+           <and>
+               <equals arg1="${isAppOmitted}" arg2="false"/>
+               <or>
+                   <equals arg1="${configArchivePath}" arg2="${defaultConfigArchivePath}"/>
+                   <equals arg1="${configArchivePath}" arg2="${developerConfigArchivePath}"/>
+               </or>
+           </and>
+        </condition>
+        <wscmtlog> Value of isDefaultAppNotOmittedForAppSrvCar = ${isDefaultAppNotOmittedForAppSrvCar}</wscmtlog>
+    
+    </target>                            
+
+    <!-- =================================================================== -->
+    <!-- There are two versions of server scope resources.xml for AppSrv.car -->
+    <!--   and AppSrvDev.car                                                 -->
+    <!--   - resources.xml: used while the default apps are installed        -->
+    <!--     which is the case where all apps installed                      -->
+    <!--   - withSampleNoDefApp-resources.xml: used while no default apps is -->
+    <!--     installed. In this case, admin console app and samples are      -->
+    <!--     installed.                                                      -->
+    <!--                                                                     -->
+    <!-- After config archive is done, the right resources.xml should be     -->
+    <!--   used and with a name resources.xml.                               -->
+    <!-- =================================================================== -->
+    <target name="setResourcesXMLWithAllApps" 
+            description="use the right server scope resources.xml with all apps installed"
+            if="isDefaultAppNotOmittedForAppSrvCar">
+        <delete file="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/server1/withSampleNoDefApp-resources.xml"/>
+        <wscmtlog> Do not use withSampleNoDefApp-resources.xml and delete it! </wscmtlog>
+    </target> 
+                               
+    <target name="setResourcesXMLWithoutDefApps" 
+            description="use the right server scope resources.xml when there is default app installed"
+            if="isDefaultAppOmittedForAppSrvCar">
+        <move file="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/server1/withSampleNoDefApp-resources.xml"
+              tofile="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/server1/resources.xml"
+              overwrite="true"/>
+        <wscmtlog> Use withSampleNoDefApp-resources.xml and rename it to resources.xml! </wscmtlog>
+    </target> 
+
+                                   
+    <target name="importConfigArchive"
+            description="Import a Config Archive into a profile"
+            depends="detectProductLevel,
+                     checkOS,
+                     checkOmittedApps,
+                     getTemplateType,
+                     setConfigArchivePath, 
+                     doImportConfigArchive,
+                     checkForDefaultAppOmitted,
+                     setResourcesXMLWithAllApps,
+                     setResourcesXMLWithoutDefApps"/>
+ 
+</project>

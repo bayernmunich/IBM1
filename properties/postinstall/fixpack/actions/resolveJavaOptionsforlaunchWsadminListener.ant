@@ -1,0 +1,125 @@
+<project name="resolveJavaOptionsforlaunchWsadminListener" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask" />
+
+	<property name="filePathWindows" value="${WAS_HOME}/bin/launchWsadminListener.bat"/>
+	<property name="filePathUnix" value="${WAS_HOME}/bin/launchWsadminListener.sh"/>
+
+	
+    <target name="detectPlatform"
+            description="Detects the current OS family">
+        
+		<condition property="isCurrentPlatformOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="isCurrentPlatformZOS" value="true">
+            <os family="z/os"/>
+        </condition>
+		
+        <condition property="isCurrentPlatformWindows" value="true">
+            <os family="windows"/>
+        </condition>
+		
+		<condition property="isCurrentPlatformUnix" value="true">
+         <and>
+            <os family="unix"/>
+            <and>
+                <not>
+                   <isset property="isCurrentPlatformZOS"/>
+                </not>
+                <not>
+                    <isset property="isCurrentPlatformOS400"/>
+                </not>
+            </and>
+        </and>
+       </condition>
+
+        <wscmtlog>Current platform is: ${os.name}</wscmtlog>
+		<echo>Current platform is: ${os.name}</echo>
+    </target>
+
+	<target name="isAlreadyChangedWindows" description="checks whether the ${filePathWindows} has been changed" if="isCurrentPlatformWindows">
+		
+		<loadfile property="launchwsAdminListener" srcFile="${filePathWindows}">
+		</loadfile>
+		
+		<condition property="changeWindowsNeeded">
+		<not>
+			<contains string="${launchwsAdminListener}" substring="com.ibm.ws.runtime.WsProfileAdminListener %nonjavaoption%">
+			</contains>
+		</not>
+		</condition>	
+		
+		<condition property="removeWindowsNeeded">
+			<contains string="${launchwsAdminListener}" substring="com.ibm.ws.runtime.WsProfileAdminListener %nonjavaoption%">
+			</contains>
+		</condition>
+		
+		<wscmtlog>Need to modify ${filePathWindows}: ${changeWindowsNeeded}</wscmtlog>
+		<wscmtlog>Is ${filePathWindows} already modified: ${removeWindowsNeeded}</wscmtlog>
+		<echo>Need to modify ${filePathWindows}: ${changeWindowsNeeded}</echo>
+		<echo>Is ${filePathWindows} already modified: ${removeWindowsNeeded}</echo>
+		
+	</target>	
+	
+	<target name="isAlreadyChangedUnix" description="checks whether the ${filePathUnix} has been changed" if="isCurrentPlatformUnix">
+		<loadfile property="launchwsAdminListener" srcFile="${filePathUnix}">
+		</loadfile>
+		
+		<condition property="changeUnixNeeded">
+			<and>
+			<contains string="${launchwsAdminListener}" substring="$CONSOLE_ENCODING \${line.separator}  $javaOption \">
+			</contains>
+			<contains string="${launchwsAdminListener}" substring="$PERF_JVM_OPTIONS \${line.separator}  $WAS_LOGGING \">
+			</contains>
+			</and>
+		</condition>	
+		
+		<condition property="removeUnixNeeded">
+			<not>
+			 <isset property="changeUnixNeeded"/>
+			</not>
+		</condition>
+		<wscmtlog>Need to modify ${filePathUnix}: ${changeUnixNeeded}</wscmtlog>
+		<wscmtlog>Is ${filePathUnix} already modified: ${removeUnixNeeded}</wscmtlog>
+		<echo>Need to modify ${filePathUnix}: ${changeUnixNeeded}</echo>
+		<echo>Is ${filePathUnix} already modified: ${removeUnixNeeded}</echo>
+	</target>
+	
+	<target name="changeWindows" description="changes ${filePathWindows}" depends="isAlreadyChangedWindows" if="changeWindowsNeeded">
+		<replaceTokenInFile path="${filePathWindows}" token="com.ibm.ws.runtime.WsProfileAdminListener %*" value="com.ibm.ws.runtime.WsProfileAdminListener %nonjavaoption%" property="isReplacedWindows" ignorecase="false" />
+		<wscmtlog>Did ${filePathWindows} get modified:  ${isReplacedWindows} </wscmtlog>
+		<echo>Did ${filePathWindows} get modified:  ${isReplacedWindows} </echo>
+	</target>
+	
+	<target name="changeUnix" description="changes ${filePathUnix}" depends="isAlreadyChangedUnix" if="changeUnixNeeded">
+		  <replaceTokenInFile path="${filePathUnix}" token="$javaOption \" value="ValueChangePlaceholder" property="isRemovedUnix" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathUnix}" token="$WAS_LOGGING \" value="$javaOption \" property="isRemovedUnix2" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathUnix}" token="ValueChangePlaceholder" value="$WAS_LOGGING \" property="isRemovedUnix3" ignorecase="false" />
+		   <wscmtlog>Did ${filePathUnix} get modified:  ${isRemovedUnix} and ${isRemovedUnix2} and ${isRemovedUnix3}</wscmtlog>
+		   <echo>Did ${filePathUnix} get modified:  ${isRemovedUnix} and ${isRemovedUnix2} and ${isRemovedUnix3}</echo>
+	</target>
+	
+	<target name="removeWindows" description="removes changes ${filePathWindows}" depends ="isAlreadyChangedWindows" if="removeWindowsNeeded">
+		<replaceTokenInFile path="${filePathWindows}" token="com.ibm.ws.runtime.WsProfileAdminListener %nonjavaoption%" value="com.ibm.ws.runtime.WsProfileAdminListener %*" property="isRemoved" ignorecase="false" />
+		<wscmtlog>Did modifications to ${filePathWindows} get removed: ${isRemoved}</wscmtlog>
+		<echo>Did modifications to ${filePathWindows} get removed: ${isRemoved}</echo>
+	</target>
+	
+	<target name="removeUnix" description="removes changes ${filePathUnix}" depends="isAlreadyChangedUnix" if="removeUnixNeeded">
+		   <replaceTokenInFile path="${filePathUnix}" token="$javaOption \" value="ValueChangePlaceholder" property="isRemovedUnix" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathUnix}" token="$WAS_LOGGING \" value="$javaOption \" property="isRemovedUnix2" ignorecase="false" />
+		   <replaceTokenInFile path="${filePathUnix}" token="ValueChangePlaceholder" value="$WAS_LOGGING \" property="isRemovedUnix3" ignorecase="false" />
+		   
+		   <wscmtlog>Did ${filePathUnix} get modified:  ${isRemovedUnix} and ${isRemovedUnix2} and ${isRemovedUnix3}</wscmtlog>
+		   <echo>Did ${filePathUnix} get modified:  ${isRemovedUnix} and ${isRemovedUnix2} and ${isRemovedUnix3}</echo>
+	</target>
+	
+    <target name="install" depends="detectPlatform, changeWindows, changeUnix">	
+	</target>
+	
+	<target name="uninstall" depends="detectPlatform, removeWindows, removeUnix">
+	</target>
+</project>

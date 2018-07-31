@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS collect hangs problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS collect hangs problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-linux.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-aix.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-solaris.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-windows.xml"  />
+
+	<property name="autopdProblem" value="WAS_Hangs_Problem" />
+	<property name="infocollectProblemType" value="was-collect-hangs" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="set_was_problem_type,
+						 setup_autopd, 
+						 validate_os,
+						 was_stack_custom_init, 
+					 
+					 generate_VM_string,
+			         enable_jvm_verbose_gc,			        
+			         set_jvm_arguments_with_condition,	 		  	 					  
+					 was_jvm_working_directory,
+					 collect_sychronization_info, 
+					 obtain_was_java_processid, 
+					 create_linux_hangs_pre_output, 
+					 create_aix_hangs_pre_output, 
+					 create_solaris_hangs_pre_output, 
+					 create_windows_hangs_output, 
+					 create_unix_hangs_javacore, 
+					 create_aix_hangs_post_output, 
+					 create_linux_hangs_post_output, 
+					 create_solaris_hangs_post_output,  
+					 create_unix_hangs_systemcore, 
+					 create_unix_hangs_output_options,
+					 gen_history_report, 
+		
+					 collect_linux_was_hangs, 
+					 collect_aix_was_hangs, 
+					 collect_solaris_was_hangs, 
+					 collect_windows_was_hangs, 
+					 common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery" description="Recover Portal Server state from AutoPD's failure" depends="collect_was_recovery_common">
+		<wsnlsecho key="AutoPD_recovery_is_performed" bundle="autopdtoolstrings" message="Automated Problem Determination Tool recovery has been performed" id="2269" level="info" />
+	</target>
+
+	<!-- This target is used to set some properties for the supported platforms -->
+	<target name="obtain_hangs_platform_info" description="Create properties for platform information">
+
+		<condition property="isSupportedUnix">
+			<and>
+				<os family="unix" />
+				<not>
+					<equals arg1="OS/400" arg2="${os.name}" />
+				</not>
+			</and>
+		</condition>
+		<condition property="isSupportedUnixExceptSunOS">
+			<and>
+				<os family="unix" />
+				<not>
+					<equals arg1="OS/400" arg2="${os.name}" />
+				</not>
+				<not>
+					<equals arg1="SunOS" arg2="${os.name}" />
+				</not>
+			</and>
+		</condition>
+		<echo message="isSupportedUnix: ${isSupportedUnix}" />
+		<echo message="isSupportedUnixExceptSunOS: ${isSupportedUnixExceptSunOS}" />
+	</target>
+</project>

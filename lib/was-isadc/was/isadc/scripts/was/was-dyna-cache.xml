@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. 
+	All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Dynamic Cache Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Dynamic Cache Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/http-shared-targets.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_Dynamic_Cache_Problem" />
+	<property name="infocollectProblemType" value="was-dynacache" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="ihs.local" value="true" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os,
+
+					was_stack_custom_init,
+					 
+					dyna_generate_trace_string,
+					trace_setup_custom, 
+					request_cache_information,
+		
+					execute_collector,
+					execute_vce_info_for_was,
+					collect_ihs_logs,
+			        common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<target name="inform_user_to_run_http_collection"
+	        description="inform the user to run the HTTP collection once this collection is completed">
+		<!--
+		<autopdinput message="Inform_user_run_http_collection"
+				validargs="Ok" addproperty="no.op"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />
+-->
+	</target>
+
+	<!-- query the user about running the IHS plugin trace -->
+	<target name="query_to_run_ihs_collection">
+		<!-- ask the user if they want to also collect the IHS information -->
+		<!-- IHS has to be local for this to work. If not, suggest to the user that
+			they run the HTTP collection separately
+		-->
+		<autopdinput message="Query_for_IHS_plugin_trace"
+		             validargs="Now,Later,Skip"
+		             addproperty="do.ihs.trace"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<!-- proceed with running the IHS plugin trace -->
+		<condition property="proceed.with.ihs">
+			<equals arg1="Now" arg2="${do.ihs.trace}" />
+		</condition>
+
+		<if isTrue="${proceed.with.ihs}">
+			<antcall target="run_ihs_collection" />
+		</if>
+
+		<!--  run the trace later -->
+		<condition property="run.ihs.trace.later">
+			<equals arg1="Later" arg2="${do.ihs.trace}" />
+		</condition>
+
+		<if isTrue="${run.ihs.trace.later}">
+			<autopdinput message="Inform_user_run_ihs_later"
+			             validargs="Later"
+			             addproperty="no.op"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</if>
+	</target>
+
+	<!-- run the IHS collection -->
+	<target name="run_ihs_collection"
+	        depends="ask_for_ihs_conf_path,
+		retrieve_ihs_info,
+		ask_user_if_okay_to_set_trace_on_ihs,
+		set_ihs_log_level_plugin_trace,
+				start_web_server1, 
+				IHS_sync_WSAS_instructions,
+		collect_ihs_logs_conf,
+		collect_SSL_related_files,
+						restore_original_httpd_plugin_conf,
+					
+					 
+					 restore_http_plugin-cfg">
+	</target>
+
+	<!-- synchronize all of the server machines -->
+	<target name="sync_all_server_machines"
+	        description="tell the user to synchronize all the machines">
+		<autopdinput message="Please_sync_all_machines_before_proceeding"
+		             validargs="OK"
+		             addproperty="machines.synced"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+	<!-- set the dynamic cache trace string -->
+	<target name="dyna_generate_trace_string"
+	        description="set the dynamic cache trace string">
+		
+		<inputdialogtask > 
+			<fieldtask name="prompt"
+	           label="Input_Required"
+	           type="prompt"
+	           bundle="autopdtoolstrings" />
+			<fieldtask name="replication.enabled"
+	           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	           label="DynaCache_1"
+	           list="No:Yes"
+	           listDetails="No:Yes"
+	           type="selectlist" />
+		</inputdialogtask> 
+
+		<condition property="is.replication.enabled">
+			<or>
+				<equals arg1="Yes" arg2="${replication.enabled}" />
+			</or>
+		</condition>
+		
+		<if isTrue="${is.replication.enabled}" >
+			<inputdialogtask noCancel="true" > 
+				<fieldtask name="prompt"
+		           label="Information_Message"
+		           type="prompt"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label1"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="DynaCache_2"
+		           type="label" />
+			</inputdialogtask> 
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.cache.*=all=enabled:com.ibm.ws.drs.*=all=enabled" />
+			</if> 
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+		          value="*=info:com.ibm.ws.cache.*=all:com.ibm.ws.drs.*=all" />
+			</if> 
+		</if> 
+		<if isNotTrue="${is.replication.enabled}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+		          value="com.ibm.ws.cache.*=all=enabled" />
+			</if> 
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+		          value="*=info:com.ibm.ws.cache.*=all" />
+			</if> 
+		</if> 
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<target name="request_cache_information" description="Provide required information into a file">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Collect_Cache_Informaiton"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting information regarding Cache Instance.."
+		           replace="${autopdts};;${step.count}"
+		           id="1099"
+		           level="info" />
+		
+		<inputdialogtask doSkip="true" noCancel="true">
+			
+			<fieldtask name="ws.dynacache.prompt"
+					   label="Input_Required"
+					   type="prompt"
+					   bundle="autopdtoolstrings" />
+			<fieldtask name="answer1"
+			           label="DynaCache_Instance_Name"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer2"
+			           label="DynaCache_Instance_ID"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			1. Provide the Name of Cache Instance associated with the failure.${line.separator}
+					${answer1}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			2. Provide the ID of Cache Instance associated with the failure.${line.separator}
+					${answer2}${line.separator}
+		</concat>
+
+	</target>
+	
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Dynamic Cache Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the 'dynacache' problem. 
+					The managed nodes are synchronized, the trace is set, the JVM properties are set, 
+					and the problem can then be reproduced. The application server will require a stop/start.
+					Once the problem has been reproduced, the logs, configuration, and trace files are 
+					collected and made available for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1193837" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the 
+Dynamic Cache problem. The trace is set and the problem can then be reproduced. The application server 
+will require a stop/start. Once the problem has been reproduced, the logs, configuration, and trace files 
+are collected and made available for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Dynamic Cache Problem =>
+This problem category is run on the managed node experiencing the 
+Dynamic Cache problem. The trace is set and the problem can then be reproduced. The application server 
+will require a stop/start. Once the problem has been reproduced, the logs, configuration, and trace files 
+are collected and made available for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

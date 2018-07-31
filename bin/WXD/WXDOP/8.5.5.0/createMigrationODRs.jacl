@@ -1,0 +1,402 @@
+#-------------------------------------------------------------------
+# Licensed Material - Property of IBM
+#
+# 5724-J34 Copyright IBM Corp. 2007
+# All Rights Reserved.
+# U.S. Government users - RESTRICTED RIGHTS - Use, Duplication, or
+# Disclosure restricted by GSA-ADP schedule contract with IBM Corp.
+# Status = JEJO610
+#
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# name: createMigrationODRs.jacl 
+#
+# purpose: locate <nodename>.<servername>.odr.props files created by storeODRPropsToFile.jacl 
+#          and create new ODRs based on the properties
+#
+# invocation: wsadmin[.sh] -conntype none -f createMigrationODRs.jacl 
+#
+# output: new ODRs in 6.0 configuration repository
+#
+#-------------------------------------------------------------------------------
+
+
+java::import java.io.File
+java::import java.io.FileInputStream
+java::import java.util.Properties
+java::import java.util.Enumeration
+
+#----------------------------------------------------------------------------------------
+proc getEndpoints {props} {
+#
+# purpose - extract endpoint definitions from props object
+#
+# input - props object containing 5.1 odr definition 
+#
+# output - list of ep tuples 
+#
+#----------------------------------------------------------------------------------------
+
+   set keys [$props keys]
+
+   set more [$keys hasMoreElements]
+   set key [$keys nextElement]
+   set key [$key toString]
+
+   set eps [list]
+   
+   while {$more == 1} {
+
+      if {[string match "ENDPOINT:*" $key] == 1} {
+         # puts "key= $key"
+         # get endpoint name, host, and port 
+
+         set epName [string range $key 9 [string length $key]]
+
+         #puts "ep name= $epName"
+
+         # get host:port 
+
+         set hostport [$props getProperty $key]      
+
+         # get position of ":"
+
+         set separatorPos [string first ":" $hostport]
+
+         set host [string range $hostport 0 [expr $separatorPos-1]]
+         set port [string range $hostport [expr $separatorPos+1] [string length $hostport]]
+
+         #puts "host= $host"
+         #puts "port= $port"
+
+         set epTuple [list $epName $host $port]
+
+         #puts "epTuple= $epTuple"
+
+         lappend eps $epTuple
+      
+      }
+      set more [$keys hasMoreElements]
+      if {$more == 1} {
+         set key [$keys nextElement]
+         set key [$key toString]
+      }
+   }
+
+   puts "eps= $eps"
+
+   return $eps 
+
+}
+
+
+#----------------------------------------------------------------------------------------
+proc modifyEndpoint {nodeName serverName epName host port} {
+#
+# purpose:  modify server endpoint with specified host, port
+#
+# input: 
+#          1. node name of server
+#          2. server name 
+#          3. end point name to modify
+#          4. new host name 
+#          5. new port number 
+#
+# output: none
+#
+# precondition:  specified server must already exist 
+#
+#----------------------------------------------------------------------------------------
+
+   global AdminConfig 
+
+   #--------------------------------------------------------------
+   # Fixup endpoint host and port 
+   #--------------------------------------------------------------
+
+   puts "modify endpoint $epName with host= $host port=$port"
+
+   set node [$AdminConfig getid /Node:$nodeName/]
+
+   set serverEntries [$AdminConfig list ServerEntry $node]
+   foreach serverEntry $serverEntries {
+      set serverEntryName [$AdminConfig showAttribute $serverEntry serverName]
+      if {[string compare $serverName $serverEntryName] == 0} {
+         set namedendpoints [lindex [lindex [$AdminConfig show $serverEntry "specialEndpoints"] 0] 1]
+         foreach namedendpoint $namedendpoints {
+            set endpoint [$AdminConfig showAttribute $namedendpoint "endPoint"]
+            set endpointname [$AdminConfig showAttribute $namedendpoint "endPointName"]
+            if {[string compare $endpointname $epName] == 0} {
+
+                set host_attributes [list host $host]
+                set endpoint_attrs [list $host_attributes]
+                $AdminConfig modify $endpoint $endpoint_attrs
+
+                set port_attributes [list port $port]
+                set endpoint_attrs [list $port_attributes]
+                $AdminConfig modify $endpoint $endpoint_attrs
+
+                
+            }
+         }
+      }
+   }
+
+
+}
+
+
+#----------------------------------------------------------------------------------------
+proc modifyODRSettingsFromProps {props} {
+#
+# purpose:  extract ODR settings from props object and apply
+#
+# input: props is java properties object 
+#
+# output: none 
+#
+#----------------------------------------------------------------------------------------
+
+   global AdminConfig 
+
+   #--------------------------------------------------------------
+   # extract node and server properties, get id of ProxyServer object 
+   #--------------------------------------------------------------
+
+   set serverName [$props getProperty SERVERNAME]
+   set nodeName [$props getProperty NODENAME]
+
+   set allProxySettings [$AdminConfig list ProxySettings]
+
+   #puts $allProxySettings
+   #puts "search string = */nodes/$nodeName/servers/$serverName:*"
+
+   foreach proxySettings $allProxySettings {
+
+      if {[string match "*/nodes/$nodeName/servers/$serverName:*" $proxySettings] > 0} {
+         break 	
+      }
+
+   }
+
+   puts "Updating proxy settings object $proxySettings"
+
+
+
+   #--------------------------------------------------------------
+   # extract and apply settings 
+   #--------------------------------------------------------------
+
+   set keys [$props keys]
+
+   set more [$keys hasMoreElements]
+   set key [$keys nextElement]
+   set key [$key toString]
+
+   while {$more == 1} {
+                            
+      if {[string match "SETTING:*" $key] == 1} {
+         # puts "key= $key"
+         # get endpoint name, host, and port 
+
+         set settingName [string range $key 8 [string length $key]]
+
+         #puts "setting name= $settingName"
+
+         set settingValue [$props getProperty $key]      
+
+         #puts "setting value= $settingValue"
+
+         if {[string match "*errorPagePolicy:*" $key] == 1} {
+
+            # todo:  figure out how to add errorPagePolicy to ProxySettings object 
+         
+            #set eppKey [string range $key 24 [string length $key]]
+            #puts "eppKey= $eppKey"
+
+            #set eppId [$AdminConfig showAttribute $proxySettings errorPagePolicy]
+
+            #puts "eppId = $eppId"
+            
+            #puts "Set $eppKey to $settingValue"
+            #$AdminConfig modify $eppId "{$eppKey $settingValue}"
+            
+            
+         } else {
+             puts "Set $settingName to $settingValue"
+             if { $settingValue != "" } {
+                $AdminConfig modify $proxySettings "{$settingName $settingValue}"
+             }
+         }
+      }
+      set more [$keys hasMoreElements]
+      if {$more == 1} {
+         set key [$keys nextElement]
+         set key [$key toString]
+      }
+   }
+
+
+} 
+
+
+#----------------------------------------------------------------------------------------
+proc createodr {props} {
+#
+# purpose:  create odr in workspace using props
+#
+# input: props is java properties object 
+#
+# output: return value - 0 sucess, 1 failure 
+#
+# precondition:  dmgr must be up and this script running connected 
+#
+#----------------------------------------------------------------------------------------
+
+   set retval 1
+
+   #--------------------------------------------------------------
+   # set up globals
+   #--------------------------------------------------------------
+   global AdminConfig
+   global AdminTask
+
+
+   #--------------------------------------------------------------
+   # extract node and server properties 
+   #--------------------------------------------------------------
+
+   set serverName [$props getProperty SERVERNAME]
+   set nodeName [$props getProperty NODENAME]
+
+   #--------------------------------------------------------------
+   # do some sanity checking
+   #     -- do we have a node by this name?
+   #--------------------------------------------------------------
+   set node [$AdminConfig getid /Node:$nodeName/]
+   puts "createodr: checking for existence of node $nodeName"
+   if {[llength $node] == 0} {
+      puts "createodr: Error -- node not found for name $nodeName"
+      return $retval
+   }
+
+   #----------------------------------------------------------------
+   #     -- is a server by this name already configured on the node?
+   #----------------------------------------------------------------
+   puts "createodr: checking to see if server $serverName is already configured on node $nodeName"
+   set existingServer [$AdminConfig getid /Node:$nodeName/Server:$serverName/]
+   if {[llength $existingServer] > 0} {
+      puts "createodr: Error -- Server $serverName already configured on node $nodeName"
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   #     -- check for ODR template
+   #--------------------------------------------------------------
+   set templateList [$AdminConfig listTemplates Server]
+   foreach template $templateList {
+         if {[string first "odr(" $template] == 0} {
+            # ODR template found
+            set odrTemplate $template
+            break
+         }
+   }
+   
+   if {$odrTemplate == ""} {
+      puts "createodr: Error -- Could not find ODR template"
+      return $retval
+   }
+
+
+   puts "creating odr using template $odrTemplate"
+
+   #--------------------------------------------------------------
+   # Create a server using the supplied server name and node
+   #--------------------------------------------------------------
+   puts "createodr: creating a server $serverName ....."
+   set name_attribute [list name $serverName]
+   set attributes     [list $name_attribute]
+
+
+   set cmd "$AdminTask createOnDemandRouter $nodeName {-name \"$serverName\" -templateName odr -templateLocation \"$odrTemplate\"}"
+
+   puts "Creating odr using command $cmd"
+
+   set server [eval $cmd]
+
+  # get 5.1 odr endpoints from props object and modify newly created 6.0 odr to have matching endpoints 
+
+   set eps [getEndpoints $props]
+
+   foreach ep $eps {
+
+      set epName [lindex $ep 0]
+      set host [lindex $ep 1]
+      set port [lindex $ep 2]
+      modifyEndpoint $nodeName $serverName $epName $host $port 
+
+   }
+
+   modifyODRSettingsFromProps $props
+ 
+   #--------------------------------------------------------------
+
+   set retval 0
+   puts "createodr: done."
+   return $retval
+}
+
+
+#----------------------------------------------------------------
+# read *.odr.props files 
+#----------------------------------------------------------------
+
+set dir [java::new File "."]
+
+set files [$dir list]
+
+set numFiles [$files length]
+
+for {set i 0} {$i < $numFiles} {incr i} {
+
+   set file [$files get $i]
+
+   if {[string match "*.odr.props" $file] == 1} {
+      puts $file
+
+      set f [java::new File $file]
+      set fis [java::new FileInputStream $f]
+
+      set props [java::new Properties]
+
+      $props load $fis
+
+      # process props here
+
+      set retval [createodr $props]
+
+      puts "check return code retval=$retval"
+      if {$retval == 1} {
+          puts "terminating with error"
+          return 1
+      } else { 
+          # cleanup by deleting props file
+          puts "delete $file"
+          $f delete 
+      }
+
+   }
+   
+}
+
+#--------------------------------------------------------------
+# Save all the changes
+#--------------------------------------------------------------
+puts "createodr: saving the configuration"
+$AdminConfig save
+
+return 0
+
+
+

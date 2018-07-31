@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"Окно коллективной работы","SHOW_COLLABORATION_WINDOW":"Показать окно коллективной работы","CLICK_TO_CALL":"Щелкните для вызова"})

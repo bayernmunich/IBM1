@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Analysis Report" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Analysis Report}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<property name="taxonomy" value="SSEQTP" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml" />
+
+
+	<property name="autopdProblem" value="WAS_Problem_Analysis" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-problem-analysis" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is individual module to create Application Server problem analysis report"
+	        depends="load_sharedelements_tasks,
+					 set_problem_type_with_nls_bundle,
+					 setup_autopd_v2, 
+					 validate_os, 
+					 usage,
+					 query_pmrfilename,
+                     input, 
+                     analyze_was,
+					 analysis_file_collection,
+					 autopd_feedbacks,
+			         script_completed">
+	</target>
+
+	<target name="input" description="Problem analysis input">
+		
+		<inputdialogtask bundle="properties/SSEQTP/autopdtoolstrings_was">
+			<fieldtask name="prompt" label="Input_Directory_of_Log_Files" type="prompt" />
+			<fieldtask name="was.log.dir"
+			           label="Was_Log_Directory"
+			           type="filebrowser"
+			           defaultValue="" />
+			<fieldtask name="was.problem"
+			           label="Was_Problem_Types"
+			           list="was-jms:was-orb:was-dbconnection:was-security:was-start:was-stop:was-synchronization:was-nocore:was-collect-core:was-collect-hangs:was-session-management"
+			           listDetails="WAS_JMS_Problem:WAS_ORB_Problem:WAS_DB_Connection_Problem:WAS_Security_Problem:WAS_Start_Problem:WAS_Stop_Problem:WAS_Synchronization_Problem:WAS_Crash_Set_Core_Problem:WAS_Crash_Collect_Core_Problem:WAS_Hangs_Problem:WAS_Session_Management_Problem"
+			           type="selectlist" 
+					   initialValueSource="persisted"/>
+		</inputdialogtask>
+		
+		<persistproperty property="was.problem" />
+		
+		<property name="was.name" value="IBM WebSphere Application Server" />
+		<inputdialogtask bundle="properties/SSEQTP/autopdtoolstrings_was">
+			<fieldtask name="prompt"
+			           label="Input_the_Version_of_IBM_WebSphere_Application_Server_for_the_Log_Files"
+			           type="prompt" />
+			<fieldtask name="was.version"
+			           label="Application_Server_Version"
+			           defaultValue=""
+			           type="plaintext" 
+					   initialValueSource="persisted"/>
+		</inputdialogtask>
+
+		<persistproperty property="was.version" />
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Analysis Report&lt;/h2&gt;&lt;p&gt;
+				The 'Analysis Report' requests the type of problem being experienced and the location of the log
+					files in an effort to perform problem determination analysis. Rather than a collection, this
+					problem category is focused on analysis of a known problem.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			     value="The 'Analysis Report' requests the type of problem being experienced 
+and the location of the log files in an effort to perform problem determination analysis. Rather 
+than a collection, this problem category is focused on analysis of a known problem." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Analysis Report =>
+The 'Analysis Report' requests the type of problem being experienced and the location of the log
+files in an effort to perform problem determination analysis. Rather than a collection, this
+problem category is focused on analysis of a known problem." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+				             validargs="OK"
+				             addproperty="run.current.script"
+				             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

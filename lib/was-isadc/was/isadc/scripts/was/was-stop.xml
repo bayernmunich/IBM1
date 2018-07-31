@@ -1,0 +1,489 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Stop Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Stop Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_Stop_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-stop" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="query.secure.type.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+					was_stack_custom_init,
+					 query_was_cluster,
+					 generate_stop_trace_string,
+					 trace_setup_custom,
+		
+					 execute_collector,
+					 execute_vce_info_for_was,
+			         common_postamble_general_with_ftp">
+	</target>
+<!--
+					 stop_problem_types,
+					 set_appserver_trace_from_admin_console,
+					 set_nodeagent_trace_from_admin_console,
+					 	    		   
+					 query_was_dmgr_properties,
+					 get_appserver_trace_values,
+					 get_nodeagent_trace_values,
+					 get_dmgr_trace_values,	
+
+					 recovery_needed_with_condition,	
+					 set_was_trace_appserver,
+					 set_was_trace_nodeagent,
+					 set_was_trace_dmgr,
+
+					 stop_standalone_server_problem,
+					 stop_cluster_server_problem,
+				     stop_nodeagent_problem,
+					 stop_deployment_manager_problem,
+
+					 pause_with_condition, 					 
+					 gen_history_report,  
+
+					 rename_was_properties,
+
+					 restore_appserver_trace_values,
+					 restore_nodeagent_trace_values,
+					 restore_dmgr_trace_values,
+
+			         recovery_completed_with_condition,  
+
+--> 
+	
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+			         zip_collector_jarfile_recovery,
+					 restore_appserver_trace_values,
+					 restore_nodeagent_trace_values,
+					 restore_dmgr_trace_values,
+			         recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed" />
+	</target>
+
+	<!-- This target is used to determine the problem type and set some properties -->
+
+	<target name="stop_problem_types"
+	        description="Select problem types for starting problem">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Selecting_problem_type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Selecting problem types"
+		           replace="${autopdts};;${step.count}"
+		           id="2619"
+		           level="info" />
+
+
+		<if isTrue="${isCluster}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Select_stop_problem_coming_from"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="stop.problem.from"
+				           label="Problem"
+				           list="command.line:admin.console"
+				           listDetails="Command line:Admin console"
+				           type="selectlist"
+				           accessibilityName="was_start_problem"
+				           accessibilityDesc="was_start_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<if isTrue="${isStandalone}">
+			<property name="stop.problem.from" value="command.line" />
+		</if>
+
+
+		<condition property="isCommandLine">
+			<equals arg1="command.line" arg2="${stop.problem.from}" />
+		</condition>
+		<echo message="isCommandLine: ${isCommandLine}" />
+
+		<condition property="isAdminConsole">
+			<equals arg1="admin.console" arg2="${stop.problem.from}" />
+		</condition>
+
+		<echo message="isAdminConsole: ${isAdminConsole}" />
+
+		<if isTrue="${isCommandLine}">
+			<property name="recovery.completed.needed" value="true" />
+			<property name="recovery.needed" value="true" />
+		</if>
+		<if isTrue="${isAdminConsole}">
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.adminconsole.trace.needed" value="true" />
+			<condition property="nodeagent.adminconsole.trace.needed">
+				<istrue value="${isWASVersion5}" />
+			</condition>
+			<property name="enable.pause" value="true" />
+			<property name="ND.collect.needed" value="true" />
+		</if>
+
+		<if isTrue="${isCluster}">
+			<if isTrue="${isCommandLine}">
+				<inputdialogtask>
+					<fieldtask name="prompt"
+					           label="Select_stop_problem_type"
+					           type="prompt"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="stop.problem.type"
+					           label="Problem"
+					           list="appserver:nodeagent:dmgr"
+					           listDetails="Stop AppServer:Stop NodeAgent:Stop DeploymentManager"
+					           type="selectlist"
+					           accessibilityName="was_start_problem"
+					           accessibilityDesc="was_start_problem"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+			</if>
+		</if>
+		<if isTrue="isStandalone">
+			<property name="stop.problem.type" value="appserver" />
+		</if>
+
+		<condition property="isClusterAppServer">
+			<and>
+				<equals arg1="appserver" arg2="${stop.problem.type}" />
+				<equals arg1="command.line" arg2="${stop.problem.from}" />
+				<istrue value="${isCluster}" />
+			</and>
+		</condition>
+
+		<condition property="isNodeAgent">
+			<and>
+				<equals arg1="nodeagent" arg2="${stop.problem.type}" />
+				<equals arg1="command.line" arg2="${stop.problem.from}" />
+			</and>
+		</condition>
+
+		<condition property="isDMGR">
+			<and>
+				<equals arg1="dmgr" arg2="${stop.problem.type}" />
+				<equals arg1="command.line" arg2="${stop.problem.from}" />
+			</and>
+		</condition>
+
+		<if isTrue="${isStandalone}">
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.trace.needed" value="true" />
+			<property name="isAppServerSOAP" value="true" />
+			<property name="get.appserver.trace.needed" value="true" />
+			<property name="restore.appserver.trace.needed" value="true" />
+		</if>
+
+		<if isTrue="${isClusterAppServer}">
+			<property name="isAppServerSOAP" value="true" />
+			<property name="need.appserver.properties" value="true" />
+			<property name="appserver.trace.needed" value="true" />
+			<property name="get.appserver.trace.needed" value="true" />
+			<property name="restore.appserver.trace.needed" value="true" />
+
+			<property name="isDMGRSOAP" value="true" />
+			<property name="query.was.dmgr.properties.needed" value="true" />
+			<property name="dmgr.trace.needed" value="true" />
+			<property name="get.dmgr.trace.needed" value="true" />
+			<property name="restore.dmgr.trace.needed" value="true" />
+
+			<property name="ND.collect.needed" value="true" />
+		</if>
+
+
+		<if isTrue="${isNodeAgent}">
+			<property name="need.nodeagent.properties" value="true" />
+			<property name="isNodeAgentSOAP" value="true" />
+			<property name="nodeagent.trace.needed" value="true" />
+			<property name="get.nodeagent.trace.needed" value="true" />
+			<property name="restore.nodeagent.trace.needed" value="true" />
+
+			<property name="ND.collect.needed" value="true" />
+		</if>
+
+		<if isTrue="${isDMGR}">
+			<property name="isDMGRSOAP" value="true" />
+			<property name="need.dmgr.properties" value="true" />
+			<property name="dmgr.trace.needed" value="true" />
+			<property name="get.dmgr.trace.needed" value="true" />
+			<property name="restore.dmgr.trace.needed" value="true" />
+		</if>
+
+	</target>
+
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="generate_stop_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2620"
+		           level="info" />
+
+
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="*=info:com.ibm.ws.*=all" />
+		</if>
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="*=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+	</target>
+
+
+
+	<target name="stop_standalone_server_problem"
+	        description="Stop standalone server problem"
+	        if="isStandalone">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="2621"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/stopServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} ${was.admin.info} -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} ${was.admin.info} -trace" />
+		</exec>
+	</target>
+
+	<target name="stop_cluster_server_problem"
+	        description="Start problem from cluster env"
+	        if="isClusterAppServer">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="2622"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/stopServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} ${was.admin.info} -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} ${was.admin.info} -trace" />
+		</exec>
+
+	</target>
+
+	<target name="stop_nodeagent_problem"
+	        description="Stop problem from cluster env"
+	        if="isNodeAgent">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Node_Agent"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Node Agent"
+		           replace="${autopdts};;${step.count}"
+		           id="2623"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/stopNode.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopNode.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -trace" />
+		</exec>
+
+	</target>
+
+	<target name="stop_deployment_manager_problem"
+	        description="Stop problem from cluster env"
+	        if="isDMGR">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Deployment_Manager"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Deployment Manager"
+		           replace="${autopdts};;${step.count}"
+		           id="2624"
+		           level="info" />
+
+		<exec executable="${was.enhanced.root}/bin/stopManager.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" -trace" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopManager.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -trace" />
+		</exec>
+
+	</target>
+
+
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="stop_appserver_from_admin_console"
+	        description="start problem from application server admin console"
+	        if="isAdminConsole">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Stopping_Application_Server_from_Deployment_Manager_AdminConsole"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stopping the Application Server from Deployment Manager AdminConsole"
+		           replace="${autopdts};;${step.count}"
+		           id="2625"
+		           level="info" />
+
+
+		<condition property="appserver.adminconsole.trace.needed">
+			<istrue value="${isAdminConsole}" />
+		</condition>
+
+		<condition property="isAdminConsole.stop.problem">
+			<istrue value="${isAdminConsole}" />
+		</condition>
+
+
+		<condition property="nodeagent.adminconsole.trace.needed">
+			<istrue value="${isWASVersion5}" />
+		</condition>
+
+		<property name="was.nodeagent.trace.string" value="Admin=all=enabled" />
+
+	</target>
+
+
+	<target name="stop_appserver_additional_from_admin_console"
+	        description="start problem from application server admin console"
+	        if="isAdminConsole.stop.problem">
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Notes_for_stopping_application_server_from_AdminConsole"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.stop1"
+			           label="For_stop_server_issued_from_the_Admin_Console"
+			           type="label"
+			           accessibilityName="was_stop_problem"
+			           accessibilityDesc="was_stop_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.stop2"
+			           label="Trace_enabled_on_the_Admin_Console_will_not_be_effective_until_you_recycle_the_server"
+			           type="label"
+			           accessibilityName="was_stop_problem"
+			           accessibilityDesc="was_stop_problem"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Stop Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category should be run on the Deployment Manager or host containing the administrative console.
+					Trace values are set for the Deployment Manager, Node Agent, and server and an application server stop is
+						attempted. After the stop has completed - or failed - the state of the servers is restored and the 
+						logs, configuration, and trace files are collected.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1141075" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category should be run on the Deployment Manager or host 
+containing the administrative console. Trace values are set for the Deployment Manager, Node Agent, 
+and server and an application server stop is attempted. After the stop has completed - or failed - 
+the state of the servers is restored and the  logs, configuration, and trace files are collected." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Stop Problem =>
+This problem category should be run on the Deployment Manager or host containing the administrative console.
+Trace values are set for the Deployment Manager, Node Agent, and server and an application server stop is
+attempted. After the stop has completed - or failed - the state of the servers is restored and the
+logs, configuration, and trace files are collected." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

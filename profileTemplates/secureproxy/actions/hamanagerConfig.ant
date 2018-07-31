@@ -1,0 +1,42 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="configHamanager" default="configHamanager" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+ 		<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;      		
+    <target name="runHamanagerConfigJACLScript"
+            description="Runs the JACL script to configure Hamanager">
+            
+        <wscmtlog>Configuring Hamanager, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/hamanager_config.log</wscmtlog>
+          <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->           
+        <wsadmin conntype="none"
+                 failonerror="false"
+				 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/hamanager_config.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${WAS_HOME}/util/CoreGroupInstallBase.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>   
+         <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/hamanager_config.log" />
+            <param name="description" value="Configuring Hamanager" />
+            <param name="precondition" value="foetrue" />
+        </antcall>           
+    </target>
+
+    <target name="configHamanager"
+        description="Configures Hamanager"
+        depends="runHamanagerConfigJACLScript"/>
+</project>

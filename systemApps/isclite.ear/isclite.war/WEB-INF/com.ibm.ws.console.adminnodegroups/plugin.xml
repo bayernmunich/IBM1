@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp., 1997, 2008
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.--> 
+
+<plugin id="com.ibm.ws.console.adminnodegroups" 
+        name="adminnodegroups" 
+        version="1.0.0" 
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="adminnodegroups">  
+   
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <!--<import plugin="com.ibm.ws.console.environment"/>-->
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.dynacache"/>
+</requires>
+
+<extension point="org.eclipse.help.toc">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- NodeGroupCollection  -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <task id="ManageNodeGroups" icon="/com.ibm.ws.console.adminnodegroups/images/onepix.gif" label="Manage.NodeGroups" view="/navigatorCmd.do?forwardName=NodeGroup.content.main" external="false" weight="48">
+            <category id="systemadmin"/>
+        </task>
+        
+    </tasks>    
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminnodegroups.NodeGroup.collectionItem1" contextType="NodeGroup">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nodeGroupCollection.do?EditAction=true"
+              label="NodeGroup.name.displayName">
+        </item>
+        <item
+              attributeName="memberCount"
+              sortable="sort"
+              itemURI=""
+              label="NodeGroup.memberCount.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="NodeGroup.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminnodegroups.NodeGroupForOneNode.collectionItem1" contextType="NodeGroupForOneNode">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nodeGroupCollection.do?EditAction=true"
+              label="NodeGroup.name.displayName">
+        </item>
+        <item
+              attributeName="memberCount"
+              sortable="sort"
+              itemURI=""
+              label="NodeGroup.memberCount.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="NodeGroup.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminnodegroups.NodeGroup.collection1" contextType="NodeGroup">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              scope="Cell"
+              actionURI="nodeGroupCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              scope="Cell"
+              actionURI="nodeGroupCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- NewNodeGroupDetail -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminnodegroups.NewNodeGroup.detailTab1" contextType="NewNodeGroup">
+        <tab
+              label="tab.configuration"
+              contentURI="NewNodeGroup.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminnodegroups.NodeGroup1" contextType="NewNodeGroup">
+        <link
+              categoryId="additional.properties"
+              label="NodeGroupMembers.displayName"
+              description="NodeGroupMembers.description"
+              actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=NodeGroupMember.content.main&amp;sfname=members">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="NodeGroup.properties.displayName"
+              description="NodeGroup.properties.description"
+              actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=NodeGroup.Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- NodeGroupDetail -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminnodegroups.NodeGroup1" contextType="NodeGroup">
+        <link
+              categoryId="additional.properties"
+              label="NodeGroupMembers.displayName"
+              description="NodeGroupMembers.description"
+              actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=NodeGroupMember.content.main&amp;sfname=members">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="NodeGroup.properties.displayName"
+              description="NodeGroup.properties.description"
+              actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=NodeGroup.Property.content.main&amp;sfname=properties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ZosLocationService.displayName"
+              description="ZosLocationService.description"
+              actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=Daemon.config.view&amp;sfname=properties&#38;lastPage=NodeGroup.config.view">">
+              <compatibility>
+                  <match key="com.ibm.websphere.console.NodeGroupDetailForm.sysplexNameDefined" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminnodegroups.NodeGroup.detailTab1" contextType="NodeGroup">
+        <tab
+              label="tab.configuration"
+              contentURI="NodeGroup.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="NodeGroup.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="NodeGroup.config.general.properties" contextType="NodeGroup">
+        <field 
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.NodeGroupDetailForm.sysplexNameDefined" value="true"/>
+            </compatibility>
+        </field >
+        <field 
+              attributeName="sysplexName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.NodeGroupDetailForm.sysplexNameDefined" value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- NodeGroupMemberCollection  -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminnodegroups.NodeGroupMember.collectionItem1" contextType="NodeGroupMember">
+        <item
+              attributeName="nodeName"
+              sortable="sort"
+              itemURI="nodeGroupMemberCollection.do?EditAction=true"
+              label="NodeGroupMember.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminnodegroups.NodeGroupMember.collection1" contextType="NodeGroupMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.add"
+              actionURI="nodeGroupMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.remove"
+              actionURI="nodeGroupMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- AddNodeGroupMemberCollection  -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminnodegroups.AddNodeGroupMember.collectionItem1" contextType="AddNodeGroupMember">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="addNodeGroupMemberCollection.do?EditAction=true"
+              label="NodeGroupMember.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminnodegroups.AddNodeGroupMember.collection1" contextType="AddNodeGroupMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.add"
+              actionURI="addNodeGroupMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.cancel"
+              actionURI="addNodeGroupMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- NodeGroupMemberDetail  -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminnodegroups.NodeGroupMember1" contextType="NodeGroupMember">
+        <link
+              categoryId="additional.properties"
+              label="NodeGroup.properties.displayName"
+              description="NodeGroup.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- NodeGroup.Property  -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="NodeGroup.Property.collection1" contextType="NodeGroup.Property">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="nodeGroupPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="nodeGroupPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="NodeGroup.Property.content.main1" contextType="NodeGroup.Property">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="nodeGroupPropertyCollection.do?EditAction=true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="Property.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="Property.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="NodeGroup.Property.detailTab1" contextType="NodeGroup.Property">
+        <tab
+              label="tab.configuration"
+              contentURI="NodeGroup.Property.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- Node Collection View  -->
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminnodegroups.Node1" contextType="Node">
+          <link
+                categoryId="additional.properties"
+                label="NodeGroupMemberships.displayName"
+                description="NodeGroup.description"
+                actionURI="com.ibm.ws.console.adminnodegroups.forwardCmd.do?forwardName=NodeGroupForOneNode.content.main&amp;lastPage=Node.config.view">
+          </link>
+    </linkSet>
+</extension>
+
+</plugin>
+

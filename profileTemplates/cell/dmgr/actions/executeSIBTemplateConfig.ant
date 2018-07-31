@@ -1,0 +1,235 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="executeSIBTemplateConfig" default="executeSIBTemplateConfig" basedir="."> 
+     
+    <taskdef name="wscmtlog" 
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/> 
+ 
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+ 	&importExternalLogs;
+    <target name="isServerType_not_JOB_MANAGER_or_ADMIN_AGENT"
+           description="check to make sure this is not the JOB_MANGER or ADMIN_AGENT server type">
+           
+       <wscmtlog> serverType = ${serverType}</wscmtlog>
+       <condition property="isntJobManagerOrAdminAgent" value="true">
+           <not>
+             <or>
+               <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+               <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+             </or>
+           </not>
+       </condition>
+       <wscmtlog> isntJobManagerOrAdminAgent = ${isntJobManagerOrAdminAgent}</wscmtlog>
+           
+    </target>
+
+    <target name="isServerType_ADMIN_AGENT"
+           description="check if this is a ADMIN_AGENT server type">
+           
+       <wscmtlog> serverType = ${serverType}</wscmtlog>
+       <condition property="isAdminAgent" value="true">
+            <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+       </condition>
+       <wscmtlog> isAdminAgent = ${isAdminAgent}</wscmtlog>
+           
+    </target>
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="runSIBDefineChainsJACL" 
+            description="Runs the JACL script to update the default server template with the SIB transport chains"> 
+             
+        <wscmtlog>Defining SIB transport chains and ports in the default server template, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/SIBDefineChains.log</wscmtlog>
+             
+        <echo>${profileName}</echo>
+        <echo>user.install.root value=${profilePath}</echo>
+        <echo>was.install.root value=${WAS_HOME}</echo>
+        <echo>was.repository.root value=${profilePath}/config</echo>
+        <echo>local.cell value=${cellName}</echo>
+        <echo>local.node value=${nodeName}</echo>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/SIBDefineChains.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/sibdefinechains.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="${nodeName}"/>
+        </wsadmin>  
+        <antcall target="importLogsToMain" >
+          <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/SIBDefineChains.log" />
+          <param name="description" value="Defining SIB transport chains and ports in the default server template" />
+          <param name="precondition" value="foetrue" />
+         </antcall>	    
+    </target> 
+ 
+    <target name="runSIBDeploySIBJMSRAJACL" 
+            description="Runs the JACL script to update the default server resources template with the SIB RA"> 
+
+        <wscmtlog>Adding SIB JMS RA to the Cell, Node, and default server template, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/SIBDeployRA.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->                
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/SIBDeployRA.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/sibdeployRA.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="${nodeName}"/>
+        </wsadmin>       
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/SIBDeployRA.log" />
+            <param name="description" value="Adding SIB JMS RA to the Cell, Node, and default server template" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target> 
+    
+    <target name="runSIBGenericDeployRAsJACL" 
+            description="Runs the JACL script to deploy the SIB component RAs">
+
+        <wscmtlog>Adding SIB JMS RA and WebSphere MQ RA to the Cell, Node, Servers and server templates, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->                 
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/sibgenericdeployRAs.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="${nodeName}"/>
+                 <arg value="true"/>
+                 <arg value="${mqra.exists}"/>
+        </wsadmin>       
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log" />
+            <param name="description" value="Adding SIB JMS RA and WebSphere MQ RA to the Cell, Node, Servers and server templates" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target> 
+
+    <target name="runSIBGenericDeployRAsJACLonAdminAgent" 
+            description="Runs the JACL script to deploy the SIB component RAs on the Admin Agent">
+
+        <wscmtlog>Adding WebSphere MQ RA to the Cell, Node, Servers and server templates, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->              
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 script="${templatePath}/actions/scripts/sibgenericdeployRAs.jacl"
+                 lang="jacl"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <arg value="${nodeName}"/>
+                 <arg value="false"/>
+                 <arg value="${mqra.exists}"/>
+        </wsadmin>       
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/SIBGenericDeployRAs.log" />
+            <param name="description" value="Adding WebSphere MQ RA to the Cell, Node, Servers" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target> 
+
+             
+    <target name="doExecuteSIBTemplateConfigDefault"
+        description="Configures templates for SIB component"
+        depends="runSIBDefineChainsJACL,
+                 runSIBGenericDeployRAsJACL">
+
+        <!-- Added for 228437 -->
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+           <param name="file" value="${profilePath}/config/templates/chains/sibservice-chains.xml"/>
+           <param name="token" value="$$(node.name)"/>
+           <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+
+    </target>
+
+    <target name="doExecuteSIBTemplateConfigOnAdminAgent"
+        description="Configures templates for SIB component on adminagent"
+        depends="runSIBDefineChainsJACL,
+                 runSIBGenericDeployRAsJACLonAdminAgent">
+
+        <!-- Added for 228437 -->
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+           <param name="file" value="${profilePath}/config/templates/chains/sibservice-chains.xml"/>
+           <param name="token" value="$$(node.name)"/>
+           <param name="tokenValue" value="${nodeName}"/>
+        </antcall>
+
+    </target>
+
+    <target name="condExecuteSIBTemplateConfigDefault"
+            depends="isServerType_not_JOB_MANAGER_or_ADMIN_AGENT"
+            if="isntJobManagerOrAdminAgent">
+   
+         <antcall target="doExecuteSIBTemplateConfigDefault">
+         </antcall>
+   
+    </target>
+
+    <target name="condExecuteSIBTemplateConfigOnAdminAgent"
+            depends="isServerType_ADMIN_AGENT"
+            if="isAdminAgent">
+   
+         <antcall target="doExecuteSIBTemplateConfigOnAdminAgent">
+         </antcall>
+   
+    </target>
+
+    <target name="executeSIBTemplateConfig"
+            depends="doesMQRAExist,condExecuteSIBTemplateConfigDefault,
+                     condExecuteSIBTemplateConfigOnAdminAgent">
+   
+    </target>
+
+    <target name="doesMQRAExist" description="Determine whether the MQRA is available and set the mqra.exists property">
+        <available file="${WAS_HOME}/lib/WMQ/ra/wmq.jmsra.rar" property="mqra.exists"/>
+        <property name="mqra.exists" value="false"/>
+    </target>
+
+</project>
+

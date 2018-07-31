@@ -1,0 +1,89 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="importConfigArchive_Management" default="importConfigArchive_Management" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;   
+    <target name="setCurrentOSFamily">
+       <condition property="isCurrentOSzOS" value="true">
+           <os family="z/os"/>
+       </condition>
+       <wscmtlog> Set setCurrentOSFamily to: ${setCurrentOSFamily} </wscmtlog>
+    </target>
+
+    <target name="setConfigArchiveFileName"
+            description="Set the config archive file name to be archived"
+            unless="isCurrentOSzOS" >
+      <condition property="archiveFileName" value="AdminAgent.car">
+            <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+      </condition>
+      <condition property="archiveFileName" value="Dmgr.car">
+        <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+      </condition>
+      <condition property="archiveFileName" value="JobMgr.car">
+        <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+      </condition>
+      <wscmtlog> config archive file name is: ${archiveFileName}</wscmtlog>
+    </target>
+                                                          
+    <target name="setConfigArchiveFileNamezOS"
+            description="Set the config archive file name to be archived"
+             if="isCurrentOSzOS">
+      <condition property="archiveFileName" value="AdminAgentZ.car">
+        <equals arg1="${serverType}" arg2="ADMIN_AGENT"/>
+      </condition>
+      <condition property="archiveFileName" value="DmgrZ.car">
+        <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+      </condition>
+      <condition property="archiveFileName" value="JobMgrZ.car">
+        <equals arg1="${serverType}" arg2="JOB_MANAGER"/>
+      </condition>
+      <wscmtlog> config archive file name on zos is: ${archiveFileName}</wscmtlog>
+    </target>
+
+    <target name="setQualifiedNameForConfigArchive"
+            description="Set the full qualified name for config archive file ">
+        <property name="qualifiedArchiveName" 
+                  value="&quot;${templatePath}/configArchives/${archiveFileName}&quot;"/>
+    </target>
+ 
+    <target name="doImportConfigArchive" description="Import a profile">
+
+        <wscmtlog>Importing WAS Profile ${qualifiedArchiveName}</wscmtlog>
+        <wscmtlog>Additional information will be logged in file ${WS_CMT_LOG_HOME}/${profileName}/importWasmanagementprofile.log</wscmtlog>
+           <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->  
+        <wsadmin conntype="none"
+                 lang="jacl"
+                 failonerror="false"
+			     returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/importWasmanagementprofile.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminTask importWasprofile { -archive ${qualifiedArchiveName} -options &quot; { { resolvePorts false} { reDeployApps false } } &quot; }"
+                 ipcFilename="${profilePath}/temp/wsadmin">
+        </wsadmin>
+         <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/importWasmanagementprofile.log" />
+            <param name="description" value="Importing WAS Profile ${qualifiedArchiveName}" />
+            <param name="precondition" value="foetrue" />
+        </antcall>   
+        <wscmtlog>Import WAS profile ${qualifiedArchiveName} finished</wscmtlog>
+
+    </target>
+    
+    <target name="importConfigArchive_Management"
+            description="Import a profile and do all necessary steps"
+            depends="setCurrentOSFamily,
+                     setConfigArchiveFileName,
+                     setConfigArchiveFileNamezOS,
+                     setQualifiedNameForConfigArchive,
+                     doImportConfigArchive"/> 
+                    
+</project>

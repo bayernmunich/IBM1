@@ -1,0 +1,116 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="was-mq-sharedtargets">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="wasmq.shared.targets.basedir" file="${ant.file.was-mq-sharedtargets}" />
+	<dirname property="wasmq.shared.targets.parentdir" file="${wasmq.shared.targets.basedir}" />
+	<dirname property="was.shared.targets.bundle.basedir" file="${wasmq.shared.targets.parentdir}" />
+	<taskdef file="${bundle.basedir}/properties/SSEQTP/aimpdtaskdef.properties" />
+	
+	<target name="collect_mq_info"  >
+		
+		<if isTrue="${jms.mq.configured}" >
+<!--			
+			<antcall target="ask_for_mq_root1"/>
+			<antcall target="validate_mq_root1"/>
+			<antcall target="collect_mq_logs1"/>
+--> 
+			<echo message=" " />
+			<stepcount />
+			<wsnlsecho key="Step_query_jms_mq_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="[{0}] Step {1}: Collecting WebSphere MQ information and logs..."
+			           replace="${autopdts};;${step.count}"
+			           id="11853"
+			           level="info" />
+			
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.mq.root"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+					label="WAS_MQ_root" defaultValue="" initialValueSource="persisted" />
+			</inputdialogtask>
+
+			<available file="${was.mq.root}/bin" type="dir"
+				property="mq.dir.exists" />
+
+			<if isTrue="${mq.dir.exists}">
+				<persistproperty property="mq.root" />
+			</if>
+
+			<if isNotTrue="${mq.dir.exists}">
+				<echo
+					message="The WebSphere MQ directory '${was.mq.root}' does not exist. Skipping MQ collection" />
+			</if>
+			<if isTrue="${mq.dir.exists}">
+				<zip encoding="UTF8" destfile="${pmrfilename}"
+					update="true">
+
+					<zipfileset dir="${was.mq.root}"
+						prefix="autopdzip/was/mq">
+						<include name="**/*.LOG" />
+						<include name="**/*.log" />
+					</zipfileset>
+				</zip>
+			</if>
+			
+		</if>
+		
+	</target>
+			
+			
+	<target name="ask_for_mq_root1"
+		description="ask the user for the WAS MQ root">
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_query_jms_mq_info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting WebSphere MQ information and logs..."
+		           replace="${autopdts};;${step.count}"
+		           id="11853"
+		           level="info" />
+		
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Input_Required"
+				type="prompt" bundle="autopdtoolstrings" />
+			<fieldtask name="was.mq.root"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+				label="WAS_MQ_root" defaultValue="" initialValueSource="persisted" />
+		</inputdialogtask>
+	</target>
+
+	<target name="validate_mq_root1"
+		description="validate the MQ root">
+
+		<available file="${was.mq.root}/bin" type="dir"
+			property="mq.dir.exists" />
+
+		<if isTrue="${mq.dir.exists}">
+			<persistproperty property="mq.root" />
+		</if>
+
+		<if isNotTrue="${mq.dir.exists}">
+			<echo
+				message="The WebSphere MQ directory '${was.mq.root}' does not exist. Skipping MQ collection" />
+		</if>
+
+	</target>
+
+	<target name="collect_mq_logs1" description="collect the MQ logs">
+		<if isTrue="${mq.dir.exists}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+
+				<zipfileset dir="${was.mq.root}"
+					prefix="autopdzip/was/mq">
+					<include name="**/*.LOG" />
+					<include name="**/*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+	</target>
+</project>

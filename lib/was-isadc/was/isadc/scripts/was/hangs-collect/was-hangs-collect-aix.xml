@@ -1,0 +1,479 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS hangs problem for
+	AIX platform. It should be included in the WAS hangs collect Ant scripts. 
+-->
+
+<project name="was-hangs-collect-aix">
+
+	<dirname property="was.hangs.collect.aix.basedir"
+		file="${ant.file.was-hangs-collect-aix}" />
+	<dirname property="was.hangs.collect.aix.parentdir"
+		file="${was.hangs.collect.aix.basedir}" />
+	<dirname property="was.hangs.collect.aix.grandparentdir"
+		file="${was.hangs.collect.aix.parentdir}" />
+	<dirname property="was.hangs.collect.aix.bundle.basedir"
+		file="${was.hangs.collect.aix.grandparentdir}" />
+
+	<!-- This target is used ot create hangs pre-output before staring to create javacore files-->
+	<target name="create_aix_hangs_pre_output"
+		description="Create aix hangs output before starting to create javacore"
+		if="isAIX">
+
+		<inputdialogtask > 
+			<fieldtask name="prompt1"
+        		label="Ask_how_to_proceed"
+		        type="prompt"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt2"
+				label="Run_dbx_Aix"
+        		type="label"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="run_dbx_aix"
+			   bundle="properties/SSEQTP/autopdtoolstrings_was"
+			   label="Run_dbx_Aix1"
+			   list="No:Yes"
+			   listDetails="No:Yes"
+			   type="selectlist" />
+		</inputdialogtask>
+		<condition property="run_dbx_trace_aix">
+			<equals arg1="Yes" arg2="${run_dbx_aix}" />
+		</condition>
+		
+		<if isTrue="${run_dbx_trace_aix}" >
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts"
+				pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho
+				key="Step_running_dbxtrace_aix.sh_to_obtain_dbxtrace_output"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				message="[{0}] Step {1}: Running dbxtrace_aix.sh to obtain dbxtrace output"
+				replace="${autopdts};;${step.count}" id="1096" level="info"
+				component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+			<property name="dbxtrace.out.path"
+				value="${autopdtmp}/autopd/dbxtrace.out" />
+
+			<copy
+				file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-template.sh"
+				tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-filled.sh"
+				overwrite="true">
+				<filterset>
+					<filter token="dbxtrace.path"
+						value="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/dbxtrace_aix.sh" />
+					<filter token="dbxtrace.out"
+						value="${dbxtrace.out.path}" />
+					<filter token="pid" value="${was.java.process.id}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh"
+				dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix"
+				output="${autopd.echolog.instance}" append="true">
+				<arg
+					line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-filled.sh" />
+			</exec>
+			
+		</if> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Obtaining system and network status output"
+			replace="${autopdts};;${step.count}" id="1097" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<property name="netstat.out.path"
+			value="${autopdtmp}/autopd/netstat.out" />
+		<property name="vmstat.out.path"
+			value="${autopdtmp}/autopd/vmstat.log" />
+
+		<copy
+			file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-template.sh"
+			tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path}" />
+				<filter token="vmstat.out" value="${vmstat.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+			dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>
+
+		<!-- Start changes 02/24 --> 
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_scripts_for_high_CPU_AIX"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running scripts for collecting output for High CPU on Aix."
+			replace="${autopdts};;${step.count}" id="1098" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<property name="ps.out.path" value="${autopdtmp}/autopd/psOutput.txt" />
+		<property name="vmstat.out.path" value="${autopdtmp}/autopd/vmstatOutput.txt" />
+		
+		<copy file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/ps_script.sh" tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/ps_script-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="PS_LOG" value="${ps.out.path}" />
+			</filterset>
+		</copy>
+		<copy file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/vmstat_script.sh" tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/vmstat_script-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="VMSTAT_LOG" value="${vmstat.out.path}" />
+			</filterset>
+		</copy>
+		<copy file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/tprof_ps.sh" tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/tprof_ps-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="TPROF_LOG" value="${autopdtmp}/autopd/tprof" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/ps_script-filled.sh" />
+		</exec>
+
+		<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/vmstat_script-filled.sh" />
+		</exec>
+		
+		<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/tprof_ps-filled.sh" />
+		</exec>
+		
+<!-- 	Remove all of the following as the must-gather does not specify - 02/24/2009.
+		<property name="ps.out.path" value="${autopdtmp}/autopd/ps_sfh.txt" />
+		
+		<copy file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/ps-out-template.sh" tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/ps-out-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="ps.args" value="-efH" />
+				<filter token="ps.out" value="${ps.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.linux.bundle.basedir}/scripts/was/shell/aix/ps-out-filled.sh" />
+		</exec>	
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_svmon_to_obtain_output"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running svmon to obtain output"
+			replace="${autopdts};;${step.count}" id="1098" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<property name="svmon.out.path"
+			value="${autopdtmp}/autopd/svmon.out" />
+
+
+		<exec executable="oslevel" outputproperty="aix.version.level" />
+
+		<echo message="AIX version: ${aix.version.level}" />
+
+		<condition property="isAIX4.3.3">
+			<contains substring="4.3.3" string="${aix.version.level}" />
+		</condition>
+		<condition property="isAIX5.1">
+			<contains substring="5.1" string="${aix.version.level}" />
+		</condition>
+		<condition property="isAIX5.2">
+			<contains substring="5.2" string="${aix.version.level}" />
+		</condition>
+		<condition property="isAIX5.3">
+			<contains substring="5.3" string="${aix.version.level}" />
+		</condition>
+
+		<if isTrue="${isAIX4.3.3}">
+			<property name="svmon.args"
+				value="-P -m ${was.java.process.id} -i 600" />
+		</if>
+		<if isTrue="${isAIX5.1}">
+			<property name="svmon.args"
+				value="-P ${was.java.process.id} -m -r -i 600" />
+		</if>
+		<if isTrue="${isAIX5.2}">
+			<property name="svmon.args"
+				value="-P ${was.java.process.id} -m -r -i 600" />
+		</if>
+		<if isTrue="${isAIX5.3}">
+			<property name="svmon.args"
+				value="-P ${was.java.process.id} -m -r -i 600" />
+		</if>
+
+		<copy
+			file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-template.sh"
+			tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="args" value="${svmon.args}" />
+				<filter token="svmon.out" value="${svmon.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Questionnaires"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Questionnaires"
+			replace="${autopdts};;${step.count}" id="1099" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+		<inputdialogtask>
+			<fieldtask name="prompt"
+				label="Please_check_if_you_can_serve_a_static_.html_document_from_Web_Server_and_provide_information"
+				type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer1" label="Answer" type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			append="true">
+			1. Provide information if you can serve a static .html
+			document from Web Server${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			append="true">
+			${answer1}${line.separator}
+		</concat>
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+				label="Can_you_serve_dynamic_documents_such_as_servlets_or_JSPs_when_bypassing_the_Web_server_and_WebSphere_Application_Server_plug-in?"
+				type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer2" label="Answer" type="textarea" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			append="true">
+			2. Can you serve dynamic documents such as servlets or JSPs
+			when bypassing the Web server and WebSphere Application
+			Server plug-in?${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			append="true">
+			${answer2}${line.separator}
+		</concat>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_tprof_command"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running tprof command"
+			replace="${autopdts};;${step.count}" id="1100" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<exec executable="sh"
+			dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/tprof.sh" />
+		</exec>
+-->
+	</target>
+
+
+	<!-- This target is used ot create hangs post-output after creating javacore files-->
+	<target name="create_aix_hangs_post_output"
+		description="Create aix hangs post output after creating java core files"
+		if="isAIX">
+
+		<inputdialogtask > 
+			<fieldtask name="prompt1"
+        		label="Ask_how_to_proceed"
+		        type="prompt"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt2"
+				label="Run_dbx_Aix"
+        		type="label"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="run_dbx_aix"
+			   bundle="properties/SSEQTP/autopdtoolstrings_was"
+			   label="Run_dbx_Aix1"
+			   list="No:Yes"
+			   listDetails="No:Yes"
+			   type="selectlist" />
+		</inputdialogtask>
+		<condition property="run_dbx_trace_aix">
+			<equals arg1="Yes" arg2="${run_dbx_aix}" />
+		</condition>
+		
+		<if isTrue="${run_dbx_trace_aix}" >
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts"
+				pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho
+				key="Step_running_dbxtrace_aix.sh_to_obtain_dbxtrace_output"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				message="[{0}] Step {1}: Running dbxtrace_aix.sh to obtain dbxtrace output"
+				replace="${autopdts};;${step.count}" id="1096" level="info"
+				component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+			<property name="dbxtrace.out.path1"
+				value="${autopdtmp}/autopd/dbxtrace1.out" />
+
+			<copy
+				file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-template.sh"
+				tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-filled.sh"
+				overwrite="true">
+				<filterset>
+					<filter token="dbxtrace.path"
+						value="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/dbxtrace_aix.sh" />
+					<filter token="dbxtrace.out"
+						value="${dbxtrace.out.path1}" />
+					<filter token="pid" value="${was.java.process.id}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh"
+				dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix"
+				output="${autopd.echolog.instance}" append="true">
+				<arg
+					line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-hangs-filled.sh" />
+			</exec>
+		</if> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Obtaining system and network status output"
+			replace="${autopdts};;${step.count}" id="1097" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<property name="netstat.out.path2"
+			value="${autopdtmp}/autopd/netstat2.out" />
+		<property name="vmstat.out.path2"
+			value="${autopdtmp}/autopd/vmstat2.log" />
+
+		<copy
+			file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-template.sh"
+			tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out"
+					value="${netstat.out.path2}" />
+				<filter token="vmstat.out" value="${vmstat.out.path2}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+			dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_svmon_to_obtain_output"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running svmon to obtain output"
+			replace="${autopdts};;${step.count}" id="1098" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<property name="svmon.out.path2"
+			value="${autopdtmp}/autopd/svmon.out" />
+
+		<!-- different aix version need to set different arguments -->
+		<copy
+			file="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-template.sh"
+			tofile="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="args" value="${svmon.args}" />
+				<filter token="svmon.out" value="${svmon.out.path}" />
+			</filterset>
+		</copy>
+		<!-- 
+			<exec executable="sh" dir="${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.hangs.collect.aix.bundle.basedir}/scripts/was/shell/aix/svmon-filled.sh" />
+			</exec>
+		-->
+
+	</target>
+
+
+
+	<!-- This target is used to collect specific information of was hangs problem for aix platform -->
+
+	<target name="collect_aix_was_hangs"
+		description="Collect was hangs problem" if="isAIX">
+		<echo message=" " />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1052641" />
+		
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho
+			key="Step_collect_specific_information_of_was_hangs_problem_for_AIX_platform"
+			bundle="autopdtoolstrings"
+			message="[{0}] Step {1}: Collecting specific information for WebSphere Application Server hang problem on the AIX platform"
+			replace="${autopdts};;${step.count}" id="1104" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+		<wsnlsecho
+			key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename"
+			bundle="autopdtoolstrings"
+			message="Zipping all log and related information to a zip file: {0}"
+			replace="${pmrfilename}" id="1030" level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-aix.xml" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${netstat.out.path}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path2}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path3}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${vmstat.out.path}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${vmstat.out.path2}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${vmstat.out.path3}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${ps.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${dbxtrace.out.path}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${dbxtrace.out.path1}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${svmon.out.path2}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${svmon.out.path}"
+				prefix="autopdzip/autopd" />
+		</zip>
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${ps.out.path}" prefix="${autopdProblem}" />
+			<zipfileset file="${vmstat.out.path}" prefix="${autopdProblem}" />
+			<zipfileset dir="${autopdtmp}/autopd/tprof" prefix="${autopdProblem}">
+				<include name="*" />
+			</zipfileset> 
+		</zip>
+		
+		
+	</target>
+</project>

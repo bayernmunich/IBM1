@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<meta name="security" content="public" />
+<meta name="Robots" content="index,follow" />
+<meta http-equiv="PICS-Label" content='(PICS-1.1 "http://www.icra.org/ratingsv02.html" l gen true r (cz 1 lz 1 nz 1 oz 1 vz 1) "http://www.rsac.org/ratingsv01.html" l gen true r (n 0 s 0 v 0 l 0) "http://www.classify.org/safesurf/" l gen true r (SS~~000 1))' />
+<meta name="DC.Type" content="topic" />
+<meta name="DC.Title" content="On demand router settings" />
+<meta name="abstract" content="Use this topic to perform advanced configuration on an on demand router (ODR). With ODR settings, you can fine tune the behavior of the ODR. In particular, you can configure the connections and requests to the application server, enable caching, configure the requests that must be rejected, define how error responses are handled, and specify the location of the ODR logs." />
+<meta name="description" content="Use this topic to perform advanced configuration on an on demand router (ODR). With ODR settings, you can fine tune the behavior of the ODR. In particular, you can configure the connections and requests to the application server, enable caching, configure the requests that must be rejected, define how error responses are handled, and specify the location of the ODR logs." />
+<meta name="DC.Relation" scheme="URI" content="uiodr_collection.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_settings.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_cache.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_cacheinstances.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_chain.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_detail_main.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_static_cache.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_wiz.html" />
+<meta name="DC.Relation" scheme="URI" content="odr_cluster_collection.html" />
+<meta name="copyright" content="© Copyright IBM Corporation 2005" />
+<meta name="DC.Rights.Owner" content="© Copyright IBM Corporation 2005" />
+<meta name="DC.Format" content="XHTML" />
+<meta name="DC.Identifier" content="odr_settings" />
+<meta name="DC.Language" content="en-us" />
+<!-- Licensed Materials Property of IBM -->
+<!-- US Government Users Restricted Rights -->
+<!-- Use, duplication or disclosure restricted by -->
+<!-- GSA ADP Schedule Contract with IBM Corp. -->
+<link rel="stylesheet" type="text/css" href="./ibmdita.css" />
+<link rel="stylesheet" type="text/css" href="./swg_info_common.css" />
+<title>On demand router settings</title>
+<style type="text/css">
+        span.stealth { visibility:hidden; }
+   </style></head>
+<body role="main" class="field-help" id="odr_settings">
+<h1 class="title topictitle1">On demand router settings</h1>
+<div class="body"><p class="shortdesc">Use this topic to perform advanced configuration on an
+on demand router (ODR). With ODR settings, you can fine tune the behavior
+of the ODR. In particular, you can configure the connections and requests
+to the application server, enable caching, configure the requests
+that must be rejected, define how error responses are handled, and
+specify the location of the ODR logs.</p>
+<p class="p">The ODR server, upon creation, senses the environment and is capable
+of routing requests to WebSphere® Application
+Server. Additional configuration can be applied to the ODR to meet
+the needs of a particular environment. Configuration of the ODR in
+the DMZ is not supported.</p>
+<p class="p">To view this administrative console page, click <span class="ph menucascade"><span class="ph uicontrol">Servers</span> &gt; <span class="ph uicontrol">Server types</span> &gt; <span class="ph uicontrol">On demand routers</span> &gt; <span class="ph uicontrol"><var class="keyword varname">odr_name</var></span> &gt; <span class="ph uicontrol">On demand router properties</span> &gt; <span class="ph uicontrol">On demand
+router settings</span></span>.</p>
+<p class="p">To change the ODR settings, you must have administrator
+or configurator administrative privileges.</p>
+<p class="p">You can edit configurable field settings for the ODR on the Configuration
+tab.</p>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="contentsc_description"><h2 class="title topictitle2">Content server connection</h2>
+<div class="body"><p class="shortdesc">Configure basic HTTP connection parameters between the
+proxy server and content servers.</p>
+<dl class="dl"><dt class="dt dlterm">Outbound request timeout</dt>
+<dd class="dd">The default number of seconds the ODR waits for a response prior
+timing out a request to a content server.  Consider this option carefully
+when changing the value. </dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Outbound connect timeout</dt>
+<dd class="dd">The number of milliseconds that the ODR waits to connect to a
+server. If this time expires, the ODR attempts to connect to a different
+server. If no other available servers exist, the request times out.
+A value of 0 indicates that the ODR should use the operating system
+kernel timeout value</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Pool connections to content server</dt>
+<dd class="dd">The option to pool connections to the server is an optimization
+feature. Pooling prevents the need to frequently create and destroy
+socket connections to the server, by allowing the ODR to pool these
+connections and reuse them. The default value for the maximum connections
+per server is 0, which means the number of connections can increase
+as needed.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Maximum connections per server</dt>
+<dd class="dd">The maximum number of connections that are pooled to any single
+content server. ODR custom properties that tweak content server connections
+are as follows:<ul class="ul"><li class="li">key=http.maxTargetReconnects: Maximum number of reconnects to
+the same target content server for each request. The default is 5.</li>
+<li class="li">key=http.maxTargetRetries:  Maximum number of times that the ODR
+attempts to select a new target content server for each request. The
+default is 5.</li>
+<li class="li">key=http.routing.sendReverseProxyNameInHost:  Determines whether
+or not the ODR name is placed in the host header for content that
+is not specific to WebSphere Application
+Server content servers. The options are <samp class="ph tt">true</samp> or <samp class="ph tt">false</samp> and
+are not case sensitive. The default is false.</li>
+<li class="li">key=http.compliance.disable: Determines whether HTTP V1.1 compliance
+is enforced on ODR content server connections. The options are <samp class="ph tt">true</samp> or <samp class="ph tt">false</samp> and
+are not case sensitive. The default is false.</li>
+<li class="li">key=http.compliance.via: The value of the via header that is appended
+to requests and responses for HTTP compliance. If the value is null,
+a via header is not appended. If the value is true, a default via
+value is appended. Otherwise, the specified string via value is appended.
+The default is null.</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="caching_description"><h2 class="title topictitle2">Caching</h2>
+<div class="body"><p class="shortdesc">The ODR can be configured to cache the content of servers.</p>
+<div class="p">By default, caching content is enabled. The properties that follow
+apply only if caching is enabled:<dl class="dl"><dt class="dt dlterm">Enable caching</dt>
+<dd class="dd">Enables caching framework for the ODR server and enables static
+content caching, as defined by HTTP 1.1 specifications.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache instance name</dt>
+<dd class="dd">The dynamic cache object cache instance, that is configured under <span class="ph menucascade"><span class="ph uicontrol">Resourcs</span> &gt; <span class="ph uicontrol">Cache instances</span> &gt; <span class="ph uicontrol">Object cache instances</span></span>, used
+to cache all static and dynamic content responses. This object cache
+instance must be configured to support new I/O (NIO) application program
+interfaces (APIs).</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache SSL content</dt>
+<dd class="dd">Determines whether client ODR SSL connections that are terminated
+by the ODR should have their responses cached.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache aggressively</dt>
+<dd class="dd">Enables caching of HTTP responses that would not normally be cached.
+Caching rules that are defined by HTTP 1.1 can be broken to gain caching
+optimization.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache dynamic content</dt>
+<dd class="dd">Determines whether dynamic content that is generated by WebSphere Application Servers
+V6.02, or later, is cached. Caching dynamic content generated by content
+servers prior to WebSphere Application
+Server V6.02 is not supported.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache update URI</dt>
+<dd class="dd">When caching dynamic content, this is the relative URI of an installed
+content server application that is used to invalidate cached entries. </dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="topic nested1" xml:lang="en-us" id="compression"><h2 class="title topictitle2">Compression Policy</h2>
+<div class="body"><p class="shortdesc">Enables compression of the HTTP response message body prior
+to sending it to the client.</p>
+<dl class="dl"><dt class="dt dlterm">gzip-only</dt>
+<dd class="dd">Compress the response using the gzip compression mechanism. The
+response is compressed only if it is acceptable to the client, based
+on the Accept-Encoding request header. </dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">deflate-only</dt>
+<dd class="dd">Compress the response using the deflate compression mechanism.
+The response is compressed only if it is acceptable to the client,
+based on the Accept-Encoding request header.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">auto-only</dt>
+<dd class="dd">Use either gzip, deflate, or no compression as determined by the
+client preference</dd>
+</dl>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="pexclus_description"><h2 class="title topictitle2">Exclusions</h2>
+<div class="body"><p class="shortdesc">The ODR examines every incoming request. You can define
+certain methods for exclusion and if the requested HTTP method matches
+any of the configured methods for exclusion, the ODR rejects the requests
+with a METHOD DISALLOWED error. </p>
+<dl class="dl"><dt class="dt dlterm">HTTP methods disabled</dt>
+<dd class="dd">By default, the CONNECT, PUT, and DELETE methods are disabled.</dd>
+</dl>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="plog_description"><h2 class="title topictitle2">Logging</h2>
+<div class="body"><p class="shortdesc">HTTP requests are logged in one of three logs: proxy, cache,
+and local. Local log configuration is not available in the administrative
+console, but is available at ${SERVER_LOG_ROOT}local.log. Specify
+the location of this log by setting the http.log.localFileName custom
+property to the file location. The content of each log is formatted
+using the National Center for Supercomputing Applications common log
+format. </p>
+<div class="p"><dl class="dl"><dt class="dt dlterm">Enable access logging</dt>
+<dd class="dd">Select to enable logging.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Access log maximum</dt>
+<dd class="dd">The maximum log size in megabytes (MB). 25 MB is the default.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Proxy access log</dt>
+<dd class="dd">Logs responses that are received from remote servers.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Cache access log</dt>
+<dd class="dd">Logs responses that are served from the local cache.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Local access log</dt>
+<dd class="dd">Contains the name of the local log. A value of <samp class="ph tt">NULL</samp> indicates
+that the default <samp class="ph tt">${SERVER_LOG_ROOT}/local.log</samp> is used. Logs
+all non-cache local responses, for example, redirects and internal
+errors. This content does not come from the ODR cache.</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="psecurity_description"><h2 class="title topictitle2">Security</h2>
+<div class="body"><p class="shortdesc">Use this section to set up security options.</p>
+<dl class="dl"><dt class="dt dlterm">Trusted security proxies</dt>
+<dd class="dd">Some topologies have another layer of routing enabled on top of
+the ODR. For example, Web servers read incoming requests to verify
+which ODR they are routed to. This configuration field enables intermediaries
+other than the ODR server to handle the request by explicitly telling
+the ODR that is to trust them. Use an internet protocol or fully-qualified
+host name in this field.</dd>
+</dl>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="proxyplug_description"><h2 class="title topictitle2">Proxy plug-in configuration policy</h2>
+<div class="body"><dl class="dl"><dt class="dt dlterm">Generate plug-in configuration</dt>
+<dd class="dd">Use this parameter for the generation of an ODR plug-in configuration
+file that you can use on a Web server that is deployed in front of
+the ODR. The plug-in can determine the URI that the ODR is handling
+on behalf of the application server. The plug-in can determine the
+endpoint, or boundaries of the ODR so that it can properly route requests
+it receives to the ODR. This feature is useful for those who prefer
+to deploy a proven Web server in the demilitarized zone (DMZ), which
+is fully capable of exploiting the ability of the ODR. Note that the
+configuration of the ODR in the DMZ is not supported.<p class="p">You can define
+a level by which to generate the plug-in. For the cell scope, the
+ODR generates a plug-in configuration that includes all of the URIs
+managed by all the ODRs in the cell. For the node scope, the plug-in
+configuration file contains all the URIs managed by the ODRs that
+are defined on the same node as the ODR that is generating the plug-in.
+Additionally, all traffic routed by the plug-in configuration file
+is routed through only the ODRs on the same node as this ODR. For
+the server scope, the plug-in configuration file contains all the
+URIs managed by only the ODR that is generating the plug-in, and all
+traffic routed by the plug-in configuration file is routed through
+this ODR only.</p>
+</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Plugin config change script</dt>
+<dd class="dd">Specifies the path to a script that is run following the WebSphere Application Server
+plug-in configuration is generated.</dd>
+</dl>
+</div>
+</div>
+<div class="topic nested1 field-help" xml:lang="en-us" id="errpage_description"><h2 class="title topictitle2">Custom error page policy</h2>
+<div class="body"><p class="shortdesc">Use this field to support the use of customized error pages
+when errors occur during the processing of the request. </p>
+<div class="p">The default is no customized error pages generated. The properties
+that follow enable customized error pages for use when errors occur
+during request processing:<dl class="dl"><dt class="dt dlterm">Error page generation application URI</dt>
+<dd class="dd">If a valid URI to an installed application is not provided, the
+custom error page policy does not handle requests.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Handle remote errors</dt>
+<dd class="dd">When not selected, HTTP response error status codes are handled
+only when the ODR generates an error response. When selected, HTTP
+response error status codes are handled when the ODR generates an
+error response, as well as when an application server generates an
+error response. A best practice is to configure an error page application
+on the same physical machine as the ODR.</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">Headers to forward to error page application</dt>
+<dd class="dd">Specifies additional header values from the client request to
+forward to the error page application as query parameters. The responseCode
+and URI query parameters are always sent to the error page application,
+in addition to the ones that are configured. The responseCode parameter
+is the HTTP status code that generates internally or is returned by
+the content server. The URI parameter is the request URI for the client.<div class="p"><strong class="ph b">Example</strong> -
+The error page URI is <samp class="ph tt">/ErrorPageApp/ErrorPage</samp>, the headers
+to forward contain <samp class="ph tt">Host</samp>, and a client sends the following
+request:<pre class="pre">GET  /house/rooms/kitchen.jpg HTTP/1.1
+Host:  homeserver.companyx.com
+The request results in a HTTP 404 response (local or remote), and the request URI to the error page application would be:
+/ErrorPageApp/ErrorPage?responseCode=404&amp;uri=/house/rooms/kitchen.jpg&amp;Host= homeserver.companyx.com</pre>
+</div>
+</dd>
+</dl>
+<dl class="dl"><dt class="dt dlterm">HTTP status codes that are to be recognized as errors</dt>
+<dd class="dd">The status codes for which the error page policy provides a response.
+If a status code is not specified, the original content of responses
+with that status code is returned.  If no HTTP status codes are specified,
+the defaults, <samp class="ph tt">404</samp> and <samp class="ph tt">5XX</samp>, are used. Instead of
+specifying status codes individually, the following method is recommended
+to represent a range:<ul class="ul"><li class="li"><samp class="ph tt">5XX:  500-599</samp>  </li>
+<li class="li"><samp class="ph tt">4XX:  400-499</samp></li>
+<li class="li"><samp class="ph tt">3XX:  300-399</samp>  </li>
+<li class="li"><samp class="ph tt">2XX:  200-299</samp> </li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="related-links">
+<div class="relinfo"><strong>Related information</strong>:<br />
+<div><a class="link help" href="uiodr_collection.html" title="This page lists the on demand routers (ODRs) in the cell. An ODR resides within an Intelligent Management node. An ODR classifies, prioritizes, and routes HTTP and SIP traffic in the enterprise. On this page you can create, delete, start, and stop an ODR. You can also create server templates.">On demand router collection</a></div>
+<div><a class="link help" href="odr_settings.html" title="Use this topic to perform advanced configuration on an on demand router (ODR). With ODR settings, you can fine tune the behavior of the ODR. In particular, you can configure the connections and requests to the application server, enable caching, configure the requests that must be rejected, define how error responses are handled, and specify the location of the ODR logs.">On demand router settings</a></div>
+<div><a class="link help" href="odr_cache.html" title="Use this topic to configure a cache rule that is associated to a URI group for the on demand router (ODR). HTTP 1.1 defines a set of rules for ODRs to cache content. Static cache rules enable these default rules to be overridden for a given address space. For the rules to have meaning, you must enable caching on the Servers &gt; Server types &gt; On demand routers &gt; ODR_name &gt; On demand router properties &gt; On demand router settings administrative console page.">On demand router static cache rule settings</a></div>
+<div><a class="link help" href="odr_cacheinstances.html" title="Use this page to configure and manage object cache instances, which in addition to the default shared dynamic cache, can store, distribute, and share data for Java Platform, Enterprise Edition (Java EE) applications. Use cache instances to give applications better flexibility and tuning of the cache resources.">On demand router object cache instance collection</a></div>
+<div><a class="link help" href="odr_chain.html" title="Use this page to view or manage transport chains for the on demand router (ODR). Transport chains enable communication through transports, or protocol stacks, which are usually socket based.">On demand router transport chains collection</a></div>
+<div><a class="link help" href="odr_detail_main.html" title="Use this page to modify settings on an existing on demand router (ODR).">On demand router configuration</a></div>
+<div><a class="link help" href="odr_static_cache.html" title="This topic lists the on demand router (ODR) static cache rules. On this page you can create, delete, or modify an on demand router static cache rule.">On demand router static cache rules</a></div>
+<div><a class="link help" href="odr_wiz.html" title="Use this page to create an on demand router.">Create a new on demand router</a></div>
+<div><a class="link help" href="odr_cluster_collection.html" title="This page lists the on demand router (ODR) clusters in the cell. An ODR cluster consists of a group of ODRs. On this page, you can modify the configuration settings of an ODR cluster. If one of the members of an ODR cluster fails, requests are routed to the other members of the cluster.">On demand router clusters collection</a></div>
+</div>
+</div>
+<hr align="left" /><br /><span class="runningfooter">File name: odr_settings.html</span></body>
+</html>

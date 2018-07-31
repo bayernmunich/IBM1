@@ -1,0 +1,179 @@
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-I63, 5724-H88 (C) COPYRIGHT International Business Machines Corp. 2003, 2004 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<form-validation>
+  <formset>
+
+    <form name="com.ibm.ws.console.coregroup.bridge.settings.accesspointgroup.AccessPointGroupDetailForm">
+        <field property="name" depends="required,mask">
+            <arg0 key="AccessPointGroup.name.displayName"/>
+			<var>
+				<var-name>mask</var-name>
+				<var-value>${was_name}</var-value>
+             </var>            
+        </field>
+    </form>
+
+    <form name="com.ibm.ws.console.coregroup.bridge.settings.coregroupaccesspoint.CoreGroupAccessPointDetailForm">
+        <field property="name" depends="required,mask">
+            <arg0 key="CoreGroupAccessPoint.name.displayName"/>
+			<var>
+				<var-name>mask</var-name>
+				<var-value>${was_name}</var-value>
+             </var>            
+        </field>        
+        <field property="coreGroup" depends="required,mask">
+            <arg0 key="CoreGroupAccessPoint.coreGroup.displayName"/>
+ 			<var>
+				<var-name>mask</var-name>
+				<var-value>${was_name}</var-value>
+             </var>            
+        </field>
+    </form>
+    <form name="ProvidePeerEndPointForm">    	
+      <field property="host" depends="when,mask">
+        <arg0 key="PeerEndPoint.host.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>endPointRadioButton</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>EQUAL</var-value>
+		</var>
+		<var>
+			<var-name>fieldValue[0]</var-name>
+			<var-value>USEENDPOINT</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${IPv4}|${IPv6}|${IPv4MappedIPv6}|${IPv4CompatibleIPv6}|${Hostname}|${DNSHostname}</var-value>
+        </var>
+      </field>
+      
+      
+     <field property="port" depends="when,integer,range">
+        <arg0 key="PeerEndPoint.port.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>endPointRadioButton</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>EQUAL</var-value>
+		</var>
+		<var>
+			<var-name>fieldValue[0]</var-name>
+			<var-value>USEENDPOINT</var-value>
+		</var>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>65535</var-value>
+        </var>
+      </field>
+    </form>
+        
+     <form name="com.ibm.ws.console.coregroup.bridge.settings.peeraccesspoint.endpoint.EndPointDetailForm">    	
+           
+      <field property="host" depends="required,mask">
+        <arg0 key="EndPoint.host.displayName"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>action</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>EQUAL</var-value>
+		</var>
+		<var>
+			<var-name>fieldValue[0]</var-name>
+			<var-value>new</var-value>
+		</var>
+        <var>
+          <var-name>mask</var-name>
+          <var-value>${IPv4}|${IPv6}|${IPv4MappedIPv6}|${IPv4CompatibleIPv6}|${Hostname}|${DNSHostname}|(^[\s]*[\*][\s]*$)</var-value>
+        </var>
+      </field>
+      
+      <field property="port" depends="required,integer,range">
+        <arg0 key="EndPoint.port.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+			<var-name>field[0]</var-name>
+			<var-value>action</var-value>
+		</var>
+		<var>
+			<var-name>fieldTest[0]</var-name>
+			<var-value>EQUAL</var-value>
+		</var>
+		<var>
+			<var-name>fieldValue[0]</var-name>
+			<var-value>new</var-value>
+		</var>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>65535</var-value>
+        </var>
+      </field>
+    </form>    
+
+    <form name="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.TunnelPeerAccessPointDetailForm">
+    <field property="retryDelay" depends="integer,range">
+        <arg0 key="TunnelPeerAccessPoint.retryDelay.displayName"/>
+        <arg1 name="range" key="${var:min}" resource="false"/>
+        <arg2 name="range" key="${var:max}" resource="false"/>
+        <var>
+          <var-name>min</var-name>
+          <var-value>1</var-value>
+        </var>
+        <var>
+          <var-name>max</var-name>
+          <var-value>65535</var-value>
+        </var>
+      </field> 
+      <field depends="required,mask" property="name">
+        <arg0 key="TunnelPeerAccessPoint.name.displayName"/>
+        <var>
+			<var-name>mask</var-name>
+			<var-value>${was_name}</var-value>
+      	</var>     
+      </field>
+      <field depends="required" property="cellName">
+        <arg0 key="TunnelPeerAccessPoint.cell.displayName"/>
+      </field>
+    </form>
+    
+    <form name="com.ibm.ws.console.coregroup.bridge.settings.tunnelpeeraccesspoint.PeerCoreGroupDetailForm">
+    	<field depends="required,mask" property="coreGroup">
+        	<arg0 key="PeerCoreGroup.name.displayName"/>
+        	<var>
+				<var-name>mask</var-name>
+				<var-value>${was_name}</var-value>
+            </var>     
+      	</field>
+    </form>
+    
+    <form name="com.ibm.ws.console.coregroup.bridge.settings.tunneltemplate.TunnelTemplateDetailForm">
+    	<field depends="required,mask" property="name">
+        	<arg0 key="TunnelTemplate.name.displayName"/>
+        	<var>
+				<var-name>mask</var-name>
+				<var-value>${was_name}</var-value>
+           	</var>     
+      	</field>
+    </form>
+          
+  </formset>    
+</form-validation>

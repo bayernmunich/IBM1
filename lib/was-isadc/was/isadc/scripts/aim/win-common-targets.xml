@@ -1,0 +1,593 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Windows Was Shared Targets">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="win.was.shared.targets.basedir"
+		file="${ant.file.Windows Was Shared Targets}" />
+	<dirname property="win.was.shared.targets.parentdir"
+		file="${win.was.shared.targets.basedir}" />
+	<dirname property="win.was.shared.targets.bundle.basedir"
+		file="${win.was.shared.targets.parentdir}" />
+
+	<!-- documentation target, only -->
+				<target name="internal-usage" 
+					description="This shared component contains Windows specific targets used to perform
+					heap dumps, user dumps, and configure Perfmon.">
+				</target>
+
+	<!-- **************************************************************************** -->
+	<!-- BEGIN AIM SHARED COMBINED TARGETS ****************************************** -->
+	<!-- **************************************************************************** -->
+	
+	<!-- 1. WIN COMMON TARGETS: INFORM_USER_TEST_CYCLE_ENDED ************************ -->
+	<target name="inform_user_test_cycle_ended" 
+		description="Prompt the user with the 'I have reproduced the problem' prompt."
+		if="isWindows">
+		<autopdinput message="Prompt_user_for_test_end"
+			validargs="I_have_reproduced_the_problem" addproperty="do.reproduce"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+	<!-- 2. WIN COMMON TARGETS: COLLECT_WAS_CPU ************************************* -->
+	<target name="collect_was_cpu" 
+		description="This target collects the CPU perfmon logs from the file system
+			iff 'perf.result' is 'true'."
+		if="isWindows">
+		<!-- Collect perflogs -->
+
+		<if isTrue="${perf.result}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${perf.log}" prefix="${autopdProblem}/perf" />
+			</zip>
+		</if>
+	</target>
+
+	<!-- 3. WIN COMMON TARGETS: GENERATE_USR.DMP ************************************ -->
+	<target name="generate_usr.dmp" description="This target uses Dr. Watson
+			to generate a user dump iff the user agress to the
+			operation." 
+		if="isWindows">
+<!--
+		<autopdinput message="Warn_User_About_Java_Process_Termination"
+			validargs="OK,Skip" addproperty="terminate.ok"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.user.dmp">
+			<equals arg1="${terminate.ok}" arg2="OK" />
+		</condition>
+		
+		<if isTrue="${do.user.dmp}">
+
+			<exec executable="cmd"
+				dir="${bundle.basedir}/scripts/was/shell/windows"
+				output="${autopd.echolog.instance}" append="true">
+				<arg line="/c drwtsn32 -p ${was.java.process.id}" />
+			</exec>
+
+			<property name="user.dmp.generated" value="true" />
+
+			<property name="was.server.isRunning" value="false" />
+			<autopdinput message="Ask_Start_App_Server"
+				validargs="OK,Skip" addproperty="start.ok"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<condition property="start.app.server">
+				<equals arg1="${start.ok}" arg2="OK" />
+			</condition>
+		</if>
+--> 
+<!-- Task 21884 --> 
+	<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="User_Dump_Windows2" 
+					propertyName="User_Dump_Windows2_URL"
+					message="For details - See {0} -> Setup Userdump Tool"
+					replace="${userdump.web.url}" />
+		</if> 
+		<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="User_Dump_Windows2" 
+					propertyName="User_Dump_Windows2_URL"
+					message="For details - See {0} -> Setup Userdump Tool"
+					replace="${userdump.web.url.text}" />
+		</if> 
+						
+
+		<inputdialogtask doSkip="true" noCancel="true" actionProperty="userDumpIncluded"  > 
+			<fieldtask name="prompt"
+			    label="Input_Required"
+			    type="prompt"
+			    bundle="autopdtoolstrings" />
+			<fieldtask name="label1"
+				type="label"
+				label="User_Dump_Windows0"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+			<fieldtask name="label1"
+				type="label"
+				label="User_Dump_Windows1"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+			<fieldtask name="lable21"
+		        label="${User_Dump_Windows2_URL}"
+        		type="label"
+           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="userdump.path"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+				label="Path_To_UserDump_Utility" initialValueSource="persisted" />
+		</inputdialogtask> 
+	
+		<condition property="user.dump.included">
+				<equals arg1="ok" arg2="${userDumpIncluded}" casesensitive="false" />
+		</condition>	
+		<condition property="user.dump.skipped">
+				<equals arg1="skip" arg2="${userDumpIncluded}" casesensitive="false" />
+		</condition>
+
+		<if isTrue="${user.dump.skipped}" > 
+			<echo message="User Dump Skipped."/>
+		</if>
+			
+		<if isTrue="${user.dump.included}" >
+			<available file="${userdump.path}" property="userdump.file.available" /> 
+			
+			<if isNotTrue="${userdump.file.available}"> 
+				<echo message="Userdump executable is not available. Proceed without running the Userdump tool."/> 
+			</if> 
+			<if isTrue="${userdump.file.available}" > 
+				
+				<echo message=" " />
+				<stepcount />
+				<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+				<wsnlsecho key="Create_Windows_User_Dump_1" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" 
+					message="[{0}] Step {1}: Creating first User Dump Output for Windows..." 
+					replace="${autopdts};;${step.count}" 
+					id="1000" />
+
+				<copy file="${bundle.basedir}/scripts/was/shell/windows/userdump-template.bat"
+					tofile="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+					overwrite="true">
+					<filterset>
+						<filter token="userdump.exe" value='"${userdump.path}"' />
+						<filter token="pid" value="${was.java.process.id}" />
+						<filter token="userdump.output" value='"${autopdtmp}/autopd/dump/firstDump.dmp"' />
+					</filterset>
+				</copy>
+				<exec executable="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+				      dir="${autopdtmp}/autopd/dump"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line="" />
+				</exec>
+				<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+				<wsnlsecho key="Waiting_for_2_minutes_For_User_Dump" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" 
+					message="[{0}] Waiting for next user dump generation..." 
+					replace="${autopdts}" 
+					id="1020" 
+					level="info"/>	
+
+				<waitfor maxwait="120" maxwaitunit="second" > 
+					<available file="${autopdtmp}/autopd/dump/firstDump.dmp" type="file" property="userdump.file.notexisting" />
+				</waitfor>
+	<!-- 2nd dump --> 
+				<echo message=" " />
+				<stepcount />
+				<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+				<wsnlsecho key="Create_Windows_User_Dump_2" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" 
+					message="[{0}] Step {1}: Creating second User Dump Output for Windows..." 
+					replace="${autopdts};;${step.count}" 
+					id="1000" />
+
+				<copy file="${bundle.basedir}/scripts/was/shell/windows/userdump-template.bat"
+					tofile="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+					overwrite="true">
+					<filterset>
+						<filter token="userdump.exe" value="${userdump.path}" />
+						<filter token="pid" value="${was.java.process.id}" />
+						<filter token="userdump.output" value="${autopdtmp}/autopd/dump/SecondDump.dmp" />
+					</filterset>
+				</copy>
+				<exec executable="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+				      dir="${autopdtmp}/autopd/dump"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line="" />
+				</exec>
+				<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+				<wsnlsecho key="Waiting_for_2_minutes_For_User_Dump" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" 
+					message="[{0}] Waiting for next user dump generation..." 
+					replace="${autopdts}" 
+					id="1020" 
+					level="info"/>	
+				<waitfor maxwait="120" maxwaitunit="second" > 
+					<available file="${autopdtmp}/autopd/dump/SecondDump.dmp" type="file" property="userdump.file.notexisting" />
+				</waitfor>
+
+	<!-- 3rd dump --> 
+				<echo message=" " />
+				<stepcount />
+				<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+				<wsnlsecho key="Create_Windows_User_Dump_3" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" 
+					message="[{0}] Step {1}: Creating third User Dump Output for Windows..." 
+					replace="${autopdts};;${step.count}" 
+					id="1000" />
+
+				<copy file="${bundle.basedir}/scripts/was/shell/windows/userdump-template.bat"
+					tofile="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+					overwrite="true">
+					<filterset>
+						<filter token="userdump.exe" value="${userdump.path}" />
+						<filter token="pid" value="${was.java.process.id}" />
+						<filter token="userdump.output" value="${autopdtmp}/autopd/dump/ThirdDump.dmp" />
+					</filterset>
+				</copy>
+				<exec executable="${autopdtmp}/autopd/dump/userdump-template-filled.bat"
+				      dir="${autopdtmp}/autopd/dump"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line="" />
+				</exec>
+
+
+	<!--			
+				<exec executable="cmd" dir="${autopdtmp}/autopd/dump" output="${autopd.echolog.instance}" append="true">
+					<arg line="/c ${userdump.path}"/>
+					<arg line=' -f ${was.java.process.id} "${autopdtmp}/autopd/dump/firstDump.dmp"' />
+				</exec>
+
+				<waitfor maxwait="2" maxwaitunit="second" /> 
+				
+				<exec executable="cmd" dir="${autopdtmp}/autopd/dump" output="${autopd.echolog.instance}" append="true">
+					<arg line="/c ${userdump.path}"/>
+					<arg line=' -f ${was.java.process.id} "${autopdtmp}/autopd/dump/SecondDump.dmp"' />
+				</exec>
+
+				<waitfor maxwait="2" maxwaitunit="second" /> 
+				
+				<exec executable="cmd" dir="${autopdtmp}/autopd/dump" output="${autopd.echolog.instance}" append="true">
+					<arg line="/c ${userdump.path}"/>
+					<arg line=' -f ${was.java.process.id} "${autopdtmp}/autopd/dump/ThirdDump.dmp"' />
+				</exec>
+
+				<waitfor maxwait="2" maxwaitunit="second" /> 
+	--> 
+				<available file="{autopdtmp}/autopd/dump" type="dir" property="user.dump.dir.available" /> 
+				
+			</if> 
+		</if>
+			
+			
+	</target>
+
+	<!-- 2. WIN COMMON TARGETS: GENERATE_HEAPDUMP_WINDOWS *************************** -->
+	<target name="generate_heapdump_windows" 
+			description="This target performs a heap dump iff the variable
+				force.dump is set to 'true'." 
+		if="isWindows">
+
+		<if isTrue="${force.dump}">
+
+			<echo message="Forcing a heapdump to occur" />
+
+			<copy
+				file="${bundle.basedir}/scripts/jacl/was-jvm-threaddumps-template.jacl"
+				tofile="${bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl"
+				overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable='"${was.enhanced.root}/bin/wsadmin.bat"'
+				dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}"
+				append="true">
+				<arg
+					line=' -f "${was.java.process.id}${bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+
+		</if>
+	</target>
+
+	<!-- 4. WIN COMMON TARGETS: LAUNCH_PERFORMANCE_MANAGER ************************** -->
+	<target name="launch_performance_manager" 
+		description="This target launches the performance manager, 'perfmon'
+			iff 'do.run.perfmon' is set to 'true'."
+		if="isWindows">
+
+		<autopdinput message="Question_run_perfmon" validargs="OK,Skip"
+			addproperty="run.perfmon"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.run.perfmon">
+			<equals arg1="${run.perfmon}" arg2="OK" />
+		</condition>
+<!--
+		<if isTrue="${do.run.perfmon}">
+
+			<exec executable="logman.exe">
+				<arg line="stop ${perf.name}" />
+			</exec>
+
+			<exec executable="logman.exe">
+				<arg line="delete ${perf.name}" />
+			</exec>
+--> 
+			<!--  instantiate it -->
+<!--		
+			<exec executable="logman.exe"
+				dir="${bundle.basedir}/scripts/was/shell/windows"
+				output="${autopd.echolog.instance}" append="true">
+				<arg
+					line="create counter ${perf.name} -cf ${perfmon.input}" />
+			</exec>
+--> 
+			<!--  start it up -->
+<!--		
+			<exec executable="logman.exe">
+				<arg line="start ${perf.name}" />
+			</exec>
+
+			<waitfor maxwait="3" maxwaitunit="second">
+				<available file="doesntexist.tmp" property="nopropnoop" />
+			</waitfor>
+
+			<perfmonfilename success="perf.result" logfile="perf.log"
+				perfmon="${perf.name}" />
+
+			<waitfor maxwait="5" maxwaitunit="second">
+				<available file="doesntexist.tmp" property="nopropnoop" />
+			</waitfor>
+		</if>
+--> 			
+	</target>
+
+	<!-- 5. WIN COMMON TARGETS: CPU_MANUALLY_CONFIG_PERFMON ************************* -->
+	<target name="cpu_manually_config_perfmon" 
+		description="This target displays instructions for manually configuring 
+			the perfmon CPU settings iff 'do.run.perfmon' is set to 'true'."
+		if="isWindows">
+
+		<if isTrue="${do.run.perfmon}">
+			<inputdialogtask>
+				<fieldtask name="prompt" label="CPU_Config_Instructions"
+					type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+				<fieldtask name="prompt1" label="cpu_perf_instructions1"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2" label="cpu_perf_instructions2"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt3" label="cpu_perf_instructions3"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt4" label="cpu_perf_instructions4"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt5" label="cpu_perf_instructions5"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt6" label="cpu_perf_instructions6"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt7" label="cpu_perf_instructions7"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt8" label="cpu_perf_instructions8"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt9" label="cpu_perf_instructions9"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt10"
+					label="cpu_perf_instructions10" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+	</target>
+
+
+	<!-- 6. WIN COMMON TARGETS: OOM_MANUALLY_CONFIG_PERFMON ************************* -->
+	<target name="oom_manually_config_perfmon" 
+		description="This target displays instructions for manually configuring 
+					the perfmon Out of Memory settings iff 'do.run.perfmon' is set to 'true'."
+		if="isWindows">
+
+		<if isTrue="${do.run.perfmon}">
+			<inputdialogtask>
+				<fieldtask name="prompt" label="OOM_Config_Instructions"
+					type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+				<fieldtask name="prompt1" label="oom_perf_instructions1"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2" label="oom_perf_instructions2"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt3" label="oom_perf_instructions3"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt4" label="oom_perf_instructions4"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt5" label="oom_perf_instructions5"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt6" label="oom_perf_instructions6"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt7" label="oom_perf_instructions7"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt8" label="oom_perf_instructions8"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt9" label="oom_perf_instructions9"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt10"
+					label="oom_perf_instructions10" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt11"
+					label="oom_perf_instructions11" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+	</target>
+
+	<!-- 7. WIN COMMON TARGETS: LAUNCH_PERFMON_CLIENT ******************************* -->
+	<target name="launch_perfmon_client" 
+		description="This target launches the perfmon client iff 'do.run.perfmon' 
+			is set to 'true'."
+		if="isWindows">
+		<if isTrue="${do.run.perfmon}">
+			<exec executable="cmd"
+				dir="${bundle.basedir}/scripts/was/shell/windows"
+				output="${autopd.echolog.instance}" append="true">
+				<arg line="/c perfmon" />
+			</exec>
+		</if>
+	</target>
+
+	<!-- 8. WIN COMMON TARGETS: STOP_PERFORMANCE_MANAGER **************************** -->
+	<target name="stop_performance_manager" 
+		description="This target stops the perfmon manager iff 'do.run.perfmon' 
+					is set to 'true'."
+		if="isWindows">
+		
+		<if isTrue="${do.run.perfmon}">
+			<exec executable="logman.exe">
+				<arg line="stop ${perf.name}" />
+			</exec>
+
+			<exec executable="logman.exe">
+				<arg line="delete ${perf.name}" />
+			</exec>
+		</if>
+	</target>
+
+	<!-- 9. WIN COMMON TARGETS: OBTAIN_WINDOWS **************************** -->
+	<target name="obtain_windows_core_file_location"
+		description="This target obtains the location of the user dump file
+			by querying the registry." 
+		
+		if="isWindows">
+
+		<windows_registry_access propertyName="user.dmp.file.path"
+			registryKey="SOFTWARE\Microsoft\DrWatson\CrashDumpFile" />
+		<windows_registry_access propertyName="drwtson32.log.file.path"
+			registryKey="SOFTWARE\\Microsoft\\DrWatson\\LogFilePath" />
+
+		<echo message="user.dmp.file.path: ${user.dmp.file.path}" />
+		<echo
+			message="drwtson32.log.file.path: ${drwtson32.log.file.path}" />
+
+
+		<available file="${user.dmp.file.path}" type="file"
+			property="user.dmp.file.path.available" />
+		<available file="${drwtson32.log.file.path}/drwtsn32.log"
+			type="file" property="drwtson32.log.file.path.available" />
+
+		<echo
+			message="user.dmp.file.path.available: ${user.dmp.file.path.available}" />
+		<echo
+			message="drwtson32.log.file.path.available: ${drwtson32.log.file.path.available}" />
+
+
+		<if isNotTrue="${user.dmp.file.path.available}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Please_provide_the_core_file_location" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="user.dmp.file.path"
+					label="Crash_Dump_File_Path" defaultValue="" type="filebrowser"
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					initialValueSource="persisted" />
+			</inputdialogtask>
+
+			<persistproperty property="user.dmp.file.path" />
+
+		</if>
+		<if isNotTrue="${drwtson32.log.file.path.available}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Please_provide_the_core_file_location" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="drwtson32.log.file.path"
+					label="Dr_Watson.log_File_Path" defaultValue="" type="filebrowser"
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					initialValueSource="persisted" />
+			</inputdialogtask>
+
+			<persistproperty property="drwtson32.log.file.path" />
+
+		</if>
+
+
+		<echo message="user.dmp.file.path: ${user.dmp.file.path}" />
+		<echo
+			message="drwtson32.log.file.path: ${drwtson32.log.file.path}" />
+
+		<!--	
+			<inputdialogtask>
+			<fieldtask name="prompt" label="Please_provide_the_core_file_location" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="drwtson32.log.file.path" label="Dr_Watson.log_File_Path"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="user.dmp.file.path" label="Crash_Dump_File_Path"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>
+		-->
+
+		<trim_filename key="drwtson32.log.file.dir.trimmed"
+			filename="${drwtson32.log.file.path}"
+			prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+		<dirname property="drwtson30.log.file.dir"
+			file="${drwtson32.log.file.path}" />
+		<basename property="drwtson30.log.file.name"
+			file="${drwtson32.log.file.path}" />
+
+			
+		<dirname property="user.dmp.file.dir"
+			file="${user.dmp.file.path}" />
+		<basename property="user.dmp.file.name"
+			file="${user.dmp.file.path}" />
+
+		<trim_filename key="user.dmp.file.dir.trimmed"
+			filename="${user.dmp.file.dir}" prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true"
+			preservelastmodified="true">
+			<fileset file="${drwtson32.log.file.path}" />
+			<fileset file="${user.dmp.file.path}" />
+		</copy>
+	</target>
+
+	<!-- 10. WIN COMMON TARGETS: SET_WIN_DUMP_PATH ********************************** -->
+	<target name="set_win_dump_path" 
+		description="This target sets the user dump path in the registry."
+		if="isWindows">
+		<windows_registry_access propertyName="drwtson32.log.file.path"
+			registryKey="SOFTWARE\\Microsoft\\DrWatson\\LogFilePath" />
+	</target>
+
+	<!-- 11. WIN COMMON TARGETS: COLLECT_WAS_MEMORY_WINDOWS ************************* -->
+	<target name="collect_was_memory_windows" 
+		description="This target collects the user dump iff 'do.user.dmp' is 'true'."
+		if="isWindows"
+		depends="set_win_dump_path">
+
+		<available file="${drwtson32.log.file.path}/drwtsn32.log"
+					type="file" property="drwtson32.log.file.path.available" />
+		
+		<if isTrue="${do.user.dmp}">
+			<if isTrue="${drwtson32.log.file.path.available}">
+				<zip encoding="UTF8" destfile="${jar.file.name}"
+					update="true">
+					<zipfileset dir="${drwtson32.log.file.path}"
+						prefix="autopdzip/win-mem">
+						<include name="**/user.dmp" />
+						<include name="**/drwtsn32.log" />
+					</zipfileset>
+				</zip>
+			</if>
+		</if>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- END WIN_COMMON_TARGETS ***************************************************** -->
+	<!-- **************************************************************************** -->
+</project>

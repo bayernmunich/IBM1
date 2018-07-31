@@ -1,0 +1,454 @@
+#--------------------------------------------------------------
+# @start_restricted_prolog@
+# Version: @(#) 1.3 SIB/ws/code/sib.webservices/all/all/util/sibwsInstall.jacl, SIB.webservices.runtime, WAS855.SIB, cf131750.05 05/05/18 11:09:15 [12/17/17 20:15:38]
+# 
+# Licensed Materials - Property of IBM
+# 
+# "Restricted Materials of IBM"
+# 
+# 5724-I63, 5724-H88, 5655-N01, 5733-W60         
+# 
+# (C) Copyright IBM Corp. 2004 All Rights Reserved.
+# 
+# US Government Users Restricted Rights - Use, duplication or
+# disclosure restricted by GSA ADP Schedule Contract with
+# IBM Corp.
+# @end_restricted_prolog@
+#
+#--------------------------------------------------------------
+#
+# sibwsInstall.jacl
+#
+# Usage:
+#  wsadmin -f sibwsInstall.jacl INSTALL_RA
+#          -installRoot <install directory>
+#          -nodeName <node> [-clusterName <cluster>]
+#          
+#  wsadmin -f sibwsInstall.jacl [INSTALL_HTTP | INSTALL_JMS | INSTALL]
+#          -installRoot <install directory>
+#          -serverName <server> -nodeName <node>
+#
+#  wsadmin -f sibwsInstall.jacl [INSTALL_HTTP | INSTALL_JMS | INSTALL]
+#          -installRoot <install directory>
+#          -clusterName <cluster>
+#
+# Notes:
+#  * Forward slashes (/) should be used for all paths.
+#  * The resource adaptor must be installed, using INSTALL_RA, before
+#    the application can be started.
+#  * At least one of INSTALL_HTTP and INSTALL_JMS is recommended.
+#
+#--------------------------------------------------------------
+
+#--------------------------------------------------------------
+# getFormattedNLSString : get localised message for key and inserts
+#   nlsBundle - the bundle containing the message
+#   key	      - the message key
+#   inserts   - a list of strings to insert into the message
+# return localised message
+#--------------------------------------------------------------
+proc getFormattedNLSString { nlsBundle key inserts } {
+  set insertArray [java::new {Object[]} [llength $inserts]]
+  for {set x 0} {$x<[llength $inserts]} {incr x} {
+    $insertArray set $x [lindex $inserts $x]
+  }
+  return [$nlsBundle getFormattedMessage $key $insertArray  "Message not found for key: $key"]
+}
+
+#--------------------------------------------------------------
+# putsMessage : format and print CWSWSxxxx message
+#   key	      - the message key
+#   inserts   - a list of strings to insert into the message
+#--------------------------------------------------------------
+proc putsMessage { key inserts } {
+  global nlsMessageBundle
+  set localMessage [getFormattedNLSString $nlsMessageBundle $key $inserts]
+  puts $localMessage 
+}
+
+#--------------------------------------------------------------
+# putsUsageMessageAndExit : issue command line usage and terminate
+#--------------------------------------------------------------
+proc putsUsageMessageAndExit { } {
+  global nlsTextBundle
+  set localMessage [getFormattedNLSString $nlsTextBundle Install.Arguments [list]]
+  puts $localMessage 
+  set localMessage [getFormattedNLSString $nlsTextBundle Install.ArgumentList [list]]
+  puts $localMessage 
+  set localMessage [getFormattedNLSString $nlsTextBundle Install.Slashes [list]]
+  puts $localMessage 
+  exit
+}
+
+#--------------------------------------------------------------
+# startApp : start application on named server
+#  appName - Application name
+#  server  - Server name
+#  node    - Node name
+#--------------------------------------------------------------
+proc startApp { appName server node } {
+  global AdminControl
+  global AdminConfig
+
+  # Find application manager for server
+  set appmgr [$AdminControl queryNames type=ApplicationManager,process=$server,node=$node,*]
+
+  # Is server running?
+  if {$appmgr != ""} {
+
+    # Synchronise node
+    set nodeSync [$AdminControl completeObjectName type=NodeSync,node=$node,*]
+    if {$nodeSync != "" } {
+      $AdminControl invoke $nodeSync sync
+    }
+
+    # MSG_STARTING_APPLICATION
+    putsMessage   CWSWS5053  [list [list $appName $server $node]]
+
+    # Attempt to start application
+    if {[catch {$AdminControl invoke $appmgr startApplication $appName} result]} {
+
+      # MSG_APPLICATION_NOT_STARTED
+      putsMessage    CWSWS5054 [list $result]    
+      
+    } else {
+
+      # MSG_APPLICATION_STARTED
+      putsMessage    CWSWS5055 [list $appName]
+      
+    }
+
+  } else {
+
+    # Server not currently running  
+
+  }
+  
+}
+
+#--------------------------------------------------------------
+# installApp : install an application (to server or cluster)
+#  earFile - EAR file within installRoot/installableApps directory
+#  appName - Application name
+#--------------------------------------------------------------
+proc installApp { earFile appName } {
+  global AdminConfig
+  global AdminApp
+  global installRoot
+  global serverName
+  global nodeName
+  global clusterName
+
+  # Set up path to application EAR
+  set earFilePath $installRoot
+  append earFilePath /installableApps/$earFile
+
+  # Construct unique application name for this target
+  if {$clusterName != ""} {
+    set fullAppName "$appName.$clusterName"
+    set installArgs "-cluster $clusterName -usedefaultbindings -appname \"$fullAppName\""
+  } else {
+    set fullAppName "$appName.$nodeName.$serverName"
+    set installArgs "-server $serverName -node $nodeName -usedefaultbindings -appname \"$fullAppName\""
+  }
+  
+  # MSG_INSTALLING_APPLICATION
+  putsMessage    CWSWS5050 [list $fullAppName]
+
+  # Attempt to install EAR  
+  if {[catch {$AdminApp install $earFilePath $installArgs} result ]} {
+
+    # Analyse error response
+    set notFound [ string first "WASX7115" $result]
+    set duplicate [ string first "WASX7279" $result]
+
+    # Report error (and exit if necessary)
+    if {$duplicate > 0} {
+       putsMessage   CWSWS5066 [list $earFilePath]
+       # Might already be present if a previous attempt was
+       #  partially successful so do not exit
+    } elseif {$notFound > 0} {
+       putsMessage   CWSWS5065 [list $earFilePath]
+       exit
+    } else {
+       putsMessage   CWSWS5051 [list $result]
+       exit
+    }
+    
+  }
+
+  # MSG_SAVING_CONFIGURATION
+  putsMessage    CWSWS5060 [list]
+  
+  # Attempt to save configuration
+  if {[catch {$AdminConfig save} result ]} {
+    #MSG_ERROR_SAVING_CONFIGURATION
+    putsMessage    CWSWS5061 [list $result]
+    exit
+  }
+
+  # Start application on running server
+  if {$clusterName != ""} {
+  
+    # Iterate over the members of the cluster
+    set clusterid [$AdminConfig getid /ServerCluster:$clusterName/]
+    set clustermembers [lindex [$AdminConfig showAttribute $clusterid members] 0]
+    foreach member $clustermembers {
+    
+      # Attempt to start application on this member
+      set server [$AdminConfig showAttribute $member memberName]
+      set node [$AdminConfig showAttribute $member nodeName]
+      startApp $fullAppName $server $node
+
+    }
+  
+  } else {
+  
+    # Start application on single server
+    startApp $fullAppName $serverName $nodeName
+
+  }
+
+}
+
+#--------------------------------------------------------------
+# installResourceAdaptor : install resource adaptor
+#--------------------------------------------------------------
+proc installResourceAdaptor { } {
+   global AdminConfig
+   global AdminTask
+   global installRoot
+   global nodeName
+   global clusterName
+
+   # Resource adaptor name                
+   set raname "SIB_RA"
+        
+   # Already installed on node?
+   set ra [$AdminConfig getid /Node:$nodeName/J2CResourceAdapter:$raname/]
+   if {[llength $ra] > 0} {
+   
+      # Already installed on node (do nothing and continue)
+      
+   } else {
+   
+      # Prepare to install on node
+      set options [list -rar.name $raname]
+      set raFilePath $installRoot/lib/sib.ra.rar
+          
+      # MSG_INSTALLING_RESOURCE_ADAPTER
+      putsMessage  CWSWS5056 [list $raname]
+      
+      # Attempt to install resource adaptor          
+      if {[catch {set ra [$AdminConfig installResourceAdapter $raFilePath $nodeName $options]} result ]} {
+      
+         # Report error and exit
+         putsMessage   CWSWS5057 [list $result]
+         exit
+         
+      }
+      
+      # Prepare to create activation spec
+      set specName     "SIBWS_OUTBOUND_MDB"
+      set specJndiName "eis/$specName"
+      
+      # MSG_CREATING_ACTIVATION_SPEC
+      putsMessage  CWSWS5059 [list $specName]     
+      
+      # Attempt to create activation spec
+      set params [list -messageListenerType com.ibm.wsspi.sib.ra.SibRaMessageListener -name $specName -jndiName $specJndiName]
+      if {[catch { set specList [$AdminTask createJ2CActivationSpec $ra $params]} result ]} {
+      
+         # Report error and exit
+         putsMessage    CWSWS5062 [list $result]
+         exit
+         
+      }
+
+      # Set parameter values
+      set spec [lindex $specList 0]
+      set propList [$AdminConfig list J2EEResourceProperty $spec]
+      for {set n 0} {$n < [llength $propList]} {incr n} {
+         set prop [lindex $propList $n]
+         set name [$AdminConfig showAttribute $prop name]
+         if { $name == "destinationType" } {
+            set att [list value Port]
+            set atts [list  $att]
+            $AdminConfig modify $prop $atts
+         }
+      }
+
+      # MSG_RESOURCE_ADAPTER_INSTALLED
+      putsMessage CWSWS5058   [list $raname]
+   }
+
+   # Do we have a cluster specified?        
+   if {$clusterName != ""} {
+   
+      # Already installed on cluster?
+      set racluster [$AdminConfig getid /ServerCluster:$clusterName/J2CResourceAdapter:$raname/]
+      if {[llength $racluster] > 0} {
+      
+         # Already installed on cluster (do nothing and continue)
+         
+      } else {
+      
+         # Prepare to install on cluster
+         set clusterList [$AdminConfig list ServerCluster]
+         set clusterScope [lindex $clusterList [lsearch $clusterList "*$clusterName*"]]
+        
+         # MSG_INSTALLING_RESOURCE_ADAPTER
+         putsMessage  CWSWS5056 [list $clusterName.$raname]
+        
+         # Deep-copy the configured resource adaptor to cluster
+         # ("-useDeepCopy" option will include the modifications we made)
+         set raCluster [$AdminTask copyResourceAdapter $ra [subst {-name $raname -scope $clusterScope -useDeepCopy}] ]
+                        
+         # MSG_RESOURCE_ADAPTER_INSTALLED
+         putsMessage CWSWS5058   [list $clusterName.$raname]
+      
+      }
+      
+   }
+        
+   # MSG_SAVING_CONFIGURATION
+   putsMessage    CWSWS5060  [list]
+  
+   # Attempt to save configuration
+   if {[catch {$AdminConfig save} result ]} {
+      #MSG_ERROR_SAVING_CONFIGURATION
+      putsMessage  CWSWS5061   [list $result]
+      exit
+   }
+     
+}
+
+#--------------------------------------------------------------
+# Main code 
+#--------------------------------------------------------------
+
+# Bundle containing CWSWSxxxx messages
+set nlsMessageBundle [java::call com.ibm.ejs.ras.TraceNLS getTraceNLS com.ibm.ws.sib.webservices.messages.SIBWSMessages];
+
+# Bundle containing other strings
+set nlsTextBundle [java::call com.ibm.ejs.ras.TraceNLS getTraceNLS com.ibm.ws.sib.webservices.messages.SIBWSText];
+
+# Default command action is INSTALL
+set command "INSTALL"
+# Default all other parms to blanks.
+set serverName ""
+set nodeName ""
+set installRoot ""
+set clusterName ""
+set cellName ""
+
+# Make sure we have some parameters
+if {$argc < 1} {
+   putsUsageMessageAndExit
+}
+
+# Retrieve supplied parameters
+for {set i 0 } {$i < $argc} {incr i} {
+   if { [lindex $argv $i] == "-serverName" } {
+      incr i
+      set serverName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-cellName" } {
+      incr i
+      set cellName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-nodeName" } {
+      incr i
+      set nodeName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-installRoot" } {
+      incr i
+      set installRoot [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "-clusterName" } {
+      incr i
+      set clusterName [lindex $argv $i]
+   } elseif { [lindex $argv $i] == "INSTALL" } {
+      set command "INSTALL"
+   } elseif { [lindex $argv $i] == "INSTALL_RA" } {
+      set command "INSTALL_RA"
+   } elseif { [lindex $argv $i] == "INSTALL_HTTP" } {
+      set command "INSTALL_HTTP"
+   } elseif { [lindex $argv $i] == "INSTALL_JMS" } {
+      set command "INSTALL_JMS"
+   } else {
+      # unknown parameter
+      putsUsageMessageAndExit
+   }
+}
+
+# Check for mandatory installRoot
+if {$installRoot == ""} {
+    putsUsageMessageAndExit
+}
+
+# Check for valid combination of serverName, nodeName and clusterName
+if {$command == "INSTALL_RA"} {
+   # INSTALL_RA needs nodeName but not serverName, clusterName is optional
+   if {$nodeName == ""} {
+      # nodeName required for INSTALL_RA
+      putsUsageMessageAndExit
+   }
+   if {$serverName != ""} {
+      # serverName prohibited for INSTALL_RA
+      putsUsageMessageAndExit
+   }
+} else {
+   # Other commands either have clusterName OR (nodeName AND serverName)
+   if {$clusterName != ""} {
+      if {$serverName != ""} {
+         # clusterName prohibits serverName
+         putsUsageMessageAndExit
+      }
+      if {$nodeName != ""} {
+         # clusterName prohibits nodeName
+         putsUsageMessageAndExit
+      }
+   } else {
+      if {$nodeName != ""} {
+         if {$serverName == ""} {
+            # serverName required when no clusterName
+            putsUsageMessageAndExit
+         }   
+      } else {
+         # nodeName required when no clusterName
+         putsUsageMessageAndExit
+      }   
+   }
+}
+
+# Perform command
+if {$command == "INSTALL"} {
+       
+   # Install the main application
+   installApp sibws.ear sibws
+
+} elseif {$command == "INSTALL_HTTP"} {
+    
+   # Install the HTTP endpoints
+   installApp sibwshttpchannel1.ear sibwshttp1
+   installApp sibwshttpchannel2.ear sibwshttp2
+    
+} elseif {$command == "INSTALL_JMS"} {
+    
+   # Install the JMS endpoints
+   installApp sibwsjmschannel1.ear sibwsjms1
+   installApp sibwsjmschannel2.ear sibwsjms2
+    
+} elseif {$command == "INSTALL_RA"} {
+
+   # Install the resource adaptor
+   installResourceAdaptor
+        
+} else {
+
+   # Invalid command
+   putsMessage  CWSWS5063  [list $command]
+
+}
+
+#--------------------------------------------------------------
+# End of main code
+#--------------------------------------------------------------
+

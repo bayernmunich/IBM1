@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <definition
+        controllerClass="com.ibm.ws.console.genericserver.ServerController"
+        name="GenericServer.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="GenericServer"/>
+        <put name="descTitle" value="GenericServer.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.servermanagement"/>
+        <put name="descText" value="GenericServer.description"/>
+        <put name="serverType" value="GENERIC_SERVER"/>
+        <putList name="contentList">
+            <add value="GenericServer.paging.extend"/>
+            <add value="GenericServer.quicksearch.extend"/>
+            <add value="GenericServer.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="GenericServer.paging.extend">
+        <put name="displayLabelKey" value="GenericServer.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formAction" value="genericServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="GenericServer.quicksearch.extend">
+        <put name="selectUri" value="genericServerCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formAction" value="genericServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <putList name="searchList">
+            <add value="ManagedObject.name.displayName:name"/>
+            <add value="Server.node.displayName:node"/>
+            <add value="Host.name.displayName:hostName"/>
+            <add value="node.version.displayName:expandedVersion"/>
+            <add value="Server.status.displayName:status:ExecutionState.STARTED,ExecutionState.STOPPED,ExecutionState.UNAVAILABLE"/>
+        </putList>
+    </definition>
+    <definition name="GenericServer.collection.table.extends" path="/com.ibm.ws.console.servermanagement/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formAction" value="genericServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"/>
+        <put name="buttons" value="GenericServer.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.genericserver.forwardCmd.do?forwardName=GenericServer.content.main"/>
+        <!-- added for d226010 -->
+        <put name="serverType" value="genericserver"/>
+        <!-- added for d226010 -->
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/GenericServer/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/GenericServer/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="GenericServer.collection.buttons.panel">
+        <put name="buttonCount" value="6"/>
+        <put name="definitionName" value="GenericServer.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.view" name="GenericServer.config.view">
+        <put name="contextType" value="GenericServer"/>
+        <putList name="list">
+            <add value="GenericServer.detail.title"/>
+            <add value="GenericServer.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="GenericServer.detail.title">
+        <put name="formName" value="com.ibm.ws.console.genericserver.GenericServerDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.servermanagement"/>
+        <put name="titleKey" value="GenericServer.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.genericserver.forwardCmd.do?forwardName=GenericServer.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="GenericServer.description"/>
+        <put name="displayName" value="GenericServer.displayName"/>
+    </definition>
+    <definition name="GenericServer.detail.tabsLayout" path="/com.ibm.ws.console.servermanagement/tabsLayout.jsp">
+        <put name="selectUri" value="genericServerDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.genericserver.GenericServerDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="GenericServer.config.tab.view">
+        <putList name="list">
+            <add value="GenericServer.config.general.properties"/>
+            <add value="GenericServer.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="GenericServer.config.general.properties">
+        <put name="formAction" value="genericServerDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.genericserver.GenericServerDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.genericserver.GenericServerDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ApplicationServer.name.displayName:name:no:Text:ApplicationServer.name.description:yes:yes"/>
+        </putList>
+    </definition>
+    <definition name="GenericServer.config.additional.properties" path="/com.ibm.ws.console.servermanagement/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.genericserver.GenericServerDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition name="genericserver.wizard.steps" path="/com.ibm.ws.console.servermanagement/stepsLayout.jsp">
+        <put name="contextType" value="genericserver.wizard.steps"/>
+        <put name="titleKey" value="genericserver.create.new"/>
+        <put name="descKey" value="genericserver.create.new.description"/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value=""/>
+        <put name="formType" value=""/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="stepArraySessionKey" value="GENERIC_SERVER_STEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.servermanagement/SelectNodeForServer" value="genericserver.new.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.servermanagement/SelectAppServerTemplate" value="genericserver.new.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.genericserver/SpecifyGenericServerProperties" value="genericserver.new.step3"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.servermanagement/ConfirmCreateAppServer" value="genericserver.new.step4"/>
+        </putList>
+    </definition>
+    <definition extends="genericserver.wizard.steps" name="genericserver.new.step1">
+        <put name="actionHandler" value="selectNodeForGenericServer"/>
+        <put name="jspName" value="SelectNodeForServer"/>
+        <put name="actionForm" value="SelectAppServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.wizard.CreateNewAppServerForm"/>
+    </definition>
+    <definition extends="genericserver.wizard.steps" name="genericserver.new.step2">
+        <put name="actionHandler" value="selectGenericServerTemplate"/>
+        <put name="jspName" value="SelectAppServerTemplate"/>
+        <put name="actionForm" value="SelectAppServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.wizard.CreateNewAppServerForm"/>
+    </definition>
+    <definition extends="genericserver.wizard.steps" name="genericserver.new.step3">
+        <put name="actionHandler" value="specifyGenericServerProperties"/>
+        <put name="jspName" value="SpecifyGenericServerProperties"/>
+        <put name="actionForm" value="SpecifyGenericServerPropertiesForm"/>
+        <put name="formType" value="com.ibm.ws.console.genericserver.GenericServerForm"/>
+    </definition>
+    <definition extends="genericserver.wizard.steps" name="genericserver.new.step4">
+        <put name="actionHandler" value="confirmCreateGenericServer"/>
+        <put name="jspName" value="ConfirmCreateAppServer"/>
+        <put name="actionForm" value="ConfirmCreateAppServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.genericserver.GenericServerForm"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.servermanagement.server.templates.TemplateController"
+        name="GenericServerTemplate.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="bcHandler" value="com.ibm.ws.console.core.breadcrumbs.impl.POSTBreadcrumbHandler"/>
+        <put name="contextType" value="GenericServerTemplate"/>
+        <put name="descTitle" value="ServerTemplate.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.servermanagement"/>
+        <put name="descText" value="ServerTemplate.description"/>
+        <putList name="contentList">
+            <add value="ServerTemplate.paging.extend"/>
+            <add value="ServerTemplate.quicksearch.extend"/>
+            <add value="ServerTemplate.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="ServerTemplate.quicksearch.extend">
+        <put name="selectUri" value="templateCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formAction" value="templateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <putList name="searchList">
+            <add value="template.name:name"/>
+            <add value="ServerTemplate.platform.displayName:platform"/>
+            <add value="ServerTemplate.version.displayName:version"/>
+            <add value="template.description:description"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="ServerTemplate.paging.extend">
+        <put name="displayLabelKey" value="ServerTemplate.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formAction" value="templateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.main" name="ServerTemplate.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formAction" value="templateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.server.templates.TemplateCollectionForm"/>
+        <put name="buttons" value="ServerTemplate.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=GenericServerTemplate.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/ServerTemplate/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ServerTemplate/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="ServerTemplate.collection.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="ServerTemplate.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.servermanagement.server.templates.SelectServerController"
+        name="servermanagement.selectserver.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="servermanagement.selectserver.main"/>
+        <put name="descTitle" value="serverForTemplate.select.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.core"/>
+        <put name="descText" value="serverForTemplate.select.text"/>
+        <putList name="contentList">
+            <add value="servermanagement.selectserver.paging.extend"/>
+            <add value="servermanagement.selectserver.quicksearch.extend"/>
+            <add value="servermanagement.select.server"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="servermanagement.selectserver.paging.extend">
+        <put name="displayLabelKey" value="servers.displayName"/>
+        <put name="collectionForm" value="selectServerForm"/>
+        <put name="formAction" value="selectServerForTemplate.do"/>
+        <put name="formName" value="selectServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.core.form.ServersCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="servermanagement.selectserver.quicksearch.extend">
+        <put name="selectUri" value="selectServerForTemplate.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="selectServerForm"/>
+        <put name="formAction" value="selectServerForTemplate.do"/>
+        <put name="formName" value="selectServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.core.form.ServersCollectionForm"/>
+        <putList name="searchList">
+            <add value="servers.displayName:server"/>
+            <add value="nodes.displayName:node"/>
+            <add value="node.version.displayName:version"/>
+        </putList>
+    </definition>
+    <definition name="servermanagement.select.server" path="/com.ibm.ws.console.servermanagement/selectServerForTemplateCollectionLayout.jsp">
+        <put name="iterationName" value="selectServerForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="single"/>
+        <put name="createButtons" value="true"/>
+        <put name="selectName" value="selectedServer"/>
+        <put name="formAction" value="selectServerForTemplate.do"/>
+        <put name="formName" value="selectServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.core.form.ServersCollectionForm"/>
+        <put name="includeButtonTile" value="false"/>
+        <putList name="columnList"/>
+    </definition>
+    <definition name="servermanagement.create.template" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="servermanagement.create.template"/>
+        <put name="descTitle" value="CreateNewTemplate.descTitle"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.core"/>
+        <put name="descText" value="CreateNewTemplate.description"/>
+        <putList name="contentList">
+            <add value="servermanagement.create.new.template"/>
+        </putList>
+    </definition>
+    <definition name="servermanagement.create.new.template" path="/com.ibm.ws.console.servermanagement/createNewTemplate.jsp">
+        <put name="formAction" value="createTemplate.do"/>
+        <put name="formName" value="com.ibm.ws.console.servermanagement.wizard.TemplateDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.servermanagement.wizard.TemplateDetailForm"/>
+    </definition>
+</tiles-definitions>

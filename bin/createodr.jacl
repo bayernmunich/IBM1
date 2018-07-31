@@ -1,0 +1,284 @@
+#
+# (C) Copyright IBM Corp. 2004,2012 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you
+# in the  use of  the product. The code is provided 'AS IS', without warranty or
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+
+#-----------------------------------------------------------------
+# createodr.jacl - creates an odr server
+#-----------------------------------------------------------------
+#
+#  Creates a odr server type on specified node
+#
+#  This is a bi-modal script: it can be included in the wsadmin
+#  command invocation like this:
+#     wsadmin -f createodr.jacl nodeY odr_template odr_name
+#
+#  or the script can be sourced from the wsadmin command line if:
+#     wsadmin> source createodr.jacl
+#     wsadmin> createodr nodeY odr_template odr_name
+#
+#  The script expects some parameters:
+#      arg1 - node name (required)
+#      arg2 - odr template (optional)
+#      arg3 - odr name (optional)
+#-----------------------------------------------------------------
+
+proc validNode {productVersion} {
+   
+   set retval -1
+   if {[string first "<id>WXD" $productVersion] != -1} {
+        set retval 1
+   } else {
+        set slen [string length $productVersion]
+        set idx [string first "<id>ND" $productVersion]
+	set s2 [string range $productVersion $idx $slen]
+
+        set slen [string length $s2]
+        set idx [string first "<version>" $s2]
+	set s3 [string trim [string range $s2 [expr $idx+9] $slen]]
+
+        set idx [string first "</version>" $s3]
+	set ndver [string trim [string range $s3 0 [expr $idx-1]]]
+
+        set slen [string length $ndver]
+        set idx [string first "." $ndver]
+	set v1 [string range $ndver 0 [expr $idx-1]]
+	set ndver2 [string range $ndver [expr $idx+1] $slen]
+        set idx [string first "." $ndver2]
+	set v2 [string range $ndver2 0 [expr $idx-1]]
+
+        if {$v1 == 8} {
+	      if {$v2 >= 5} {
+	            set retval 1
+	      }
+	} else if {$v1 >= 9} {
+	      set retval 1
+	}
+   }
+
+   return $retval
+}
+
+proc createodr {nodeName serverTemplate serverName} {
+
+   set templatePrefix $serverTemplate
+   append templatePrefix (
+   set retval 1
+
+   #--------------------------------------------------------------
+   # set up globals
+   #--------------------------------------------------------------
+   global AdminConfig
+   global AdminControl
+   global AdminApp
+   global AdminTask
+
+   #--------------------------------------------------------------
+   # do some sanity checking
+   #     -- do we have a node by this name?
+   #--------------------------------------------------------------
+   set node [$AdminConfig getid /Node:$nodeName/]
+   puts "createodr: checking for existence of node $nodeName"
+   if {[llength $node] == 0} {
+      puts "createodr: Error -- node not found for name $nodeName"
+      return $retval
+   }
+
+   #----------------------------------------------------------------
+   #     -- is a server by this name already configured on the node?
+   #----------------------------------------------------------------
+   puts "createodr: checking to see if server $serverName is already configured on node $nodeName"
+   set existingServer [$AdminConfig getid /Node:$nodeName/Server:$serverName/]
+   if {[llength $existingServer] > 0} {
+      puts "createodr: Error -- Server $serverName already configured on node $nodeName"
+      return $retval
+   }
+
+   #----------------------------------------------------------------
+   #     -- is the nodeagent server mbean available for verifying that this is an valid node
+   #        (version >= 8.5 or WVE is found)
+   #----------------------------------------------------------------
+   puts "createodr: checking to see if the nodeagent server mbean is available"
+   set nodeagtMbean [$AdminControl queryNames type=Server,node=$nodeName,name=nodeagent,*]
+   if {[llength $nodeagtMbean] == 0} {
+	puts "createodr: skipping check for node type"
+   } else {
+	set productVersion [$AdminControl invoke $nodeagtMbean getVersionsForAllProducts]
+	if {[validNode $productVersion] != -1} {
+		puts "createodr: Node type verified as a valid node"
+	} else {
+		puts "createodr: Error -- On Demand Router can only be created on a valid node"
+		return $retval
+	}
+   }
+
+   #----------------------------------------------------------------
+   #     -- is the nodeagent at the same version level as the dmgr
+   #----------------------------------------------------------------
+   set dmgrNode [$AdminControl getNode]
+   set dmgrVersion [eval "$AdminTask getNodeBaseProductVersion {-nodeName \"$dmgrNode\"}"]
+   set compareResults [eval "$AdminTask compareNodeVersion {-nodeName \"$nodeName\" -version \"$dmgrVersion\"}"]
+   if {$compareResults != 0} {
+      puts "createodr: Error -- Node used to create an On Demand Router must be using same version of WAS as the Deployment Manager"
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   #     -- is a nodeSync MBean available on this node?
+   #--------------------------------------------------------------
+   puts "createodr: checking for the existence of a NodeSync MBean on node $nodeName"
+   set nodeSync [$AdminControl completeObjectName type=NodeSync,node=$nodeName,*]
+   if {[llength $nodeSync] == 0} {
+      puts "createodr: Error -- NodeSync MBean not found for name $nodeName"
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   #     -- check for ODR template
+   #--------------------------------------------------------------
+   set odrTemplate ""
+   set templateList [$AdminConfig listTemplates Server]
+   foreach template $templateList {
+   if {[string first $templatePrefix $template] == 0} {
+      # ODR template found
+      set odrTemplate $template
+      break
+   }
+   }
+   if {$odrTemplate == ""} {
+      puts "createodr: Error -- Could not find ODR template"
+      return $retval
+   }
+
+
+   #--------------------------------------------------------------
+   # Create a server using the supplied node and template
+   #--------------------------------------------------------------
+   puts "createodr: creating a server $serverName ....."
+   set name_attribute [list name $serverName]
+   set attributes     [list $name_attribute]
+   # set server [$AdminConfig createUsingTemplate Server $node $attributes $odrTemplate]
+   set osName [$AdminTask getMetadataProperty [ list -nodeName $nodeName -propertyName com.ibm.websphere.nodeOperatingSystem]] 
+
+   if {[string compare $osName "os390"] == 0} {
+      if {[string compare $serverTemplate "odr_zos"] == 0} {
+         #set server [$AdminTask createOnDemandRouter $nodeName {-name odr -templateName odr_zos}]
+         set cmd "$AdminTask createOnDemandRouter $nodeName {-name \"$serverName\" -templateName odr_zos}"
+         set server [eval $cmd]
+      }
+    } else {
+      if {[string compare $serverTemplate "http_sip_odr_server"] == 0} {
+         #set server [$AdminTask createOnDemandRouter $nodeName {-name odr -templateName http_sip_odr_server}]
+         set cmd "$AdminTask createOnDemandRouter $nodeName {-name \"$serverName\" -templateName http_sip_odr_server}"
+         set server [eval $cmd]
+      } elseif {[string compare $serverTemplate "sip_odr_server"] == 0} {
+         #set server [$AdminTask createOnDemandRouter $nodeName {-name odr -templateName sip_odr_server}]
+         set cmd "$AdminTask createOnDemandRouter $nodeName {-name \"$serverName\" -templateName sip_odr_server}"
+         set server [eval $cmd]
+      } else {
+         #set server [$AdminTask createOnDemandRouter  $nodeName {-name odr -templateName odr}]
+         set cmd "$AdminTask createOnDemandRouter $nodeName {-name \"$serverName\" -templateName odr}"
+         set server [eval $cmd]
+      }
+    }
+
+   #--------------------------------------------------------------
+   # Fixup the DCS endpoint hostname
+   #--------------------------------------------------------------
+   set nameserver [$AdminConfig list NameServer $server]
+   set bootstrapaddr [$AdminConfig showAttribute $nameserver BOOTSTRAP_ADDRESS]
+   set bootstraphost [$AdminConfig showAttribute $bootstrapaddr host]
+
+   set serverEntries [$AdminConfig list ServerEntry $node]
+   foreach serverEntry $serverEntries {
+      set serverEntryName [$AdminConfig showAttribute $serverEntry serverName]
+      if {[string compare $serverName $serverEntryName] == 0} {
+         set namedendpoints [lindex [lindex [$AdminConfig show $serverEntry "specialEndpoints"] 0] 1]
+         foreach namedendpoint $namedendpoints {
+            set endpoint [$AdminConfig showAttribute $namedendpoint "endPoint"]
+            set endpointname [$AdminConfig showAttribute $namedendpoint "endPointName"]
+            if {[string compare $endpointname "DCS_UNICAST_ADDRESS"] == 0} {
+                set host_attributes [list host $bootstraphost]
+                set endpoint_attrs [list $host_attributes]
+                $AdminConfig modify $endpoint $endpoint_attrs
+            }
+            if {[string compare $endpointname "DCS_CGBS_UNICAST_ADDRESS"] == 0} {
+                set host_attributes [list host $bootstraphost]
+                set endpoint_attrs [list $host_attributes]
+                $AdminConfig modify $endpoint $endpoint_attrs
+            }
+         }
+      }
+   }
+
+   #--------------------------------------------------------------
+   # Save all the changes
+   #--------------------------------------------------------------
+   puts "createodr: saving the configuration"
+   $AdminConfig save
+
+   #--------------------------------------------------------------
+   # Find out if serverStartupSyncEnabled is true for this node
+   # We just created this server, so if this attribute is set to
+   # "false" we have to perform a sync.  If we do not, the node we
+   # are installing on may have an out-of-date copy of the config
+   # data.
+   #--------------------------------------------------------------
+   set enabled [$AdminControl getAttribute $nodeSync serverStartupSyncEnabled]
+   if {[string compare $enabled "false"] == 0} {
+      puts "createodr: Invoking synchronization for node $nodeSync because serverStartupSyncEnabled is set to false..."
+      $AdminControl invoke $nodeSync sync
+      puts "createodr: Done with synchronization."
+   }
+
+   #--------------------------------------------------------------
+   # start the server - not done
+   #--------------------------------------------------------------
+   #puts "createodr: starting server $serverName ..."
+   #$AdminControl startServer $serverName $nodeName
+
+   set retval 0
+   puts "createodr: done."
+   return $retval
+}
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+if { ($argc == 1) } {
+   set nodeName         [lindex $argv 0]
+   set serverTemplate   "odr"
+   set serverName       "odr"
+   createodr $nodeName $serverTemplate $serverName
+} elseif { ($argc == 2) } {
+   set nodeName         [lindex $argv 0]
+   set serverTemplate   [lindex $argv 1]
+   set serverName       "odr"
+   createodr $nodeName $serverTemplate $serverName
+} elseif { ($argc == 3) } {
+   set nodeName         [lindex $argv 0]
+   set serverTemplate   [lindex $argv 1]
+   set serverName       [lindex $argv 2]
+   createodr $nodeName $serverTemplate $serverName
+} else {
+   puts ""
+   puts "createodr: this script takes 3 parameters: node_name <odr_template> <odr_name>"
+   puts ""
+   puts "e.g.:     createodr  mynode"
+   puts "          createodr  mynode odr"
+   puts "          createodr  mynode odr myodr"
+   puts ""
+   puts "odr_template default value is: odr"
+   puts "odr_name default value is: odr"
+   puts "possible odr_templates are: odr, odr_zos, http_sip_odr_server,"
+   puts "         sip_odr_server"
+   puts ""
+   puts "The odr template name ending in zos are only applicable to the zOS environment."
+}
+

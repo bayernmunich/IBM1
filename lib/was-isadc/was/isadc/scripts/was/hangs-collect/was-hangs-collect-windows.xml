@@ -1,0 +1,219 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS hangs problem for
+     Windows platform. It should be included in the WAS hangs collect Ant scripts. 
+-->
+
+<project name="was-hangs-collect-windows" >
+
+	<dirname property="was.hangs.collect.windows.basedir" file="${ant.file.was-hangs-collect-windows}"/>
+	<dirname property="was.hangs.collect.windows.parentdir" file="${was.hangs.collect.windows.basedir}"/>
+	<dirname property="was.hangs.collect.windows.grandparentdir" file="${was.hangs.collect.windows.parentdir}"/>
+	<dirname property="was.hangs.collect.windows.bundle.basedir" file="${was.hangs.collect.windows.grandparentdir}"/>
+
+	<!-- This target is used ot create windows hangs output -->
+	<target name="create_windows_hangs_output" description="Creat windows hangs problem" if="isWindows">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>
+		
+		<property name="netstat.out.path" value="${autopdtmp}/autopd/netstat_before.out" />
+		
+		<copy file="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-template.bat" tofile="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value='"${netstat.out.path}"' />
+			</filterset>
+		</copy>
+
+		<exec executable="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" dir="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows" output="${autopd.echolog.instance}" append="true">
+		</exec>	
+		
+		<autopdinput message="We_will_now_generate_3_Java_core_files_each_will_take_two_minutes" validargs="OK,Quit" addproperty="do.kill" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nokill">
+			<equals arg1="Quit" arg2="${do.kill}" />	
+		</condition>
+		<fail if="do.abort.nokill">Automated Problem Determination Tool aborted by user.</fail>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_generating_thread_dump_of_Application_Server"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Generating thread dump for WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1116" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>	
+
+		<copy file="${was.hangs.collect.windows.bundle.basedir}/scripts/jacl/was-jvm-threaddumps-template.jacl" tofile="${was.hangs.collect.windows.bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl" overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+			</filterset>
+		</copy>
+		
+<!-- wait.time to 2 minutes. 
+		<inputdialogtask>
+			<fieldtask name="prompt"
+				label="Input_core_file_wait_time"
+				type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="wait.time"
+				label="select_wait_time" list="120:15:60:180:240:300"
+				listDetails="2 minutes:15 seconds:1 minute:3 minutes:4 minutes:5 minutes" type="selectlist"
+				accessibilityName="select_wait_time"
+				accessibilityDesc="select_wait_time" 
+				defaultValue="2 minutes"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+--> 
+		<property name="wait.time" value="120" /> 
+		
+		<if isTrue="${tprof.selected}"> 
+<!-- Start run.tprof. --> 
+			<if isTrue="${tprof.dir.available}"> 
+				<copy file="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/high-cpu-tprof-template.bat" 
+					tofile="${autopdtmp}/tprof/high-cpu-tprof-filled.bat" overwrite="true">
+					<filterset>
+						<filter token="tprof.home" value="${tprof.home.dir}" />
+						<filter token="timeperiod" value="300" />
+					</filterset>
+				</copy>
+				<exec executable="cmd" dir="${autopdtmp}/tprof" spawn="true">
+					<arg line="/c high-cpu-tprof-filled.bat"/>
+				</exec>
+			</if> 
+
+		</if> 
+		
+		<exec executable="cmd" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true">
+			<arg line="/c wsadmin.bat"/>
+			<arg line=' -f "${was.hangs.collect.windows.bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+		</exec>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_2_minutes" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Waiting for two minutes" 
+			replace="${autopdts}" 
+			id="1020" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>	
+
+		<!-- core available check -->
+		<waitfor maxwait="${wait.time}" maxwaitunit="second" >
+			<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+		</waitfor>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_generating_thread_dump_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Generating thread dump of Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1116" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>	
+
+
+		<exec executable="cmd" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true">
+			<arg line="/c wsadmin.bat"/>
+			<arg line=' -f "${was.hangs.collect.windows.bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+		</exec>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_2_minutes" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Waiting for two minutes" 
+			replace="${autopdts}" 
+			id="1020" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>	
+		<!-- core available check -->
+		<waitfor maxwait="${wait.time}" maxwaitunit="second" >
+			<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+		</waitfor>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_generating_thread_dump_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Generating thread dump of Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1116" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>	
+
+		<exec executable="cmd" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true">
+			<arg line="/c wsadmin.bat"/>
+			<arg line=' -f "${was.hangs.collect.windows.bundle.basedir}/scripts/jacl/was-jvm-threaddumps-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_obtaining_sysyem_network_status_output" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Obtaining system and network status output" 
+			replace="${autopdts};;${step.count}" 
+			id="1097" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>
+		
+		<property name="netstat.out.path1" value="${autopdtmp}/autopd/netstat_after.out" />
+		
+		<copy file="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-template.bat" tofile="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value='"${netstat.out.path1}"' />
+			</filterset>
+		</copy>
+
+		<exec executable="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" dir="${was.hangs.collect.windows.bundle.basedir}/scripts/was/shell/windows" output="${autopd.echolog.instance}" append="true">
+		</exec>		
+	</target>
+	
+	<!-- This target is used to collect specific information of was hangs problem for Windows platform -->
+	
+	<target name="collect_windows_was_hangs" description="Collect was hangs problem" if="isWindows">
+		<echo message=" " />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1111364" />
+		
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_specific_information_of_was_hangs_problem_for_Windows_platform" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting specific information for WebSphere Application Server hang problem on the Windows platform" 
+			replace="${autopdts};;${step.count}" 
+			id="1117" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\hangs-collect\was-hangs-collect-windows.xml"/>
+
+		<trim_filename key="netstat.out.path.trimmed" filename="${netstat.out.path}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+		<trim_filename key="netstat.out.path1.trimmed" filename="${netstat.out.path1}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${netstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${netstat.out.path1}" prefix="autopdzip/autopd" />
+		</zip>
+	</target>
+</project>

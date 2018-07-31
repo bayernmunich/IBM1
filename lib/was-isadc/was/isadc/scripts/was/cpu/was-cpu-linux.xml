@@ -1,0 +1,137 @@
+<project name="was-cpu-linux">
+	<dirname property="was.cpu.linux.basedir" file="${ant.file.was-cpu-linux}"/>
+	<dirname property="was.cpu.linux.parentdir" file="${was.cpu.linux.basedir}"/>
+	<dirname property="was.cpu.linux.grandparentdir" file="${was.cpu.linux.parentdir}"/>
+	<dirname property="was.cpu.linux.bundle.basedir" file="${was.cpu.linux.grandparentdir}"/>
+
+
+	<target name="run_linux_high_cpu_targets" if="isLinux"> 
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1115785" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Linux_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for Linux..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+		<!-- Task 22830 -->
+		<mkdir dir="${autopdtmp}/autopd/highcpu/linux"/>
+		<chmod file="${was.cpu.linux.bundle.basedir}/scripts/was/shell/linux/linperf.sh" perm="766"/>
+		<exec executable="${was.cpu.linux.bundle.basedir}/scripts/was/shell/linux/linperf.sh" dir="${autopdtmp}/autopd/highcpu/linux" 
+			output="${autopd.echolog.instance}" append="true" >
+			<arg line=" ${was.java.process.id}" />
+		</exec>	
+
+<!--
+		<copy file="${was.cpu.linux.bundle.basedir}/scripts/was/shell/linux/linperf.sh" 
+			tofile="${autopdtmp}/autopd/highcpu/linux/linperf-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pid" value="${was.java.process.id}" />			
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${autopdtmp}/autopd/highcpu/linux" 
+			output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdtmp}/autopd/highcpu/linux/linperf-filled.sh" />
+		</exec>	
+-->		
+	</target> 
+		
+	<target name="collect_linux_high_cpu_targets" if="isLinux"> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Linux_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting High-CPU/Crash Output for Linux..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/highcpu/linux" prefix="${autopdProblem}" > 
+				<include name="*.gz" /> 
+			</zipfileset>
+		</zip> 	
+	</target> 
+	<target name="run_linux_cpu_script" if="isLinux">
+
+		<property name="logfile" value="${autopdtmp}/cpu_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1132699" />
+		
+		<!-- Prompt user for sleep interval (default 600) -->
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="600" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	
+		<echo message="Property sleepinterval set to: ${sleepinterval}" />
+		
+		<copy file="${autopdrootdir}/scripts/was/shell/linux/Linux_memory_leak_template.sh" tofile="${autopdrootdir}/scripts/was/shell/linux/Linux_memory_leak-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="logfile" value="${logfile}" />
+				<filter token="pid" value="${was.java.process.id}" />
+				<filter token="sleeptime" value="${sleepinterval}" />
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+			<arg line="-f ${autopdrootdir}/scripts/was/shell/linux/Linux_memory_leak-filled.sh" />
+		</exec>
+	</target>
+	
+	<target name="set_env_entries_linux" if="isLinux">
+	<!-- 
+	MALLOCTRACE	1
+	MALLOC_TRACE	cpu_log_path
+	
+	Where, cpu_log_path is install_root/profiles/
+	profile_name/logs/server_name/mtrace.log
+	 -->
+		
+		<property name="malloctrace.value" value="1" />
+		<property name="malloc_trace.value" value="${was.enhanced.root}/mtrace.log" />
+		<property name="disable_javadump.value" value="false" />
+		
+		<property name="properties" value="MALLOCTRACE MALLOC_TRACE DISABLE_JAVADUMP"/>
+		<property name="values" value="${malloctrace.value} ${malloc_trace.value} ${disable_javadump}" />
+		
+		<copy file="${autopdrootdir}/scripts/jacl/was-processdef-envs-multiple-template.jacl" tofile="${autopdrootdir}/scripts/jacl/was-processdef-envs-filled.jacl" overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="property.names" value="${properties}" />
+				<filter token="property.values" value="${values}" />
+			</filterset>
+		</copy>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" os="${os.unixkind}">
+			<arg line="-f ${autopdrootdir}/scripts/jacl/was-processdef-envs-filled.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+	
+	 	<!-- Set the ulimit -f value to unlimited so it will not truncate the Heapdump file. -->
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true" os="SunOS">
+			<arg line="-f ${autopdrootdir}/scripts/was/shell/solaris/ulimit.sh" />
+		</exec>
+
+	</target>
+	
+	<target name="create_javacore_linux" if="isLinux">
+	<!--  kill -3 ${was.java.process.id} -->
+	 	<copy file="${bundle.basedir}/scripts/was/shell/kill-template.sh" tofile="${bundle.basedir}/scripts/was/shell/kill-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-3" />			
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+		
+	</target>
+</project>

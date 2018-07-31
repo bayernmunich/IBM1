@@ -1,0 +1,318 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2005, 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Web Services UDDI Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Web Services UDDI Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_SOA_UDDI_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-webservices" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+
+	<!-- Implements Mustgather swg21164764 -->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		 validate_os,
+		usage,
+		 was_stack_custom_init,
+					 collect_client_atts,
+					 collect_jar_atts,
+					 collect_qname_jar_atts,
+					 get_uddi_version,
+					 gen_history_report, 
+			        
+			         start_tcpmon_trace,
+			         
+			         start_time, 
+			         pause, 
+			         end_time, 
+			         
+			         end_tcpmon_trace,
+					common_postamble_general_with_ftp">
+	</target>
+
+	<!-- collect the client attributes for the UDDI transaction -->
+	<target name="collect_client_atts"
+	        description="get the client attributes for the UDDI transaction">
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.runtime.question1"
+			           label="ws_client"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.runtime.question2a"
+			           label="ws_provider"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.runtime.question2b"
+			           label="failure_from_client_or_provider"
+			           list="client:provider:do_not_know"
+			           listDetails="client:provider:do_not_know"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.runtime.question3"
+			           label="browser_type"
+			           list="ie6:ie6sp1:ie6sp2:firefox:other"
+			           listDetails="ie6:ie6sp1:ie6sp2:firefox:other"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.runtime.question4"
+			           label="browser_other"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the client-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.runtime.question1}${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the provider-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.runtime.question2a}${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				Where is the problem coming from-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.runtime.question2b}${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the browser type (listed)-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.runtime.question3}${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the browser type (other)-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.runtime.question4}${line.separator}
+			</concat>
+	</target>
+
+	<!-- get the UDDI version installed in the app server -->
+	<target name="get_uddi_version" description="get the UDDI version for the app server">
+		<echo message="Get the UDDI version..." />
+	</target>
+
+	<target name="collect_qname_jar_atts"
+	        description="collect the attributes for the qname.jar">
+		<!--  ex: C:\IBM\WebSphere\AppServer\deploytool\itp\plugins\com.ibm.etools.wsdl_6.0.1\runtime -->
+		<echo message="Get the qname.jar attributes..." />
+	</target>
+
+	<target name="start_tcpmon_trace" if="ws.RuntimeProblem">
+		<wsnlsecho key="Step_start_TCPMon_trace"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Starting the TCPMon trace for Web Services runtime problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1190"
+		           level="info" />
+
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask noCancel="true">
+				<fieldtask name="ws.tooling.prompt"
+				           label="Input_Required"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+				<fieldtask name="ws.listenPort"
+				           label="ws_listenPort"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.targetHost"
+				           label="ws_targetHost"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.targetPort"
+				           label="ws_targetPort"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+
+			<!-- Windows -->
+			<copy file="${bundle.basedir}/scripts/was/shell/windows/tcpmon-template.bat"
+			      tofile="${bundle.basedir}/scripts/was/shell/windows/tcpmon-filled.bat"
+			      overwrite="true">
+				<filterset>
+					<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+					<filter token="listenPort" value="${ws.listenPort}" />
+					<filter token="targetHost" value="${ws.targetHost}" />
+					<filter token="targetPort" value="${ws.targetPort}" />
+				</filterset>
+			</copy>
+			<exec executable="${bundle.basedir}/scripts/was/shell/windows/tcpmon-filled.bat"
+			      dir="${was.enhanced.root}/bin"
+			      os="${os.windows}"
+			      spawn="true">
+			</exec>
+
+			<!-- Unix -->
+			<copy file="${bundle.basedir}/scripts/was/shell/tcpmon-template.sh"
+			      tofile="${bundle.basedir}/scripts/was/shell/tcpmon-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+					<filter token="listenPort" value="${ws.listenPort}" />
+					<filter token="targetHost" value="${ws.targetHost}" />
+					<filter token="targetPort" value="${ws.targetPort}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh"
+			      dir="${was.enhanced.root}/bin"
+			      os="${os.unixkind}"
+			      spawn="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/tcpmon-filled.sh" />
+			</exec>
+
+		</if>
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask>
+				<fieldtask name="ws.gui.prompt"
+				           label="Wait_for_TCPMon"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label"
+				           label="GUI_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label2"
+				           label="GUI_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label3"
+				           label="GUI_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${useGuiConsole }">
+			<!-- TCPMon trace not collected -->
+			<inputdialogtask>
+				<fieldtask name="ws.nogui.prompt"
+				           label="No_GUI"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label"
+				           label="No_GUI_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label2"
+				           label="No_GUI_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label3"
+				           label="No_GUI_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label4"
+				           label="No_GUI_explain4"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+	</target>
+
+	<!-- How does this work in a non-gui env?? i.e. remote collector -->
+	<target name="end_tcpmon_trace" if="ws.RuntimeProblem">
+		<wsnlsecho key="Step_stop_TCPMon_trace"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Displaying instructions to stop the TCPMon trace"
+		           replace="${autopdts};;${step.count}"
+		           id="1191"
+		           level="info" />
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask>
+				<fieldtask name="ws.endtrace.prompt"
+				           label="End_trace"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label"
+				           label="End_trace_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label"
+				           label="End_trace_explain1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label2"
+				           label="End_trace_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.file"
+				           label="${autopdtmp}/autopd"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label3"
+				           label="End_trace_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Web Services UDDI Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the managed node experiencing the web services
+						UDDI problem. It will set the appropriate trace string and start the 
+						TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+						and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1164764" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the web 
+services UDDI problem. It will set the appropriate trace string and start the TCP Monitor. After 
+the problem has been reproduced the tcpmon, logs, configuration, and trace files are collected for 
+further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Web Services UDDI Problem =>
+				This problem category is run on the managed node experiencing the web services
+				UDDI problem. It will set the appropriate trace string and start the 
+				TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+				and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

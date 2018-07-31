@@ -1,0 +1,885 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+
+<plugin id="com.ibm.ws.console.eventinfrastructure"
+        name="eventinfrastructure" 
+        version="1.0.0"
+        provider-name="IBM Corp. - WebSphere Server Group" 
+        embedded="true"
+        context-root="eventinfrastructure">
+        
+        <requires>
+                <import plugin="com.ibm.ws.console.core" />
+                <import plugin="com.ibm.ws.console.servermanagement" />
+                <!-- Service Integration category -->
+                <import plugin="com.ibm.ws.console.sib.sibresources" /> 
+                <import plugin="com.ibm.ws.console.resources" />                
+                <import plugin="com.ibm.ws.console.appmanagement" /> 
+                <import plugin="com.ibm.ws.console.tam" />                   
+        </requires>
+
+
+        <!-- #################################################################### -->
+        <!-- # Extending console Navigator                                      # -->
+        <!-- #################################################################### -->
+        <extension point="com.ibm.ws.console.core.navigatorTask">
+        
+           <tasks>
+              <!-- #################################################################### -->
+              <!-- # Common Event Infrastructure  category on the console Navigator   # -->
+              <!-- # under Service Integration  category (which is id sibresources)   # -->
+              <!-- #################################################################### -->
+              <categoryDefinition id="com.ibm.ws.console.eventinfrastructure.CommonEventInfrastructureCategory"
+                 parent="sibresources"    
+                 icon="/com.ibm.ws.console.sib.sibresources/images/onepix.gif"
+                 label="CommonEventInfrastructureProvider.displayName"
+                 weight="80"/>                                                
+
+              <!-- #################################################################### -->
+              <!-- # Event Server  (launch from Navigator)                            # -->
+              <!-- # under Common Event Infrastructure  category                      # -->
+              <!-- #################################################################### -->
+              <task id="com.ibm.ws.console.eventinfrastructure.EventServerAppTask"
+                 view="/navigatorCmd.do?forwardName=EventServerApp.config.view"
+                 label="eventinfrastructure.EventServerApp.displayName"
+                 icon="/com.ibm.ws.console.sib.sibresources/images/onepix.gif"
+                 weight="40"
+                 external="false" >
+                 <category id="com.ibm.ws.console.eventinfrastructure.CommonEventInfrastructureCategory" />
+                    <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+              </task>              
+
+
+              <!-- #################################################################### -->
+              <!-- # Event Emitter Factories    (launch from Navigator)               # -->
+              <!-- # under Common Event Infrastructure  category                      # -->
+              <!-- # Note: formerly Emitter Factory Profile                           # -->
+              <!-- #################################################################### -->
+              <task id="com.ibm.ws.console.eventinfrastructure.EmitterFactoryProfileTask"
+                 view="/navigatorCmd.do?forwardName=EmitterFactoryProfile.content.main"
+                 label="EmitterFactoryProfile.displayName"
+                 icon="/com.ibm.ws.console.sib.sibresources/images/onepix.gif"
+                 weight="60"
+                 external="false" >
+                 <category id="com.ibm.ws.console.eventinfrastructure.CommonEventInfrastructureCategory" />
+              </task>              
+
+
+           </tasks>
+        </extension>
+        
+
+
+        <!-- #################################################################### -->
+        <!-- # Event Server Application                                         # -->
+        <!-- #################################################################### -->
+        
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EventServerApp.detailTab1"
+                        contextType="EventServerApp">
+                        <tab label="tab.configuration"
+                                contentURI="EventServerApp.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+
+        <extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="EventServerApp"
+                        contextType="EventServerApp">
+                        
+                        <link categoryId="additional.properties"
+                                label="EventServerProfile.displayName"
+                                description="EventServerProfile.description"
+                                actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=EventServerProfile.content.main&amp;sfname=factories&amp;contextId">
+                                <!-- 5.1 and above -->
+                     			<compatibility>
+                             			<match key="com.ibm.websphere.baseProductVersion"
+                                     			value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     			</compatibility>
+                        </link>
+                </linkSet>
+        </extension>
+
+        <!-- #################################################################### -->
+        <!-- #Data Store Profile                                                # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="DataStoreProfile.collection1"
+                        contextType="DataStoreProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="dataStoreProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="dataStoreProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="DataStoreProfile.collectionItem1"
+                        contextType="DataStoreProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="dataStoreProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="jndiName" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.jndiName.displayName">
+                        </item>
+                        <item attributeName="description" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.description.displayName">
+                        </item>
+                        <item attributeName="category" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.category.displayName">
+                        </item>
+                        <!--      <item
+                                attributeName="schemaName"
+                                sortable="sort"
+                                itemURI=""
+                                label="DataStoreProfile.schemaName.displayName">
+                                </item>        -->
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="DataStoreProfile.detailTab1"
+                        contextType="DataStoreProfile">
+                        <tab label="tab.configuration"
+                                contentURI="DataStoreProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="DataStoreProfile2.detailTab1"
+                        contextType="DataStoreProfile2">
+                        <tab label="tab.configuration"
+                                contentURI="DataStoreProfile2.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="DataSTtorProfile"
+                 contextType="DataStoreProfile">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+    
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="DataSTtorProfile2"
+                 contextType="DataStoreProfile2">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+
+
+        <!-- #################################################################### -->
+        <!-- #Distribution Queue                                                # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="DistributionQueue.collection1"
+                        contextType="DistributionQueue">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="distributionQueueCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="distributionQueueCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="DistributionQueue.collectionItem1"
+                        contextType="DistributionQueue">
+                        <item attributeName="queueJNDIName" sortable="sort"
+                                itemURI="distributionQueueCollection.do?EditAction=true"
+                                label="DistributionQueue.queueJNDIName.headDisplayName">
+                        </item>
+                        <item attributeName="queueConnectionFactoryJNDIName"
+                                sortable="sort" itemURI=""
+                                label="DistributionQueue.queueConnectionFactoryJNDIName.headDisplayName">
+                        </item>
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="DistributionQueue.detailTab1"
+                        contextType="DistributionQueue">
+                        <tab label="tab.configuration"
+                                contentURI="DistributionQueue.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+
+        <!-- #################################################################### -->
+        <!-- #Event Bus Transmission Profile                                    # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="EventBusTransmissionProfile.collection1"
+                        contextType="EventBusTransmissionProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="eventBusTransmissionProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="eventBusTransmissionProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="EventBusTransmissionProfile.collectionItem1"
+                        contextType="EventBusTransmissionProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="eventBusTransmissionProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="jndiName" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.jndiName.displayName">
+                        </item>
+                        <item attributeName="eventBusJNDIName" sortable="sort"
+                                itemURI=""
+                                label="EventBusTransmissionProfile.eventBusJNDIName.headDisplayName">
+                        </item>
+                        <item attributeName="description" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.description.displayName">
+                        </item>
+                        <item attributeName="category" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.category.displayName">
+                        </item>                        
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EventBusTransmissionProfile.detailTab1"
+                        contextType="EventBusTransmissionProfile">
+                        <tab label="tab.configuration"
+                                contentURI="EventBusTransmissionProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EventBusTransmissionProfile2.detailTab1"
+                        contextType="EventBusTransmissionProfile2">
+                        <tab label="tab.configuration"
+                                contentURI="EventBusTransmissionProfile2.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.link">
+            <linkSet id="EventBusTransmissionProfile"
+                     contextType="EventBusTransmissionProfile">
+                 <link categoryId="additional.properties"
+                       label="J2EEResourceFactory.propertySet.displayName"
+                       description="J2EEResourceFactory.propertySet.description"
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+                 </link>                        
+           </linkSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.link">
+            <linkSet id="EventBusTransmissionProfile2"
+                     contextType="EventBusTransmissionProfile2">
+                 <link categoryId="additional.properties"
+                       label="J2EEResourceFactory.propertySet.displayName"
+                       description="J2EEResourceFactory.propertySet.description"
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+                 </link>                        
+           </linkSet>
+        </extension>
+
+
+        <!-- #################################################################### -->
+        <!-- #Emitter Factory Profile                                           # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="EmitterFactoryProfile.collection1"
+                        contextType="EmitterFactoryProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="eventEmitterProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="eventEmitterProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="EmitterFactoryProfile.collectionItem1"
+                        contextType="EmitterFactoryProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="eventEmitterProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="jndiName" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.jndiName.displayName">
+                        </item>
+                        <item attributeName="preferredTransactionMode"
+                                sortable="sort" itemURI=""
+                                label="EmitterFactoryProfile.preferredTransactionMode.headDisplayName">
+                        </item>
+                        <item attributeName="preferredSynchronizationMode"
+                                sortable="sort" itemURI=""
+                                label="EmitterFactoryProfile.preferredSynchronizationMode.headDisplayName">
+                        </item>
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EmitterFactoryProfile.detailTab1"
+                        contextType="EmitterFactoryProfile">
+                        <tab label="tab.configuration"
+                                contentURI="EmitterFactoryProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+        
+    <!-- Add links to EmitterFactoryProfile detail screen Additional Properties -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="EmitterFactoryProfile"
+                 contextType="EmitterFactoryProfile">                 
+             <link categoryId="additional.properties"
+                     label="EventBusTransmissionProfile.displayName"
+                     description="EventBusTransmissionProfile.description"
+                     weight="40"                     
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=EventBusTransmissionProfile2.config.view&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>
+             <link categoryId="additional.properties"
+                     label="JMSTransmissionProfile.displayName"
+                     description="JMSTransmissionProfile.description"
+                     weight="50"                     
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=JMSTransmissionProfile2.config.view&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>
+             <link categoryId="additional.properties"
+                     label="FilterFactoryProfile.displayName"
+                     description="FilterFactoryProfile.description"
+                     weight="60"                     
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=FilterFactoryProfile2.config.view&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>             
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   weight="70"                                        
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>        
+
+     <!-- Add links to EmitterFactoryProfile detail screen Related Items -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="allItems.FilterFactoryProfile" 
+                 contextType="EmitterFactoryProfile">
+             <link categoryId="related.items"
+                     label="EventBusTransmissionProfile.all.displayName"
+                     description="EventBusTransmissionProfile.all.description"
+                     weight="40"                                          
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=EventBusTransmissionProfile.content.main&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>
+             <link categoryId="related.items"
+                     label="JMSTransmissionProfile.all.displayName"
+                     weight="50"
+                     description="JMSTransmissionProfile.all.description"
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=JMSTransmissionProfile.content.main&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>
+             <link categoryId="related.items"
+                     label="FilterFactoryProfile.all.displayName"
+                     description="FilterFactoryProfile.all.description"
+                     weight="60"
+                     actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=FilterFactoryProfile.content.main&amp;sfname=factories">
+                     <!-- 5.1 and above -->
+                     <compatibility>
+                             <match key="com.ibm.websphere.baseProductVersion"
+                                     value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     </compatibility>
+             </link>             
+        </linkSet>
+    </extension>
+
+        <!-- #################################################################### -->
+        <!-- #Event Group Profile                                               # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="EventGroupProfile.collection1"
+                        contextType="EventGroupProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="eventGroupProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="eventGroupProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="EventGroupProfile1.collectionItem1"
+                        contextType="EventGroupProfile">
+                        <item attributeName="eventGroupName" sortable="sort"
+                                itemURI="eventGroupProfileCollection.do?EditAction=true"
+                                label="EventGroupProfile.eventGroupName.headDisplayName">
+                        </item>
+                        <item attributeName="eventSelectorString" sortable="sort"
+                                itemURI=""
+                                label="EventGroupProfile.eventSelectorString.headDisplayName">
+                        </item>
+                        <item attributeName="topicJNDIName" sortable="sort"
+                                itemURI="" label="EventGroupProfile.topicJNDIName.headDisplayName">
+                        </item>
+                        <item attributeName="topicConnectionFactoryJNDIName"
+                                sortable="sort" itemURI=""
+                                label="EventGroupProfile.topicConnectionFactoryJNDIName.headDisplayName">
+                        </item>
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EventGroupProfile.detailTab1"
+                        contextType="EventGroupProfile">
+                        <tab label="tab.configuration"
+                                contentURI="EventGroupProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="EventGroupProfile"
+                        contextType="EventGroupProfile">
+                        <link categoryId="additional.properties"
+                                label="EventGroupProfile.distributionQueues.displayName"
+                                description="EventGroupProfile.distributionQueues.description"
+                                actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=DistributionQueue.content.main&amp;sfname=distributionQueues">
+                        </link>
+                        <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>
+                </linkSet>
+        </extension>
+
+        <!-- #################################################################### -->
+        <!-- #Event Server Profile                                              # -->
+        <!-- #################################################################### -->
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="EventServerProfile.collectionItem1"
+                        contextType="EventServerProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="eventServerProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="enableEventDistribution"
+                                sortable="sort" itemURI=""
+                                label="EventServerProfile.enableEventDistribution.headDisplayName">
+                        </item>
+                        <item attributeName="enableDataStore" sortable="sort"
+                                itemURI="" label="EventServerProfile.enableDataStore.headDisplayName">
+                        </item>
+                        <item attributeName="dataStoreJNDIName" sortable="sort"
+                                itemURI=""
+                                label="EventServerProfile.dataStoreJNDIName.headDisplayName">
+                        </item>
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="EventServerProfile.detailTab1"
+                        contextType="EventServerProfile">
+                        <tab label="tab.configuration"
+                                contentURI="EventServerProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+
+        <!-- *** Links on EventServerProfile detail panel, additional properties section  -->
+        <extension point="com.ibm.websphere.wsc.link">
+            <linkSet id="EventServerProfile"
+                     contextType="EventServerProfile">
+
+                 <!-- link to eventGroupProfiles -->
+                 <link categoryId="additional.properties"
+                       label="EventGroupProfileList.eventGroupProfiles.displayName"
+                       description="EventGroupProfileList.eventGroupProfiles.description"
+                       weight="20"                     
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=EventGroupProfile.content.main&amp;sfname=eventGroupProfiles">
+                 </link>                     
+                 <!-- link to DataStoreProfile -->
+                 <link categoryId="additional.properties"
+                       label="DataStoreProfile.displayName"
+                       description="DataStoreProfile.description"
+                       weight="30"                     
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=DataStoreProfile2.config.view&amp;sfname=factories">
+                 </link>                  
+                 
+      <!-- begin REMOVED but keep in this file:  link to DataStoreProfile table useful for Unit Test
+                 <link categoryId="additional.properties"
+                       label="DataStoreProfile.displayName"
+                       description="DataStoreProfile.description"
+                       weight="32"                     
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=DataStoreProfile.content.main&amp;sfname=factories">
+                </link>
+           end REMOVED  -->
+           
+                 <!-- link to Custom Properties   -->
+                 <link categoryId="additional.properties"
+                       label="J2EEResourceFactory.propertySet.displayName"
+                       description="J2EEResourceFactory.propertySet.description"
+                       weight="40"                                              
+                       actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+                 </link>          
+        
+            </linkSet>
+        </extension>
+    
+
+        <!-- #################################################################### -->
+        <!-- #Filter Factory Profile                                            # -->
+        <!-- #################################################################### -->
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="FilterFactoryProfile.collection1"
+                        contextType="FilterFactoryProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="filterProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="filterProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="FilterFactoryProfile.collectionItem1"
+                        contextType="FilterFactoryProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="filterProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="jndiName" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.jndiName.displayName">
+                        </item>
+                        <item attributeName="filterConfigurationString"
+                                sortable="sort" itemURI=""
+                                label="FilterFactoryProfile.filterConfigurationString.headDisplayName">
+                        </item>
+                        <item attributeName="description" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.description.displayName">
+                        </item>
+                        <item attributeName="category" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.category.displayName">
+                        </item>                        
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="FilterFactoryProfile.detailTab1"
+                        contextType="FilterFactoryProfile">
+                        <tab label="tab.configuration"
+                                contentURI="FilterFactoryProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="FilterFactoryProfile2.detailTab1"
+                        contextType="FilterFactoryProfile2">
+                        <tab label="tab.configuration"
+                                contentURI="FilterFactoryProfile2.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="FilterFactoryProfile"
+                 contextType="FilterFactoryProfile">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="FilterFactoryProfile2"
+                 contextType="FilterFactoryProfile2">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+
+        <!-- #################################################################### -->
+        <!-- #JMS Transmission Profile                                          # -->
+        <!-- #################################################################### -->
+        <extension point="com.ibm.websphere.wsc.actionSet">
+                <actionSet id="JMSTransmissionProfile.collection1"
+                        contextType="JMSTransmissionProfile">
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.new"
+                                actionURI="jMSTransmissionProfileCollection.do">
+                        </action>
+                        <action enablesFor="Collection"
+                                role="administrator,configurator" label="button.delete"
+                                actionURI="jMSTransmissionProfileCollection.do">
+                        </action>
+                </actionSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.collectionItem">
+                <collectionItem id="JMSTransmissionProfile.collectionItem1"
+                        contextType="JMSTransmissionProfile">
+                        <item attributeName="name" sortable="sort"
+                                itemURI="jMSTransmissionProfileCollection.do?EditAction=true"
+                                label="J2EEResourceFactory.name.displayName">
+                        </item>
+                        <item attributeName="contextId" sortable="sort" itemURI=""
+                                label="Resources.scope.displayName">
+                        </item>
+                        <item attributeName="jndiName" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.jndiName.displayName">
+                        </item>
+                        <item attributeName="queueJNDIName" sortable="sort"
+                                itemURI=""
+                                label="JMSTransmissionProfile.queueJNDIName.displayName">
+                        </item>
+                        <item attributeName="queueConnectionFactoryJNDIName"
+                                sortable="sort" itemURI=""
+                                label="JMSTransmissionProfile.queueConnectionFactoryJNDIName.displayName">
+                        </item>
+                        <item attributeName="description" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.description.displayName">
+                        </item>
+                        <item attributeName="category" sortable="sort" itemURI=""
+                                label="J2EEResourceFactory.category.displayName">
+                        </item>                        
+                </collectionItem>
+        </extension>
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="JMSTransmissionProfile.detailTab1"
+                        contextType="JMSTransmissionProfile">
+                        <tab label="tab.configuration"
+                                contentURI="JMSTransmissionProfile.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab id="JMSTransmissionProfile2.detailTab1"
+                        contextType="JMSTransmissionProfile2">
+                        <tab label="tab.configuration"
+                                contentURI="JMSTransmissionProfile2.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="JMSTransmissionProfile"
+                 contextType="JMSTransmissionProfile">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="JMSTransmissionProfile2"
+                 contextType="JMSTransmissionProfile2">
+             <link categoryId="additional.properties"
+                   label="J2EEResourceFactory.propertySet.displayName"
+                   description="J2EEResourceFactory.propertySet.description"
+                   actionURI="com.ibm.ws.console.eventinfrastructure.forwardCmd.do?forwardName=CeiResourceProperty.content.main&amp;sfname=propertySet">
+             </link>                        
+        </linkSet>
+    </extension>
+    
+        <!-- #################################################################### -->
+        <!-- #Event Infrastructure Service                                      # -->
+        <!-- #################################################################### -->
+        <extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="eventinfrastructure.services"
+                         contextType="ApplicationServer">
+                        <link categoryId="containerservices.properties"
+                                label="CommonEventInfrastructureService.displayName"
+                                description="CommonEventInfrastructureService.description"
+                                actionURI="com.ibm.ws.console.eventinfrastructureservice.forwardCmd.do?forwardName=EventInfrastructureService.config.view&amp;sfname=services&amp;resourceUri=server-cei.xml">
+                                <!-- 5.1 and above -->
+                     			<compatibility>
+                             			<match key="com.ibm.websphere.baseProductVersion"
+                                     			value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     			</compatibility>
+                        </link>
+                </linkSet>
+        </extension>
+
+
+        <extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="eventinfrastructure.services" 
+                         contextType="ClusterMember">
+                        <link categoryId="clustermember.containerservices.properties"
+                                label="CommonEventInfrastructureService.displayName"
+                                description="CommonEventInfrastructureService.description"
+                                actionURI="com.ibm.ws.console.eventinfrastructureservice.forwardCmd.do?forwardName=EventInfrastructureService.config.view&amp;sfname=services&amp;resourceUri=server-cei.xml&amp;lastPage=ClusterMember.config.view">
+                                <!-- 5.1 and above -->
+                     			<compatibility>
+                             			<match key="com.ibm.websphere.baseProductVersion"
+                                     			value="(5\.[1-9].*)|(([6-9]|[1-9][0-9])\.[0-9]\.[0-9]\.([0-9]|[1-9][0-9]))" />
+                     			</compatibility>
+                        </link>
+                </linkSet>
+        </extension>
+
+
+        <extension point="com.ibm.websphere.wsc.link">
+                <linkSet
+                        id="EventInfrastructure_Link.EventInfrastructureService1"
+                        contextType="EventInfrastructureService">
+                        <link categoryId="additional.properties"
+                                label="Service.properties.displayName"
+                                description="Service.properties.description"
+                                actionURI="com.ibm.ws.console.eventinfrastructureservice.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+                        </link>
+                </linkSet>
+        </extension>
+
+        <extension point="com.ibm.websphere.wsc.detailTab">
+                <detailTab
+                        id="EventInfrastructure_DetailTab.EventInfrastructureService.detailTab1"
+                        contextType="EventInfrastructureService">
+                        <tab label="tab.configuration"
+                                contentURI="EventInfrastructureService.config.tab.view">
+                        </tab>
+                </detailTab>
+        </extension>
+
+
+        <!-- #################################################################### -->
+        <!-- #Custom Properties                                                 # -->
+        <!-- #################################################################### -->
+
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="Resources_ActionSet.CeiResourceProperty.collection1" contextType="CeiResourceProperty">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="ceiResourcePropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="ceiResourcePropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Resources_CollectionItem.CeiResourceProperty.collectionItem1" contextType="CeiResourceProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="ceiResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI="ceiResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI="ceiResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.description.displayName">
+        </item>
+        <item
+              attributeName="required"
+              sortable="sort"
+              itemURI="ceiResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.required.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="Resources_DetailTab.CeiResourceProperty.detailTab1" contextType="CeiResourceProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="CeiResourceProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+        <extension point="com.ibm.ws.console.core.help">
+                <toc file="toc.xml" primary="true"></toc>
+        </extension>
+
+</plugin>

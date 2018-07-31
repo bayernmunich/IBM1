@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<plugin id="com.ibm.ws.console.gridscheduler"
+        name="gridscheduler"
+        version="6.0.0"
+        provider-name="IBM Corp. - WebSphere XD"
+        embedded="true"
+        context-root="gridscheduler">
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+    </requires>
+		
+    <!-- Add a Business Grid link -->
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+    	<tasks>
+			<!-- Create a temporary root navigator category for Business Grid -->
+        	<!-- categoryDefinition id="bgridcategory" parent="root"   
+         					icon="images/onepix.gif" label="bgridcategory.displayName"
+         					external="false"/-->
+			
+			<!-- Add a link under the Business Grid category -->
+        	<task id="showGridScheduler"
+                icon="images/onepix.gif"
+                label="nav.showGridScheduler"
+                view="/navigatorCmd.do?forwardName=gridscheduler.config.view"
+                external="false">
+            	<!-- category id="bgridcategory"/-->
+            	<category id="systemadmin"/>
+        	</task>
+      	</tasks>
+	</extension> 
+
+	<extension point="com.ibm.websphere.wsc.detailTab">
+	    <detailTab id="gridscheduler.tabs.detailTab" contextType="gridscheduler">
+	        <tab label="tab.configuration" contentURI="gridscheduler.config.tab.view"/>
+	        <!--  xd61: remove runtime tab -->
+	        <!-- tab label="tab.runtime" contentURI="gridscheduler.runtime.tab.view"/-->
+    	</detailTab>
+	</extension>
+
+	<!-- custom property -->	
+	<extension point="com.ibm.websphere.wsc.link">
+    	<linkSet id="gridscheduler_Link.addtional_props" contextType="gridscheduler">
+        	
+        	<link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.classrules.displayName"
+            	description="gridscheduler.classrules.description"   
+            	weight="10"         
+            	actionURI="com.ibm.ws.console.gridclassrules.forwardCmd.do?forwardName=defaultgirdclassruleset.content.main">
+            </link>
+            
+        	<link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.property.displayName"
+            	description="gridscheduler.property.description"
+            	weight="11"            
+            	actionURI="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gridscheduler.property.content.main&#38;sfname=properties">
+            </link>
+            <!--
+            <link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.jobclass.displayName"
+            	description="gridscheduler.jobclass.description"  
+            	weight="12"          
+            	actionURI="com.ibm.ws.console.gridjobclass.forwardCmd.do?forwardName=jobclass.content.main">
+            </link>
+            -->
+            <link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.jobclass.displayName"
+            	description="gridscheduler.jobclass.description"  
+            	weight="12"          
+            	actionURI="com.ibm.ws.console.gridjobclass.forwardCmd.do?forwardName=jobclass.content.main">
+            </link>
+            
+            <link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.mapsecroles.displayName"
+            	description="gridscheduler.mapsecroles.description"  
+            	weight="13"          
+            	actionURI="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gs.appconfigure.securityroles.tousers">
+            	<compatibility>
+                	<match class="com.ibm.ws.console.gridscheduler.form.GridSchedulerDetailForm"
+                	  key="com.ibm.ws.console.appdeployment.isMapRolesToUsersFormInScope" value="true"/>
+             	</compatibility>
+            </link>
+            
+            <link
+                categoryId="additional.properties"
+                label="appinstall.tam.securityroles.tousers"
+                description="appinstall.tam.securityroles.tousers"                
+                weight="13"
+                actionURI="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gs.appmanagement.tam.securityroles.tousers"> 
+             	<compatibility>
+                	<match class="com.ibm.ws.console.tam.appmanagement.action.TAMMapRolesToUsersAction"
+                 	  key="com.ibm.ws.console.appmanagement.isTAMMapRolesToUsersFormInScope" value="true"/> 
+             	</compatibility>
+       		</link>   
+           
+            <link 
+        		categoryId="additional.properties"
+        		label="gridscheduler.endpoint.displayName"
+            	description="gridscheduler.endpoint.description"   
+            	weight="14"         
+            	actionURI="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gridscheduler.endpoints.content.main">
+            </link> 
+                            	
+    	</linkSet>
+	</extension>
+
+	<!-- custom property buttons -->	
+	<extension point="com.ibm.websphere.wsc.actionSet">
+    	<actionSet id="gridscheduler.property.collection" contextType="gridscheduler.property.content.main">
+        	<action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="button.new"
+              	actionURI="GridSchedulerPropertyCollection.do">
+        	</action>
+        	<action
+            	enablesFor="Collection"
+              	role="administrator,configurator"
+              	label="button.delete"
+              	actionURI="GridSchedulerPropertyCollection.do">
+        	</action>
+    	</actionSet>
+	</extension>
+
+	<!-- custom property collection -->	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="gridscheduler.property.content.main" contextType="gridscheduler.property.content.main">
+        	<item
+            	attributeName="name"
+                sortable="sort"
+                itemURI="GridSchedulerPropertyCollection.do?EditAction=true"
+                label="gridscheduler.property.name.displayName">
+          	</item>
+          	<item
+                attributeName="value"
+                sortable="sort"
+                itemURI=""
+                label="gridscheduler.property.value.displayName">
+          	</item>
+          	<item
+                attributeName="description"
+                sortable="sort"
+                itemURI=""
+                label="gridscheduler.property.description.displayName">
+        	</item>
+    	</collectionItem>
+  	</extension>
+
+	<!-- custom property config tab -->	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="gridscheduler.property.detailTab" contextType="gridscheduler.property.content.main">
+        <tab
+              label="tab.configuration"
+              contentURI="gridscheduler.property.config.tab.view">
+        </tab>
+    </detailTab>
+	</extension>	
+
+	<!-- Add a link extension point for the related items on the configuration tab  -->
+	<extension point="com.ibm.websphere.wsc.link">
+    	<linkSet id="gridscheduler_Link.related_items" contextType="gridscheduler">
+    		<!--  xd61: remove job mgmt link -->
+        	<!-- link
+            	categoryId="related.items"
+            	label="gridscheduler.jobmanagement.displayName"
+            	description="gridscheduler.jobmanagement.description"
+            	actionURI="navigatorCmd.do?forwardName=jobmanagement.content.main">
+        	</link-->
+        	<link
+            	categoryId="related.items"
+              	label="JDBCProvider.displayName"
+              	description="JDBCProvider.description"
+              	weight="10"
+              	actionURI="navigatorCmd.do?forwardName=JDBCProvider.content.main">
+        	</link>
+        	<!--  xd61: remove ds alias link -->
+        	<!-- link
+              categoryId="related.items"
+              label="Security.authDataEntries.displayName"
+              description="JAASAuthData.description"
+              actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=JAASAuthData.content.main">
+        	</link-->
+        	<!--  xd61: add middleware server link -->
+            <!--
+        	<link
+            	categoryId="related.items"
+            	label="gridscheduler.middlewareservers.displayName"
+            	description="gridscheduler.middlewareservers.description"
+            	weight="11"
+            	actionURI="navigatorCmd.do?forwardName=MiddlewareServer.content.main">
+        	</link>
+            -->
+        	<!--  xd61: add service policy link -->
+            <!--
+        	<link
+            	categoryId="related.items"
+            	label="gridscheduler.servicepolicy.displayName"
+            	description="gridscheduler.servicepolicy.description"
+            	weight="12"
+            	actionURI="com.ibm.ws.console.policyconfiguration.forwardCmd.do?forwardName=serviceclass.content.main">
+        	</link>
+            -->
+        </linkSet>
+	</extension>
+
+	<!-- Add a help extension point for help documentation -->
+	<extension point="com.ibm.ws.console.core.help">
+    	<toc file="toc.xml" primary="true"/>
+	</extension>
+	
+    <!-- Add a collection item extension point for GridEndpoints collection view -->
+    
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+		<collectionItem id="gridscheduler.collection" contextType="gridscheduler">
+        	<item attributeName="name"
+                  sortable="sort"
+                  itemURI=""
+                  label="gridscheduler.gee.name" >
+            </item>
+            <item attributeName="dsJndiName"
+                  sortable="sort"
+                  itemURI=""
+                  label="gridscheduler.gee.dsjndiname" >
+            </item>
+        </collectionItem>
+    </extension>
+    
+    <!-- Add an action item for GridEndpoints collection view -->
+    
+	<extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="gridscheduler.collection.action" contextType="gridscheduler">
+            <action enablesFor="Collection"
+                    label="gridscheduler.gee.setjndiname"
+                    actionURI="GridEndpointsCollection.do"
+                    role="administrator,operator">
+            </action>
+        </actionSet>
+    </extension>
+    
+</plugin>
+

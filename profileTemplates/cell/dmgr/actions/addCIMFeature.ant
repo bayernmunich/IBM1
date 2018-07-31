@@ -1,0 +1,32 @@
+<project name="addCIMFeature" default="main" basedir=".">
+
+	<target name="detectZOS">
+		<condition property="isZOS" value="true">
+			<os family="z/os"/>
+		</condition>
+	</target>
+
+
+    <target name="addCIMFeature"
+            description="adds the CIM feature"
+            unless="isZOS">
+
+         <replace encoding="ISO8859-1" dir="${profilePath}/config">
+
+            <include name="**/node-metadata.properties"/>
+
+            <!-- remove existing occurences to make this script idempotent -->
+            <replacefilter token=",com.ibm.ws.cim_7.0.0.0" value="" />
+            <replacefilter token="com.ibm.ws.cim_7.0.0.0," value="" />
+
+            <!-- add the CIM feature when ND is deployed -->
+            <replacefilter token="com.ibm.ws.nd_6.0.0.0" value="com.ibm.ws.nd_6.0.0.0,com.ibm.ws.cim_7.0.0.0" />
+         </replace>
+
+    </target>
+
+
+    <target name="main"
+    	depends="detectZOS, addCIMFeature"/>
+    	
+</project>

@@ -1,0 +1,49 @@
+<project name="wsdmConfig" default="wsdmConfig" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    
+    <property name="NODE_NAME" value="${WS_CMT_NODE_NAME}"/>
+    <property name="CELL_NAME" value="${WS_CMT_CELL_NAME}"/>
+    <property name="serverName" value="dmgr"/>
+
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+    
+    <target name="deployWSDM"
+            description="Deploys WebSphere WSDM application">
+            
+        <wscmtlog>Deploying WebSphere WSDM application, the output will be recorded in: ${WAS_HOME}/logs/wsdm_config.log</wscmtlog>
+            
+       <wsadmin conntype="none"
+		 lang="jacl"
+                 failonerror="true"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/wsdm_config.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <command value="$AdminApp install &quot;${WAS_HOME_UNIX_STYLE}/systemApps/WebSphereWSDM.ear&quot; {-node ${NODE_NAME} -server ${serverName} -appname WebSphereWSDM -copy.sessionmgr.servername ${serverName} -zeroEarCopy -skipPreparation -installed.ear.destination $(WAS_INSTALL_ROOT)/systemApps -MapWebModToVH {{.* .* admin_host}}}"/>
+		 <command value="$AdminConfig modify [lindex [$AdminConfig showAttribute [$AdminConfig showAttribute [$AdminConfig getid /Deployment:WebSphereWSDM] deployedObject] targetMappings] 0] {{enable false}}"/>
+		 <command value="$$AdminConfig save"/>
+        </wsadmin>      
+    </target>
+<target name="wsdmConfig"
+        description="Configures WSDM"
+        depends="convertWASHomeToUNIXStylePath,
+            deployWSDM"/>
+</project>

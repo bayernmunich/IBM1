@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-us" xml:lang="en-us">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<meta name="copyright" content="© Copyright IBM Corporation 2014" />
+<meta name="DC.Rights.Owner" content="© Copyright IBM Corporation 2014" />
+<meta name="security" content="public" />
+<meta name="Robots" content="index,follow" />
+<meta http-equiv="PICS-Label" content='(PICS-1.1 "http://www.icra.org/ratingsv02.html" l gen true r (cz 1 lz 1 nz 1 oz 1 vz 1) "http://www.rsac.org/ratingsv01.html" l gen true r (n 0 s 0 v 0 l 0) "http://www.classify.org/safesurf/" l gen true r (SS~~000 1))' />
+<meta name="DC.Type" content="topic" />
+<meta name="DC.Title" content="Autonomic request flow manager settings" />
+<meta name="abstract" content="Use this panel to configure the autonomic request flow manager (ARFM). The ARFM manages incoming messages for applications: it determines whether and when to allow the messages to be serviced by middleware servers. For HTTP and Session Initiation Protocol (SIP) traffic, the management actions take place in the on demand routers. For Java Message Service (JMS) and Internet Inter-ORB Protocol (IIOP) messages, the management actions take place in the application servers." />
+<meta name="description" content="Use this panel to configure the autonomic request flow manager (ARFM). The ARFM manages incoming messages for applications: it determines whether and when to allow the messages to be serviced by middleware servers. For HTTP and Session Initiation Protocol (SIP) traffic, the management actions take place in the on demand routers. For Java Message Service (JMS) and Internet Inter-ORB Protocol (IIOP) messages, the management actions take place in the application servers." />
+<meta name="DC.Relation" scheme="URI" content="apc.html" />
+<meta name="DC.Relation" scheme="URI" content="placement_custom.html" />
+<meta name="DC.Format" content="XHTML" />
+<meta name="DC.Identifier" content="arfm" />
+<meta name="DC.Language" content="en-us" />
+<!-- Licensed Materials Property of IBM -->
+<!-- US Government Users Restricted Rights -->
+<!-- Use, duplication or disclosure restricted by -->
+<!-- GSA ADP Schedule Contract with IBM Corp. -->
+<link rel="stylesheet" type="text/css" href="./ibmdita.css" />
+<link rel="stylesheet" type="text/css" href="./swg_info_common.css" />
+<title>Autonomic request flow manager settings</title>
+<style type="text/css">
+        span.stealth { visibility:hidden; }
+   </style></head>
+<body role="main" class="help" id="arfm">
+<h1 class="title topictitle1">Autonomic request flow manager settings</h1>
+<div class="body"><p class="shortdesc">Use this panel to configure the autonomic request flow
+manager (ARFM). The ARFM manages incoming messages for applications:
+it determines whether and when to allow the messages to be serviced
+by middleware servers. For HTTP and Session Initiation Protocol (SIP)
+traffic, the management actions take place in the on demand routers.
+For Java Message Service (JMS)
+and Internet Inter-ORB Protocol (IIOP) messages, the management actions
+take place in the application servers.</p>
+<p class="p">To view this administrative console page, click <span class="ph menucascade"><span class="ph uicontrol">Operational policies</span> &gt; <span class="ph uicontrol">Autonomic managers</span> &gt; <span class="ph uicontrol">Autonomic request flow manager</span></span>.</p>
+<p class="p">The autonomic request flow manager (ARFM) contains two parts: a
+controller and a gateway. The ARFM function is implemented for each
+cell by a controller plus a collection of gateways in the on demand
+routers (ODRs). The gateways intercept and queue the incoming requests,
+while the controller provides control signals, or directions, to the
+gateways and the placement controller. The components work together
+to prioritize incoming requests.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> To manage HTTP traffic, you can use a node-based
+algorithm. To enable the node-based ARFM, set the cell custom property <samp class="ph codeph">arfmQueueMode</samp>.
+With the node-based ARFM, queuing and CPU overload protection is performed
+at the node level.  There is no separate controller and gateway involved.</p>
+<p class="p">Depending on your administrative role, you are allowed specific
+privileges when you configure the autonomic request flow manager.
+ This list shows the administrative roles and privileges for configuring
+the autonomic request flow manager:</p>
+<dl class="dl"><dt class="dt dlterm">Monitor</dt>
+<dd class="dd">Can view the information.</dd>
+<dt class="dt dlterm">Operator</dt>
+<dd class="dd">Can view the information on the configuration tab.</dd>
+<dt class="dt dlterm">Configurator</dt>
+<dd class="dd">Can change the configuration.</dd>
+<dt class="dt dlterm">Administrator</dt>
+<dd class="dd">Has all privileges.</dd>
+</dl>
+<p class="p"><span class="ph uicontrol">Enabling security</span> When security is enabled,
+some fields are not editable without appropriate security authorization.</p>
+</div>
+<div class="topic nested1 help" xml:lang="en-us" id="arfm_agg_period"><h2 class="title topictitle2">Aggregation period</h2>
+<div class="body"><p class="shortdesc">Each ARFM gateway broadcasts aggregated statistics periodically,
+and this field specifies the period. The default value is 5 seconds.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> This property does not apply to node-based
+ARFM.</p>
+<div class="p">Gateway support reports the following statistics:<ul class="ul"><li class="li">The runtime charting in the WebSphere® administrative
+console.</li>
+<li class="li">The operation of the ARFM controllers.</li>
+<li class="li">The operation of the application placement controller.</li>
+</ul>
+</div>
+<p class="p">When you set the aggregation period, set the value high enough
+to support the collection of a sufficient number of performance samples.
+Gateways collect samples for each request. To produce a good statistical
+measure, a few hundred samples are necessary. For example, requests
+that are associated with a service class run in 250 milliseconds,
+and on average 10 requests run concurrently. The concurrency value
+is calculated automatically, based on the cluster size and the resources
+in the environment. You can see the concurrency value on the visualization
+panels under <span class="ph uicontrol">Runtime operations</span> in the administrative
+console.</p>
+<p class="p">As a result, the service class handles about 40 requests per second.
+Setting the aggregation period value to 15 seconds results in the
+collection of 600 samples for each aggregation period. The metrics
+that are provided by a 600 sample survey are useful and reliable.</p>
+<p class="p">Setting an aggregation period value too low results in unreliable
+performance metrics. Performance metrics that are derived from fewer
+samples are less reliable than a higher number of samples. Because
+the ARFM controller is activated when new statistics are produced,
+setting an aggregation period value too long results in less frequent
+recomputation of the control settings. Therefore, the product becomes
+less responsive to sudden changes in traffic intensity and patterns.</p>
+</div>
+</div>
+<div class="topic nested1 help" xml:lang="en-us" id="arfm_control_cycle_length_min"><h2 class="title topictitle2">Control cycle length minimum</h2>
+<div class="body"><p class="shortdesc">Defines how often the ARFM controller is activated. The
+default value is 59 seconds.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> This property does not apply to node-based
+ARFM.</p>
+<p class="p">Controller activation is the process of evaluating input and producing
+new control settings as a result of the received input. The activation
+process for an ARFM controller initiates when new statistics come
+from one of its gateways, and the elapsed time since the previous
+activation is greater than or equal to the control cycle minimum length,
+or if the controller was never activated.</p>
+</div>
+</div>
+<div class="topic nested1 help" xml:lang="en-us" id="arfm_smoothing_window"><h2 class="title topictitle2">Smoothing window</h2>
+<div class="body"><p class="shortdesc">Defines how sensitive the ARFM controller reaction is to
+the incoming gateway statistics, by allowing a concatenation of gateway
+statistics. The default value is <samp class="ph codeph">12</samp>.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> This property does not apply to node-based
+ARFM.</p>
+<p class="p">The ARFM controller of any gateway uses a running average of the
+last few statistic reports from that gateway. The smoothing window
+controls the number of reports that are combined. A low smoothing
+window setting makes the controller more sensitive and supports quicker
+reaction. However, a low setting also creates a sensitive reaction
+to noise, or anomalies in the data.</p>
+<p class="p">The product of the smoothing window and the aggregation period
+is approximately the same as the actual control cycle length, which
+sometimes is slightly greater than the configured control cycle minimum
+length. </p>
+</div>
+</div>
+<div class="topic nested1 help" xml:lang="en-us" id="arfm_max_queue_length"><h2 class="title topictitle2">Maximum queue length</h2>
+<div class="body"><p class="shortdesc">Bounds the length of each ARFM queue to a maximum number
+of requests that are possibly held in queue. </p>
+<p class="p">The ARFM has a separate queue for each combination of on demand
+routers, node groups, service classes, and deployment targets. When
+a request arrives and the queue is full, the request is rejected.
+A lower parameter in this field increases the possibility that a request
+is rejected due to short-term traffic bursts, while a higher parameter
+allows requests to linger longer in the queues. Queued requests use
+memory. The default setting is <samp class="ph codeph">1000</samp>, but test this
+setting to determine which one best matches your environment.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> The node-based ARFM has a separate queue
+for each node and each cluster.  This property refers to the total
+number of queued requests allowed.</p>
+</div>
+</div>
+<div class="topic nested1" xml:lang="en-us" id="memoryoverloadprotectionmaximumpercentageofthewebsphereapplicationserver"><h2 class="title topictitle2">Memory overload protection: Maximum percentage of the WebSphere Application Server
+heap size to use</h2>
+<div class="body"><p class="shortdesc">Specifies the maximum percentage of the heap size to be
+used for each application server. This property applies to HTTP and
+Session Initiation Protocol (SIP) messages. The default is <kbd class="ph userinput">100%</kbd>.</p>
+<p class="p"></p>
+</div>
+</div>
+<div class="topic nested1" xml:lang="en-us" id="cpuoverloadprotectionmaximumpercentageofmiddlewarenodecputo"><h2 class="title topictitle2">Maximum CPU usage</h2>
+<div class="body"><p class="shortdesc">Specifies a maximum CPU usage percentage for middleware
+nodes. The ARFM considers the entire cluster as a whole when calculating
+the CPU usage. When the CPU usage exceeds this percentage, the cluster
+is considered to be overloaded. The ARFM considers the entire cluster
+as a whole when calculating the CPU usage. The default is <kbd class="ph userinput">90%</kbd>.</p>
+<p class="p"><img src="./images/ng_v8553.gif" alt="[8.5.5.3 or later]" /> The node-based ARFM considers CPU usage on
+a node-by-node basis.  When the CPU usage exceeds the maximum usage
+percentage, the node is considered to be overloaded. The default is <kbd class="ph userinput">90%</kbd>.</p>
+</div>
+</div>
+<div class="topic nested1" xml:lang="en-us" id="rejectionpolicy"><h2 class="title topictitle2">Rejection policy</h2>
+<div class="body"><p class="shortdesc">A rejection policy prevents a CPU from being overloaded
+by rejecting incoming HTTP or SIP messages that are not part of preexisting
+dialogs or sessions.</p>
+<div class="p"><ul class="ul"><li class="li"><span class="ph uicontrol">Reject no incoming messages, allow all messages into
+the queue regardless of their potential to time out or breach the
+response time threshold of their service policy goal</span>.
+This option has a rejection threshold value of <kbd class="ph userinput">-1</kbd>.
+This value is the default.</li>
+<li class="li"><span class="ph uicontrol">Reject incoming messages that are not part of a preexisting
+dialog or session if the predicted response time of the message exceeds
+the response time threshold of its service policy goal.</span> This
+option has a rejection threshold value of <kbd class="ph userinput">0%</kbd>.</li>
+<li class="li"><span class="ph uicontrol">Reject incoming messages that are not part of a preexisting
+dialog or session if the predicted response time of the message exceeds
+the response time threshold of its service policy goal by more than
+the following percentage.</span> For this option, specify a <span class="ph uicontrol">Rejection
+threshold</span> value as a percentage. For example, the default
+value of <kbd class="ph userinput">400%</kbd> means that a message with a service
+policy response time threshold of 500 ms is rejected if its predicted
+response time was greater than 2.5 seconds.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="related-links">
+<div class="relinfo"><strong>Related information</strong>:<br />
+<div><a class="link help" href="apc.html" title="Use this page to define the settings that control application placement. You can enable the autonomic placement controller, define how often placement changes occur, and control the behavior of the placement controller when it is operating in supervised mode.">Application placement controller settings</a></div>
+<div><a class="link help" href="placement_custom.html" title="Use this page to view and manage a list of arbitrary name-value pairs of data, where the name is a property key and the value is a string value that can be used to set internal system configuration properties. Defining a new property enables you to configure a setting beyond the settings available in the administrative console.">Application placement controller custom properties</a></div>
+</div>
+</div>
+<hr align="left" /><br /><span class="runningfooter">File name: arfm.html</span></body>
+</html>

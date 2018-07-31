@@ -1,0 +1,169 @@
+<actions>
+    <action path="actions/first.ant" priority="01" isFatal="true">
+        <argument key="profileName" values="1" required="true" >
+            <defaulter path="defaulters/profileNameDefaulter.ijc" priority="10"/>
+            <validator path="validators/profileNameValidator.ijc"/>
+            <validator path="validators/noSpacesValidator.ijc"/>
+            <validator path="validators/noInvalidCharactersValidator.ijc"/>
+        </argument>
+        <argument key="profilePath" values="1" required="true" >
+            <defaulter path="defaulters/profileLocationDefaulter.ijc" priority="20"/>
+            <validator path="validators/noStartingOrTrailingSpacesValidator.ijc"/>
+            <validator path="validators/directoryValidator.ijc"/>
+            <validator path="validators/nonRootUserValidator.ijc"/>
+            <validator path="validators/diskSpaceValidator.ijc"/>
+            <validator path="validators/profilePathLengthValidator.ijc"/>
+        </argument>
+        <argument key="hostName" values="1" required="true" >
+            <defaulter path="defaulters/hostNameDefaulter.ijc" priority="10"/>
+            <validator path="validators/hostnameValidator.ijc"/>
+        </argument>
+        <argument key="nodeName" values="1" required="true" >
+            <defaulter path="defaulters/nodeNameDefaulter.ijc" priority="20"/>
+            <validator path="validators/noSpacesValidator.ijc"/>
+            <validator path="validators/noInvalidCharactersValidator.ijc"/>
+        </argument>
+        <argument key="cellName" values="1" required="true" >
+            <defaulter path="defaulters/cellNameDefaulter.ijc" priority="20"/>
+            <validator path="validators/noSpacesValidator.ijc"/>
+            <validator path="validators/noInvalidCharactersValidator.ijc"/>
+        </argument>
+    </action>
+    <action path="actions/generateBin.ant" priority="10" isFatal="true"/>
+    <action path="actions/postinstallManagement.ant" priority="10" isFatal="true"/>
+    <action path="actions/bootStrapWCCMFiles.ant" priority="10" isFatal="true"/>
+    <action path="actions/updateProxyWCCMFiles.ant" priority="10" isFatal="false"/>
+    <action path="actions/updateSetupSdk.ant" priority="10" isFatal="true"/>
+    <action path="actions/convertCodepageForProfileBatchFiles.ant" priority="10" isFatal="false"/>
+    <action path="actions/bootStrapSASClient.ant" priority="10" isFatal="true"/>
+    <action path="actions/os400.ant" priority="11" isFatal="true">
+          <argument key="serverName" values="1" required="false" platform="os400">
+               <defaulter path="defaulters/serverNameDefaulter.ijc" priority="25"/>
+          </argument>
+    </action>
+    <action path="actions/launchWsAdminListener.ant" priority="11" isFatal="true"/>
+
+    <!--  LI 4405-1.1 use config Archive file             --> 
+ 
+    <action path="actions/importConfigArchive.ant" priority="11" isFatal="true"/> 
+    <action path="actions/updateWCCMFiles.ant" priority="11" isFatal="true">  
+          <argument key="serverName" values="1" required="false" platform="os400">
+               <defaulter path="defaulters/serverNameDefaulter.ijc" priority="25"/>
+          </argument>
+    </action>  
+
+    <!--  LI 4405-1.1 use config Archive file              -->       
+
+    <action path="actions/generateProfileKey.ant" priority="11" isFatal="true"/>
+    <action path="actions/collectNodeMetadata.ant" priority="11" isFatal="true"/>
+    <action path="actions/generateKeysForSingleProfile.ant" priority="11" isFatal="true">     
+     		<!--START: Creating a personal certificate -->
+        <argument key="personalCertDN" values="1" required="false" >
+            <defaulter path="defaulters/personalCertDNDefaulter.ijc" priority="25"/>
+            <validator path="validators/certificateDNValidator.ijc"/>
+        </argument>
+        <argument key="personalCertValidityPeriod" values="1" required="false" >		
+            <defaulter path="defaulters/personalCertValidityPeriodDefaulter.ijc" priority="20"/>
+            <validator path="validators/personalCertValidityPeriodValidator.ijc"/>
+        </argument>
+        <!--END: Creating a personal certificate -->
+        
+        <!--START: Creating a signing certificate -->
+        <argument key="signingCertDN" values="1" required="false" >
+            <defaulter path="defaulters/signingCertDNDefaulter.ijc" priority="25"/>
+            <validator path="validators/certificateDNValidator.ijc"/>
+        </argument>
+        <argument key="signingCertValidityPeriod" values="1" required="false" >
+            <defaulter path="defaulters/signingCertValidityPeriodDefaulter.ijc" priority="20"/>
+						<validator path="validators/signingCertValidityPeriodValidator.ijc"/>
+        </argument>        
+        <argument key="keyStorePassword" values="1" required="false">
+            <defaulter path="defaulters/keyStorePasswordDefaulter.ijc" priority="20"/>
+            <validator path="validators/noSpacesValidator.ijc"/>
+            <validator path="validators/noInvalidCharactersValidator.ijc"/>
+        </argument>
+        <!--END: Creating a signing certificate -->
+        
+        <!--START: Importing a personal certificate -->
+        <argument key="importPersonalCertKS" values="1" required="false">
+            <validator path="validators/importCertKSValidator.ijc"/>
+            <validator path="validators/fileValidator.ijc"/>
+        </argument>
+        <argument key="importPersonalCertKSType" values="1" required="false" >				
+            <validator path="validators/importCertKSTypeValidator.ijc"/>
+        </argument>
+        <argument key="importPersonalCertKSPassword" values="1" required="false"/>        
+        <argument key="importPersonalCertKSAlias" values="1" required="false" >			
+            <validator path="validators/importCertKSAliasValidator.ijc"/>
+        </argument>
+        <!--END: Importing a personal certificate -->
+        
+        <!--START: Importing a signing certificate -->
+        <argument key="importSigningCertKS" values="1" required="false">
+            <validator path="validators/importCertKSValidator.ijc"/>
+            <validator path="validators/fileValidator.ijc"/>
+        </argument>
+        <argument key="importSigningCertKSType" values="1" required="false" >
+            <validator path="validators/importCertKSTypeValidator.ijc"/>
+        </argument>
+        <argument key="importSigningCertKSPassword" values="1" required="false" />
+        <argument key="importSigningCertKSAlias" values="1" required="false" >
+            <validator path="validators/importCertKSAliasValidator.ijc"/>
+        </argument>
+        <!--END: Importing a signing certificate -->            
+    </action>
+    <action path="actions/zInitialSecuritySetup.ant" priority="12" isFatal="true">
+       <argument key="useSAFSecurity" values="1" required="true" platform="zos">
+          <validator path="validators/booleanValidator.ijc"/>
+       </argument>
+       <argument key="enableAdminSecurity" values="1" required="true" platform="zos">
+          <validator path="validators/booleanValidator.ijc"/>
+       </argument>
+       <argument key="zUseVirtualKeyring" values="1" required="true">
+              <defaulter path="defaulters/falseDefaulter.ijc"/>
+              <validator path="validators/booleanValidator.ijc"/>
+       </argument>
+    </action>
+    <action path="actions/deploySIBmanaged.ant" priority="12" isFatal="true"/>
+    <action path="actions/executeManagedProfileSetup.ant" priority="20" isFatal="true">
+        <argument key="federateLater" values="1" required="false">
+            <defaulter path="defaulters/federateLaterDefaulter.ijc" priority="20"/>
+        </argument>
+        <argument key="dmgrHost" values="1" required="false">
+            <defaulter path="defaulters/dmgrHostDefaulter.ijc" priority="25"/>
+            <validator path="validators/dmgrConnectionValidator.ijc"/>
+            <validator path="validators/dmgrHostValidator.ijc"/>
+        </argument>
+        <argument key="dmgrPort" values="1" required="false">
+            <defaulter path="defaulters/dmgrPortDefaulter.ijc" priority="25"/>
+            <validator path="validators/dmgrPortValueInRangeValidator.ijc"/>
+            <validator path="validators/dmgrPositiveIntValidator.ijc"/>
+        </argument>
+        <argument key="dmgrAdminUserName" values="1" required="false"/>
+        <argument key="dmgrAdminPassword" values="1" required="false"/>
+        <argument key="portsFile" values="1" required="false">
+	    <validator path="validators/fileValidator.ijc"/>
+	</argument>
+    </action>
+    <action path="actions/amjrteConfig.ant" priority="20" isFatal="false"/>
+	<action path="actions/zSetOptionalConfigProperties.ant" priority="90" isFatal="false"/>
+    <action path="actions/zCreateUUIDs.ant" priority="20" isFatal="false"/>
+    <action path="actions/configFirstStepsManaged.ant" priority="90" isFatal="false"/>
+    <action path="actions/createProfileShortCut2StartMenuManaged.ant" priority="90" isFatal="false"/>
+    <action path="actions/generateCollectorBin.ant" priority="10" isFatal="false"/>
+    <action path="actions/os400finish.ant" priority="98" isFatal="false"/>
+    <action path="actions/deleteUnecessaryScriptsInProfileBin.ant" priority="99" isFatal="false"/>
+    <action path="actions/createVirtualHost.ant" priority="100" isFatal="false"/>
+
+    <!-- VE config actions start -->
+
+    <action path="actions/addXDFeature.ant" priority="19" isFatal="true"/>
+    <action path="actions/updateServerPolicy.ant" priority="106" isFatal="false"/>
+ 
+    <!-- VE config actions end -->
+
+	<action path="actions/updatePermissionsAndOwnerships.ant" priority="200" isFatal="true"/>
+    <action path="actions/stopWsAdminListener.ant" priority="201" isFatal="false"/>
+    <action path="actions/aboutThisProfileManaged.ant" priority="201" isFatal="false"/>
+    <action path="actions/fileAndDirPermFixups.ant" priority="201" isFatal="false"/>
+</actions>

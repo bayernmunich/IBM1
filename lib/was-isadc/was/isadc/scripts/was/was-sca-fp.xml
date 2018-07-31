@@ -1,0 +1,231 @@
+<?xml version="1.0"?>
+
+<project name="Feature Pack for SCA Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Feature Pack for SCA Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_FeaturePack_For_SCA_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-featurepack-for-SCA" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+		 			was_stack_custom_init, 
+		 		  
+					request_additional_application_information,
+					sca_generate_trace_string,
+						
+					trace_setup_custom, 
+					 				 
+					common_postamble_general_with_ftp">
+	</target>
+
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="sca_generate_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" 
+				value="SCA=all:SCARTB=all:SCAAdmin=all:com.ibm.ws.soa.sca.binding.*=all:org.apache.tuscany.*=all" />
+		</if>
+		<echo message="Trace specification string: ${was.trace.string}" />
+		
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;System Management Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the node experiencing the SCA feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis.&lt;/p&gt;">
+		
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1199596" />
+		
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the node experiencing the SCA feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Feature Pack for SCA Problem =>
+This problem category is run on the node experiencing the SCA feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+	
+	<target name="request_additional_application_information" >
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="SCA_Application_Info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Questionnaires"
+		           replace="${autopdts};;${step.count}"
+		           id="1099"
+		           level="info" />
+		
+		<inputdialogtask doSkip="true" noCancel="true">
+			
+			<fieldtask name="prompt"
+					   label="Input_Required"
+					   type="prompt"
+					   bundle="autopdtoolstrings" />
+			<fieldtask name="app.type"
+			           label="App_Type"
+			           list="WAR:JAR"
+			           listDetails="WAR:JAR"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+		
+		<echo message="Application Type selected : ${app.type}" />
+
+		<condition property="war.app.type">
+			<equals arg1="WAR" arg2="${app.type}" />
+		</condition>
+		<condition property="jar.app.type">
+			<equals arg1="JAR" arg2="${app.type}" />
+		</condition>
+		
+		<if isTrue="${war.app.type}" >
+			<inputdialogtask doSkip="true" noCancel="true" actionProperty="war_app_skip" > 
+				<fieldtask name="prompt"
+					   label="Input_Required_SCA_WAR"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="App_Name" 
+					   label="App_Name"
+					   type="textarea" 
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="Web_Mod_Name" 
+					   label="Web_Mod_Name"
+					   type="textarea" 
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<condition property="war_app_skip_selected" > 
+				<equals arg1="skip" arg2="${war_app_skip}" />
+			</condition>
+			
+			<if isNotTrue="${war_app_skip_selected}" >
+				<echo message="Name of Application : ${App_Name}" />
+				<echo message="Name of Web Module : ${Web_Mod_Name}" />
+
+				<available file="${was.enhanced.root}/installedApps/${CellName}/${App_Name}/${Web_Mod_Name}/META-INF" type="dir" property="App.Dir.Exists" />
+			
+				<if isNotTrue="${App.Dir.Exists}" >
+					<echo message="The Application directory for the Web Module Specified does not exist. Skipping collection.. "/>
+				</if>
+			
+				<if isTrue="${App.Dir.Exists}" >
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${was.enhanced.root}/installedApps/${CellName}/${App_Name}/${Web_Mod_Name}/META-INF"
+							prefix="${autopdProblem}/SCA_LOGS/META-INF">
+							<include name="**/*.*" />
+						</zipfileset>
+					</zip>
+				</if>
+			</if>
+			
+		</if>
+		
+		
+		<if isTrue="${jar.app.type}" >
+			<inputdialogtask doSkip="true" noCancel="true" actionProperty="jar_app_skip"> 
+				<fieldtask name="prompt"
+					   label="Input_Required_SCA_JAR"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="BLA_Name" 
+					   label="BLA_Name"
+					   type="textarea" 
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="Composite_Name" 
+					   label="Composite_Name"
+					   type="textarea" 
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<condition property="jar_app_skip_selected" > 
+				<equals arg1="skip" arg2="${jar_app_skip}" />
+			</condition>
+			
+			<if isNotTrue="${jar_app_skip_selected}" >
+				<echo message="Name of BLA : ${BLA_Name}" />
+				<echo message="Name of Composite : ${Composite_Name}" />
+				
+				<available file="${was.enhanced.root}/config/cells/${CellName}/blas/${BLA_Name}" type="dir" property="Bla.Dir.Exists" />
+				<available file="${was.enhanced.root}/config/cells/${CellName}/cus/${Composite_Name}" type="dir" property="Composite.Dir.Exists" />
+			
+				<if isNotTrue="${Bla.Dir.Exists}" >
+					<echo message="The BLA directory specified does not exist. Skipping collection.. "/>
+				</if>
+				<if isTrue="${Bla.Dir.Exists}" >
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${was.enhanced.root}/config/cells/${CellName}/blas/${BLA_Name}"
+							prefix="${autopdProblem}/SCA_LOGS/BLA">
+							<include name="**/*.*" />
+						</zipfileset>
+					</zip>
+				</if>
+
+				<if isNotTrue="${Composite.Dir.Exists}" >
+					<echo message="The Composite directory specified does not exist. Skipping collection.. "/>
+				</if>
+				<if isTrue="${Composite.Dir.Exists}" >
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${was.enhanced.root}/config/cells/${CellName}/cus/${Composite_Name}"
+							prefix="${autopdProblem}/SCA_LOGS/COMPOSITE">
+							<include name="**/*.*" />
+						</zipfileset>
+					</zip>
+				</if>
+			</if>
+		
+		</if>
+	</target>
+
+</project>

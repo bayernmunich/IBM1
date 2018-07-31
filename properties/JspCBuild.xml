@@ -1,0 +1,103 @@
+<!-- JspCBuild.xml - sample build.xml for the public WebSphere Ant task JspC.  JspC is included in        -->
+<!-- WebSphere Application Server and is found in the jar wsanttasks.jar.                                 -->
+<!-- JspC is an Ant front-end to the JSP Batch Compiler.  Descriptions of the attributes can              -->
+<!-- be found in the Information Center, and in the file batchcompiler.properties.default which			  -->
+<!-- is found in {WAS_HOME}/bin.                                                                          -->
+<!--                                                                                                      -->
+<!-- JspC Attribute                                                  Equivalent Batch Compiler Parameter  -->
+<!-- ==============                                                  ===================================  -->
+<!-- earPath                                                         -ear.path                            -->
+<!-- warPath                                                         -war.path                            -->
+<!-- src                                                                                                  -->
+<!--     Same as warPath, for backward compatibility                 -war.path                            -->
+<!-- enterpriseAppName                                               -enterpriseapp.name                  -->
+<!-- responseFile                                                    -response.file                       -->
+<!-- webmoduleName                                                   -webmodule.name                      -->
+<!-- fileName                                                        -filename                            -->
+<!-- configRoot                                                      -config.root                         -->
+<!-- cellName                                                        -cell.name                           -->
+<!-- nodeName                                                        -node.name                           -->
+<!-- serverName                                                      -server.name                         -->
+<!-- extractToDir                                                    -extractToDir                        -->
+<!-- compileToDir                                                    -compileToDir                        -->
+<!-- toDir                                                                                                -->
+<!--     same as compileToDir, for backward compatibility            -compileToDir                        -->
+<!-- compileToWebInf                                                 -compileToWebInf                     -->
+<!-- jspCompileClasspath                                             -jspCompileClasspath                 -->
+<!-- compilerOptions                                                 -compilerOptions                     -->
+<!-- recurse                                                         -recurse                             -->
+<!-- removeTempDir                                                   -removeTempDir                       -->
+<!-- translate                                                       -translate                           -->
+<!-- compile                                                         -compile                             -->
+<!-- forceCompilation                                                -forceCompilation                    -->
+<!-- useFullPackageNames                                             -useFullPackageNames                 -->
+<!-- trackDependencies                                               -trackDependencies                   -->
+<!-- createDebugClassfiles                                           -createDebugClassfiles               -->
+<!-- keepgenerated                                                   -keepgenerated                       -->
+<!-- keepGeneratedclassfiles                                         -keepGeneratedclassfiles             -->
+<!-- usePageTagPool                                                  -usePageTagPool                      -->
+<!-- useThreadTagPool                                                -useThreadTagPool                    -->
+<!-- classloaderParentFirst                                          -classloader.parentFirst             -->
+<!-- classloaderSingleWarClassloader                                 -classloader.singleWarClassloader    -->
+<!-- additionalClasspath                                             -additional.classpath                -->
+<!-- classpath                                                                                            -->
+<!--     same as additionalClasspath, for backward compatibility     -additional.classpath                -->
+<!-- verbose                                                         -verbose                             -->
+<!-- deprecation                                                     -deprecation                         -->
+<!-- javaEncoding                                                    -javaEncoding                        -->
+<!-- compileWithAssert                                               -compileWithAssert                   -->
+<!-- useJikes                                                        -useJikes                            -->
+<!-- jspFileExtensions                                               -jsp.file.extensions                 -->
+<!-- logLevel                                                        -log.level                           -->
+<!-- wasHome                                                         none                                 -->
+<!-- classpathref                                                    none                                 -->
+<!--                                                                                                      -->
+<!-- Below is an example of a build script with multiple targets, each with different attributes.         -->
+<!-- The following commands can be used to execute the script:                                            -->
+<!--     on Windows: ant -Dwas.home=%WAS_HOME% -Dear.path=%EAR_PATH% -Dextract.dir=%EXTRACT_DIR%          -->
+<!--                 ant jspc2 -Dwas.home=%WAS_HOME% -Dapp.name=%APP_NAME% -Dwebmodule.name=%MOD_NAME%    -->
+<!--                 ant jspc3 -Dwas.home=%WAS_HOME% -Dapp.name=%APP_NAME% -Dwebmodule.name=%MOD_NAME% -Ddir.name=%DIR_NAME%   -->
+<!--     on Unix:    ant -Dwas.home=$WAS_HOME  -Dear.path=$EAR_PATH  -Dextract.dir=$EXTRACT_DIR           -->
+<!--                 ant jspc2 -Dwas.home=$WAS_HOME -Dapp.name=$APP_NAME -Dwebmodule.name=$MOD_NAME       -->
+<!--                 ant jspc3 -Dwas.home=$WAS_HOME -Dapp.name=$APP_NAME -Dwebmodule.name=$MOD_NAME -Ddir.name=$DIR_NAME   -->
+
+<project name="JSP Precompile" default="jspc1" basedir=".">
+    <taskdef name="wsjspc" classname="com.ibm.websphere.ant.tasks.JspC"/>
+    <target name="jspc1" description="example using  a path to an EAR, and extracting the EAR to a directory">
+        <wsjspc wasHome="${was.home}"
+            earpath="${ear.path}"
+            forcecompilation="true"
+            extractToDir="${extract.dir}"
+            useThreadTagPool="true"
+            keepgenerated="true"
+            jspCompileClasspath=""
+
+        />
+    </target>
+    <target name="jspc2" description="example using an enterprise app and webmodule">
+        <wsjspc wasHome="${was.home}"
+            enterpriseAppName="${app.name}"
+            webmoduleName="${webmodule.name}"
+            removeTempDir="true"
+            forcecompilation="true"
+            keepgenerated="true"
+            jspCompileClasspath=""
+
+        />
+    </target>
+    <target name="jspc3" description="example using an enterprise app, webmodule and specific directory">
+        <wsjspc wasHome="${was.home}"
+            enterpriseAppName="${app.name}"
+            webmoduleName="${webmodule.name}"
+            fileName="${dir.name}"
+            recurse="false"
+            forcecompilation="true"
+            keepgenerated="true"
+            jspCompileClasspath=""
+
+        />
+    </target>
+</project>
+
+
+

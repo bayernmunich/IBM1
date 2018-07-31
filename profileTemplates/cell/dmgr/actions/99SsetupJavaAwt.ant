@@ -1,0 +1,52 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="setupJavaAwtProject" default="setupJavaAwt" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;
+        
+    <target name="init">
+        <!--
+        <wscmtlog> serverType = ${serverType}</wscmtlog>
+        <condition property="isDmgr" value="true">
+             <equals arg1="${serverType}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <wscmtlog>Detected isDmgr is = ${isDmgr}</wscmtlog>	
+        -->
+        <loadproperties srcFile="${profilePath}/properties/profileKey.metadata"/> 
+        <wscmtlog> serverType = ${com.ibm.ws.profile.type}</wscmtlog>
+        <condition property="isDmgr" value="true">
+             <equals arg1="${com.ibm.ws.profile.type}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <wscmtlog message="isDmgr=${isDmgr}"/>        
+    </target>
+	
+    <target name="setupJavaAwt"
+            description="setup java.awt.headless property" depends="init" if="isDmgr">
+
+        <wsadmin conntype="none"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  lang="jython"
+                  script="${templatePath}/actions/scripts/setupJavaAwt.py"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/setupJavaAwt.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+        </wsadmin>
+	<antcall target="importLogsToMain" >
+		<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/setupJavaAwt.log" />
+		<param name="description" value="Set up WVE Java AWT parameters" />
+		<param name="precondition" value="foetrue" />
+	</antcall>        
+    </target>
+
+</project>

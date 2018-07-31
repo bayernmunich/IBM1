@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:Server xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:customprocessexec="http://www.ibm.com/websphere/appserver/schemas/6.1/customprocessexec.xmi" xmlns:externalfileservices="http://www.ibm.com/websphere/appserver/schemas/6.1/externalfileservices.xmi" xmlns:foreignservers="http://www.ibm.com/websphere/appserver/schemas/6.1/foreignservers.xmi" xmlns:process="http://www.ibm.com/websphere/appserver/schemas/5.0/process.xmi" xmi:id="Server_1156125198242" name="weblogic10x">
+  <components xmi:type="foreignservers:ForeignServer" xmi:id="ForeignServer_1156125198258">
+    <configuration xmi:id="DescriptivePropertyGroup_1156125198258">
+      <propertyGroups xmi:id="DescriptivePropertyGroup_1156125198259" name="endpoint">
+        <propertyGroups xmi:id="DescriptivePropertyGroup_1156125198260" name="transport.http">
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198258" name="port" value="7001" required="true" type="int" range="" inclusive="false">
+            <descriptor xmi:id="DisplayDescriptor_1156125198258" displayNameKey="transport.port.name" displayDescriptionKey="transport.port.desc" firstClass="true" hoverHelpKey="transport.port.help"/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198259" name="protocol" value="http" required="true" type="String" range="http,https" inclusive="true">
+            <descriptor xmi:id="DisplayDescriptor_1156125198259" displayNameKey="" displayDescriptionKey="" firstClass="true" hidden="true" hoverHelpKey=""/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198260" name="ssl" value="false" required="true" type="boolean" range="">
+            <descriptor xmi:id="DisplayDescriptor_1156125198260" displayNameKey="" displayDescriptionKey="" firstClass="true" hidden="true" hoverHelpKey=""/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198261" name="enabled" value="true" required="true" type="boolean" range="">
+            <descriptor xmi:id="DisplayDescriptor_1156125198261" displayNameKey="transport.enabled" displayDescriptionKey="transport.enabled.desc" firstClass="true" hoverHelpKey=""/>
+          </properties>
+          <descriptor xmi:id="DisplayDescriptor_1156125198262" displayNameKey="weblogic.http.listener" displayDescriptionKey="weblogic.http.listener.desc" firstClass="true"/>
+        </propertyGroups>
+        <propertyGroups xmi:id="DescriptivePropertyGroup_1156125198261" name="transport.https">
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198262" name="port" value="7002" required="true" type="int" range="" inclusive="false">
+            <descriptor xmi:id="DisplayDescriptor_1156125198263" displayNameKey="transport.port.name" displayDescriptionKey="transport.port.desc" firstClass="true" hoverHelpKey="transport.port.help"/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198263" name="protocol" value="https" required="true" type="String" range="http,https" inclusive="true">
+            <descriptor xmi:id="DisplayDescriptor_1156125198264" displayNameKey="" displayDescriptionKey="" firstClass="true" hidden="true" hoverHelpKey=""/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198264" name="ssl" value="true" required="true" type="boolean" range="">
+            <descriptor xmi:id="DisplayDescriptor_1156125198265" displayNameKey="" displayDescriptionKey="" firstClass="true" hidden="true" hoverHelpKey=""/>
+          </properties>
+          <properties xmi:id="DiscoverableDescriptiveProperty_1156125198265" name="enabled" value="false" required="true" type="boolean" range="">
+            <descriptor xmi:id="DisplayDescriptor_1156125198266" displayNameKey="transport.enabled" displayDescriptionKey="transport.enabled.desc" firstClass="true" hoverHelpKey=""/>
+          </properties>
+          <descriptor xmi:id="DisplayDescriptor_1156125198267" displayNameKey="weblogic.https.listener" displayDescriptionKey="weblogic.https.listener.desc" firstClass="true"/>
+        </propertyGroups>
+        <descriptor xmi:id="DisplayDescriptor_1156125198268" displayNameKey="weblogic.listeners.name" displayDescriptionKey="weblogic.listeners.desc" firstClass="true"/>
+      </propertyGroups>
+      <properties xmi:id="DiscoverableDescriptiveProperty_1156125198266" name="discoverymode" value="manual" type="String" range="manual,semiautomatic,automatic" inclusive="true">
+        <descriptor xmi:id="DisplayDescriptor_1156125198269" firstClass="true" hidden="true" readonly="true"/>
+      </properties>
+    </configuration>
+  </components>
+  <components xmi:type="externalfileservices:ExternalFileService" xmi:id="ExternalFileService_1156125198258" name="ExternalLogService">
+    <externalFiles xmi:id="ExternalFile_1156125198258" filePath="${WEBLOGIC_SERVERROOT}/servers/${WEBLOGIC_SERVERNAME}/logs" readOnly="true"/>
+    <externalFiles xmi:id="ExternalFile_1156125198259" filePath="${USER_INSTALL_ROOT}/logs/${WAS_SERVERNAME}" readOnly="true"/>
+  </components>
+  <components xmi:type="externalfileservices:ExternalFileService" xmi:id="ExternalFileService_1156125198259" name="ExternalConfigFileService">
+    <externalFiles xmi:id="ExternalFile_1156125198260" filePath="${WEBLOGIC_SERVERROOT}/config/config.xml" readOnly="true"/>
+  </components>
+  <processDefinitions xmi:type="customprocessexec:NamedProcessDef" xmi:id="NamedProcessDef_1172871277926" executableName="${WEBLOGIC_DOMAINDIR}\bin\startManagedWebLogic.cmd" workingDirectory="${WEBLOGIC_SERVERROOT}" name="start" osnames="windows">
+    <executableArguments>${WEBLOGIC_SERVERNAME}</executableArguments>
+    <executableArguments>${WEBLOGIC_ADMINURL}</executableArguments>
+    <execution xmi:id="ProcessExecution_1172957186410"/>
+  </processDefinitions>
+  <processDefinitions xmi:type="customprocessexec:NamedProcessDef" xmi:id="NamedProcessDef_1172871277927" executableName="${WEBLOGIC_DOMAINDIR}\bin\stopManagedWebLogic.cmd" workingDirectory="${WEBLOGIC_SERVERROOT}" name="stop" osnames="windows">
+    <executableArguments>${WEBLOGIC_SERVERNAME}</executableArguments>
+    <executableArguments>${WEBLOGIC_ADMINURL}</executableArguments>
+    <execution xmi:id="ProcessExecution_1172957186629"/>
+  </processDefinitions>
+  <processDefinitions xmi:type="customprocessexec:NamedProcessDef" xmi:id="NamedProcessDef_1172871277928" executableName="${WEBLOGIC_DOMAINDIR}/bin/startManagedWebLogic.sh" workingDirectory="${WEBLOGIC_SERVERROOT}" name="start" osnames="unix">
+    <executableArguments>${WEBLOGIC_SERVERNAME}</executableArguments>
+    <executableArguments>${WEBLOGIC_ADMINURL}</executableArguments>
+    <execution xmi:id="ProcessExecution_1172957186426"/>
+  </processDefinitions>
+  <processDefinitions xmi:type="customprocessexec:NamedProcessDef" xmi:id="NamedProcessDef_1172871277929" executableName="${WEBLOGIC_DOMAINDIR}/bin/stopManagedWebLogic.sh" workingDirectory="${WEBLOGIC_SERVERROOT}" name="stop" osnames="unix">
+    <executableArguments>${WEBLOGIC_SERVERNAME}</executableArguments>
+    <executableArguments>${WEBLOGIC_ADMINURL}</executableArguments>
+    <execution xmi:id="ProcessExecution_1172957186645"/>
+  </processDefinitions>
+</process:Server>

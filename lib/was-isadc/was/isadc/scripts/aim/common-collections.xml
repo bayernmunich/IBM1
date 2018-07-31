@@ -1,0 +1,952 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Common Collections">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="was.shared.targets.basedir"
+		file="${ant.file.Common Collections}" />
+	<dirname property="was.shared.targets.parentdir"
+		file="${was.shared.targets.basedir}" />
+	<dirname property="was.shared.targets.bundle.basedir"
+		file="${was.shared.targets.parentdir}" />
+	
+	<taskdef file="${sharedelements.targets.bundle.basedir}/properties/sharedelements/autopdsharedelementstaskdef.properties" /> 
+
+	<import>
+		<javaresource name="scripts/sharedtargets.xml"/>
+	</import>
+	<import>
+		<javaresource name="scripts/sharedelements/sharedelements-sharedtargets.xml"/>
+	</import>
+	<autopdimport file="${was.shared.targets.bundle.basedir}/scripts/aim/archive-utilities.xml"  />
+	<autopdimport file="${was.shared.targets.bundle.basedir}/scripts/aim/win-common-targets.xml"  />
+	<autopdimport file="${was.shared.targets.bundle.basedir}/scripts/vce-shared/vce-sharedtargets.xml" />
+	<autopdimport file="${was.shared.targets.bundle.basedir}/scripts/portchecker/portcollector.xml" />
+
+
+	<!-- **************************************************************************** -->
+	<!-- BEGIN Common API for collections ******************************************* -->
+	<!-- **************************************************************************** -->
+
+	<!-- documentation target, only -->
+	<target name="internal-usage"
+		description="These instruction explain how the 'common-collections.xml' file is
+		included in your script. &lt;br/&gt;&lt;br/&gt;
+		1. This script is dependant on the 'common-setup.xml' scritp. Therefore,
+		it will have already been included along with the other AIM shared scripts.
+		&lt;br/&gt;&lt;br/&gt;
+		2. The pre-conditions for running the targets in this script are defined in the
+		'common-setup.xml' script. As long as those pre-conditions have been met, then 
+		these targets can be used.
+		&lt;br/&gt;&lt;br/&gt;
+		3. The main target of concern is the 'collect_all' target. However, any subset
+		of the targets in the 'depends' attribute of 'collect_all' can be called.">
+	</target>
+
+	<!-- AIM SHARED TARGET - COMMON COLLECTIONS ************************************* -->
+	<!-- 
+		DESCRIPTION:
+		'collect_all' combines the WebSphere collection targets into a single target
+		that is called from the either the 'common_postamble_general_with_ftp' or the
+		'common_postamble_general_no_ftp' targets.
+		
+		PRE-CONDITIONS:
+		The conditions of the scripts/aim/common-setup.xml must be met.
+		
+		POST-CONDITIONS:
+		After this target is complete, all the logs, trace, configuration, and meta 
+		information files will be collected from the WebSphere Application Server
+		installation.
+	-->
+	<!-- A. COMMON COLLECTIONS: : COLLECT_ALL **************************** -->
+	<target name="collect_all"
+		description="This target combines the WebSphere collection targets 
+		that is called from the either the 'common_postamble_general_with_ftp' or the
+		'common_postamble_general_no_ftp' targets.&lt;br/gt;&lt;br/gt;
+		
+		PRE-CONDITIONS:&lt;br/gt;
+		The conditions of the scripts/aim/common-setup.xml must be met.
+		&lt;br/gt;&lt;br/gt;
+		
+		POST-CONDITIONS:&lt;br/gt;
+		After this target is complete, all the logs, trace, configuration, and meta 
+		information files will be collected from the WebSphere Application Server
+		installation."
+		depends="log_trace_collection,
+					 meta_file_collection,
+					 analysis_file_collection,
+					 profile_xml_collection,
+					 properties_file_collection,
+					 heap_core_collection">
+	</target>
+
+	<!-- 1. COMMON COLLECTIONS: LOG_TRACE_COLLECTION ******************************** -->
+	<target name="log_trace_collection"
+		description="This target collects all of the WebSphere trace and log files such as
+		SystemOut, SystemErr, trace.log, nativeStdOut, nativeStderr, and ffdc logs.">
+
+		<!-- determine if the logs and trace files are available -->
+		<available file="${trace.log.file}" type="file"
+			property="trace.log.file.available" />
+		<available file="${systemout.log.file}" type="file"
+			property="systemout.log.file.available" />
+		<available file="${systemerr.log.file}" type="file"
+			property="systemerr.log.file.available" />
+		<available file="${native_stderr.log.file}" type="file"
+			property="native_stderr.log.file.available" />
+		<available file="${native_stdout.log.file}" type="file"
+			property="native_stdout.log.file.available" />
+
+		<dirname property="log.file.path" file="${systemout.log.file}" />
+		<if isTrue="${systemout.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset dir="${log.file.path}" prefix="${profileName}/logs/${ServerName}" > 
+<!-- Task 21872 - pick everything instead of just *.log --> 					
+					<include name="**/*"/>
+				</zipfileset>
+			</zip>
+		</if>
+			
+		<if isNotTrue="${systemout.log.file.available}">
+			<available file="${logFilePath}" type="dir" property="logFilePath.available" /> 
+			<if isTrue="${logFilePath.available}" > 
+				<zip encoding="UTF8" destfile="${pmrfilename}"
+					update="true">
+					<zipfileset dir="${logFilePath}" prefix="${profileName}/logs/${ServerName}" >
+						<include name="**/*"/>
+					</zipfileset>
+				</zip>
+			</if> 
+		</if>
+			
+		<!-- a. trace.log -->		
+<!--	<if isTrue="${trace.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${trace.log.file}"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+
+		<if isNotTrue="${trace.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset
+					file="${logFilePath}/trace.log"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+-->
+		<!-- b. SystemOut.log -->
+<!--	<if isTrue="${systemout.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${systemout.log.file}"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+
+		<if isNotTrue="${systemout.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset
+					file="${logFilePath}/SystemOut.log"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+-->
+		<!-- c. SystemErr.log -->
+<!--	<if isTrue="${systemerr.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${systemerr.log.file}"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+
+		<if isNotTrue="${systemerr.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset
+					file="${logFilePath}/SystemErr.log"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+-->
+		<!-- d. native_stderr.log -->
+<!--	<if isTrue="${native_stderr.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${native_stderr.log.file}"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+
+		<if isNotTrue="${native_stderr.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset
+					file="${logFilePath}/native_stderr.log"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+-->
+		<!-- e. native_stdout.log -->
+<!--	<if isTrue="${native_stdout.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${native_stdout.log.file}"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+
+		<if isNotTrue="${native_stderr.log.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset
+					file="${logFilePath}/native_stdout.log"
+					prefix="${profileName}/logs/${ServerName}" />
+			</zip>
+		</if>
+-->
+		<!-- f. FFDC index and logs -->
+		<available file="${was.enhanced.root}/logs/ffdc" type="dir"
+			property="ffdc.dir.available" />
+		
+		<if isTrue="${ffdc.dir.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.enhanced.root}/logs/ffdc"
+					prefix="${profileName}/logs/ffdc">
+					<include name="*.log" />
+					<include name="*.txt" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isNotTrue="${ffdc.dir.available}" >
+			<!-- 23893 - check ${logFilePath}/../ffdc instead of ${logFilePath} --> 
+			<available file="${logFilePath}/../ffdc" type="dir" property="logFilePath.available" /> 
+			<if isTrue="${logFilePath.available}" > 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${logFilePath}/../ffdc"
+						prefix="${profileName}/logs/ffdc">
+						<include name="*.log" />
+						<include name="*.txt" />
+					</zipfileset>
+				</zip>
+			</if> 
+		</if>
+		
+		<!-- g. general logs -->
+		<available file="${was.enhanced.root}/logs/${ServerName}" type="dir"
+			property="general.dir.available" />
+		<if isTrue="${general.dir.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.enhanced.root}/logs/${ServerName}"
+					prefix="${profileName}/logs/${ServerName}">
+					<include name="startServer.log" />
+					<include name="stopServer.log" />
+				</zipfileset>
+			</zip>
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.enhanced.root}/logs"
+					prefix="${profileName}/logs">
+						<include name="activity.log" />
+						<include name="wsadmin.*" />
+				</zipfileset>
+			</zip>
+		</if> 
+		<if isNotTrue="${general.dir.available}">
+			<available file="${logFilePath}" type="dir" property="logFilePath.available" /> 
+			<if isTrue="${logFilePath.available}" > 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${logFilePath}"
+						prefix="${profileName}/logs/${ServerName}">
+						<include name="startServer.log" />
+						<include name="stopServer.log" />
+					</zipfileset>
+				</zip>
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${logFilePath}/.."
+						prefix="${profileName}/logs">
+							<include name="activity.log" />
+							<include name="wsadmin.*" />
+					</zipfileset>
+				</zip>
+			</if> 			
+		</if>
+		
+
+		<available file="${was.enhanced.root}/tranlog" type="dir"
+			property="is.tran.avail" />
+
+		<!-- h. tranlogs -->
+		<if isTrue="${is.tran.avail}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset dir="${was.enhanced.root}/tranlog"
+					prefix="${profileName}/tranlog">
+					<include name="**/log*" />
+				</zipfileset>
+			</zip>
+		</if>
+<!-- Defect 25003 Remove levelreport --> 
+<!--		
+		<if isNotTrue="${isOS400}">
+			<if isNotTrue="${isZos}">
+				<levelreporttask format="html"
+					filename="${autopdtmp}/autopd/levelreport.html" />
+			</if>
+		</if>
+--> 		
+	</target>
+
+	<!-- 2. COMMON COLLECTIONS: META_FILE_COLLECTION ******************************** -->
+	<target name="meta_file_collection"
+		description="get the html, xml, and properties files that describe the collection.
+		These files are generated during the WebSphere collection and have the same name
+		as the problem type, except with all of the spaces removed and a time stamp appended
+		to the name.">
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${autopdtmp}/${meta.output.name}*.html"
+				prefix="${autopdProblem}" />
+			<zipfileset file="${autopdtmp}/${meta.output.name}*.xml"
+				prefix="${autopdProblem}" />
+			<zipfileset
+				file="${autopdtmp}/${meta.output.name}*.properties"
+				prefix="${autopdProblem}" />
+			<zipfileset
+				file="${autopdtmp}/levelReport.html"
+				prefix="${autopdProblem}" />
+			<zipfileset
+				file="${autopdtmp}/historyReport.html"
+				prefix="${autopdProblem}" />
+			<zipfileset
+				file="${autopdtmp}/versionReport.html"
+				prefix="${autopdProblem}" />
+		</zip>
+
+
+	</target>
+
+	<!-- 5. COMMON COLLECTIONS: ANALYSIS_FILE_COLLECTION ****************************** -->
+	<target name="analysis_file_collection"
+		description="This target collects the analysis report created during the
+			common_setup:analyze_was target call iff if exists.">
+
+		<available property="analysis.file"
+			file="${analysis.report.location}" type="file" />
+
+		<if isTrue="${analysis.file}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset file="${analysis.report.location}"
+					prefix="${autopdProblem}" />
+			</zip>
+		</if>
+<!-- Add the CISA inventory Report --> 		
+		<if isNotTrue="${isOS400}||${isHPUX}||${isZos}" >
+
+			<collect_cisa_inventory_info 
+				filename="${autopdtmp}/autopd/inventory_rcf.xml" 
+				criteria="default.HardwareSoftwareFixes" />
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd" >
+					<include name="inventory_rcf.xml" /> 
+				</zipfileset> 
+			</zip>
+			
+			<!-- 26460 Delete cisa files --> 
+			<delete includeEmptyDirs="true">
+				<fileset dir="${autopdrootdir}/cisa/repository">
+					<include name="mofupdated"/>
+				</fileset>
+				<fileset dir="${autopdrootdir}/cisa/repository/tivoli">
+				</fileset>
+                <fileset dir="${autopdrootdir}/cisa/data">
+            		<include name="inventoryconfig.properties"/>
+			    </fileset>
+
+			</delete>
+
+
+		</if>
+	
+	</target>
+	
+	<!-- 6. COMMON COLLECTIONS: PROFILE_XML_COLLECTION ****************************** -->
+	<target name="profile_xml_collection"
+		description="this target collects the cell.xml,
+		security.xml, virtualhosts.xml, resources.xml, serverindex.xml, and the node*.*
+		files.">
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset
+				dir="${was.enhanced.root}/config/cells/${CellName}/"
+				prefix="${profileName}/${CellName}">
+				<include name="cell.xml" />
+				<include name="*security.xml" />
+				<include name="virtualhosts.xml" />
+				<include name="resources*.xml" />
+				<include name="variables*.xml" />
+			</zipfileset>
+
+			<zipfileset
+				dir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}"
+				prefix="${profileName}/${CellName}/${NodeName}">
+				<include name="serverindex.xml" />
+				<include name="node*.*" />
+			</zipfileset>
+
+			<zipfileset
+				dir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}"
+				prefix="${profileName}/${CellName}/${NodeName}/${ServerName}">
+				<include name="server*.xml" />
+				<include name="*security.xml" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- 7. COMMON COLLECTIONS: PROPERTIES_FILE_COLLECTION ************************** -->
+	<target name="properties_file_collection"
+		description="This target collections all 
+			of the *.conf, *.properties, and version/*.product files from the WebSphere
+			Application Server installation.">
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/properties"
+				prefix="${profileName}/properties">
+				<include name="*.conf" />
+				<include name="*.properties" />
+				<include name="version/*.product" />
+			</zipfileset>
+		</zip>
+<!-- Task 18203 -->
+		<available file="${was.root}/properties/version/nif/backup" type="dir" property="nif.dir.exists" />
+		<if isTrue="${nif.dir.exists}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.root}/properties/version/nif/backup" prefix="${autopdProblem}/INSTALL">
+					<include name="NIFHistory.xml" /> 
+					<include name="NIFStack.xml" /> 
+				</zipfileset> 
+			</zip> 
+		</if> 
+		<available file="${was.root}/properties/NIFRegistry.properties" type="file" property="nif.prop.file.exists" />
+		<if isTrue="${nif.prop.file.exists}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.root}/properties" prefix="${autopdProblem}/INSTALL">
+					<include name="NIFRegistry.properties" /> 
+				</zipfileset> 
+			</zip> 
+		</if> 
+	</target>
+
+	<!-- 8. COMMON COLLECTIONS: HEAP_CORE_COLLECTION ******************************** -->
+	<target name="heap_core_collection"
+		description="This target collects all of the
+			heapdump and javacore files from the WebSphere Application Server
+			installation.">
+<!-- Removing them since we do not want to pick up all the heap and javacores (could be very old) 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}"
+				prefix="${profileName}">
+				<include name="**/heapdump*" />
+				<include name="**/javacore*" />
+			</zipfileset>
+		</zip>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}" prefix="autopdzip/autopd">
+				<include name="**/*.threads" />
+			</zipfileset>
+		</zip>
+--> 		
+	</target>
+
+	<!-- 9. COMMON COLLECTIONS: COLLECT_NETSTAT ************************************* -->
+	<target name="collect_netstat"
+		description="This target collects any netstat files.">
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd"
+				prefix="${autopdProblem}">
+				<include name="netstat*" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- IHS COLLECTIONS ************************************************************ -->
+	<!-- **************************************************************************** -->
+
+	<!-- 10. COMMON COLLECTIONS: COLLECT_IHS_LOGS *********************************** -->
+	<target name="collect_ihs_logs_conf"
+		description="This target collects IHS log file and configuration files.">
+
+		<!-- IHS logs -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${ihs.root}">
+				<include name="**/*log" />
+			</zipfileset>
+		</zip>
+
+		<!--  IHS conf -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${ihs.root}">
+				<include name="**/*conf" />
+				<exclude name="**/http.conf"/>
+			</zipfileset>
+		</zip>
+
+		<!-- IHS conf -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}">
+				<include name="**/ihs-httpd-conf.properties" />
+				<include name="**/httpd.conf" />
+				<include name="**/ihs-properties.txt" />
+			</zipfileset>
+		</zip>
+	</target>
+	
+	<!-- 11. COMMON COLLECTIONS: COLLECT_IHS_LOGS *********************************** -->
+	<target name="collect_ihs_logs" 
+		description="This target collects IHS logs based on httpd.conf parameters.">
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts"
+					pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_IHS_Logs"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Collecting IHS logs"
+			replace="${autopdts};;${step.count}" 
+			id="2201" level="error" component="scripts\aim\common-setup.xml" />
+
+		<inputdialogtask 
+			bundle="/properties/SSEQTP/autopdtoolstrings_was"
+			doSkip="true" noCancel="true" actionProperty="ihsInputProvided" >
+			<fieldtask  name="prompt"
+						label="Input_Required_WAS" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						type="prompt" />
+			<fieldtask name="Skip_IHS_if_not_Installed"
+						label="Skip_IHS_if_not_Installed"
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						type="label" />
+			<fieldtask  name="ihs_conf_dir"
+						type="filebrowser"
+						label="IHS_Conf_Path" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						defaultValue="" />
+		</inputdialogtask>
+		<condition property="ihs.conf.dir.supplied">
+				<equals arg1="ok" arg2="${ihsInputProvided}" casesensitive="false" />
+		</condition>	
+		<condition property="ihs.conf.dir.skipped">
+				<equals arg1="skip" arg2="${ihsInputProvided}" casesensitive="false" />
+		</condition>
+		
+		<if isTrue="${ihs.conf.dir.skipped}" > 
+			<inputdialogtask noCancel="true" > 
+				<fieldtask  name="prompt"
+							label="Information_Message" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							type="prompt" />
+				<fieldtask name="Collect_IHS_Remote"
+							label="Please_Collect_IHS_Remote"
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							type="label" />
+			</inputdialogtask> 
+		</if> 
+			
+		<if isTrue="${ihs.conf.dir.supplied}" >
+			
+			<available file="${ihs_conf_dir}/httpd.conf" type="file" 
+					property="conf_file_exists" />
+			
+			<if isTrue="${conf_file_exists}" >
+				<persistproperty property="ihs_conf_dir" />
+				
+				<ihsconfreader confPath="${ihs_conf_dir}/httpd.conf" serverRoot="ihs.root"
+					docRoot="ihs.doc.root" logLevel="ihs.log.level"
+					accessLog="ihs.access.log" errorLog="ihs.error.log"
+					customLog="ihs.custom.log" ihsPid="ihs.pid"
+					wasPluginPath="ihs.was.plugin.path" success="ihs.conf.read.succeeded"
+					message="ihs.message" />
+
+				<if isNotTrue="${ihs.conf.read.succeeded}">
+					<fail message="${ihs.message}" />
+				</if>
+				
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset file="${ihs.log.level}" 
+						prefix="${profileName}/IHS" />
+					<zipfileset file="${ihs.error.log}" 
+						prefix="${profileName}/IHS" />
+					<zipfileset file="${ihs.custom.log}" 
+						prefix="${profileName}/IHS" />
+					<zipfileset file="${ihs.was.plugin.path}" 
+						prefix="${profileName}/IHS" />
+					<zipfileset file="${ihs_conf_dir}/httpd.conf" 
+						prefix="${profileName}/IHS" />
+				</zip>
+				
+				<!-- Now that we have IHS logs - lets pick up Http Plugin Log as specified in plugin-cfg.xml --> 
+
+				<autopd_read_xml_attributes filename="${ihs.was.plugin.path}" 
+										   path="Config!Log" delimiter="!" >
+						<xml_attribute name="Name" result="plugin_log_path" />
+				</autopd_read_xml_attributes> 
+
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset file="${plugin_log_path}" 
+						prefix="${profileName}/IHS" />
+				</zip> 
+
+			</if>
+		</if>
+		
+		
+		
+		
+	</target>
+	
+	<target name="execute_collector">
+
+		<!-- 24234 --> 
+		<!-- No need to provide information message while running collector utility 
+			 Also, add console element for the following wsnlsecho custom task -->
+		<!--
+		<inputdialogtask >
+			<fieldtask  name="prompt"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				label="Information_Message" 
+				type="prompt" />
+			<fieldtask name="label"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				label="Collector_Run_Please_Wait"
+				type="label" />
+		</inputdialogtask>
+		--> 
+		
+		<wsnlsecho message="" console="true" /> 
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Run_WAS_Collector"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running the Collector Tool.Please wait..."
+			replace="${autopdts};;${step.count}"
+			id="2202" level="info" component="scripts\aim\common-setup.xml" />
+		<wsnlsecho key="Run_WAS_Collector0" bundle="properties/SSEQTP/autopdtoolstrings_was" console="true" /> 
+		<wsnlsecho message=" " console="true" /> 
+		
+		<exec executable="${was.root}/bin/collector.bat"
+		      dir="${env.TMP}"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -JarOutName "${autopdtmp}/autopd/collector.jar" -LogFile "${autopdtmp}/autopd/collector.log"' />
+		</exec>
+		<exec executable="${was.root}/bin/collector.sh"
+		      dir="${env.HOME}"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind.exclude.iseries}">
+			<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+		</exec>
+		<exec executable="${was.root}/bin/collector"
+		      dir="${env.HOME}"
+		      output="${autopd.echolog.instance}"
+	    	  append="true"
+	      	os="OS/400">
+			<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+		</exec> 
+		
+		<!-- 25424 Invoke collector.sh for z/OS --> 
+		<condition property="isZos">
+			<equals arg1="z/OS" arg2="${os.name}" />
+		</condition>
+		<if isTrue="${isZos}">
+			<exec executable="${was.root}/bin/collector.sh"
+			      dir="${env.HOME}"
+			      output="${autopd.echolog.instance}"
+			      append="true" >
+				<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+			</exec>
+
+		</if> 
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}" >
+				<include name="collector.jar"/>
+			</zipfileset>
+			
+			<zipfileset dir="${autopdtmp}/trace/config" prefix="${autopdProblem}/Debug/config" >
+				<include name="Output.txt" /> 
+			</zipfileset> 
+		</zip>
+ 			
+<!--
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="collector.jar" />
+			</fileset>
+--> 
+			
+		
+	</target>
+	<!-- 25308 - remove VCE -->
+	<!--
+	<target name="execute_vce_info_for_was" 
+		depends="port_checker,prompt_vce_dialog, 
+				 create_collection_info_manifest_for_was,
+			     was_install_exporter_local, 
+				 was_run_exporter_local,
+				 zip_was_topology, 
+		 		 zip_manifest_for_topology" >
+		
+	</target> 
+	-->
+	<target name="execute_vce_info_for_was" 
+		depends="port_checker" >
+	</target> 
+
+	<target name="collect_last_three_javacores" > 
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Javacores"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Collect the most recent javacores..."
+			replace="${autopdts};;${step.count}" 
+			id="2202" level="error" component="scripts\aim\common-collections.xml" />
+	
+		<get_latest_x_files_v2 key="javacore.recent.three" 
+			path="${was.enhanced.root}" 
+			selector="javacore.[0-9].*" 
+			delimiter="|"
+			fileNum="3" />
+		
+		<condition property="javacore.present">
+			<and>
+				<length string="${javacore.recent.three}" trim="true" when="greater" length="0"/>
+			</and>
+		</condition>
+
+		<if isTrue="${javacore.present}" > 
+			
+			<filepath_complete key="javacore.recent.list" 
+				files="${javacore.recent.three}"
+				delimiter="|" 
+				defaultPrefix="${was.enhanced.root}/" />
+	
+			<zip_multiple_files destfile="${pmrfilename}" 
+			     update="true" 
+			     prefix="${profileName}/javacores/" 
+			     prefixTrimmed=".:\\|.:/|..:\\|..:/|/" 
+			     srcfiles="${javacore.recent.list}" 
+			     delimiter="|" />
+		</if> 
+			
+	</target> 
+
+	<target name="collect_recent_heapdump" > 
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_HeapDump"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Collect the most recent heapdump..."
+			replace="${autopdts};;${step.count}" 
+			id="2202" level="error" component="scripts\aim\common-collections.xml" />
+	
+		<get_latest_x_files_v2 key="heapdump.recent.three" 
+			path="${was.enhanced.root}" 
+			selector="heapdump*.*" 
+			delimiter="|"
+			fileNum="3" />
+
+		<condition property="heapdump.present">
+			<and>
+				<length string="${heapdump.recent.three}" trim="true" when="greater" length="0"/>
+			</and>
+		</condition>
+
+		<if isTrue="${heapdump.present}" > 
+			<filepath_complete key="heapdump.recent.list" 
+				files="${heapdump.recent.three}"
+				delimiter="|" 
+				defaultPrefix="${was.enhanced.root}/" />
+
+			<zip_multiple_files destfile="${pmrfilename}" 
+			     update="true" 
+			     prefix="${profileName}/heapdump/" 
+			     prefixTrimmed=".:\\|.:/|..:\\|..:/|/" 
+			     srcfiles="${heapdump.recent.list}" 
+			     delimiter="|" />		
+
+		</if> 
+
+		<get_latest_x_files_v2 key="hprof.recent.three" 
+			path="${was.enhanced.root}" 
+			selector="hprof*.*" 
+			delimiter="|"
+			fileNum="3" />
+
+		<condition property="hprof.present">
+			<and>
+				<length string="${hprof.recent.three}" trim="true" when="greater" length="0"/>
+			</and>
+		</condition>
+
+		<if isTrue="${hprof.present}" > 
+			<filepath_complete key="hprof.recent.list" 
+				files="${hprof.recent.three}"
+				delimiter="|" 
+				defaultPrefix="${was.enhanced.root}/" />
+	
+			<zip_multiple_files destfile="${pmrfilename}" 
+			     update="true" 
+			     prefix="${profileName}/hprof/" 
+			     prefixTrimmed=".:\\|.:/|..:\\|..:/|/" 
+			     srcfiles="${hprof.recent.list}" 
+			     delimiter="|" />		
+		</if> 
+		
+	</target> 
+
+	<target name="determine_java_version_for_server" > 
+	
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Run_Java_Version"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Determine the Java version for the Application Server."
+			replace="${autopdts};;${step.count}" />
+		
+		<property name="java.version.txt" value="${autopdtmp}/java_version.txt" /> 
+<!-- Run 'java -version' --> 		
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.version.txt}"
+			append="true" os="${os.windows}">
+			<arg line=" -version" />
+		</exec>
+
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.version.txt}"
+			append="true" os="${os.unixkind.exclude.iseries}">
+			<arg
+				line=" -version" />
+		</exec>
+
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.version.txt}"
+			append="true" os="OS/400">
+			<arg
+				line=" -version" />
+		</exec>
+
+<!-- Run 'java -fullversion' --> 
+		<property name="java.full.version.txt" value="${autopdtmp}/java_fullversion.txt" /> 
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.full.version.txt}"
+			append="true" os="${os.windows}">
+			<arg line=" -fullversion" />
+		</exec>
+
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.full.version.txt}"
+			append="true" os="${os.unixkind.exclude.iseries}">
+			<arg
+				line=" -fullversion" />
+		</exec>
+
+		<exec executable="${was.root}/java/jre/bin/java"
+			dir="${autopdtmp}" output="${java.full.version.txt}"
+			append="true" os="OS/400">
+			<arg
+				line=" -fullversion" />
+		</exec>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}" prefix="${autopdProblem}" > 
+				<include name="java_version.txt"/>
+				<include name="java_fullversion.txt"/> 
+			</zipfileset>
+		</zip>			
+
+	</target> 
+	
+	<target name="autopd_feedback_shared_v3" >
+		<!-- This is build on existing target autopd_feedback_shared from SHARED -
+		sharedelements-sharedtargets.xml --> 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="${timepattern}" />
+		<wsnlsecho key="Step_providing_autopd_feedback" 
+			bundle="properties/SHARED/autopdtoolstrings_shared" 
+			message="[{0}] Step {1}: Providing feedback about {2} usage" 
+			replace="${autopdts};;${step.count};;${autopd_name}" 
+			id="2360" 
+			level="info" 
+			component="\scripts\sharedelements\sharedelements-sharedtargets.xml" />
+	
+		<autopdinput message="${tool.feedback}" 
+			bundle="properties/SHARED/autopdtoolstrings_shared" 
+			validargs="Yes,No" 
+			addproperty="will.do.feedback" />
+
+		<if isTrue="${will.do.feedback}" >
+			<inputdialogtask doSkip="true" noCancel="true">
+				<fieldtask name="prompt" 
+					label="Provide_feedback" 
+					type="prompt" 
+					bundle="properties/SHARED/autopdtoolstrings_shared" />
+				<fieldtask name="relation.support" 
+					label="Relation.to.Support.Feedback"  bundle="properties/SSEQTP/autopdtoolstrings_was"
+					type="selectlist" 
+					list="Customer:IBM Business Partner:IBM Services:IBM Sales:IBM Support" 
+					listDetails="Customer:IBM Business Partner:IBM Services:IBM Sales:IBM Support" /> 
+				<fieldtask name="use.feedback" 
+					label="Use.Again.Feedback" bundle="properties/SSEQTP/autopdtoolstrings_was"
+					type="selectlist" 
+					list="Yes:No" listDetails="Yes:No" /> 
+				<fieldtask name="time.feedback" 
+					label="Time.Saved.Feedback" bundle="properties/SSEQTP/autopdtoolstrings_was"
+					type="selectlist" 
+					list="1-59 minutes:1-3 Hours:3-6 Hours:None" listDetails="1-59 minutes:1-3 Hours:3-6 Hours:None" /> 
+				<fieldtask name="survey.feedback" 
+					label="Survey.Participate.Feedback" 
+					type="selectlist" 
+					list="Yes:No" listDetails="Yes:No" /> 
+				<fieldtask name="email.feedback" 
+					label="Email.Feedback"  bundle="properties/SSEQTP/autopdtoolstrings_was"
+					type="textarea" 
+					wordWrap="true"/>
+				<fieldtask name="text.feedback" 
+					label="Provide.Feedback"  bundle="properties/SSEQTP/autopdtoolstrings_was"
+					type="textarea" 
+					wordWrap="true"/>
+			</inputdialogtask>
+			
+			<autopdproperty name="message_detail" value="What is your relationship to this collection ? : ${relation.support}${line.separator}Would you use IBM Support Assistant Lite for future data collections ? : ${use.feedback}${line.separator}How much time was saved using IBM Support Assistant Lite ?  : ${time.feedback}${line.separator}Are you willing to participate in a followup survey ?  : ${survey.feedback}${line.separator}Please provide your email : ${email.feedback}${line.separator}Please provide feedback on how this IBM Support Assistant Lite experience could be improved : ${text.feedback}${line.separator}"/> 
+			<echo message="We are going to send this feedback --- ${message_detail}"/> 
+			
+			<autopd_send_stmp_email messageText="${message_detail}" /> 
+<!--			
+			<if isTrue="${status}"> 
+				<wsnlsecho key="Feedback_Email_Sent" 
+					       bundle="properties/SHARED/autopdtoolstrings_shared"
+						   message="The Feedback email was successfully sent to IBM. Thank you for your feedback."
+						   id="6628" level="info"
+						   component="\scripts\sharedelements\sharedelements-sharedtargets.xml" />
+
+			</if>
+-->				
+		</if> 
+		
+	</target>
+	<!-- **************************************************************************** -->
+	<!-- END Common API for collections ********************************************* -->
+	<!-- **************************************************************************** -->
+</project>

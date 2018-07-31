@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema version="0.9" xml:lang="en"
+	xmlns:preferences="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-preferences.xsd"
+	targetNamespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-preferences.xsd"
+	xmlns:navigation="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-navigation.xsd"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	attributeFormDefault="unqualified" elementFormDefault="qualified">
+
+	<xs:import
+		namespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-navigation.xsd"
+		schemaLocation="ibm-portal-navigation.xsd" />
+	<!--
+		Navigation Description - Root Element 
+	-->
+	<xs:element name="preferences" type="preferences:Preferences">
+		<xs:annotation>
+			<xs:documentation>
+				This tree holds the concatenation of the preferences
+				elements of all the deployed topology.xmls.
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:complexType name="Preferences">
+		<xs:sequence>
+			<xs:element name="favorites-tree"
+				type="preferences:FavoritesTree" />
+			<xs:element name="portlets" type="preferences:Portlets" />			
+		</xs:sequence>
+	</xs:complexType>
+
+
+	<xs:complexType name="FavoritesTree">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0"
+				name="favorites" type="navigation:NavElement" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Portlets">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="pii"
+				type="preferences:PII" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="PII">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0"
+				name="portletPreference" type="preferences:PortletPreference" />
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:ID" use="required" />
+	</xs:complexType>
+
+	<xs:complexType name="PortletPreference">
+		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="value"
+				type="xs:string" />
+		</xs:sequence>
+		<xs:attribute name="windowName" type="xs:string" use="required" />
+		<xs:attribute name="readOnly" type="xs:boolean" use="required" />
+	</xs:complexType>
+
+</xs:schema>

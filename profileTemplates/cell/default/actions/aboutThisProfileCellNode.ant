@@ -1,0 +1,132 @@
+<project name="aboutThisProfileCellNode" default="aboutThisProfileCellNode" basedir=".">
+
+    <taskdef name="wscmtlog" 
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="resourcebundle" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ResourceBundleAntTask"/> 
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+        
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setOSCRLFSequence"
+            description="Sets CRLF to whatever is the appropriate CRLF sequence for this platform">
+
+        <condition property="CRLF" value="&#10;">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        <condition property="CRLF" value="&#10;">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="CRLF" value="&#13;&#10;">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="resolveResourceBundleStrings"
+            description="Resolves NL text for the key properties used to create this profile">
+        <property name="BUNDLE_NAME" value="com.ibm.ws.profiletemplates.resourcebundle.CellDefaultProfileTemplateResourceBundle"/>
+        
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.type" param="" property="profileSummaryType"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="Cell.node.name" param="" property="profileSummaryTypeValue"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.location" param="" property="profileSummaryLocation"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.diskspace" param="" property="profileSummaryDiskSpace"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.diskspace.suffix" param="" property="profileSummaryDiskSpaceSuffix"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.name" param="" property="profileSummaryName"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.cellname" param="" property="profileSummaryCellName"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.nodename" param="" property="profileSummaryNodeName"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.hostname" param="" property="profileSummaryHostName"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.port.http" param="" property="profileSummaryHTTP"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.port.https" param="" property="profileSummaryHTTPS"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.port.bootstrap" param="" property="profileSummaryBootstrap"/>
+        <resourcebundle resourceBundleName="${BUNDLE_NAME}" resourceBundleKey="ProfileSummary.port.soap" param="" property="profileSummarySOAP"/>
+
+    </target>
+
+    <target name="resolvePorts"
+            description="Resolves the key ports used to create this profile">
+
+        <property file="${profilePath}/properties/nodeportdef.props"/>
+			
+			  <property name="HTTPPort" value="${WC_defaulthost}"/>
+			  <property name="HTTPSPort" value="${WC_defaulthost_secure}"/>
+			  <property name="bootstrapPort" value="${BOOTSTRAP_ADDRESS}"/>
+			  <property name="SOAPPort" value="${SOAP_CONNECTOR_ADDRESS}"/>
+    </target>
+
+    <target name="generateProfileInformationFile"
+            description="Generates an information file for the key properties used to create this profile">
+            
+  			<xmlproperty file="${templatePath}/templateMetadata.xml"/>
+			  <property name="profileSummaryDiskSpaceSize" value="${profileTemplate.size}"/>
+
+       	<echo file="${profilePath}/logs/AboutThisProfile.txt" append="false">${profileSummaryType} ${profileSummaryTypeValue}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryLocation} ${profilePath}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryDiskSpace} ${profileSummaryDiskSpaceSize} ${profileSummaryDiskSpaceSuffix}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryName} ${profileName}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryCellName} ${cellName}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryNodeName} ${appServerNodeName}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryHostName} ${hostName}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryHTTP} ${HTTPPort}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryHTTPS} ${HTTPSPort}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummaryBootstrap} ${bootstrapPort}${CRLF}</echo>
+        <echo file="${profilePath}/logs/AboutThisProfile.txt" append="true">${profileSummarySOAP} ${SOAPPort}${CRLF}</echo>
+
+    </target>
+        
+    <target name="aboutThisProfileCellNode"
+        description="Generates an information file for the key properties used to create this profile"
+        depends="detectCurrentOSFamily,
+            defineOSSpecificConfigFlag,
+            setOSFileSeparator,
+            setOSCRLFSequence,
+            resolveResourceBundleStrings,
+            resolvePorts,
+            generateProfileInformationFile"/>                      
+</project>

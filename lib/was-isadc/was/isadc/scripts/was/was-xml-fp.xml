@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+
+<project name="Feature Pack for XML Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Feature Pack for XML Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_FeaturePack_For_XML_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-featurepack-for-XML" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+		 			was_stack_custom_init, 
+		 		  
+					xml_generate_trace_string,
+						
+					trace_setup_custom, 
+					
+					common_postamble_general_with_ftp">
+	</target>
+
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="xml_generate_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" 
+				value="com.ibm.xml.*=fine:com.ibm.xltxe.*=fine" />
+		</if>
+		<echo message="Trace specification string: ${was.trace.string}" />
+		
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;System Management Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the node experiencing the XML feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis.&lt;/p&gt;">
+		
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1199596" />
+		
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the node experiencing the XML feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Feature Pack for XML Problem =>
+This problem category is run on the node experiencing the XML feature 
+pack problem.  It will set the appropriate trace string. After the problem has been reproduced 
+the logs, configuration, and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+	
+
+</project>

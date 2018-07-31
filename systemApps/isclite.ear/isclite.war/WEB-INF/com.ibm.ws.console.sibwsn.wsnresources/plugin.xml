@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--
+ * @start_restricted_prolog@
+ * Version: @(#) 1.45 SIB/ws/code/sib.wsnotification.webui/src/wsnresources/WEB-INF/plugin.xml, SIB.wsn.webui, WAS855.SIB, cf131750.05 08/03/07 05:38:28 [12/17/17 20:07:35]
+ * 
+ * Licensed Materials - Property of IBM
+ * 
+ * "Restricted Materials of IBM"
+ * 
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70
+ * 
+ * Copyright IBM Corp. 2005, 2008 All Rights Reserved.
+ * 
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ * @end_restricted_prolog@
+-->
+ 
+<plugin id="com.ibm.ws.console.sibwsn.wsnresources"
+           name="sibwsnresources"
+           version="1.0.0"
+           vendor-name="IBM Corp. - WebSphere Server Group"
+           embedded="true"
+           context-root="wsnresources">
+
+
+  <requires>
+    <import plugin="com.ibm.ws.console.core" />
+    <import plugin="com.ibm.ws.console.servermanagement" />
+    <import plugin="com.ibm.ws.console.sib.sibresources" />
+    <import plugin="com.ibm.ws.console.sibws.sibusresources" />
+  </requires>
+
+
+
+  <extension point="com.ibm.ws.console.core.navigatorTask">
+
+
+    <tasks>
+
+      <categoryDefinition id="SIBWSNCategory"
+                          parent="sibresources"
+                          icon="/com.ibm.ws.console.sibws.sibusresources/images/onepix.gif"
+                          label="WS-Notification.navigator.category"
+                          weight="95"/>
+
+      <task id="WSNService"
+            icon="/com.ibm.ws.console.sibwsn.wsnresources/images/onepix.gif"
+            label="WSNService.navigator.displayName"
+            view="/com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNService.content.main"
+            external="false"
+            weight="80">
+          <category id="SIBWSNCategory"/>
+      </task>
+      
+      <task id="JAXWSHandler"
+            icon="/com.ibm.ws.console.sibws.sibusresources/images/onepix.gif"
+            label="JAXWSHandler.displayName"
+            view="/com.ibm.ws.console.sibws.sibusresources.forwardCmd.do?forwardName=JAXWSHandler.content.main"
+            external="false"
+            weight="90">
+          <category id="SIBWSNCategory"/>
+      </task>    
+      
+      <task id="JAXWSHandlerList"
+            icon="/com.ibm.ws.console.sibws.sibusresources/images/onepix.gif"
+            label="JAXWSHandlerList.displayName"
+            view="/com.ibm.ws.console.sibws.sibusresources.forwardCmd.do?forwardName=JAXWSHandlerList.content.main"
+            external="false"
+            weight="95">
+          <category id="SIBWSNCategory"/>
+      </task>         
+
+    </tasks>
+  </extension>
+
+
+
+  <!--
+  *************************************************************************
+  *                                                                       *
+  * DETAIL TAB EXTENSIONS...                                              *
+  * The following definitions define all the detail tabs for the objects  *.
+  *                                                                       *
+  *************************************************************************
+  -->
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WSNService.detailTab" contextType="WSNService">
+      <tab label="tab.configuration" contentURI="WSNService.config.tab.view"> </tab>
+      <tab label="tab.runtime" contentURI="WSNService.runtime.tab.view"> </tab>
+    </detailTab>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WSNService.detailTab" contextType="WSNServicePoint">
+      <tab label="tab.configuration" contentURI="WSNServicePoint.config.tab.view"> </tab>
+      <tab label="tab.runtime" contentURI="WSNServicePoint.runtime.tab.view"> </tab>
+    </detailTab>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WSNTopicNamespace.detailTab" contextType="WSNTopicNamespace">
+      <tab label="tab.configuration" contentURI="WSNTopicNamespace.config.tab.view"> </tab>
+    </detailTab>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WSNInstanceDocumentUpload.detailTab" contextType="WSNInstanceDocumentUpload">
+      <tab label="tab.configuration" contentURI="WSNInstanceDocumentUpload.config.tab.view"> </tab>
+    </detailTab>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WSNAdministeredSubscriber.detailTab" contextType="WSNAdministeredSubscriber">
+      <tab label="tab.configuration" contentURI="WSNAdministeredSubscriber.config.tab.view"> </tab>
+    </detailTab>
+  </extension>
+
+  <!--
+  ***************************************************************
+  *                                                             *
+  * SI BUS ADDITIONAL PROPERTIES LINKS                          *
+  * The following links are all additional properties of SI Bus *
+  *                                                             *
+  ***************************************************************
+  -->
+
+
+    <!-- Adding WSNService to the SIBus detail panel.. -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNService.linkInSIBus" contextType="SIBus">
+            <link label="WSNService.displayName"
+                  description="WSNService.description"
+                  categoryId="SIBus.category.services"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNService.content.main&#38;sfname=service"/>
+        </linkSet>
+    </extension>
+
+
+    <!--
+    ***********************************
+    *                                 *
+    * BUTTONS                         *
+    * Adding buttons to the panels... *
+    *                                 *
+    ***********************************
+    -->
+
+
+    <!-- Add New and Delete Buttons to WSNService Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNService.buttons" contextType="WSNService">
+            <action enablesFor="Collection"
+                    label="WSNService.button.new"
+                    role="administrator,configurator"
+                    actionURI="wsnServiceCollection.do" />
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnServiceCollection.do" />
+        </actionSet>
+    </extension>
+
+    <!-- Add New and Delete Buttons to Broker Instance Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNServicePoint.buttons" contextType="WSNServicePoint">
+            <action enablesFor="Collection"
+                    label="WSNServicePoint.button.new"
+                    role="administrator,configurator"
+                    actionURI="wsnServicePointCollection.do" />
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnServicePointCollection.do" />
+            <action enablesFor="Collection"
+                    label="WSNServicePoint.button.copy"
+                    role="administrator,configurator"
+                    actionURI="wsnServicePointCollection.do">
+                <compatibility>
+                    <match key="WSNServicePointCollection.showCopyButton" value="true"/>
+                </compatibility>
+            </action>
+        </actionSet>
+    </extension>
+
+    <!-- Add New and Delete Buttons to Topic Space Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNTopicNamespace.buttons" contextType="WSNTopicNamespace">
+            <action enablesFor="Collection"
+                    label="button.new"
+                    role="administrator,configurator"
+                    actionURI="wsnTopicNamespaceCollection.do" />
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnTopicNamespaceCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <!-- Add New and Delete Buttons to Instance Document Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNTopicNamespace.buttons" contextType="WSNInstanceDocument">
+            <action enablesFor="Collection"
+                    label="button.new"
+                    role="administrator,configurator"
+                    actionURI="wsnInstanceDocumentCollection.do" />
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnInstanceDocumentCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <!-- Add New and Delete Buttons to Administrative Subscription Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNAdministeredSubscriber.buttons" contextType="WSNAdministeredSubscriber">
+            <action enablesFor="Collection"
+                    label="button.new"
+                    role="administrator,configurator"
+                    actionURI="wsnAdminSubCollection.do" />
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnAdminSubCollection.do" />
+        </actionSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNPublisherRegistrations.buttons" contextType="WSNPublisherRegistrations">
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnPublisherRegistrationsCollection.do" />
+        </actionSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNPullPoints.buttons" contextType="WSNPullPoints">
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnPullPointsCollection.do" />
+        </actionSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.actionSet">
+        <actionSet id="WSNSubscriptions.buttons" contextType="WSNSubscriptions">
+            <action enablesFor="Collection"
+                    label="button.delete"
+                    role="administrator,configurator"
+                    actionURI="wsnSubscriptionsCollection.do" />
+        </actionSet>
+    </extension>
+
+    <!--
+    **********************************************************
+    *                                                        *
+    * COLLECTION LIST ITEMS                                  *
+    * Adding the attributes to the collection list tables... *
+    *                                                        *
+    **********************************************************
+    -->
+
+
+    <!-- Add Attributes to the table in the broker Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNService.collectionItems" contextType="WSNService">
+            <item attributeName="name"
+                  sortable="sort"
+                  itemURI="wsnServiceCollection.do?EditAction=true"
+                  label="WSNService.name.displayName">
+            </item>
+            <item attributeName="busName"
+                  sortable="sort"
+                  itemURI="wsnServiceCollection.do?EditAction=true&#38;BusLink=true&#38;lastPage=WSNService.content.main"
+                  label="WSNService.SIBus.displayName">
+            </item>
+            <item attributeName="type"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNService.type.displayName">
+            </item>
+            <item attributeName="description"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNService.description.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+    <!-- Add Attributes to the table in the broker instance Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNServicePoint.collectionItems" contextType="WSNServicePoint">
+            <item attributeName="name"
+                  sortable="sort"
+                  itemURI="wsnServicePointCollection.do?EditAction=true"
+                  label="WSNServicePoint.name.displayName">
+            </item>
+            <item attributeName="endpoint"
+                  sortable="sort"
+                  itemURI="wsnServicePointCollection.do?EditAction=true&#38;EndpointLink=true&#38;lastPage=WSNServicePoint.content.main"
+                  label="WSNServicePoint.endpoint.displayName">
+            </item>
+            <item attributeName="description"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNServicePoint.description.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+
+    <!-- Add Attributes to the table in the topic space Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNTopicNamespace.collectionItems" contextType="WSNTopicNamespace">
+            <item attributeName="namespace"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNTopicNamespace.namespace.displayName">
+            </item>
+            <item attributeName="sibTopicSpaceName"
+                  sortable="sort"
+                  itemURI="wsnTopicNamespaceCollection.do?EditAction=true&#38;WPMTopicSpaceLink=true&#38;lastPage=WSNTopicNamespace.content.main"
+                  label="WSNTopicNamespace.wpmTopicSpace.displayName">
+            </item>
+            <item attributeName="messageReliability"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNTopicNamespace.messageReliability.displayName">
+            </item>
+            <item attributeName="instanceDocCount"
+                  sortable="sort"
+                  itemURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNInstanceDocument.content.main&#38;EditAction=true&#38;sfname=instanceDocument"
+                  label="WSNTopicNamespace.instanceDocs.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+
+    <!-- Add Attributes to the table in the topic space Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNInstanceDocument.collectionItems" contextType="WSNInstanceDocument">
+            <item attributeName="filename"
+                  sortable="sort"
+                  itemURI="wsnInstanceDocumentCollection.do?EditAction=true"
+                  label="WSNInstanceDocument.filename.displayName">
+            </item>
+            <item attributeName="description"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNInstanceDocument.description.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+
+    <!-- Add Attributes to the table in the Administrative Subscription Collection Panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNAdministeredSubscriber.collectionItems" contextType="WSNAdministeredSubscriber">
+            <item attributeName="producerEndpoint"
+                  sortable="sort"
+                  itemURI="wsnAdminSubCollection.do?EditAction=true"
+                  label="WSNAdministeredSubscriber.endpoint.displayName">
+            </item>
+            <item attributeName="nlsDialect"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNAdministeredSubscriber.dialect.displayName">
+            </item>
+            <item attributeName="topic"
+                  sortable="sort"
+                  itemURI=""
+                  label="WSNAdministeredSubscriber.topic.displayName">
+            </item>
+        </collectionItem>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNPublisherRegistrations.collectionItems" contextType="WSNPublisherRegistrations">
+            <item attributeName="id"              sortable="sort" label="WSNPublisherRegistrations.publisherID.displayName"      itemURI=""/>
+            <item attributeName="topics"          sortable="sort" label="WSNPublisherRegistrations.topic.displayName"            itemURI="" />
+            <item attributeName="creationTime"    sortable="sort" label="WSNPublisherRegistrations.creationTime.displayName"     itemURI="" />
+            <item attributeName="terminationTime" sortable="sort" label="WSNPublisherRegistrations.terminationTime.displayName"  itemURI="" />
+            <item attributeName="demandBased"     sortable="sort" label="WSNPublisherRegistrations.demandBased.displayName"      itemURI="" />
+            <item attributeName="producerEPR"     sortable="sort" label="WSNPublisherRegistrations.publisherRefData.displayName" itemURI="" />
+        </collectionItem>
+    </extension>
+
+
+    <!-- Subscriptions runtime collection panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNSubscriptions.collectionItems" contextType="WSNSubscriptions">
+            <item attributeName="id"               sortable="sort" label="WSNSubscriptions.subscriptionID.displayName"   itemURI="" />
+            <item attributeName="topics"           sortable="sort" label="WSNSubscriptions.topics.displayName"           itemURI="" />
+            <item attributeName="state"            sortable="sort" label="WSNSubscriptions.deliveryState.displayName"    itemURI="" />
+            <item attributeName="consumerEPR"      sortable="sort" label="WSNSubscriptions.consumerEPR.displayName"      itemURI="" />
+            <item attributeName="creationTime"     sortable="sort" label="WSNSubscriptions.creationTime.displayName"     itemURI="" />
+            <item attributeName="terminationTime"  sortable="sort" label="WSNSubscriptions.terminationTime.displayName"  itemURI="" />
+            <item attributeName="pullType"         sortable="sort" label="WSNSubscriptions.pullType.displayName"         itemURI="" />
+            <item attributeName="wpmSubscriptions" sortable="sort" label="WSNSubscriptions.wpmSubscriptions.displayName" itemURI="wsnSubscriptionsCollection.do?EditAction=true&#38;sibSubscriptionLink=true" />
+        </collectionItem>
+    </extension>
+
+    <!-- Multiple Subscriptions runtime collection panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNSubscriptionsMultiple.collectionItems" contextType="WSNSubscriptionsMultiple">
+            <item attributeName="wpmSubscription" sortable="sort" label="WSNSubscriptions.subscriptionID.displayName"    itemURI="wsnSubscriptionsMultipleCollection.do?EditAction=true&#38;sibSubscriptionLink=true" />
+            <item attributeName="topics"          sortable="sort" label="WSNSubscriptions.topics.displayName"            itemURI="" />
+        </collectionItem>
+    </extension>
+
+    <!-- Pull points runtime collection panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNPullPoints.collectionItems" contextType="WSNPullPoints">
+            <item attributeName="id"              sortable="sort" label="WSNPullPoints.pullPointID.displayName"     itemURI="" />
+            <item attributeName="creationTime"    sortable="sort" label="WSNPullPoints.creationTime.displayName"    itemURI="" />
+            <item attributeName="terminationTime" sortable="sort" label="WSNPullPoints.terminationTime.displayName" itemURI="" />
+            <item attributeName="subscriptionId"  sortable="sort" label="WSNPullPoints.subscriptionID.displayName"  itemURI="" />
+        </collectionItem>
+    </extension>
+
+    <!-- Administered Subscribers runtime collection panel -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="WSNAdministeredSubscribersRT.collectionItems" contextType="WSNAdministeredSubscriberRT">
+            <item attributeName="producerEPR"           sortable="sort" label="WSNAdministeredSubscriber.endpoint.displayName" itemURI="" />
+            <item attributeName="topics"                sortable="sort" label="WSNAdministeredSubscriberRT.topic.displayName"  itemURI="" />
+            <item attributeName="state"                 sortable="sort" label="WSNAdministeredSubscriberRT.state.displayName"  itemURI="" />
+        </collectionItem>
+    </extension>
+
+
+    <!--
+    ***************
+    *             *
+    * OTHER LINKS *
+    *             *
+    ***************
+    -->
+
+    <!-- WSNService additional properties links -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNServicePoint.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.instancesLink.displayName"
+                  description="WSNService.instancesLink.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNServicePoint.content.main&#38;sfname=servicePoint"
+                  weight="10"/>
+        </linkSet>
+    </extension>
+
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNTopicNamespace.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.topicSpacesLink.displayName"
+                  description="WSNService.topicSpacesLink.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNTopicNamespace.content.main&#38;sfname=topicNamespace"
+                  weight="20"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="Properties.linkInWSNService" contextType="WSNService" >
+            <link categoryId="additional.properties"
+                  label="Service.properties.displayName"
+                  description="WSNService.customProperties.description"
+                  actionURI="wsnServiceDetail.do?linkConversion=true&#38;forwardCmd=com.ibm.ws.console.servermanagement.forwardCmd.do&#38;forwardTile=Property.content.main&#38;forwardPerpective=tab.configuration&#38;forwardSFName=property"
+                  weight="30"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="NotificationBrokerService.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.NotificationBrokerServiceLink.displayName"
+                  description="WSNService.NotificationBrokerServiceLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServiceDetail.do?serviceType=notificationBrokerServiceName&#38;lastPage=WSNService.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>       
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="SubscriptionManagerService.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.SubscriptionManagerServiceLink.displayName"
+                  description="WSNService.SubscriptionManagerServiceLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServiceDetail.do?serviceType=subscriptionManagerServiceName&#38;lastPage=WSNService.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>                   
+            </link>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="PubRegManagerService.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.PubRegManagerServiceLink.displayName"
+                  description="WSNService.PubRegManagerServiceLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServiceDetail.do?serviceType=pubRegManagerServiceName&#38;lastPage=WSNService.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>
+            </link>
+        </linkSet>
+    </extension>
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="OutboundRequestPolicySets.linkInWSNService" contextType="WSNService">
+            <link label="WSNService.OutboundRequestPolicySets.displayName"
+                  description="WSNService.OutboundRequestPolicySets.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServiceDetail.do?outboundRequestPolicySets=true&#38;lastPage=WSNService.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV70Links" value="true"/>
+                  </compatibility>
+            </link>
+        </linkSet>
+    </extension>    
+
+    <!-- WSNService runtime additional properties --> 
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNSubscription.linkInWSNService" contextType="WSNService">
+            <link label="WSNSubscriptions.displayName"
+                  description="WSNSubscriptions.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNSubscriptions.content.main&#38;sfname=getSubscriptionMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNPublisherRegistrations.linkInWSNService" contextType="WSNService">
+            <link label="WSNPublisherRegistrations.displayName"
+                  description="WSNPublisherRegistrations.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNPublisherRegistrations.content.main&#38;sfname=getPublisherRegistrationMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNPullPoints.linkInWSNService" contextType="WSNService">
+            <link label="WSNPullPoints.displayName"
+                  description="WSNPullPoints.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNPullPoints.content.main&#38;sfname=getPullPointMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+
+    <!-- Service point additional properties links -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNAdministeredSubscriber.linkInWSNService" contextType="WSNServicePoint">
+            <link label="WSNAdministeredSubscriber.displayName"
+                  description="WSNAdministeredSubscriber.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNAdministeredSubscriber.content.main&#38;sfname=administeredSubscriber"
+                  weight="10"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="Properties.linkInWSNServicePoint" contextType="WSNServicePoint" >
+            <link categoryId="additional.properties"
+                  label="Service.properties.displayName"
+                  description="WSNServicePoint.customProperties.description"
+                  actionURI="wsnServicePointDetail.do?linkConversion=true&#38;forwardCmd=com.ibm.ws.console.servermanagement.forwardCmd.do&#38;forwardTile=Property.content.main&#38;forwardPerpective=tab.configuration&#38;forwardSFName=property"
+                  weight="20"/>
+        </linkSet>
+    </extension>
+
+
+    <!-- Service point runtime additonal properties links -->
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNSubscription.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNSubscriptions.displayName"
+                  description="WSNSubscriptions.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNSubscriptions.content.main&#38;sfname=getSubscriptionMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNPublisherRegistrations.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNPublisherRegistrations.displayName"
+                  description="WSNPublisherRegistrations.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNPublisherRegistrations.content.main&#38;sfname=getPublisherRegistrationMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNPullPoints.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNPullPoints.displayName"
+                  description="WSNPullPoints.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNPullPoints.content.main&#38;sfname=getPullPointMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="WSNAdministeredSubscriberRT.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNAdministeredSubscriber.displayName"
+                  description="WSNAdministeredSubscriber.description"
+                  categoryId="additional.properties"
+                  actionURI="com.ibm.ws.console.sibwsn.wsnresources.forwardCmd.do?forwardName=WSNAdministeredSubscriberRT.content.main&#38;sfname=getAdministeredSubscriberMBeanNames"
+                  perspective="runtime"/>
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="NotificationBrokerPort.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.NotificationBrokerPortLink.displayName"
+                  description="WSNServicePoint.NotificationBrokerPortLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?portType=notificationBrokerPortName&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="SubscriptionManagerPort.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.SubscriptionManagerPortLink.displayName"
+                  description="WSNServicePoint.SubscriptionManagerPortLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?portType=subscriptionManagerPortName&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>
+
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="PubRegManagerPort.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.PubRegManagerPortLink.displayName"
+                  description="WSNServicePoint.PubRegManagerPortLink.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?portType=pubRegManagerPortName&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV61Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="ServicePointApp.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.ServicePointApplication.displayName"
+                  description="WSNServicePoint.ServicePointApplication.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?servicePointAppLink=true&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV70Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>    
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="PublishWSDLToZip.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.PublishWSDLToZip.displayName"
+                  description="WSNServicePoint.PublishWSDLToZip.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?publishWSDL=true&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV70Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>
+    
+    <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="PolicySetConfig.linkInWSNServicePoint" contextType="WSNServicePoint">
+            <link label="WSNServicePoint.PolicySetConfiguration.displayName"
+                  description="WSNServicePoint.PolicySetConfiguration.description"
+                  categoryId="additional.properties"
+                  actionURI="wsnServicePointDetail.do?policySetConfig=true&#38;lastPage=WSNServicePoint.config.view">
+                  <compatibility>
+                      <match key="WSNServiceDetail.showV70Links" value="true"/>
+                  </compatibility>                   
+            </link>                  
+        </linkSet>
+    </extension>        
+
+    <!--
+    *********************
+    *                   *
+    * ONLINE HELP LINKS *
+    *                   *
+    *********************
+    -->
+
+    <extension point="com.ibm.ws.console.core.help">
+        <toc file="toc.xml" primary="true"/>
+    </extension>
+
+</plugin>
+

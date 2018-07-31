@@ -1,0 +1,317 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS Install Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS Install Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<property name="autopdProblem" value="WAS_Installation_Manager_Problem" />
+	<property name="infocollectProblemType" value="was-install" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+		was_home_dir_install,im_home_dir, prompt_type_of_install, 	
+			         
+		zip_autopd_log, ftp_message_shared, ftp_collected_information_shared, 	
+		script_completed_v2">
+	</target>
+
+	<target name="was_home_dir_install"> 
+		<!-- WAS_HOME/logs to be picked up --> 
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_WAS_Root"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Ask for WebSphere Application Root Directory and build environment..."
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+		
+		<!-- copy one setupCmdLine exec to autopdtmp -->
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec.sh"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec.sh" perm="766"/>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec" perm="766"/>
+
+
+		<!-- 24112 --> 
+		<if isTrue="${isWindows}">
+			<available type="file" file="${bundle.basedir}/../../../../bin/setupCmdLine.bat" property="was.root.true" />
+		</if> 
+		<if isNotTrue="${isWindows}" >
+			<!-- Defect 27259 --> 
+			<if isNotTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine.sh" property="was.root.true" />
+			</if> 
+			<if isTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine" property="was.root.true" />
+			</if> 
+		</if> 
+		<if isTrue="${was.root.true}" >
+			<property name="was.install.root" location="${bundle.basedir}/../../../../" /> 
+		</if>
+		<!--25004  --> 
+		<mkdir dir="${autopdtmp}/trace/config"/> 
+		<mkdir dir="${autopdtmp}/trace/jacl"/> 
+		
+		<property name="autopd.echolog.instance" value="${autopdtmp}/trace/config/Output.txt" />
+		
+		<condition property="no.was">
+			<not>
+				<isset property="was.install.root" />
+			</not>
+		</condition>
+
+		<if isTrue="${no.was}">
+
+			<inputdialogtask doSkip="true" >
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.install.root" label="WAS_root_IM"
+					type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"
+				/>
+			</inputdialogtask>
+		</if>
+			
+		<available file="${was.install.root}/logs" type="dir" property="was.install.exists" /> 
+		
+		<if isTrue="${was.install.exists}">
+		
+	        <zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.install.root}/logs" prefix="${autopdProblem}/WAS_LOGS">
+					<include name="**/**" />
+				</zipfileset> 
+        	</zip>		
+		</if> 
+		
+	</target>
+
+	<target name="im_home_dir"> 
+
+		<autopd_unset_property name="exitloop"/>
+		<autopdproperty name="exitloop" value="true"/> 
+		<autopdwhile property="exitloop" > 
+			<!-- Prompt for IM Home dir location --> 
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.im.root" label="WAS_IM_DIR"
+					type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"
+				/>
+			</inputdialogtask>
+			<available file="${was.im.root}/eclipse/tools/" type="dir" property="was.im.dir.exists" /> 
+			
+			<if isTrue="${was.im.dir.exists}">
+				<autopdproperty name="exitloop" value="false"/>
+			</if> 
+			<if isNotTrue="${was.im.dir.exists}">
+				<wsnlsecho key="IM_Install_Location_Not_Required" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					message="The IM Install Location is not correct. Please enter the right location." />
+				<inputdialogtask>
+					<fieldtask name="prompt" label="Information_Message"
+						type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="no.name" label="IM_Install_Location_Not_Required"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" type="label" />
+				</inputdialogtask>
+			</if>
+		</autopdwhile>
+			
+		
+		<if isTrue="${was.im.dir.exists}">
+		
+			<mkdir dir="${autopdtmp}/im"/> 
+			
+			<copy
+				file="${bundle.basedir}/scripts/was/shell/im/imcl-dump.bat"
+				tofile="${autopdtmp}/im/imcl.bat"
+				overwrite="true">
+				<filterset>
+					<filter token="im_home" value="${was.im.root}/eclipse/tools" />
+					<filter token="zip_name" value="${autopdtmp}/im/InstallationManager.zip" />
+				</filterset>
+			</copy>
+			<copy
+				file="${bundle.basedir}/scripts/was/shell/im/imcl-dump.sh"
+				tofile="${autopdtmp}/im/imcl.sh"
+				overwrite="true">
+				<filterset>
+					<filter token="im_home" value="${was.im.root}/eclipse/tools" />
+					<filter token="zip_name" value="${autopdtmp}/im/InstallationManager.zip" />
+				</filterset>
+			</copy>
+			<copy
+				file="${bundle.basedir}/scripts/was/shell/im/imcl-dump"
+				tofile="${autopdtmp}/im/imclSystemI"
+				overwrite="true">
+				<filterset>
+					<filter token="im_home" value="${was.im.root}/eclipse/tools" />
+					<filter token="zip_name" value="${autopdtmp}/im/InstallationManager.zip" />
+				</filterset>
+			</copy>
+			<chmod file="${autopdtmp}/im/imcl.sh" perm="766"/>
+			<chmod file="${autopdtmp}/im/imclSystemI" perm="766"/>
+			
+			<exec executable="${autopdtmp}/im/imcl.bat"
+			      dir="${autopdtmp}"
+			      output="${autopd.echolog.instance}"
+			      append="true" os="${os.windows}">
+				<arg line=' ' />
+			</exec>
+			<exec executable="${autopdtmp}/im/imcl.sh"
+			      dir="${autopdtmp}"
+			      output="${autopd.echolog.instance}"
+			      append="true" os="${os.unixkind.exclude.iseries}">
+				<arg line=' ' />
+			</exec>
+			<exec executable="${autopdtmp}/im/imclSystemI"
+			      dir="${autopdtmp}"
+			      output="${autopd.echolog.instance}"
+			      append="true" os="OS/400">
+				<arg line=' ' />
+			</exec>
+	<!-- z/OS --> 		
+			<condition property="isZos">
+				<equals arg1="z/OS" arg2="${os.name}" />
+			</condition>
+			<if isTrue="${isZos}">
+				<exec executable="${autopdtmp}/im/imcl.sh"
+				      dir="${autopdtmp}"
+				      output="${autopd.echolog.instance}"
+				      append="true" >
+					<arg line=' ' />
+				</exec>
+
+			</if> 
+
+			
+			<!--  Pick the resultant output  -->			
+	        <zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/im" prefix="${autopdProblem}/IMCL">
+					<include name="InstallationManager.zip" />
+				</zipfileset> 
+	        </zip>		
+			
+		</if> 
+		
+	</target>
+
+	<target name="prompt_type_of_install"> 
+		<!-- Prompt for type of IM problem - GUI/Silent/Command Line --> 
+		<inputdialogtask> 
+			<fieldtask name="prompt" 
+					   label="select_one"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="im.problem.type"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+	        		   label="Select_IM_Problem_Type"
+			           list="GUI:Response File:Command Line"
+			           listDetails="GUI:Response File:Command Line"
+	        		   type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="gui.im.problem">
+			<equals arg1="GUI" arg2="${im.problem.type}" />
+		</condition>
+		<condition property="response.im.problem">
+			<equals arg1="Response File" arg2="${im.problem.type}" />
+		</condition>
+		<condition property="command.im.problem">
+			<equals arg1="Command Line" arg2="${im.problem.type}" />
+		</condition>
+<!--
+		<if isTrue="${gui.im.problem}">
+	 
+		</if>		
+--> 
+		<if isTrue="${response.im.problem}">
+			<inputdialogtask doSkip="true" actionProperty="isResponseSkip" >
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="im.response.file" label="IM_Response_File_Location"
+					type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<condition property="isSkip1" > 
+				<equals arg1="skip" arg2="${isResponseSkip}" casesensitive="false" />
+			</condition> 
+			
+			<if isNotTrue="${isSkip1}"> 
+				<available file="${im.response.file}" property="im.response.file.available" /> 
+				
+				<if isTrue="${im.response.file.available}" > 
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset file="${im.response.file}" prefix="${autopdProblem}/IM_Response" />
+					</zip>
+		 
+				</if> 
+			</if> 
+			
+			
+		</if>		
+
+		<if isTrue="${command.im.problem}">
+			<inputdialogtask doSkip="true" actionProperty="isCommandSkip" >
+				<fieldtask name="ws.security.prompt"
+						   label="Input_Required"
+						   type="prompt"
+						   bundle="autopdtoolstrings" />
+				<fieldtask name="im.command.answer0"
+				           label="IM_Command"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+
+			<condition property="isSkip2" > 
+				<equals arg1="skip" arg2="${isCommandSkip}" casesensitive="false" />
+			</condition> 
+			
+			<if isNotTrue="${isSkip2}"> 
+				<concat destfile="${autopdtmp}/autopd/IM-Command-Line.txt" append="true">
+					1. What was the command invoked for Installation Manager${line.separator}
+							${im.command.answer0}${line.separator}
+				</concat>
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+					<zipfileset file="${autopdtmp}/autopd/IM-Command-Line.txt"
+					            prefix="${autopdProblem}/IM_Command" />
+
+				</zip>
+			</if> 
+
+
+		</if>		
+	</target>
+</project>

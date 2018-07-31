@@ -1,0 +1,917 @@
+###############################################################################
+#                                                                             #
+#                  configureWebserverDefinition.jacl                          #
+#                  ---------------------------------                          #
+#                                                                             #
+#                                                                             #
+# Purpose:                                                                    #
+#                                                                             #
+#    This script is designed to configure the Web server                      #
+#                                                                             #
+#    A) Create an unmanaged node definition                                   #
+#    B) Create the web server defintion                                       #
+#    C) Map the existing application to the web server defintion              #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+
+#--------------------------------------------------------------
+# Define exit return code
+#--------------------------------------------------------------
+set SUCCESS 0
+set FAIL    1
+set RETURN_VALUE 0
+
+#--------------------------------------------------------------
+# Print the usage
+#--------------------------------------------------------------
+proc printUsage {} {
+   global FAIL
+
+   puts " "
+   puts "Usage is as follows: "
+   puts ""
+   puts "wsadmin.sh \[-user WASadminUsername\] \[-password WASadminPassword\]    "
+   puts "                  -f \${WAS_HOME}/bin/configureWebserverDefinition.jacl "
+   puts "                  webserverName webserverType                           "
+   puts "                  webserverInstallLocation webserverConfigFile          "
+   puts "                  webserverPort mapApplications pluginInstallLocation   "
+   puts "                  webserverNodeType webserverNodeName                   "
+   puts "                  webserverHostName webserverOS                         "
+   puts "                  adminPort adminUserID adminPassword                   "
+   puts ""
+   puts "WASadminUsername         : User Name for WAS Adminstration              "
+   puts "WASadminPassword         : Password  for WAS Adminstration              "
+   puts "webserverName            : Name of the webserver to be defined          "
+   puts "webserverType            : Type of the web server. Valid values are:    "
+   puts "                           IHS APACHE IPLANET DOMINO IIS HTTPSERVER_ZOS "
+   puts "webserverInstallLocation : Location of the websserver install           "
+   puts "webserverConfigFile      : Webserver configuration file                 "
+   puts "webserverPort            : Listening port of the web server             "
+   puts "mapApplications          : Specifies whether the existing applications  "
+   puts "                           are to be mapped to the web server.          "
+   puts "                           Valid values are:                            "
+   puts "                           MAP_NONE MAP_DEFAULT MAP_ALL                 "
+   puts "pluginInstallLocation    : Location of the plugin install               "
+   puts "webserverNodeType        : Type of the node holding webserver           "
+   puts "                           definition, valid values are:                "
+   puts "                           managed unmanaged                            "
+   puts "webserverNodeName        : Node at which web server should be defined   "
+   puts "webserverHostName        : Host name of the web server                  "
+   puts "                           Needed only for unmanaged node               "
+   puts "webserverOS              : Operating system of the web server machine   "
+   puts "                           Needed only for unmanaged node               "
+   puts "                           Valid values are:                            "
+   puts "                           windows solaris aix hpux linux os400 os390   "
+   puts "adminPort                : IHS Remote Administration port               "
+   puts "                           Needed only for IHS webserver                "
+   puts "                           Defaults to 2001 for os400                   "
+   puts "                           Defaults to 8008 for other platforms         "
+   puts "adminUserID              : IHS Remote Administration userid             "
+   puts "                           Needed only for IHS webserver                "
+   puts "adminPassword            : IHS Remote Administration password           "
+   puts "                           Needed only for IHS webserver                "
+   puts "serviceName              : Service name for the webserver               "
+   puts "                           Needed only for IHS webserver                "
+
+
+   puts " "
+
+   exit $FAIL
+}
+
+#--------------------------------------------------------------
+# Define other parameters for administering IHS webserver
+# Can be changed to suit the current environment
+#--------------------------------------------------------------
+set adminPort        \"\"
+set adminUserID      \"\"
+set adminPasswd      \"\"
+set adminProtocol    \"\"
+
+#--------------------------------------------------------------
+# Define other parameters for creating webserver definition
+# Can be changed to suit the current environment
+#--------------------------------------------------------------
+set serviceName    \"\"
+set errorLogfile   \"\"
+set accessLogfile  \"\"
+set webProtocol    \"\"
+
+#--------------------------------------------------------------
+# Check if all parameters are passed
+#--------------------------------------------------------------
+if { ($argc < 9 ) } {
+
+   printUsage
+}
+
+#--------------------------------------------------------------
+# Get the input parameters
+#--------------------------------------------------------------
+
+# Get the Web server name
+set webserverName            [lindex $argv 0]
+
+# Get the Web server type
+set webserverType            [lindex $argv 1]
+
+# Get the Web server install location
+set webserverInstallLocation [lindex $argv 2]
+
+# Get the Web server config location
+set webserverConfigLocation  [lindex $argv 3]
+
+# Get the Web server port
+set webserverPort            [lindex $argv 4]
+
+# Get the option to map the existing aplications on the Web server
+set mapApplications          [lindex $argv 5]
+
+# Get the plugin install location
+set pluginInstallLocation    [lindex $argv 6]
+
+# Get the Web server node type
+set webserverNodeType        [lindex $argv 7]
+
+# Get the Web server node name
+set webserverNodeName        [lindex $argv 8]
+
+#--------------------------------------------------------------
+# Check if the plugin install location is correct
+#--------------------------------------------------------------
+if { (!(($webserverNodeType == "unmanaged") || ($webserverNodeType == "managed"))) } {
+
+   puts " "
+   puts "Invalid node type is specified. Using unmanaged as the default."
+
+   # Use unmanaged as the default node type
+   set webserverNodeType unmanaged
+}
+
+#--------------------------------------------------------------
+# Check if all parameters are passed for unmanaged node creation
+#--------------------------------------------------------------
+if { (($webserverNodeType == "unmanaged") && ($argc < 11)) } {
+
+   printUsage
+}
+
+# Get the Web server host name
+set webserverHostName      [lindex $argv 9]
+set webserverHostName [string tolower $webserverHostName]
+
+# Get the Web server operating system type
+set webserverOS            [lindex $argv 10]
+
+#----------------------------------------------------------
+# Set the defaut IHS admin port
+#----------------------------------------------------------
+if {$webserverOS == "os400"} {
+    set adminPort 2001
+} else {
+    set adminPort 8008
+}
+
+
+#--------------------------------------------------------------
+# Check if all parameters are passed for IHS Admin properties
+#--------------------------------------------------------------
+
+# Get the IHS admin port number
+if  {($argc > 11)} {
+    set adminPort       [lindex $argv 11]
+}
+
+# Get the IHS admin user id
+if { ($argc > 12) } {
+    set adminUserID   [lindex $argv 12]
+}
+
+# Get the IHS admin user password
+if { ($argc > 13) } {
+    set adminPasswd   [lindex $argv 13]
+}
+
+# Get the service name
+if { ($argc > 14) } {
+    set serviceName   [lindex $argv 14]
+}
+
+
+#------------------------------------------------------------------------
+# os400:
+# This change is required to support calls written for i5/OS or OS400 6.0.x.x
+# In 6.0.x.x i5/OS used the web server install location to store the
+# web server instance name.
+# The following code checks if the call is for OS400 and parses the web server
+# install location. If it does not have a '/', then it assumes it is a web
+# server instance name. It will then place the web serve intance name in the service
+# name attribute and relace the web server install location parameter with:
+# "".
+#-------------------------------------------------------------------------
+if { ($webserverOS == "os400") && ($serviceName == "\"\"") } {
+    if {[regexp "/" $webserverInstallLocation] == 0} {
+       set serviceName $webserverInstallLocation
+       set webserverInstallLocation ""
+       puts ""
+       puts "Warning: This script was invoked using the WebSphere Application Server V6"
+       puts "parameters."
+       puts "The serviceName attribute is set to $serviceName which was passed as the third"
+       puts "parameter to the script to maintain compatibility with the WebSphere Application "
+       puts " Server V6 version of the script."
+       puts "Invoke this script with no parameters to see the new V6.1 parameters."
+       puts ""
+    }
+}
+
+#--------------------------------------------------------------
+# Display the input parameters
+#--------------------------------------------------------------
+puts " "
+puts "Input parameters: "
+puts " "
+puts "   Web server name             - $webserverName "
+puts "   Web server type             - $webserverType "
+puts "   Web server install location - $webserverInstallLocation "
+puts "   Web server config location  - $webserverConfigLocation "
+puts "   Web server port             - $webserverPort "
+puts "   Map Applications            - $mapApplications "
+puts "   Plugin install location     - $pluginInstallLocation "
+puts "   Web server node type        - $webserverNodeType "
+puts "   Web server node name        - $webserverNodeName "
+
+if { ($webserverNodeType == "unmanaged") } {
+   puts "   Web server host name        - $webserverHostName "
+   puts "   Web server operating system - $webserverOS "
+}
+
+if { ($webserverType == "IHS") } {
+   puts "   IHS Admin port              - $adminPort "
+   puts "   IHS Admin user ID           - $adminUserID "
+   puts "   IHS Admin password          - $adminPasswd "
+   puts "   IHS service name            - $serviceName "
+}
+
+#--------------------------------------------------------------
+# Check if the Web server type is valid
+#--------------------------------------------------------------
+if { (!(($webserverType == "IHS") || ($webserverType == "APACHE") || ($webserverType == "SUNJAVASYSTEM") || ($webserverType == "DOMINO") || ($webserverType == "IIS") || ($webserverType == "HTTPSERVER_ZOS"))) } {
+
+   puts " "
+   puts "Invalid webserver type specified. Using IHS as the default."
+
+   # Use IHS as the default web server type
+   set webserverType IHS
+}
+
+#--------------------------------------------------------------
+# Check if the Web server install location is specified
+#--------------------------------------------------------------
+if { ($webserverInstallLocation == "NULL") } {
+
+   puts " "
+   puts "Web server install location is not specified. Using defaults."
+
+   # Use the default webserver install location
+   set webserverInstallLocation  \"\"
+}
+
+#--------------------------------------------------------------
+# Check if the Web server config location is specified
+#--------------------------------------------------------------
+if { ($webserverConfigLocation == "NULL") } {
+
+   puts " "
+   puts "Web server config location is not specified. Using defaults."
+
+   # Use the default webserver config location
+   set webserverConfigLocation  \"\"
+}
+
+#--------------------------------------------------------------
+# Check if the Web server node type is unmanaged
+#--------------------------------------------------------------
+if { ($webserverNodeType == "unmanaged") } {
+
+   #--------------------------------------------------------------
+   # Check if the Web server opertating system is valid
+   #--------------------------------------------------------------
+   if { (!(($webserverOS == "windows") || ($webserverOS == "solaris") || ($webserverOS == "aix") || ($webserverOS == "hpux") || ($webserverOS == "linux") || ($webserverOS == "os400")|| ($webserverOS == "os390"))) } {
+
+       puts " "
+       puts "Invalid webserver operating system specified. Using windows as the default."
+
+
+       # Use windows as the default operating system
+       set webserverOS windows
+   }
+
+   #-------------------------------------------------------------
+   # set the nodeList
+   #-------------------------------------------------------------
+   
+   set nodeList [$AdminConfig list Node]
+
+   #--------------------------------------------------------------
+   # Compute the web server hostName without the domain name
+   # If $hostname is a pure IP address, then do not get the host name
+   # without domain, use it all.
+   #--------------------------------------------------------------
+   set dotIndex 0
+   if {! [regexp {[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+} $webserverHostName]} {
+       set dotIndex [ expr [string first . $webserverHostName] - 1 ]
+   } 
+   if {($dotIndex > 0) } {
+
+     set webserverHostNameWithoutDomain [string range $webserverHostName 0 $dotIndex]
+
+   } else {
+
+     set webserverHostNameWithoutDomain $webserverHostName
+   }
+
+   #--------------------------------------------------------------
+   # Loop through all the nodes and find hostname
+   #--------------------------------------------------------------
+   foreach nodeID $nodeList {
+
+     #--------------------------------------------------------------
+     # Check if the Deployment Manager server exists
+     #--------------------------------------------------------------
+     set currentNodeName [$AdminConfig showAttribute $nodeID name]
+     set serverID [$AdminConfig getid /Node:$currentNodeName/Server:dmgr]
+     if { ($serverID == "") } {
+        set serverID [$AdminTask listServers "-serverType DEPLOYMENT_MANAGER -nodeName $currentNodeName"]
+        }
+     if { ($serverID == "") } {
+
+        set hostname [$AdminConfig showAttribute $nodeID hostName]
+        #--------------------------------------------------------------
+        # Compute the hostName without the domain name
+        #--------------------------------------------------------------
+        set dotIndex 0
+        if {! [regexp {[0-9]+[.][0-9]+[.][0-9]+[.][0-9]+} $hostname]} {
+           set dotIndex [ expr [string first . $hostname] - 1 ]
+        } 
+        if {($dotIndex > 0) } {
+
+           set hostnameWithoutDomain [string range $hostname 0 $dotIndex]
+
+        } else {
+
+           set hostnameWithoutDomain $hostname
+        }
+
+        if { ($webserverHostName == "localhost") }  {
+
+           if { ($hostname == "127.0.0.1") || ($hostname == "localhost") } {
+
+              #---------------------------------------------
+              # Use the existing node referencing localhost
+              #---------------------------------------------
+	      puts "  "
+	      puts "Found node referencing localhost. Using the existing node $currentNodeName "
+              set webserverNodeName $currentNodeName
+
+              break
+           }
+        } else {
+           #----------------------------------------------------
+           # Check if hostName of node matches webserverHostName
+           #----------------------------------------------------
+           if { (([string equal -nocase $hostname $webserverHostName]) || ([string equal -nocase $hostnameWithoutDomain $webserverHostNameWithoutDomain])) } {                  
+
+              #-------------------------------------------------
+              # Use the existing node with the same hostname
+              #-------------------------------------------------
+	      puts "  "
+	      puts "Found node with matching hostname. Using existing node $currentNodeName "
+              set webserverNodeName $currentNodeName
+
+              break
+             }
+        }
+      }
+   }
+
+   #--------------------------------------------------------------
+   # Check if the webserver node already exists
+   #--------------------------------------------------------------
+   set webserverNodeID [$AdminConfig getid /Node:$webserverNodeName]
+   if { ($webserverNodeID == "") } {
+
+       #--------------------------------------------------------------
+       # Create the unmanaged Web server node
+       #--------------------------------------------------------------
+       set nodeExists false
+
+       puts " "
+       puts "Creating the unmanaged node $webserverNodeName ."
+
+       if {[catch {$AdminTask createUnmanagedNode "-nodeName $webserverNodeName -hostName $webserverHostName  -nodeOperatingSystem $webserverOS "} result]} {
+
+           puts "Unmanged node $webserverNodeName is not created, exception = $result"
+
+           exit $FAIL
+
+       } else {
+
+          puts "Unmanged node $webserverNodeName is created."
+       }
+   } else {
+       set nodeExists true
+
+       puts " "
+       puts "Node definition $webserverNodeName already exists."
+   }
+} else {
+
+   set nodeExists true
+
+   #--------------------------------------------------------------
+   # Compute the operating system of the managed node
+   #--------------------------------------------------------------
+   if {[catch {set webserverOS [$AdminTask getMetadataProperty "-nodeName $webserverNodeName -propertyName com.ibm.websphere.nodeOperatingSystem"] } result]} {
+
+       puts " "
+       puts "Operating system of the managed node is not computed, exception = $result"
+   }
+}
+
+#--------------------------------------------------------------
+# Compute the template version of the web server  node
+#--------------------------------------------------------------
+if { ($nodeExists == "true") }  {
+
+   if {[catch {set templateVersion [$AdminTask getMetadataProperty "-nodeName $webserverNodeName -propertyName com.ibm.websphere.baseProductVersion"] } result]} {
+
+       puts " "
+       puts "The template version of the web server node is not computed, exception = $result"
+   }
+} else {
+
+   set templateVersion 7.0.0.0
+}
+
+
+
+
+#--------------------------------------------------------------
+# Check if the webserver already exists
+#--------------------------------------------------------------
+set webserverID [$AdminConfig getid /Node:$webserverNodeName/Server:$webserverName]
+if { ($webserverID == "") } {
+
+   #--------------------------------------------------------------
+   # Create the Web server defintion
+   #--------------------------------------------------------------
+
+   puts " "
+   puts "Creating the web server definition for $webserverName on node $webserverNodeName."
+
+   #--------------------------------------------------------------
+   # Compute webserver steps
+   #--------------------------------------------------------------
+   set serverConfigStep  "$webserverPort \"$webserverInstallLocation\" \"$pluginInstallLocation\" \"$webserverConfigLocation\" \"$serviceName\" $errorLogfile $accessLogfile $webProtocol"
+   set remoteServerConfigStep  "$adminPort $adminUserID $adminPasswd $adminProtocol"
+
+
+   if { ($webserverType == "IHS") } {
+
+      puts "Parameters for administering IHS web server can also be updated using wsadmin script or admin console."
+
+   }
+
+   #--------------------------------------------------------------
+   # Check if webserver is IBM HTTP Server running on ZOS
+   #--------------------------------------------------------------
+   if { (($webserverType == "IHS") && ($webserverOS == "os390")) } {
+
+      # Set the Web server template for IBM HTTP Server on ZOS
+      set webserverType IHSZOS
+
+      puts "The template IHSZOS is used for creating the webserver."
+   }
+
+   #--------------------------------------------------------------
+   # Check if webserver is the base HTTP Server running on ZOS
+   #--------------------------------------------------------------
+   if { ($webserverType == "HTTPSERVER_ZOS") } {
+
+      # Set the Web server template for base HTTP Server on ZOS
+      set webserverType HTTPSERVERZOS
+
+      puts "The template HTTPSERVERZOS is used for creating the webserver."
+   }
+
+   #--------------------------------------------------------------------
+   # Check if are creating on a node created with 6.0.x template version
+   #--------------------------------------------------------------------
+   set index [string first 6.0 $templateVersion]
+   if {($index == "0") } {
+
+      # Set the Web server template for for WAS 6.0.X
+      set webserverType ${webserverType}_60X
+
+      puts "Switching to 60X version of the webserver template."
+
+   }
+
+   #--------------------------------------------------------------------
+   # Check if are creating on a node created with 6.1.x template version
+   #--------------------------------------------------------------------
+   set index [string first 6.1 $templateVersion]
+   if {($index == "0") } {
+
+      # Set the Web server template for for WAS 6.1.X
+      set webserverType ${webserverType}_61X
+
+      puts "Switching to 61X version of the webserver template."
+
+   }
+
+   if {[catch {$AdminTask createWebServer $webserverNodeName [subst {-name $webserverName -templateName $webserverType -serverConfig {{ $serverConfigStep }} -remoteServerConfig {{ $remoteServerConfigStep }} } ] } result]} {
+
+      puts "Web server definition for $webserverName is not created, exception = $result"
+
+      exit $FAIL
+   } else {
+
+      set webserverID [$AdminConfig getid /Node:$webserverNodeName/Server:$webserverName]
+
+      puts "Web server definition for $webserverName is created."
+   }
+
+} else {
+
+   puts " "
+   puts "Web server definition for $webserverName already exists."
+}
+
+#--------------------------------------------------------------
+# Compute the plugin properties config ID
+#--------------------------------------------------------------
+puts " "
+puts "Start computing the plugin properties ID."
+
+if {[catch {set pluginPropertiesIDList [$AdminConfig list PluginProperties]} result]} {
+
+   puts "Plugin properties ID is not computed, exception = $result"
+
+} else {
+
+   set endIndex [string first | $webserverID]
+   set webID    [string range $webserverID 0 $endIndex]
+
+   foreach webserverPluginPropertiesID $pluginPropertiesIDList {
+
+       set endIndex    [string first | $webserverPluginPropertiesID]
+       set pluginWebID [string range $webserverPluginPropertiesID 0 $endIndex]
+
+       set idx [string first $pluginWebID $webID]
+       if { ($idx > 0) } {
+
+           puts "Plugin properties ID is computed."
+
+           break
+       }
+   }
+}
+
+#--------------------------------------------------------------
+# Set the attribute plugin install root
+#--------------------------------------------------------------
+puts " "
+puts "Start updating the plugin install location."
+
+if {[catch {$AdminConfig modify $webserverPluginPropertiesID "{PluginInstallRoot {$pluginInstallLocation}}"} result]} {
+
+   puts "Plugin install location is not updated, exception = $result"
+
+} else {
+
+   puts "Plugin install location is updated."
+}
+
+#--------------------------------------------------------------
+# Set the attribute plugin log location
+#--------------------------------------------------------------
+puts " "
+puts "Start updating the plugin log file location."
+
+if {[catch {$AdminConfig modify $webserverPluginPropertiesID "{LogFilename {$pluginInstallLocation/logs/$webserverName/http_plugin.log}}"} result]} {
+
+   puts "Plugin log file location is not updated, exception = $result"
+
+} else {
+
+   puts "Plugin log file location is updated."
+}
+
+#--------------------------------------------------------------
+# Set the attribute RemoteConfigFilename
+#--------------------------------------------------------------
+if {$webserverOS != "os400"} {
+
+   puts " "
+   puts "Start updating the RemoteConfigFilename location."
+
+   if {[catch {$AdminConfig modify $webserverPluginPropertiesID "{RemoteConfigFilename {$pluginInstallLocation/config/$webserverName/plugin-cfg.xml}}"} result]} {
+
+      puts "Plugin remote config file location is not updated, exception = $result"
+
+   } else {
+
+      puts "Plugin remote config file location is updated."
+   }
+}
+
+#--------------------------------------------------------------
+# Set the attribute RemoteKeyRingFileName
+#--------------------------------------------------------------
+if {$webserverOS != "os400"} {
+   puts " "
+   puts "Start updating the RemoteKeyRingFileName location."
+
+   if {[catch {$AdminConfig modify $webserverPluginPropertiesID "{RemoteKeyRingFilename {$pluginInstallLocation/config/$webserverName/plugin-key.kdb}}"} result]} {
+
+      puts "Plugin remote keyring file location is not updated, exception = $result"
+
+   } else {
+
+      puts "Plugin remote keyring file location is updated."
+   }
+}
+
+#--------------------------------------------------------------
+# Save the configuration
+#--------------------------------------------------------------
+puts " "
+puts "Start saving the configuration."
+
+if {[catch {$AdminConfig save} result]} {
+
+   puts " "
+   puts "Configuration save is not complete, exception = $result"
+
+   set RETURN_VALUE $FAIL
+} else {
+
+   puts " "
+   puts "Configuration save is complete."
+
+   # Create the web server's logs/webservername folders
+   # if they do not exist and grant QTMHHTTP/QNOTES *RWX auth to it
+   if { $webserverOS == "os400" } {
+     set result [file isdirectory $pluginInstallLocation/logs]
+     if {$result == 0} {
+       puts "os400: Creating the logs folder under: $pluginInstallLocation"
+       set dummy [catch {exec mkdir $pluginInstallLocation/logs}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs') USER(QTMHHTTP) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs') USER(QNOTES) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs') USER(*PUBLIC) DTAAUT(*NONE)}]
+     }
+     unset result
+     set result [file isdirectory $pluginInstallLocation/logs/$webserverName]
+     if {$result == 0} {
+       puts "os400: Creating the $webserverName folder under: $pluginInstallLocation/logs"
+       set dummy [catch {exec mkdir $pluginInstallLocation/logs/$webserverName}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs/$webserverName') USER(QTMHHTTP) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs/$webserverName') USER(QNOTES) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$pluginInstallLocation/logs/$webserverName') USER(*PUBLIC) DTAAUT(*NONE)}]
+     }
+
+     set user_install_root [java::call System getProperty "user.install.root"]
+     set result [file isdirectory $user_install_root/config/$webserverName]
+     if {$result == 0} {
+       puts "os400: Creating the $webserverName folder under: $user_install_root/config"
+       set dummy [catch {exec mkdir $user_install_root/config/$webserverName}]
+       set dummy [catch {exec system CHGAUT OBJ('$user_install_root/config/$webserverName') USER(QTMHHTTP) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$user_install_root/config/$webserverName') USER(QNOTES) DTAAUT(*RWX)}]
+       set dummy [catch {exec system CHGAUT OBJ('$user_install_root/config/$webserverName') USER(*PUBLIC) DTAAUT(*NONE)}]
+     }
+   }
+
+   set RETURN_VALUE $SUCCESS
+}
+
+
+#--------------------------------------------------------------
+# Check if applications should be mapped to the Web server
+#--------------------------------------------------------------
+
+if { ($mapApplications == "MAP_NONE") } {
+
+   puts " "
+   puts "Applications are not mapped to the Web server."
+
+   exit $RETURN_VALUE
+} else {
+
+   #--------------------------------------------------------------
+   # Compute the target name for the Web server
+   #--------------------------------------------------------------
+   set newTarget WebSphere:cell=$cellName,node=$webserverNodeName,server=$webserverName
+
+   #--------------------------------------------------------------
+   # Get the list of installed application
+   #--------------------------------------------------------------
+   if {[catch {set ApplicationList [$AdminApp list]} result]} {
+
+       puts " "
+       puts "Unable to compute the list of installed applications, exception = $result"
+
+       exit $FAIL
+   } else {
+
+       puts " "
+       puts "Computed the list of installed applications."
+   }
+
+   #--------------------------------------------------------------
+   # Looping through all the applications
+   #--------------------------------------------------------------
+   foreach Application $ApplicationList {
+
+       puts " "
+       puts "Processing the application $Application."
+
+       if { (($mapApplications == "MAP_ALL") || (($mapApplications == "MAP_DEFAULT") && ($Application == "DefaultApplication"))) }  {
+
+           puts "Get the current target mapping for the application $Application."
+
+           #--------------------------------------------------------------
+           # Get the current target mapping
+           #--------------------------------------------------------------
+           if {[catch {set MapModulesResultList [$AdminApp view $Application "-MapModulesToServers"]} result]} {
+
+               puts "Unable to compute the current target mapping for the application $Application, exception = $result"
+
+           } else {
+
+               puts "Computed the current target mapping for the application $Application."
+
+               #--------------------------------------------------------------
+               # Initialize the result entries
+               #--------------------------------------------------------------
+               set moduleEntry false
+               set uriEntry false
+               set serverEntry false
+               set firstColonHit false
+
+               set moduleName    ""
+               set targetMapList ""
+
+               #--------------------------------------------------------------
+               # Loop through the all the mapped modules
+               #--------------------------------------------------------------
+               foreach resultEntry $MapModulesResultList {
+
+                   #--------------------------------------------------------------
+                   # Check if the moduleEntry list is over
+                   #--------------------------------------------------------------
+                   if { ($resultEntry == "URI:") }  {
+
+                       set moduleEntry false
+                   }
+
+                   #--------------------------------------------------------------
+                   # Check if the previousEntry is module
+                   #--------------------------------------------------------------
+                   if { ($moduleEntry == "true") }  {
+
+                       set moduleName "$moduleName$resultEntry "
+
+                   #--------------------------------------------------------------
+                   # Check if the previousEntry is URI
+                   #--------------------------------------------------------------
+                   } elseif  { ($uriEntry == "true") }  {
+
+                       set moduleUri $resultEntry
+
+                   #--------------------------------------------------------------
+                   # Check if the previousEntry is serverEntry
+                   #--------------------------------------------------------------
+                   } elseif { ($serverEntry == "true") }  {
+
+                       set currentTargets $resultEntry
+
+                       #--------------------------------------------------------------
+                       # Check if web server is already defined as the target
+                       #--------------------------------------------------------------
+                       set index [string first $newTarget $currentTargets]
+                       if {($index > 0) } {
+                           set targetMapList "$targetMapList { .* $moduleUri $currentTargets }"
+                       } else {
+                           set targetMapList "$targetMapList { .* $moduleUri $currentTargets+$newTarget }"
+                       }
+
+                       #--------------------------------------------------------------
+                       # Initialize the result entries
+                       #--------------------------------------------------------------
+                       set serverEntry false
+                       set moduleName    ""
+                   }
+
+                   #--------------------------------------------------------------
+                   # Check if the current result entry is URI
+                   #--------------------------------------------------------------
+                   if { ($resultEntry == "URI:") }  {
+                       set uriEntry true
+                       set moduleEntry false
+                       set serverEntry false
+                   } else {
+                       set uriEntry false
+
+                       #--------------------------------------------------------------
+                       # Skip the token MapModulesToServers:
+                       #--------------------------------------------------------------
+                       if { ($resultEntry != "MapModulesToServers:") }  {
+
+                           #--------------------------------------------------------------
+                           # Skip the token WebSphere:
+                           #--------------------------------------------------------------
+                           set index [string first WebSphere: $resultEntry]
+                           if {($index < 0) } {
+                               #--------------------------------------------------------------
+                               # Check if the result entry has :
+                               #--------------------------------------------------------------
+                               set index [string first : $resultEntry]
+                               if {($index >= 0) } {
+                                   if { ($firstColonHit == "false") }  {
+
+                                       #--------------------------------------------------------------
+                                       # Current result entry is module
+                                       #--------------------------------------------------------------
+                                       set moduleEntry true
+                                       set serverEntry false
+                                       set firstColonHit true
+
+                                   } else {
+
+                                       #--------------------------------------------------------------
+                                       # Current result entry is server
+                                       #--------------------------------------------------------------
+                                       set serverEntry true
+                                       set moduleEntry false
+                                       set firstColonHit false
+                                   }
+                               }
+                           }
+                       }
+                   }
+               }
+
+               #--------------------------------------------------------------
+               # Compute the revised targetMapping
+               #--------------------------------------------------------------
+
+               #--------------------------------------------------------------
+               #  Update the target mapping for each application
+               #--------------------------------------------------------------
+               puts "Start updating the target mappings for the application $Application."
+
+               if {[catch {$AdminApp edit $Application [subst {-MapModulesToServers { $targetMapList } } ]} result]} {
+
+                   puts "Target mapping is not updated for the application $Application, exception = $result"
+
+               } else {
+
+                   puts "Target mapping is updated for the application $Application."
+               }
+
+               #--------------------------------------------------------------
+               #  Check if only default application is to be mapped
+               #--------------------------------------------------------------
+               if { ($mapApplications == "MAP_DEFAULT") }  {
+
+                   # No need to process further
+                   break
+               }
+           }
+       }
+   }
+}
+
+#--------------------------------------------------------------
+# Save the configuration
+#--------------------------------------------------------------
+puts " "
+puts "Start saving the configuration."
+
+if {[catch {$AdminConfig save} result]} {
+
+   puts " "
+   puts "Configuration save is not complete, exception = $result"
+
+   exit $FAIL
+
+} else {
+
+   puts " "
+   puts "Configuration save is complete."
+
+   exit $SUCCESS
+}

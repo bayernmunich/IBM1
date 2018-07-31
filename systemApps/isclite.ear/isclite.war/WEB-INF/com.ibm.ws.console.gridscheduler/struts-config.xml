@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+	<!-- Data Sources -->
+	<data-sources>
+	</data-sources>
+
+	<!-- Form Beans -->
+	<form-beans>
+		<form-bean 
+			name="com.ibm.ws.console.gridscheduler.form.GridSchedulerDetailForm"
+			type="com.ibm.ws.console.gridscheduler.form.GridSchedulerDetailForm">
+		</form-bean>
+		<form-bean 
+			name="com.ibm.ws.console.gridscheduler.form.PropertyCollectionForm" 
+			type="com.ibm.ws.console.gridscheduler.form.PropertyCollectionForm">
+		</form-bean>	
+        <form-bean 
+        	name="com.ibm.ws.console.gridscheduler.form.PropertyDetailForm" 
+        	type="com.ibm.ws.console.gridscheduler.form.PropertyDetailForm">
+        </form-bean>
+        <form-bean 
+        	name="com.ibm.ws.console.gridscheduler.form.GridEndpointsCollectionForm" 
+        	type="com.ibm.ws.console.gridscheduler.form.GridEndpointsCollectionForm">
+        </form-bean>
+	    <form-bean 
+        	name="com.ibm.ws.console.gridscheduler.form.GridEndpointsDetailForm" 
+        	type="com.ibm.ws.console.gridscheduler.form.GridEndpointsDetailForm">
+        </form-bean> 
+    </form-beans>
+
+	<!-- Global Exceptions -->
+	<global-exceptions>
+	</global-exceptions>
+
+	<!-- Global Forwards -->
+	<global-forwards>
+		<!-- Security Roles -->
+		<forward name="gs.appconfigure.securityroles.tousers" path="gs.appconfigure.securityroles.tousers"/> 
+		<forward name="gridscheduler.endpoints.content.main" path="gridscheduler.endpoints.content.main"/>
+		<forward name="gs.appmanagement.tam.securityroles.tousers" path="gs.appmanagement.tam.securityroles.tousers"/> 
+	</global-forwards>
+
+	<!-- Action Mappings -->
+	<action-mappings>
+		<action
+            name="com.ibm.ws.console.gridscheduler.form.GridSchedulerDetailForm"
+            path="/GridSchedulerDetail"
+			type="com.ibm.ws.console.gridscheduler.action.GridSchedulerDetailAction" 
+			input="gridscheduler.config.view">
+			<forward name="failure" path="/error.jsp"/>
+            <forward name="error" path="gridscheduler.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gridscheduler.config.view"/>
+        </action>
+
+		<action 
+			name="com.ibm.ws.console.gridscheduler.forwardCmd" 
+			path="/com.ibm.ws.console.gridscheduler.forwardCmd" 
+			type="com.ibm.ws.console.core.action.ForwardAction">
+        	<forward name="gridscheduler.config.view" path="gridscheduler.config.view"/>
+        	<forward name="gridscheduler.property.content.main" path="gridscheduler.property.content.main"/>
+        	<forward name="gridscheduler.endpoints.content.main" path="gridscheduler.endpoints.content.main"/>
+			<!-- Security Roles -->
+			<forward name="gs.appconfigure.securityroles.tousers" path="gs.appconfigure.securityroles.tousers"/>
+			<forward name="gs.appmanagement.tam.securityroles.tousers" path="gs.appmanagement.tam.securityroles.tousers"/>		
+        </action>
+
+        <!-- Custom property collection -->        
+        <action
+            name="com.ibm.ws.console.gridscheduler.form.PropertyCollectionForm"
+            path="/GridSchedulerPropertyCollection"
+            type="com.ibm.ws.console.gridscheduler.action.PropertyCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="gridscheduler.property.config.view"/>
+            <forward name="GridSchedulerPropertyCollection" path="gridscheduler.property.content.main"/>
+        </action>
+
+        <!-- Custom property detail -->
+        <action
+            name="com.ibm.ws.console.gridscheduler.form.PropertyDetailForm"
+            path="/GridSchedulerPropertyDetail"
+            type="com.ibm.ws.console.gridscheduler.action.PropertyDetailAction"
+            input="gridscheduler.property.config.view">
+            <forward name="error" path="gridscheduler.property.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gridscheduler.property.content.main"/>
+        </action>
+        
+        <!-- Security Roles -->
+ 	    <action 
+            name="MapRolesToUsersForm" 
+            path="/gsMapRolesToUsers" 
+            type="com.ibm.ws.console.appmanagement.action.MapRolesToUsersAction">
+            <forward name="lookup.users.groups" path="gs.appmanagement.lookup.content"/>
+            <forward name="this" path="gs.appconfigure.securityroles.tousers"/>
+            <forward name="cancel" path="gridscheduler.config.view"/>            
+            <forward name="applicationDeploymentDetail" path="gridscheduler.config.view"/>            
+        </action>
+        
+        <action 
+            name="TAMMapRolesToUsersForm" 
+            path="/gsTAMMapRolesToUsers" 
+            type="com.ibm.ws.console.tam.appmanagement.action.TAMMapRolesToUsersAction">
+            <forward name="lookup.users.groups" path="gs.appmanagement.tam.lookup.content"/>
+            <forward name="this" path="gs.appmanagement.tam.securityroles.tousers"/>
+            <forward name="cancel" path="gridscheduler.config.view"/>            
+            <forward name="applicationDeploymentDetail" path="gridscheduler.config.view"/>            
+        </action>
+		
+		<!-- Grid Endpoints -->
+        
+		<action path="/GridEndpointCollection" name="com.ibm.ws.console.gridscheduler.form.GridEndpointsCollectionForm" scope="session" type="com.ibm.ws.console.gridscheduler.action.GridEndpointsCollectionAction">
+            <forward name="error" path="gridscheduler.endpoints.content.main"/>
+            <forward name="success" path="gridscheduler.endpoints.content.main" />
+            <forward name="refresh" path="com.ibm.ws.console.gridscheduler.forwardCmd.do?forwardName=gridscheduler.endpoints.content.main" />
+        </action>
+        		
+	</action-mappings>
+
+</struts-config>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+<!DOCTYPE struts-config PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+          "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+
+<struts-config>
+    <form-beans>
+    <!-- Begin WAS.webui.core -->
+        <form-bean name="BrowseRemoteForm"
+               type="com.ibm.ws.console.core.form.BrowseRemoteForm"/>
+        <form-bean name="logonForm"
+               type="com.ibm.ws.console.core.form.LogonForm"/>
+        <!-- PERF Changes -->
+        <form-bean name="PreferenceForm"
+               type="com.ibm.ws.console.core.form.PreferencesForm"
+               dynamic="true"/>
+        <!-- PERF Changes -->
+        <form-bean name="contextScopeForm"
+               type="com.ibm.ws.console.core.form.ContextScopeForm"/>
+        <form-bean name="selectNodeForm"
+               type="com.ibm.ws.console.core.form.NodesCollectionForm"/>
+        <form-bean name="selectClusterForm" type="com.ibm.ws.console.core.form.ClustersCollectionForm"/>
+        <form-bean name="selectServerForm"
+               type="com.ibm.ws.console.core.form.ServersCollectionForm"/>
+        <form-bean name="manageAdminUsersForm"
+               type="com.ibm.ws.console.core.form.ManageUsersForm"/>
+        <form-bean name="manageNamingUsersForm"
+               type="com.ibm.ws.console.core.form.ManageUsersForm"/>
+        <form-bean name="userDetailForm"
+               type="com.ibm.ws.console.core.form.UserDetailForm"/>
+        <form-bean name="manageAdminGroupsForm"
+               type="com.ibm.ws.console.core.form.ManageGroupsForm"/>
+        <form-bean name="manageNamingGroupsForm"
+               type="com.ibm.ws.console.core.form.ManageGroupsForm"/>
+        <form-bean name="groupDetailForm"
+               type="com.ibm.ws.console.core.form.GroupDetailForm"/>
+        <!--LI3509-->
+        <form-bean name="commandAssistanceCollectionForm"
+           type="com.ibm.ws.console.core.commandassistance.CommandAssistanceCollectionForm"/>
+        <form-bean name="commandAssistanceDetailForm"
+               type="com.ibm.ws.console.core.commandassistance.CommandAssistanceDetailForm"/>
+        <!--LI3509-->
+        <form-bean
+            name="com.ibm.ws.console.core.authgroup.AuthorizationGroupCollectionForm" type="com.ibm.ws.console.core.authgroup.AuthorizationGroupCollectionForm"/>
+        <form-bean
+            name="com.ibm.ws.console.core.authgroup.AuthorizationGroupDetailForm" type="com.ibm.ws.console.core.authgroup.AuthorizationGroupDetailForm"/>
+    <!-- End WAS.webui.core -->
+    </form-beans>
+    <global-forwards>
+    <!-- Begin WAS.webui.core -->
+        <forward name="console.content.main" path="console.content.main"/>
+        <forward name="console.selectnode.main" path="console.selectnode.main"/>
+        <forward name="console.selectserver.main" path="console.selectserver.main"/>
+    <!-- End WAS.webui.core -->
+    </global-forwards>
+    <action-mappings>
+    <!-- Begin WAS.webui.core -->
+
+        <action path="/navigatorCmd"
+            type="com.ibm.ws.console.core.action.NavigatorAction">
+            <forward name="console.users.main" path="console.users.main"/>
+            <forward name="console.groups.main" path="console.groups.main"/>
+            <forward name="console.naming.users.main" path="console.naming.users.main"/>
+            <forward name="console.naming.groups.main" path="console.naming.groups.main"/>
+            <forward name="guidedactivity.resource" path="guidedactivity.resource"/>
+            <forward name="guidedactivity.security" path="guidedactivity.security"/>
+            <forward name="guidedactivity.web" path="guidedactivity.web"/>
+            <forward name="guidedactivity.clustering" path="guidedactivity.clustering"/>
+       </action>
+                
+        <action path="/userGroupCmd"
+            type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="console.users.main" path="console.users.main"/>
+            <forward name="console.groups.main" path="console.groups.main"/>
+        </action>
+        
+        <action path="/menuBarCmd"
+            type="com.ibm.ws.console.core.action.MenuBarAction">
+            <forward name="console.preferences.main" path="console.preferences.main"/>
+            <forward name="toggleDescriptions" path="/secure/banner.jsp"/>
+        </action>
+        <action path="/statusTray"
+            type="com.ibm.ws.console.core.action.StatusAction">
+            <forward name="forwardName" path="console.status.main"/>
+        </action>
+        <action path="/toolbar"
+            type="com.ibm.ws.console.core.action.ToolbarAction">
+            <forward name="external"    path="/ibm/console"/>
+        </action>
+        <action path="/collectionButton" type="com.ibm.ws.console.core.action.CollectionButtonAction">
+        </action>
+        <action name="PreferenceForm" path="/preferenceAction" type="com.ibm.ws.console.core.action.PreferenceAction">
+            <forward name="success" path="console.status.main"/>
+        </action>
+        <action path="/caPreferenceAction"
+            name="PreferenceForm" type="com.ibm.ws.console.core.action.CAPreferenceAction">
+            <forward name="success" path="console.commandassistance.main"/>
+        </action>
+        <action path="/syncworkspace"
+            type="com.ibm.ws.console.core.action.SyncWorkSpaceAction">
+            <forward name="list" path="console.sync.main"/>
+            <forward name="conflict" path="console.sync.conflict"/>
+            <forward name="success" path="console.content.main"/>
+            <forward name="successDiscard" path="console.sync.discard.complete"/>
+            <forward name="successSave" path="console.sync.save.complete"/>
+            <forward name="confirmdiscard" path="console.sync.discard.main"/>
+            <forward name="logoff" path="/logout.do?nocheck=true"/>
+            <forward name="cell.sync.feedback.main" path="cell.sync.feedback.main"/> <!-- pok_PQ92329.1 -->
+        </action>
+        <action path="/selectscope"
+            name="contextScopeForm"
+            type="com.ibm.ws.console.core.action.ContextScopeAction">
+            <forward name="browseNodes" path="console.selectnode.main"/>
+            <forward name="browseServers" path="console.selectserver.main"/>
+            <forward name="browseClusters" path="console.selectcluster.main"/>
+        </action>
+        <action path="/selectserver"
+            name="selectServerForm"
+            type="com.ibm.ws.console.core.action.ServerSelectionAction">
+            <forward name="success" path="console.selectserver.main"/>
+        </action>
+        <action path="/selectnode"
+            name="selectNodeForm"
+            type="com.ibm.ws.console.core.action.NodeSelectionAction">
+            <forward name="success" path="console.selectnode.main"/>
+        </action>
+        <action name="selectClusterForm" path="/selectcluster" type="com.ibm.ws.console.core.action.ClusterSelectionAction">
+            <forward name="success" path="console.selectcluster.main"/>
+        </action>
+        <action path="/manageusers"
+            name="manageAdminUsersForm"
+            type="com.ibm.ws.console.core.action.ManageUsersAction">
+            <forward name="success" path="console.users.main"/>
+            <forward name="edit" path="console.users.detail.main.update"/>
+            <forward name="add" path="console.users.detail.main"/>
+            <forward name="logoff" path="/logout.do"/>
+        </action>
+        <action path="/userdetail"
+            name="userDetailForm"
+            type="com.ibm.ws.console.core.action.UserDetailAction">
+            <forward name="success" path="console.users.main"/>
+            <forward name="edit" path="console.users.detail.main.update"/>
+            <forward name="add" path="console.users.detail.main"/>
+        </action>
+        <action path="/managegroups"
+            name="manageAdminGroupsForm"
+            type="com.ibm.ws.console.core.action.ManageGroupsAction">
+            <forward name="success" path="console.groups.main"/>
+            <forward name="edit" path="console.groups.detail.main.update"/>
+            <forward name="add" path="console.groups.detail.main"/>
+        </action>
+        <action path="/groupdetail"
+            name="groupDetailForm"
+            type="com.ibm.ws.console.core.action.GroupDetailAction">
+            <forward name="success" path="console.groups.main"/>
+            <forward name="edit" path="console.groups.detail.main.update"/>
+            <forward name="add" path="console.groups.detail.main"/>
+        </action>
+        <action path="/managenamingusers"
+            name="manageNamingUsersForm"
+            type="com.ibm.ws.console.core.action.ManageUsersAction">
+            <forward name="success" path="console.naming.users.main"/>
+            <forward name="edit" path="console.naming.users.detail.main.update"/>
+            <forward name="add" path="console.naming.users.detail.main"/>
+        </action>
+        <action path="/naminguserdetail"
+            name="userDetailForm"
+            type="com.ibm.ws.console.core.action.UserDetailAction">
+            <forward name="success" path="console.naming.users.main"/>
+            <forward name="edit" path="console.naming.users.detail.main.update"/>
+            <forward name="add" path="console.naming.users.detail.main"/>
+        </action>
+        <action path="/managenaminggroups"
+            name="manageNamingGroupsForm"
+            type="com.ibm.ws.console.core.action.ManageGroupsAction">
+            <forward name="success" path="console.naming.groups.main"/>
+            <forward name="edit" path="console.naming.groups.detail.main.update"/>
+            <forward name="add" path="console.naming.groups.detail.main"/>
+        </action>
+        <action path="/naminggroupdetail"
+            name="groupDetailForm"
+            type="com.ibm.ws.console.core.action.GroupDetailAction">
+            <forward name="success" path="console.naming.groups.main"/>
+            <forward name="edit" path="console.naming.groups.detail.main.update"/>
+            <forward name="add" path="console.naming.groups.detail.main"/>
+        </action>
+
+        <action name="BrowseRemoteForm" path="/browseRemoteNodes" type="com.ibm.ws.console.core.action.BrowseRemoteNodesAction">
+            <forward name="remote.node.browse" path="remote.node.browse"/>
+            <forward name="filebrowse" path="remote.file.browse"/>
+        </action>
+        <!-- End WAS.webui.core -->
+
+        <!-- Begin Unknown -->
+        <action name ="wcl" path="/wcl" type="com.ibm.ws.console.wcl.WclTriggerAction">
+            <forward name="wclError" path="/wclError.jsp"/>
+        </action>
+        <!-- End Unknown -->
+
+
+        <!--Begin Federated Console changed forwards for ISC-->
+        <action name="pageLaunch" path="/pageLaunchCmd" type="com.ibm.ws.console.core.action.PageLaunchCmdAction">
+            <forward name="serverInfo" path="/com.ibm.ws.console.environment/about.jsp"/>
+            <forward name="support" path="/secure/layouts/checkforsupport.jsp"/>
+            <forward name="success" path="console.main"/>
+            <forward name="userExists" path="console.loginConflict"/>
+            <forward name="changesFound" path="tile.loginChangesFound"/>
+            <forward name="wait" path="console.login"/>
+            <forward name="continue" path="console.login"/>
+            <forward name="logonError" path="console.login"/>
+        </action>
+        <!--End Federated Console-->
+
+       <!-- LI3509 -->
+        <action name="com.ibm.ws.console.core.commandassistance.forwardCmd" path="/com.ibm.ws.console.core.commandassistance.forwardCmd" type="com.ibm.ws.console.core.action.CAForwardAction">
+            <forward name="console.commandassistance.main" path="console.commandassistance.main"/>
+            <forward name="console.commandassistance.collection.table.extend" path="console.commandassistance.collection.table.extend"/>
+        </action>
+        <action name="commandAssistanceCollectionForm" path="/commandAssistanceCollection" type="com.ibm.ws.console.core.commandassistance.CommandAssistanceCollectionAction">
+            <forward name="success" path="console.commandassistance.main"/>
+            <forward name="commandAssistanceCollection" path="console.commandassistance.main"/>
+        </action>
+        <!-- LI3509 -->
+
+        <action
+            name="com.ibm.ws.console.core.authgroup.AuthorizationGroupCollectionForm"
+            path="/authorizationGroupCollection" type="com.ibm.ws.console.core.authgroup.AuthorizationGroupCollectionAction">
+            <forward name="success" path="AuthorizationGroup.config.view"/>
+            <forward name="successUpdate" path="AuthorizationGroup.config.view.update"/>
+            <forward name="authorizationGroupCollection" path="authorizationGroupCmd.do?forwardName=AuthorizationGroup.content.main"/>
+        </action>
+        <action input="AuthorizationGroup.config.view"
+            name="com.ibm.ws.console.core.authgroup.AuthorizationGroupDetailForm"
+            path="/authorizationGroupDetail" type="com.ibm.ws.console.core.authgroup.AuthorizationGroupDetailAction">
+            <forward name="error" path="AuthorizationGroup.config.view"/>
+            <forward name="errorUpdate" path="AuthorizationGroup.config.view.update"/>
+            <forward name="success" path="authorizationGroupCmd.do?forwardName=AuthorizationGroup.content.main"/>
+        </action>
+        <action path="/authorizationGroupCmd"
+            type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="AuthorizationGroup.content.main" path="AuthorizationGroup.content.main"/>
+          </action>
+
+
+    </action-mappings>
+
+
+
+
+    <!-- 281580 <controller multipartClass="org.apache.struts.upload.DiskMultipartRequestHandler" debug="3" processorClass="org.apache.struts.tiles.TilesRequestProcessor"> -->
+    <controller multipartClass="com.ibm.ws.console.core.servlet.NLSDiskMultipartRequestHandler" debug="3" processorClass="org.apache.struts.tiles.TilesRequestProcessor">
+    </controller>
+
+    <message-resources parameter="com.ibm.ws.console.core.resources.ConsoleAppResources"/>
+
+
+
+
+    <plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+        <set-property property="pathnames"
+                          value="/WEB-INF/com.ibm.ws.console.core/validation.xml"/>
+    </plug-in>
+
+    <plug-in className="org.apache.struts.tiles.TilesPlugin">
+        <set-property property="definitions-config"
+                         value="/WEB-INF/console-defs.xml"/>
+        <set-property property="definitions-debug" value="3"/>
+        <set-property property="moduleAware" value="false"/>
+        <set-property property="definitions-parser-details" value="3" />
+        <set-property property="definitions-parser-validate" value="true"/>
+        <!-- PERF Changes -->
+        <!-- indexing is set to true to enable indexing changes -->
+        <set-property property="indexing" value="true"/>
+        <!-- if developement mode is true, console-defs index file will be rebuilt if out-of-date. If set to false, index file will not be rebuilt. -->
+        <set-property property="developement" value="false"/>
+        <!-- usageCount is minimum usage count of the definition,definition is evicted from the cache if count is below this number -->
+        <set-property property="usageCount" value="10"/>
+        <!-- lifeTime, in minutes indicates life span of the definition before it is removed from the cache -->
+        <set-property property="lifeTime" value="30"/>
+        <!-- cacheTriggerInterval, in minutes indicates time interval for cache removal algorithm is triggered -->
+        <set-property property="cacheTriggerInterval" value="20"/>
+        <!-- PERF Changes -->
+    </plug-in>
+
+    
+</struts-config>

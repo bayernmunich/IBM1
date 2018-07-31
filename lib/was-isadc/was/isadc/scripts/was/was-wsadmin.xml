@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS WSAdmin Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS WSAdmin Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	
+	<property name="autopdProblem" value="WAS_WSADMIN_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-wsadmin" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+			set_problem_type_with_nls_bundle,
+			setup_autopd_v2, 
+			validate_os, 
+
+			
+			was_stack_custom_init,		 
+			
+			determine_problem_type, 
+			wsadmin_generate_trace_string,
+		
+			enable_wsadmin_traces,
+			trace_setup_custom, 
+			restore_wsadmin_properties_file,
+		
+			execute_collector, 
+			execute_vce_info_for_was,
+			common_postamble_general_with_ftp">
+	</target>
+	
+	
+	<target name="determine_problem_type" > 
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Wsadmin_Problem_Type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: WSAdmin Problem Type..."
+		           replace="${autopdts};;${step.count}"
+		           level="info"
+		           component="\scripts\was\was-wsadmin.xml" />
+		
+		<inputdialogtask>
+			
+			<fieldtask name="wsadmin.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="wsadmin.problem.type"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was"
+					   label="wsadmin_problem_type"
+					   list="Starting WSADMIN:Runtime WSADMIN"
+					   listDetails="Starting WSADMIN:Runtime WSADMIN"
+					   type="selectlist" />
+		</inputdialogtask>
+		
+		<condition property="ws.StartProblem">
+			<equals arg1="Starting WSADMIN" arg2="${wsadmin.problem.type}" />
+		</condition>
+		<condition property="ws.RuntimeProblem">
+			<equals arg1="Runtime WSADMIN" arg2="${wsadmin.problem.type}" />
+		</condition>
+<!--		 Remove Hang for now 
+		<condition property="ws.HangProblem">
+			<equals arg1="Hang WSADMIN" arg2="${wsadmin.problem.type}" />
+		</condition>
+-->		
+		<echo message="WSAdmin Problem Type : ${wsadmin.problem.type}" />
+		
+		<if isTrue="${ws.StartProblem}" >
+			<inputdialogtask>
+				<fieldtask name="prompt0"
+		           label="Wsadmin_Error"
+		           type="prompt"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt1"
+		           label="Empty_Line"
+		           type="prompt"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+		           label="start_wsadmin_label0"
+		           type="label"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label1"
+		           type="label" 
+		           label="start_wsadmin_label1"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+				<fieldtask name="label2"
+		           type="label" 
+		           label="start_wsadmin_label2"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>		
+		</if>
+		
+		<if isTrue="${ws.RuntimeProblem}">
+		
+			<inputdialogtask>
+				<fieldtask name="prompt4"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+				<fieldtask name="wsadmin_command"
+		           label="runtime_wsadmin_label0"
+		           type="textarea"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		    </inputdialogtask>
+		    
+		    <concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				The exact command that fails in your script or at the command line.${line.separator}
+						${wsadmin_command}${line.separator}
+			</concat>
+		    
+			<property name="run_wsadmin_trace" value="true" />
+			
+		</if>
+		
+<!--
+		<if isTrue="${ws.HangProblem}">
+
+			<property name="run_trace" value="true" />
+			<property name="wsadmin_hang" value="true" />
+
+		</if>
+-->		
+	</target>
+	
+<!-- Implement this at a later date.	
+	<target name="generate_javacores" if="wsadmin_hang" >
+		<if isTrue="{isUnix}" >
+			<inputdialogtask>
+				<fieldtask name="prompt"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+				<fieldtask name="label0"
+	        	   label="runtime_wsadmin_label1"
+		           type="label"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		    </inputdialogtask>
+		</if>
+	</target> 
+-->	
+
+	<target name="wsadmin_generate_trace_string" if="run_wsadmin_trace" description="Enable WSAdmin tracing using the following string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" id="2060" level="info" />
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="Admin=all" />
+		</if>
+
+		<!-- WAS v5 -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="Admin=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+	
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere WSAdmin Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the WSAdmin 
+					problem. It will set the appropriate trace string.
+					After the problem has been reproduced the logs, configuration,
+					and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1140940" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the WSAdmin
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration, and trace 
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere WSAdm Problem =>
+This problem category is run on the managed node experiencing the WSAdmin 
+problem. It will set the appropriate trace string.
+After the problem has been reproduced the logs, configuration,
+and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

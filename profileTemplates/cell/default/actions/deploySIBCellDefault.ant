@@ -1,0 +1,37 @@
+<project name="deploySIBCellDefault" default="deploySIBCellDefault" basedir="."> 
+     
+    <taskdef name="wscmtlog" 
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/> 
+ 
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+ 
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+
+    <target name="variableReplacement"
+        description="Replaces variables in templates">
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+           <param name="file" value="${profilePath}/config/templates/chains/sibservice-chains.xml"/>
+           <param name="token" value="$$(node.name)"/>
+           <param name="tokenValue" value="${appServerNodeName}"/>
+        </antcall>
+
+    </target>
+
+    <target name="deploySIBCellDefault"
+        description="Cell default processing for SIB component"
+        depends="variableReplacement">
+
+    </target>
+
+</project>
+

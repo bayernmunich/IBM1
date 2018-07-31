@@ -1,0 +1,74 @@
+#--------------------------------------------------------------------
+# The jacl script creates a CoreGroupServer object for the nodeagent
+# attached to the default core group. The script uses the node name
+# passed in as a parameter and the server name "nodeagent" to
+# create the CoreGroupServer object. The script also generates and 
+# attaches a unique id to the default core group.
+#
+# Prerequisites:
+#   1.) only one coregroup.xml file should exist.
+#   2.) the existing coregroup.xml must be for the "DefaultCoreGroup".
+#   3.) the coregroup.xml must not contain any existing core group server elements.
+#   4.) the number of nodes in the configuration must be one (dmgr).
+#   5.) the number of servers in the configuration must be one (dmgr).
+# 
+#
+# The WAS ND install should simply invoke this script as
+#         wsadmin -conntype NONE -f CoreGroupInstallNode.jacl nodeagentNodeName
+#
+# WARNING: Do not use the JACL "exit" syntax in this script (see defect 457680.1)
+#--------------------------------------------------------------------
+proc getTheDefaultCoreGroupId {defaultCoreGroupName}  {
+   global AdminConfig
+
+   set coreGroups [$AdminConfig list CoreGroup]
+   set numOfCoreGroups [llength $coreGroups]
+
+   # if the number of coregroups is something other than 1 something is wrong
+   if {$numOfCoreGroups != 1}  {
+      error "The number of CoreGroups is not 1."
+   }
+
+   set coreGroupName [$AdminConfig showAttribute $coreGroups name]
+
+   # if the lone core group is not the default one, something is wrong
+   if {$coreGroupName != $defaultCoreGroupName}  {
+      error "The Default Core Group is missing."
+   }
+
+   return $coreGroups
+}
+
+
+# -------------------------------------------------------------------
+# The procedure creates and returns an unique id which will be added
+# later in the coregroup.xml file. It uses java.rmi.server.UID object
+# to create the unique id.
+# -------------------------------------------------------------------
+proc createAUniqueId { } {
+    java::import java.rmi.server.UID
+    set UID [java::new UID]
+    set UUID [$UID toString]
+
+    return $UUID
+}
+
+
+# ------------------------------------------------------------------------
+# Main Program
+# ------------------------------------------------------------------------
+
+set appServerNodeName   [lindex $argv 0]
+set nodeAgentName       "nodeagent"
+
+# set the default coregroup name for install
+set defaultCoreGroupName "DefaultCoreGroup"
+
+# get the default coregroup
+set defaultCoreGroupId [getTheDefaultCoreGroupId $defaultCoreGroupName]
+
+$AdminConfig create CoreGroupServer $defaultCoreGroupId [list [list nodeName $appServerNodeName] [list serverName $nodeAgentName] ] coreGroupServers
+$AdminConfig modify $defaultCoreGroupId [list [list coreGroupUID [createAUniqueId]] ]
+
+$AdminConfig save
+

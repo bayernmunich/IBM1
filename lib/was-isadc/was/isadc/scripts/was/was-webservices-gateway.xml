@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2005, 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Web Services Gateway Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Web Services Gateway Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_SOA_Gateway_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-webservices" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os,
+	was_stack_custom_init,
+			         
+					 gateway_identification,
+			         collect_jar_atts,
+			         query_ws_gateway_information,
+					 
+			     	 check_set_trace_choice_valid_with_condition,
+			         get_default_trace_values,
+			         ws_generate_gateway_trace_string,			         
+			         recovery_needed_with_condition,  			         
+			      
+			         set_was_runtime_trace_with_condition,  
+					 set_was_trace_with_condition,
+			           
+			         gen_history_report, 
+			         
+			         restore_user_default_trace_values,
+			         recovery_completed_with_condition,
+			         set_server_restore_status_with_condition,
+			         restore_app_server_status, 
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<target name="gateway_identification" description="Gateway identification">
+
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common,
+				 recovery_completed, 
+				 zip_autopd_log_for_recovery, 
+		 		 autopd_feedbacks_for_recovery,
+				 recovery_script_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- WAS Gateway questions -->
+	<target name="query_ws_gateway_information">
+
+		<wsnlsecho key="Step_query_ws_must_gather_info"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Querying extra questions as requested by the Web Services Must Gather"
+		           replace="${autopdts};;${step.count}"
+		           id="1189"
+		           level="info" />
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.gateway.question2"
+			           label="ws_gateway_q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.gateway.question3"
+			           label="ws_gateway_q3"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			${ws_gateway_q2}${line.separator}
+			${ws.gateway.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			${ws_gateway_q3}${line.separator}
+			${ws.gateway.question3}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			${ws_gateway_q4}${line.separator}
+			${ws.gateway.question4}${line.separator}
+		</concat>
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="ws_generate_gateway_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string"
+			          value="com.ibm.ws.webservices.*=all=enabled:com.ibm.ws.sib.*=all=enabled:org.apache.wsif.*=all=enabled" />
+		</if>
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string"
+			          value="com.ibm.wsgw.*=all=enabled:org.apache.wsif.*=all=enabled" />
+		</if>
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Web Services Gateway Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the managed node experiencing the web services
+						gateway problem. It will set the appropriate trace string and start the 
+						TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+						gateway identification, jar attributes, and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1159216" />
+				
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the web 
+services gateway problem. It will set the appropriate trace string and start the TCP Monitor. 
+After the problem has been reproduced the tcpmon, logs, configuration, gateway identification, 
+jar attributes, and trace files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Web Services Gateway Problem => 
+				This problem category is run on the managed node experiencing the web services
+				gateway problem. It will set the appropriate trace string and start the 
+				TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+				gateway identification, jar attributes, and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

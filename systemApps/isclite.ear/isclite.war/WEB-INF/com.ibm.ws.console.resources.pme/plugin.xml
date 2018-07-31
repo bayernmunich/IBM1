@@ -1,0 +1,861 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 1997, 2010
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+
+<plugin id="com.ibm.ws.console.resources.pme" 
+        name="resourcemanagement.pme" 
+        version="1.0.0" 
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="resourcemanagement.pme">  
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.servermanagement" />
+    <import plugin="com.ibm.ws.console.resources"/>
+</requires>
+
+<!-- BEGIN objectpool -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+   <tasks>
+       <task id="ObjectPoolResources" 
+	       icon="/com.ibm.ws.console.resources/images/onepix.gif" 
+	       label="ObjectPoolManagerInfo.displayName" 
+	       view="/navigatorCmd.do?forwardName=ObjectPoolManagerInfo.content.main" external="false" weight="5">
+	       <category id="resources"/>
+       </task>
+   </tasks>    
+</extension>   
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="ObjectPool_Link.ObjectPool1" contextType="ObjectPool">
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.resources.pme.objectpoolmanager.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="ObjectPool_Link.ObjectPoolManagerInfo1" contextType="ObjectPoolManagerInfo">
+        <link
+              categoryId="additional.properties"
+              label="ObjectPool.displayName"
+              description="ObjectPoolManagerInfo.objectPools.description"
+              weight="10"
+              actionURI="com.ibm.ws.console.resources.pme.objectpoolmanager.forwardCmd.do?forwardName=ObjectPool.content.main&amp;sfname=objectPools">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="J2EEResourceFactory.propertySet.displayName"
+              description="J2EEResourceFactory.propertySet.description"
+              weight="20"
+              actionURI="com.ibm.ws.console.resources.pme.objectpoolmanager.forwardCmd.do?forwardName=PMEJ2EEResourceProperty.content.main&amp;sfname=propertySet">
+        </link>
+    </linkSet>
+</extension>
+
+
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="ObjectPool_ActionSet.ObjectPoolManagerInfo.collection1" contextType="ObjectPoolManagerInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="objectPoolManagerInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="objectPoolManagerInfoCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="ObjectPool_ActionSet.ObjectPool.collection1" contextType="ObjectPool">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="objectPoolCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="objectPoolCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="ObjectPool_CollectionItem.ObjectPool.collectionItem1" contextType="ObjectPool">
+        <item
+              attributeName="poolClassName"
+              sortable="sort"
+              itemURI="objectPoolCollection.do?EditAction=true"
+              label="ObjectPool.poolClassName.displayName">
+        </item>
+        <item
+              attributeName="poolImplClassName"
+              sortable="sort"
+              itemURI=""
+              label="ObjectPool.poolImplClassName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="ObjectPool_CollectionItem.ObjectPoolManagerInfo.collectionItem1" contextType="ObjectPoolManagerInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="objectPoolManagerInfoCollection.do?EditAction=true"
+              label="J2EEResourceFactory.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.jndiName.displayName">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="label.scope">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.description.displayName">
+        </item>
+        <item
+              attributeName="category"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.category.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="resourcemanagement.pme.J2EEResourceProperty.form1" contextType="PMEJ2EEResourceProperty">
+        <field attributeName="required" perspective="config">
+        	<compatibility>
+                <match key="com.ibm.ws.console.pme.resources.J2EEResourcePropertyDetailForm.showRequired" value="true"/>
+            </compatibility>
+        </field>
+    </form>
+</extension>
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ObjectPool_DetailTab.ObjectPoolManagerInfo.detailTab1" contextType="ObjectPoolManagerInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="ObjectPoolManagerInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ObjectPool_DetailTab.ObjectPool.detailTab1" contextType="ObjectPool">
+        <tab
+              label="tab.configuration"
+              contentURI="ObjectPool.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END objectpool -->
+
+<!-- BEGIN resources -->
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="Resources_ActionSet.PMEJ2EEResourceProperty.collection1" contextType="PMEJ2EEResourceProperty">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="pmej2EEResourcePropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="pmej2EEResourcePropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Resources_CollectionItem.PMEJ2EEResourceProperty.valueEditable.content.main.collectionItem1" contextType="PMEJ2EEResourceProperty.valueEditable.content.main">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyValueEditableCollection.do?EditValue=true"
+              label="J2EEResourceProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyValueEditableCollection.do?EditValue=true"
+              label="J2EEResourceProperty.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyValueEditableCollection.do?EditValue=true"
+              label="J2EEResourceProperty.description.displayName">
+        </item>
+        <item
+              attributeName="required"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyValueEditableCollection.do?EditValue=true"
+              label="J2EEResourceProperty.required.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Resources_CollectionItem.PMEJ2EEResourceProperty.readOnly.content.main.collectionItem1" contextType="PMEJ2EEResourceProperty.readOnly.content.main">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyReadOnlyCollection.do?ReadOnly=true"
+              label="J2EEResourceProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyReadOnlyCollection.do?ReadOnly=true"
+              label="J2EEResourceProperty.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyReadOnlyCollection.do?ReadOnly=true"
+              label="J2EEResourceProperty.description.displayName">
+        </item>
+        <item
+              attributeName="required"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyReadOnlyCollection.do?ReadOnly=true"
+              label="J2EEResourceProperty.required.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Resources_CollectionItem.PMEJ2EEResourceProperty.collectionItem1" contextType="PMEJ2EEResourceProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.description.displayName">
+        </item>
+        <item
+              attributeName="required"
+              sortable="sort"
+              itemURI="pmej2EEResourcePropertyCollection.do?EditAction=true"
+              label="J2EEResourceProperty.required.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="Resources_DetailTab.PMEJ2EEResourceProperty.readOnly.config.view.detailTab1" contextType="PMEJ2EEResourceProperty.readOnly.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="PMEJ2EEResourceProperty.readOnly.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="Resources_DetailTab.PMEJ2EEResourceProperty.detailTab1" contextType="PMEJ2EEResourceProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="PMEJ2EEResourceProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="Resources_DetailTab.PMEJ2EEResourceProperty.valueEditable.config.view.detailTab1" contextType="PMEJ2EEResourceProperty.valueEditable.config.view">
+        <tab
+              label="tab.configuration"
+              contentURI="PMEJ2EEResourceProperty.valueEditable.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END resources -->
+
+<!-- BEGIN scheduler -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+   <tasks>
+            <task id="SchedulerResources" 
+	       icon="/com.ibm.ws.console.resources/images/onepix.gif" 
+	       label="SchedulerConfiguration.displayName" 
+	       view="/navigatorCmd.do?forwardName=SchedulerConfiguration.content.main" 
+	       external="false" 
+	       weight="4">
+	       <category id="resources"/>
+            </task>
+   </tasks>    
+</extension>   
+
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="Scheduler_Link.SchedulerConfiguration1" contextType="SchedulerConfiguration">
+        <link
+              categoryId="additional.properties"
+              label="J2EEResourceFactory.propertySet.displayName"
+              description="J2EEResourceFactory.propertySet.description"
+              actionURI="com.ibm.ws.console.resources.pme.scheduler.forwardCmd.do?forwardName=PMEJ2EEResourceProperty.content.main&amp;sfname=propertySet">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="Scheduler_Link.SchedulerConfiguration_related1" contextType="SchedulerConfiguration">
+        <link
+              categoryId="related.items"
+              label="Security.authDataEntries.displayName"
+              description="JAASAuthData.description"
+              actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=JAASAuthData.content.main">
+        </link>
+        <link
+              categoryId="related.items"
+              label="nav.view.data.sources"
+              description="DataSource.description"
+              actionURI="com.ibm.ws.console.resources.database.forwardCmd.do?forwardName=DataSource.content.main">
+        </link>
+        <link
+              categoryId="related.items"
+              label="WorkManagerInfo.displayName"
+              description="WorkManagerInfo.description"
+              actionURI="com.ibm.ws.console.resources.pme.workmanager.forwardCmd.do?forwardName=WorkManagerInfo.content.main">
+        </link>
+    </linkSet>
+</extension>
+
+
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="Scheduler_ActionSet.SchedulerConfiguration.collection1" contextType="SchedulerConfiguration">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="schedulerConfigurationCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="schedulerConfigurationCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="schedButton.VerifyTable"
+              actionURI="schedulerConfigurationCollection.do">
+              <compatibility>
+                  <match key="com.ibm.websphere.baseProductMajorVersion"
+                         value="([6-9])|([1-9][0-9])"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="schedButton.CreateTable"
+              actionURI="schedulerConfigurationCollection.do">
+              <compatibility>
+                  <match key="com.ibm.websphere.baseProductMajorVersion"
+                         value="([6-9])|([1-9][0-9])"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="schedButton.DropTable"
+              actionURI="schedulerConfigurationCollection.do">
+              <compatibility>
+                  <match key="com.ibm.websphere.baseProductMajorVersion"
+                         value="([6-9])|([1-9][0-9])"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="Scheduler_CollectionItem.SchedulerConfiguration.collectionItem1" contextType="SchedulerConfiguration">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="schedulerConfigurationCollection.do?EditAction=true"
+              label="J2EEResourceFactory.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.jndiName.displayName">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="label.scope">
+        </item>
+        <item
+              attributeName="datasourceJNDIName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SchedulerConfiguration.datasourceJNDIName.displayName">
+        </item>
+        <item
+              attributeName="tablePrefix"
+              sortable="sort"
+              itemURI=""
+              label="SchedulerConfiguration.tablePrefix.displayName">
+        </item>
+        <item
+              attributeName="pollInterval"
+              sortable="sort"
+              itemURI=""
+              label="SchedulerConfiguration.pollInterval.displayName">
+        </item>
+        <item
+              attributeName="workManagerInfoJNDIName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="SchedulerConfiguration.workmanagerJNDIName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="Scheduler_DetailTab.SchedulerConfiguration.detailTab1" contextType="SchedulerConfiguration">
+        <tab
+              label="tab.configuration"
+              contentURI="SchedulerConfiguration.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END scheduler -->
+
+<!-- BEGIN timermanager -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="asynchbeanscategory" parent="resources"  
+         					icon="images/onepix.gif" label="AsynchBeans.category" 
+         					weight="140"/>
+           <task id="TimerManagerResourceTask" 
+				 icon="/com.ibm.ws.console.resources/images/onepix.gif" 
+				 label="TimerManagerInfo.displayName" 
+				 view="/navigatorCmd.do?forwardName=TimerManagerInfo.content.main" 
+				 external="false" 
+				 weight="145">
+		   			<category id="asynchbeanscategory"/>
+           </task>
+    </tasks>    
+</extension>
+
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+
+<!-- Only show this field on zOS (os390) which means we have to hide on all other platforms -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TimerManagerInfo.config.general.properties" contextType="TimerManagerInfo">
+      <field attributeName="defTranClass" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.nodeOperatingSystem"
+                   value="(os390)"/>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="TimerManager_Link.TimerManagerInfo1" contextType="TimerManagerInfo">
+        <link
+              categoryId="additional.properties"
+              label="J2EEResourceFactory.propertySet.displayName"
+              description="J2EEResourceFactory.propertySet.description"
+              actionURI="com.ibm.ws.console.resources.pme.timermanager.forwardCmd.do?forwardName=PMEJ2EEResourceProperty.content.main&amp;sfname=propertySet">
+        </link>
+    </linkSet>
+</extension>
+
+
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="TimerManager_ActionSet.TimerManagerInfo.collection1" contextType="TimerManagerInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="timerManagerInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="timerManagerInfoCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="TimerManager_CollectionItem.TimerManagerInfo.collectionItem1" contextType="TimerManagerInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="timerManagerInfoCollection.do?EditAction=true"
+              label="J2EEResourceFactory.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.jndiName.displayName">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="label.scope">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.description.displayName">
+        </item>
+        <item
+              attributeName="category"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.category.displayName">
+        </item>
+<!-- Defect 217572 Remove the following from the collection panel
+        <item
+              attributeName="serviceNames"
+              sortable="sort"
+              itemURI=""
+              label="WorkManagerInfo.serviceNames.displayName">
+        </item>
+        <item
+              attributeName="numAlarmThreads"
+              sortable="sort"
+              itemURI=""
+              label="TimerManagerInfo.numAlarmThreads.displayName">
+        </item>
+     End of Defect 217572 -->
+
+    </collectionItem>
+</extension>
+
+<!-- Grouping fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="TimerManagerInfo.config.general.properties" contextType="TimerManagerInfo">
+	     <field attributeName="numAlarmThreads"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+     </form>
+</extension>
+
+<!-- LI2505 CollectionItemProcessor changes -->
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="TimerManager_DetailTab.TimerManagerInfo.detailTab1" contextType="TimerManagerInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="TimerManagerInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- LI2505 DetailTabProcessor changes -->
+
+<!-- BEGIN workmanager -->
+<!-- Add a link under Asynch beans naviagtor panel -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+   <tasks>
+         <task id="WorkManagerResourceTask" 
+	    icon="/com.ibm.ws.console.resources/images/onepix.gif" 
+	    label="WorkManagerInfo.displayName" 
+	    view="/navigatorCmd.do?forwardName=WorkManagerInfo.content.main" 
+	    external="false" 
+	    weight="145">
+	    <category id="asynchbeanscategory"/>
+         </task>
+   </tasks>    
+</extension>   
+
+<!-- Only show this field on v6.0+ zOS (os390) -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+      <field attributeName="defTranClass" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.nodeOperatingSystem"
+                   value="(os390)"/>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Only show this field on v6.0+ zOS (os390) -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+      <field attributeName="daemonTranClass" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.nodeOperatingSystem"
+                   value="(os390)"/>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Only show this field on v6.0+  -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+      <field attributeName="workTimeout" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Only show this field on v6.0+  -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+      <field attributeName="workReqQSize" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<!-- Only show this field on v6.0+  -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+      <field attributeName="workReqQFullAction" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([6-9])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+    <toc file="toc.xml" primary="true"/>
+</extension>
+
+
+<!-- LI2505 LinkProcessor changes -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="WorkManager_Link.WorkManagerInfo1" contextType="WorkManagerInfo">
+        <link
+              categoryId="additional.properties"
+              label="J2EEResourceFactory.propertySet.displayName"
+              description="J2EEResourceFactory.propertySet.description"
+              actionURI="com.ibm.ws.console.resources.pme.workmanager.forwardCmd.do?forwardName=PMEJ2EEResourceProperty.content.main&amp;sfname=propertySet">
+        </link>
+    </linkSet>
+</extension>
+
+
+<!-- LI2505 ActionSetProcessor changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="WorkManager_ActionSet.WorkManagerInfo.collection1" contextType="WorkManagerInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="workManagerInfoCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="workManagerInfoCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+
+<!-- LI2505 CollectionItemProcessor changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="WorkManager_CollectionItem.WorkManagerInfo.collectionItem1" contextType="WorkManagerInfo">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="workManagerInfoCollection.do?EditAction=true"
+              label="J2EEResourceFactory.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              type="url"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.jndiName.displayName">
+        </item>
+        <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="label.scope">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.description.displayName">
+        </item>
+        <item
+              attributeName="category"
+              sortable="sort"
+              itemURI=""
+              label="J2EEResourceFactory.category.displayName">
+        </item>
+<!-- Defect 217572 Remove the following from the collection panel
+	    <item
+              attributeName="serviceNames"
+              sortable="sort"
+              itemURI=""
+              label="WorkManagerInfo.serviceNames.displayName">
+        </item>
+        <item
+              attributeName="numAlarmThreads"
+              sortable="sort"
+              itemURI=""
+              label="WorkManagerInfo.numAlarmThreads.displayName">
+        </item>
+        <item
+              attributeName="minThreads"
+              sortable="sort"
+              itemURI=""
+              label="WorkManagerInfo.minThreads.displayName">
+        </item>
+        <item
+              attributeName="maxThreads"
+              sortable="sort"
+              itemURI=""
+              label="WorkManagerInfo.maxThreads.displayName">
+        </item>
+     End of Defect 217572 -->
+     
+    </collectionItem>
+</extension>
+
+<!-- Grouping fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="WorkManagerInfo.config.general.properties" contextType="WorkManagerInfo">
+	     <field attributeName="numAlarmThreads"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+	     <field attributeName="minThreads"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+	     <field attributeName="maxThreads"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+	     <field attributeName="threadPriority"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+	     <field attributeName="isGrowable"
+	            perspective="config"
+	            categoryId="ThreadPoolProperties.displayName">
+	     </field>
+     </form>
+</extension>
+
+
+<!-- LI2505 DetailTabProcessor changes -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="WorkManager_DetailTab.WorkManagerInfo.detailTab1" contextType="WorkManagerInfo">
+        <tab
+              label="tab.configuration"
+              contentURI="WorkManagerInfo.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- END workmanager -->
+
+</plugin>
+

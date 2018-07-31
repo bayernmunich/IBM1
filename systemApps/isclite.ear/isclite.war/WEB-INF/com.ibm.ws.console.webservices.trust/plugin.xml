@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2006,2011
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
+
+<plugin id="com.ibm.ws.console.webservices.trust"
+        name="trustserver"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="trustserver">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.webservices.wsadmin"/>
+    <import plugin="com.ibm.ws.console.webservices.policyset"/>    
+</requires>
+
+<extension point="org.eclipse.help.toc">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+
+<!-- Begin WAS.webui.webservices.trust -->
+<!-- "wsadminCategoryId" corresponds to "categoryDefinition id" in plugin.xml of WAS.webui.webservices.admin component -->
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+  <tasks>
+    <task id="systemPolicySetId"
+    	  icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif"
+    	  label="trustpolicyset.title"
+    	  view="/navigatorCmd.do?forwardName=SystemPolicySet.content.main&amp;type=system/trust"	  
+    	  external="false"
+    	  weight="49">
+       <category id="PolicySetCategoryId"/>
+    </task>
+
+    <categoryDefinition 
+    	id="securityTrustServiceId" 
+   		parent="wsadminCategoryId" 
+    	icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif" 
+    	label="SecurityTrustService.config.label" 
+    	weight="50"
+    />
+
+    <task id="supportedTokenTypesSTS"
+    	  icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif"
+    	  label="SupportedTokenType.name.displayName"
+    	  view="/navigatorCmd.do?forwardName=WSSupportedTokenTypes.content.main"
+    	  external="false"
+    	  weight="36">
+      <category id="securityTrustServiceId"/>
+    </task>
+    
+    <task id="STSTargetsId"
+    	  icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif"
+    	  label="STSTargets.name.displayName"
+    	  view="/navigatorCmd.do?forwardName=STSTargets.content.main&amp;attachmentType=system/trust"	
+    	  external="false"
+    	  weight="37">
+      <category id="securityTrustServiceId"/>
+    </task>
+       
+    <task id="STSAttachmentsId"
+    	  icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif"
+    	  label="TSAttachments.name.displayName"
+    	  view="/navigatorCmd.do?forwardName=TrustServiceAttachment.content.main&amp;attachmentType=system/trust"	
+    	  external="false"
+    	  weight="38">
+      <category id="securityTrustServiceId"/>
+    </task>
+    
+    <task id="sCClientIdSTSId"
+    	  icon="/com.ibm.ws.console.webservices.trust/images/onepix.gif"
+    	  label="SCClientCache.name.displayName"
+    	  view="/navigatorCmd.do?forwardName=SCClientCache.config.view"
+    	  external="false"
+    	  weight="51">
+      <category id="wsadminCategoryId"/>
+    </task>
+  </tasks>
+</extension>
+
+<!-- "Supported Token Type collection buttons and column labels -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="trust.TokenType.collection1" contextType="WSSupportedTokenType">
+<!--   These buttons were requested to be conditional, unsupported in WSFP GM -->
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="wsTokenTypeCollectionAction.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionForm.generateButtonVisible" value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="wsTokenTypeCollectionAction.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.trust.tokenType.WSTokenTypeCollectionForm.generateButtonVisible" value="true"/>
+             </compatibility>
+        </action>                                                    
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.STSupdateRuntime"
+              actionURI="wsTokenTypeCollectionAction.do">
+        </action>
+
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+ <collectionItem id="wsSupported.tokens.collectionItem1" contextType="WSSupportedTokenType">
+   <item
+   	     attributeName="tokenTypeName"
+   	     sortable="sort"
+   	     itemURI="wsTokenTypeCollectionAction.do?EditAction=true"
+   	     label="TokenIdentifier.displayName">
+   </item>
+   <item
+   	     attributeName="tokenURI"
+   	     type="url"
+   	     sortable="sort"
+   	     itemURI=""
+   	     label="TokenTypeURI.name.columnLabel">
+   </item>
+
+ </collectionItem>
+</extension>
+<!-- Custom Properties panel columns -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="STSCustomPropsId" contextType="STSCustomProps">
+            <item 
+				attributeName="name" 
+				editable="true"
+				label="customProperty.name.displayName">
+			</item>
+			<item 
+				attributeName="value" 
+				editable="true"
+				label="customProperty.value.displayName">
+			</item>    
+        </collectionItem>
+</extension>
+
+<!-- "Trust Service Attachments collection buttons  -->
+  
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="trust.attachments.collection1" contextType="TrustServiceAttachment">
+        
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.newAttach"
+               actionURI="/com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=NewAttachment.config.view">              
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.STSattach"
+               actionURI="trustAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="trustpolicyset.policysets.values"
+               optionLabelList="trustpolicyset.policysets.labels"
+               optionTitleList="trustpolicyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.inheritDefaults"
+               actionURI="trustAttachmentCollection.do">              
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.assignSTSBinding"
+               actionURI="trustAttachmentCollection.do"
+               type="menu"
+               actionName="usebinding"
+               optionValueList="trustpolicyset.bindings.values"
+               optionLabelList="trustpolicyset.bindings.labels"
+               optionTitleList="trustpolicyset.bindings.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.STSupdateRuntime"
+               actionURI="trustAttachmentCollection.do">
+         </action>
+
+    </actionSet>
+</extension>     
+<!-- "Trust Service Attachments collection column labels  -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="trust.attachments.collectionItem1" contextType="TrustServiceAttachment">
+        <!-- "Trust Service Attachments Service Endpoint URL / Operation label  -->
+        <item
+              attributeName="displayName"
+              sortable="nosort"
+              label="TSAttachments.URLOperation.displayName"
+              itemURI="">
+        </item>
+        <!-- "Trust Service Attachments Service Endpoint PolicySet field  -->
+        <item
+              attributeName="policySet"
+              sortable="nosort"
+              label="TSAttachments.policyset.displayName"
+              itemURI="custom">
+        </item>
+        <!-- "Trust Service Attachments Service Endpoint bindings field  -->
+        <item
+              attributeName="bindings"
+              sortable="nosort"
+              label="TSAttachments.bindings.displayName"
+              itemURI="custom2">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Secure Conversation Custom Properties panel columns -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="SCCCustomPropsId" contextType="SCCCustomProps">
+            <item 
+				attributeName="name" 
+				editable="true"
+				label="customProperty.name.displayName">
+			</item>
+			<item 
+				attributeName="value" 
+				editable="true"
+				label="customProperty.value.displayName">
+			</item>    
+        </collectionItem>
+</extension>
+
+<!-- "STS Targets collection buttons  -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="trust.targets.collection1" contextType="STSTargetEndpoints">
+        
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.newAssign"
+               actionURI="/com.ibm.ws.console.webservices.trust.forwardCmd.do?forwardName=TargetURL.config.view">              
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.STSTargets.changeToken"
+               actionURI="STSTargetsCollection.do"
+               type="menu"
+               actionName="assignToken"        
+               optionValueList="stsConfigured.tokens.values"
+               optionLabelList="stsConfigured.tokens.labels"
+               translatable="false">
+          </action>
+          
+       	  <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.STSupdateRuntime"
+              actionURI="STSTargetsCollection.do">
+          </action>
+
+    </actionSet>
+</extension>
+<!-- "STS Targets collection column labels  -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="trust.STSTargetEndpoints.collectionItem1" contextType="STSTargetEndpoints">
+        
+        <item
+              attributeName="displayName"
+              sortable="sort"
+              label="STSendpoint.URL.columnLabel"
+              itemURI="">
+        </item>
+        
+        <item
+              attributeName="tokenType"
+              sortable="sort"
+              label="TokenIdentifier.displayName"
+              itemURI="custom">
+        </item>
+        
+        <item
+              attributeName="tokenURI"
+              type="url"
+              sortable="sort"
+              label="TokenTypeURI.name.columnLabel"
+              itemURI="">
+        </item>
+    </collectionItem>
+</extension>
+
+</plugin>
+

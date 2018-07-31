@@ -1,0 +1,82 @@
+<project name="deleteXDFirstSteps" default="deleteXDFirstSteps" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+
+
+    <target name="setFirstStepsHome">
+        <property name="dir.profile.xd.firststeps" value="${profilePath}${separatorFile}firststeps${separatorFile}VE"/>
+    </target>
+	
+    <target name="checkForXDAugmentPresent" description="xd.augment.present is set to true if the current profile is augmented by other XD templates">
+	<condition property="xd.augment.present">
+			<available file="${profilePath}${separatorFile}properties${separatorFile}version${separatorFile}xd.augment"/>
+      </condition>
+	 <wscmtlog>xd.augment.present = "${xd.augment.present}"</wscmtlog>
+    </target>
+
+    <target name="deleteFirstStepsFileSet" unless="xd.augment.present">
+            <delete quiet="true" dir="${dir.profile.xd.firststeps}"/>
+            <wscmtlog>Deleting XD FirstSteps file set: ${dir.profile.xd.firststeps}</wscmtlog>
+    </target>
+
+
+    <target name="deleteXDFirstSteps"
+        description="remove xd firstSteps"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+            setFirstStepsHome,
+	    checkForXDAugmentPresent,
+            deleteFirstStepsFileSet"/>
+</project>

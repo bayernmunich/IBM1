@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+   (C) Copyright IBM Corp. 2005 - All Rights Reserved.
+   DISCLAIMER:
+   The following source code is sample code created by IBM Corporation.
+   This sample code is provided to you solely for the purpose of assisting you
+   in the  use of  the product. The code is provided 'AS IS', without warranty or
+   condition of any kind. IBM shall not be liable for any damages arising out of your
+   use of the sample code, even if IBM has been advised of the possibility of
+   such damages.
+   
+   ///////////////////////
+   // Since the app is running on the endpoint server and we are making remote EJB calls
+   // to scheduler methods that are constrained in the security role, the app
+   //must run under user credential.
+   // This can be done by setting WebSphere variable RUN_JOBS_UNDER_USER_CREDENTIAL. On z/OS, the synchToOS option
+   // also needs to be set.
+   // More details on how to set this variable from link:
+   // https://www.ibm.com/developerworks/wikis/display/xdcomputegrid/Running+jobs+under+user+credentials
+   ///////////////////////
+
+-->
+
+<job name="CleanUpCIEar" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<jndi-name>ejb/com/ibm/ws/ci/CleanUpCIEJB</jndi-name>
+	<job-step name="Step1">
+	    <!-- classname element within the job-step indicates this is a CI application -->
+		<classname>com.ibm.websphere.ci.util.CleanUpCIWork</classname>
+	    <!-- following element is used to pass properties (name-value pairs) to CI application -->
+        <!-- all of them must be updated to reflect the appropriate values -->
+	    <props>
+	        <!--  schedulerContext are in format :
+                "nodes/myNode/servers/myServer"  for standalone server 
+                or
+                "clusters/mySchedulerCluster" for scheduler cluster
+             --> 			
+             
+            <!-- No default. Required value. -->
+            <prop name="schedulerContext" value="replace_with_valid_scheduler_context" />
+            <!-- No default. Required value. -->
+            <prop name="schedulerHostName" value="replace_with_valid_scheduler_host_name" />
+            <!-- No default. Required value. -->
+            <prop name="schedulerBootstrapPort" value="replace_with_valid_bootstrap_port" />
+            
+            <!-- Age of job to delete.  Unit is day. Default is 100. -->
+            <prop name="ageOfJobToPurge" value="3" />
+            
+            <!-- Maxinum number of jobs to purge.  Unit is day. Default is 100. -->
+            <prop name="maxJobsToPurge" value="15"/>
+            
+            <!-- NOTE: the following filename MUST be updated to point to a valid location on the scheduler server's filesystem -->
+            <!-- No default. Required value. -->
+	        <prop name="outputFileName" value="/tmp/jobPurgedList.txt" />
+	        
+            <!-- Status of jobs to purge. Comma separated, for example "ended,restartable,executionFailed" -->
+            <!-- Default value is "ended" -->
+            <prop name="statusOfJobToPurge" value="restartable,ended" />
+            
+            <!-- Job Class to purge. Wildcards are valid, such as "MyJobClass%" -->
+            <!-- Default value is "%" , this includes all classes. -->
+            <prop name="jobClassNameToPurge" value="replace_With_JobClass" />
+            
+            <!-- An integer which sets the size of the number of jobs to submit to the JobScheduler.purgeJob(String[] jobid) method-->
+            <!-- Default value is 100 -->
+            <prop name="purgeArrayBufferSizeProp" value="replace_With_JobPurgeBufferSize" />
+            
+            <!-- Filters jobs based on job name. ex: "MyJobNamePrefix%" will only purge jobs that start with MyJobNamePrefix -->
+            <!-- Default value is "%". This includes all jobs. -->
+            <prop name="jobIdFilter" value="MyJobNamePrefix%" />
+            
+            <!-- Filters jobs based on submitter id: "user1" will only purge jobs that were submitted by user1. Wildcards 
+            are also valid. -->
+            <!-- Default value is "%". This includes all submitters -->
+            <prop name="submitterFilter" value="user1" />
+            
+            <!-- Filters jobs based on node id: "Node01" will only purge jobs that were run on Node01. Wildcards 
+            are also valid. -->
+            <!-- Default value is "%". This includes all nodes. -->
+            <prop name="nodeFilter" value="Node01" />
+            
+            <!-- Filters jobs based on application server name: "server1" will only purge jobs that were run on server1. Wildcards 
+            are also valid. -->
+            <!-- Default value is "%". This includes all servers. -->
+            <prop name="appServerFilter" value="server1" />
+            
+            <!-- Logs additional information. Default value is "false". -->
+            <prop name="debug" value="true" />
+            
+	    </props>
+	</job-step>
+</job>

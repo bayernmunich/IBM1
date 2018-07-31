@@ -1,0 +1,351 @@
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>ResourceRefExtension</title>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h2>ResourceRefExtension</h2>
+
+<p>This type is a class for model objects.</p>
+
+<p>An optional extension to a resource ref which allows specifying IBM isolation level support at a resource ref level.
+@since WAS5.0</p>
+Package:&nbsp;<A HREF="../commonext/classes-frame.html" target="packageFrame">commonext</A><BR>
+<BR>
+Classifier ID:&nbsp;&nbsp;-1
+<BR>
+Instance class name:&nbsp;&nbsp;* Unspecified *
+<BR>
+Instance class:&nbsp;&nbsp;* Unspecified *
+<BR>
+<BR>
+
+Collection attributes having this type:
+<BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/EnterpriseBeanExtension.html#resourceRefExtensions">EnterpriseBeanExtension.resourceRefExtensions</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../portletapplicationext/PortletApplicationExtension.html#resourceRefExt">PortletApplicationExtension.resourceRefExt</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../webappext/WebAppExtension.html#resourceRefExtensions">WebAppExtension.resourceRefExtensions</A></B><BR>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attributes Summary</B></FONT></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#isolationLevel">isolationLevel</A></B></FONT>&nbsp;:&nbsp;<A HREF="../commonext/IsolationLevelKind.html">IsolationLevelKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#connectionManagementPolicy">connectionManagementPolicy</A></B></FONT>&nbsp;:&nbsp;<A HREF="../commonext/ConnectionManagementPolicyKind.html">ConnectionManagementPolicyKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+This resource ref extension can be used for specifying the connection management policy on WebSphere platforms which support this option (such as zOS).
+
+Connection Starvation
+
+Connection starvation occurs when  the number of connections being held by applications reaches the maxium number of 
+connections set during configuration.  If connections aren't being returned to the pool fast enough, or not at all, then new 
+requests for connections will not be able to be serviced.
+
+Connection starvation due to users not closing connections is one of the main issues this design wants to address.  Poorly 
+written applications often have one or two places where they forget to close connections (sometimes in error paths).  If nothing 
+is done, it does not take long before the connection pool is completely and indefinitely out of connections.  This type of starvation, 
+which is permanent, is different from that where connections are closed when the user is done with them, but because of high 
+usage the pool is temporarily exhausted. 
+ 
+Reducing Connection Starvation
+
+Shareable Connections
+
+For shareable connections,  the ManagedConnection will always be returned to the pool when the UOW ends.  Since all connections will always run in a UOW this means that it won't be possible for users to "leak" connections because they forgot to close them.  It also means that the connection handles will be "parked" on a dummy connection and reassociated to a new connection on the next preinvoke.  
+
+Unshareable Connections
+
+For unshareable connections we'll have two options for the user to choose from to police users who don't close their connection handles in a timely maner.
+
+   <connection-mgmt-policy> Aggressive | Normal </connection-mgmt-policy>
+
+Aggressive - under this option, connection handles a component has in use will be tracked.  Handshaking between the Container and the ConnectionHandleManager during passivation time will force all handles to be closed and the component instance to be removed.
+
+Normal - similar to aggressive except that the connection handles will be closed and the bean removed during 
+ejbRemove. (default action)
+
+Note:  This behavior is consistent with that of Websphere z/OS and their <connection-mgmt-policy> descriptor.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#commitPriority">commitPriority</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EInt.html">EInt</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#branchCoupling">branchCoupling</A></B></FONT>&nbsp;:&nbsp;<A HREF="../commonext/BranchCouplingKind.html">BranchCouplingKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#resourceRef">resourceRef</A></B></FONT>&nbsp;:&nbsp;<A HREF="../common/ResourceRef.html">ResourceRef</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+
+</TABLE>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attribute Details</B></FONT></TD>
+</TR>
+</TABLE>
+
+
+<BR>
+<B><A name="isolationLevel">isolationLevel</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../commonext/IsolationLevelKind.html">IsolationLevelKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;TRANSACTION_NONE
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;TRANSACTION_READ_UNCOMMITTED
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;TRANSACTION_READ_COMMITTED
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4&nbsp;-&nbsp;TRANSACTION_REPEATABLE_READ
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8&nbsp;-&nbsp;TRANSACTION_SERIALIZABLE
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="connectionManagementPolicy">connectionManagementPolicy</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;This resource ref extension can be used for specifying the connection management policy on WebSphere platforms which support this option (such as zOS).
+
+Connection Starvation
+
+Connection starvation occurs when  the number of connections being held by applications reaches the maxium number of 
+connections set during configuration.  If connections aren't being returned to the pool fast enough, or not at all, then new 
+requests for connections will not be able to be serviced.
+
+Connection starvation due to users not closing connections is one of the main issues this design wants to address.  Poorly 
+written applications often have one or two places where they forget to close connections (sometimes in error paths).  If nothing 
+is done, it does not take long before the connection pool is completely and indefinitely out of connections.  This type of starvation, 
+which is permanent, is different from that where connections are closed when the user is done with them, but because of high 
+usage the pool is temporarily exhausted. 
+ 
+Reducing Connection Starvation
+
+Shareable Connections
+
+For shareable connections,  the ManagedConnection will always be returned to the pool when the UOW ends.  Since all connections will always run in a UOW this means that it won't be possible for users to "leak" connections because they forgot to close them.  It also means that the connection handles will be "parked" on a dummy connection and reassociated to a new connection on the next preinvoke.  
+
+Unshareable Connections
+
+For unshareable connections we'll have two options for the user to choose from to police users who don't close their connection handles in a timely maner.
+
+   <connection-mgmt-policy> Aggressive | Normal </connection-mgmt-policy>
+
+Aggressive - under this option, connection handles a component has in use will be tracked.  Handshaking between the Container and the ConnectionHandleManager during passivation time will force all handles to be closed and the component instance to be removed.
+
+Normal - similar to aggressive except that the connection handles will be closed and the bean removed during 
+ejbRemove. (default action)
+
+Note:  This behavior is consistent with that of Websphere z/OS and their <connection-mgmt-policy> descriptor.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../commonext/ConnectionManagementPolicyKind.html">ConnectionManagementPolicyKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;Default
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;Aggressive
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;Normal
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="commitPriority">commitPriority</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EInt.html">EInt</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="branchCoupling">branchCoupling</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../commonext/BranchCouplingKind.html">BranchCouplingKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;Loose
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;Loose
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;Tight
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+<BR>
+<B><A name="resourceRef">resourceRef</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../common/ResourceRef.html">ResourceRef</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+<CENTER>
+<h4>(C) COPYRIGHT International Business Machines Corp. 1996-2006</h4>
+</CENTER>
+
+</body>
+
+</html>

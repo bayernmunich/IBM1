@@ -1,0 +1,305 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="High CPU Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.High CPU Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/cpu/was-cpu-aix.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/cpu/was-cpu-linux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/cpu/was-cpu-solaris.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/cpu/was-cpu-hpux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/cpu/was-cpu-windows.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-linux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-aix.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-solaris.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-windows.xml"/>
+
+	<property name="autopdProblem" value="WAS_CPU_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-cpu" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os,
+					usage,
+					was_stack_custom_init,         
+			         set_no_server_restart,
+			         
+					 terminate_if_server_not_running,
+					 					 
+			         recovery_needed,  
+			         
+			         enable_mmap,
+					 collect_sychronization_info, 
+					 obtain_was_java_processid,
+			         config_cpu_performance_manager,
+			         launch_performance_manager,
+			         launch_perfmon_client,
+			         cpu_manually_config_perfmon, 
+			         
+			         run_aix_cpu_script,
+					 run_linux_cpu_script,
+					 run_hpux_cpu_script,
+			         
+					 		         
+				     was_run_cpu_solaris,					
+			         issue_netstat_before,
+			         create_linux_hangs_pre_output, 
+					 create_aix_hangs_pre_output, 
+					 create_windows_hangs_output, 
+					 create_unix_hangs_javacore, 
+					 create_aix_hangs_post_output, 
+					 create_linux_hangs_post_output, 
+					 create_unix_hangs_systemcore, 
+					 create_unix_hangs_output_options,
+					 
+					 issue_netstat_after,
+			   		 generate_heapdump,
+			         generate_heapdump_windows,
+			         generate_usr.dmp,
+			         create_javacore_linux,
+			         gen_history_report, 
+			         
+			         stop_performance_manager,
+			         
+			         collect_was_cpu,
+			         was_cpu_solaris_collect,
+					 collect_aix_was_hangs,
+					 solaris_configurations,
+			    	 recovery_completed,
+			         collect_netstat,
+					 collect_all,
+					 collect_autopd_reports,
+						
+					 zip_High_CPU_Must_Gather,execute_vce_info_for_was,
+					 ftp_logs_to_ecurep,
+					 common_script_completed">
+	</target>
+
+	<!--  disable_jvm_verbose_gc, -->
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed"
+		           id="2269"
+		           level="info" />
+
+	</target>
+
+
+	<target name="ask_user_reproduce_or_force">
+
+		<autopdinput message="Inform_user_of_two_choices_for_heapdump"
+		             validargs="I_have_reproduced_the_problem,Force_heapdump,Quit"
+		             addproperty="do.reproduce"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<wsnlsecho key="do.reproduce"
+		           bundle="autopdtoolstrings"
+		           message="do.reproduce is {0}"
+		           replace="${do.reproduce}"
+		           id="2252"
+		           level="info" />
+
+		<condition property="force.dump">
+			<equals arg1="Force_heapdump" arg2="${do.reproduce}" />
+		</condition>
+
+		<condition property="do.pause.abort1">
+			<equals arg1="Quit" arg2="${do.reproduce}" />
+		</condition>
+
+		<fail if="do.pause.abort1">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+
+	</target>
+
+	<!-- generate a heapdump unless this is Windows -->
+	<target name="generate_heapdump" unless="isWindows">
+
+		<property name="force.dump" value="true" /> 
+		
+		<if isTrue="${force.dump}">
+			<copy file="${bundle.basedir}/scripts/was/shell/kill-template.sh"
+			      tofile="${bundle.basedir}/scripts/was/shell/kill-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="num" value="-3" />
+					<filter token="pid" value="${was.java.process.id}" />
+				</filterset>
+			</copy>
+
+
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_core_file_wait_time"
+					type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="wait.time"
+					label="select_wait_time" list="120:15:60:180:240:300"
+					listDetails="2 minutes:15 seconds:1 minute:3 minutes:4 minutes:5 minutes" type="selectlist"
+					accessibilityName="select_wait_time"
+					accessibilityDesc="select_wait_time" 
+					defaultValue="2 minutes"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/shell"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+			</exec>
+
+			<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Waiting_for_2_minutes" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="[{0}] Waiting for two minutes" 
+				replace="${autopdts}" 
+				id="1020" 
+				level="info"
+				component="\scripts\was\was-high-cpu.xml"/>	
+
+			<!-- core available check -->
+			<waitfor maxwait="${wait.time}" maxwaitunit="second" >
+				<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+			</waitfor>
+
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Step_generating_javacore_of_Application_Server" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="[{0}] Step {1}: Generating javacore for WebSphere Application Server" 
+				replace="${autopdts};;${step.count}" 
+				id="1116" 
+				level="info"
+				component="\scripts\was\was-high-cpu.xml"/>	
+
+
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/shell"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+			</exec>
+
+			<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Waiting_for_2_minutes" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="[{0}] Waiting for two minutes" 
+				replace="${autopdts}" 
+				id="1020" 
+				level="info"
+				component="\scripts\was\was-high-cpu.xml"/>	
+
+			<!-- core available check -->
+			<waitfor maxwait="${wait.time}" maxwaitunit="second" >
+				<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+			</waitfor>
+
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Step_generating_javacore_of_Application_Server" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="[{0}] Step {1}: Generating javacore for WebSphere Application Server" 
+				replace="${autopdts};;${step.count}" 
+				id="1116" 
+				level="info"
+				component="\scripts\was\was-high-cpu.xml"/>	
+
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/shell"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+			</exec>
+
+
+		</if>
+	</target>
+
+	<!-- run another script -->
+	<target name="run_extra_script">
+		<inputdialogtask noCancel="true">
+			<fieldtask name="prompt"
+			           label="Additional Collection Required"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label"
+			           label="Determine if the leak is a Java heap or native memory problem.  If the avaliable memory does not drop, run the Native Leak Problem script.  Otherwise, if the memory in the heap drops over time, run the Heap Leak Problem Script."
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;High CPU Problem&lt;/h2&gt;&lt;p&gt;
+				This script should be run on the managed node experiencing the hang problem.
+				During the running of this script, it will set trace, JVM, and heap dump 
+				variables on the managed node experiencing the problem. Once the problem has
+				been reproduced, the logs, configuration, trace, heapdump, and java core files
+				will be archived for further analysis.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+									<equals arg1="NO_GUI" arg2="${console}"/>
+								</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This script should be run on the host experiencing the high (100%) CPU 
+problem. During the running of this script, it will set trace, JVM, and heap dump variables on the 
+managed node experiencing the problem. Once the problem has been reproduced, the logs, configuration, 
+trace, heapdump, and java core files will be archived for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="High CPU Problem =>
+This script should be run on the host experiencing the high (100%) CPU problem.
+During the running of this script, it will set trace, JVM, and heap dump
+variables on the managed node experiencing the problem. Once the problem has
+been reproduced, the logs, configuration, trace, heapdump, and java core files
+will be archived for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

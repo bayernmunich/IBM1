@@ -1,0 +1,439 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2005, 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Web Services Feature Pack Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Web Services Feature Pack Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_SOA_SCA_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-webservices" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+		
+		1. clean out old logs
+		2. collect the app config, WSDL, 
+		3. isolate the problem into a test app (simpler)
+		4. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os,
+					usage,
+					was_stack_custom_init,	
+				 		  	 		          
+					 query_additional_ws_information,
+					 
+			     	 check_set_trace_choice_valid_with_condition,
+			         get_default_trace_values,
+			         ws_generate_trace_string,			         
+			         recovery_needed_with_condition,  			         
+			      
+			         set_was_runtime_trace_with_condition,  
+					 set_was_trace_with_condition,
+			         		          
+			         start_tcpmon_trace,
+			         
+			         start_time, 
+			         pause, 
+			         end_time, 
+			         
+			         end_tcpmon_trace,
+			         gen_history_report, 
+			        
+			         restore_user_default_trace_values,
+			         recovery_completed_with_condition,
+			         set_server_restore_status_with_condition,
+			         restore_app_server_status, 
+			         
+			         common_postamble_general_with_ftp">
+	</target>
+
+	<!-- 
+		was_log_redirect,		 		  	 		          
+		was_load_topology,	
+		query_additional_ws_information,
+		
+	-->
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common,
+					 recovery_completed, 
+				 zip_autopd_log_for_recovery, 
+		 		 autopd_feedbacks_for_recovery,
+				 recovery_script_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- 
+		collect_was_recovery_common, 
+		restore_user_default_trace_values_for_recovery,
+		reset_was_log_files_with_condition,
+		recovery_completed, 
+		zip_autopd_log_for_recovery, 
+		autopd_feedbacks_for_recovery,
+		recovery_script_completed
+	-->
+	<target name="query_ws_problem_type">
+
+		<wsnlsecho key="Step_query_ws_problem_type"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Determining which web services problem type to collect for"
+		           replace="${autopdts};;${step.count}"
+		           id="1188"
+		           level="info" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="label"
+			           label="query_ws_problem"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.problem.type"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="Your_choice"
+			           list="Runtime:Deployment:Tooling"
+			           listDetails="Runtime:Deployment:Tooling"
+			           type="selectlist" />
+		</inputdialogtask>
+
+		<echo message="DB Problem Type: ${ws.problem.type}" />
+
+		<condition property="ws.RuntimeProblem">
+			<equals arg1="Runtime" arg2="${ws.problem.type}" />
+		</condition>
+		<condition property="ws.DeploymentProblem">
+			<equals arg1="Deployment" arg2="${ws.problem.type}" />
+		</condition>
+		<condition property="ws.ToolingProblem">
+			<equals arg1="Tooling" arg2="${ws.problem.type}" />
+		</condition>
+
+		<if isTrue="${ws.ToolingProblem}">
+			<property name="wasnothere" value="true" />
+			<property name="collection.only" value="true" />
+		</if>
+
+	</target>
+
+	<target name="query_additional_ws_information">
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			User response to questions asked in Web Services Must
+			Gather-${line.separator}
+		</concat>
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.sca.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.sca.question1"
+			           label="what_beta_driver"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question2"
+			           label="describe_the_problem"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question3"
+			           label="how_often_problem_occurs"
+			           type="plaintext"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question4"
+			           label="application_packaging"
+			           list="war:jar:do_not_know"
+			           listDetails="war:jar:do_not_know"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question5"
+			           label="multiple_sca_packages"
+			           list="yes:no:do_not_know"
+			           listDetails="yes:no:do_not_know"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question6"
+			           label="client_call_binding"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question7"
+			           label="simple_test_case"
+			           type="textarea"
+			           startNewLine="true"
+			           wordWrap="true"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.sca.question8"
+			           label="when_did_last_work"
+			           type="textarea"
+			           startNewLine="true"
+			           wordWrap="true"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				Web Services Feature Pack Questions-${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				${ws.sca.question1}${line.separator}
+			</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+						${ws.sca.question1}${line.separator}
+					</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+						${ws.sca.question2}${line.separator}
+					</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+							${ws.sca.question3}${line.separator}
+						</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+							${ws.sca.question4}${line.separator}
+						</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+							${ws.sca.question5}${line.separator}
+						</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+							${ws.sca.question6}${line.separator}
+						</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+							${ws.sca.question7}${line.separator}
+						</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+									${ws.sca.question7}${line.separator}
+								</concat>
+
+
+	</target>
+
+	<target name="start_tcpmon_trace" if="ws.RuntimeProblem">
+		<wsnlsecho key="Step_start_TCPMon_trace"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Starting the TCPMon trace for Web Services runtime problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1190"
+		           level="info" />
+
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask noCancel="true">
+				<fieldtask name="ws.tooling.prompt"
+				           label="Input_Required"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+				<fieldtask name="ws.listenPort"
+				           label="ws_listenPort"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.targetHost"
+				           label="ws_targetHost"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.targetPort"
+				           label="ws_targetPort"
+				           type="plaintext"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+
+			<!-- Windows -->
+			<copy file="${bundle.basedir}/scripts/was/shell/windows/tcpmon-template.bat"
+			      tofile="${bundle.basedir}/scripts/was/shell/windows/tcpmon-filled.bat"
+			      overwrite="true">
+				<filterset>
+					<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+					<filter token="listenPort" value="${ws.listenPort}" />
+					<filter token="targetHost" value="${ws.targetHost}" />
+					<filter token="targetPort" value="${ws.targetPort}" />
+				</filterset>
+			</copy>
+			<exec executable="${bundle.basedir}/scripts/was/shell/windows/tcpmon-filled.bat"
+			      dir="${was.enhanced.root}/bin"
+			      os="${os.windows}"
+			      spawn="true">
+			</exec>
+
+			<!-- Unix -->
+			<copy file="${bundle.basedir}/scripts/was/shell/tcpmon-template.sh"
+			      tofile="${bundle.basedir}/scripts/was/shell/tcpmon-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+					<filter token="listenPort" value="${ws.listenPort}" />
+					<filter token="targetHost" value="${ws.targetHost}" />
+					<filter token="targetPort" value="${ws.targetPort}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh"
+			      dir="${was.enhanced.root}/bin"
+			      os="${os.unixkind}"
+			      spawn="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/tcpmon-filled.sh" />
+			</exec>
+
+		</if>
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask>
+				<fieldtask name="ws.gui.prompt"
+				           label="Wait_for_TCPMon"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label"
+				           label="GUI_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label2"
+				           label="GUI_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.gui.label3"
+				           label="GUI_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${useGuiConsole }">
+			<!-- TCPMon trace not collected -->
+			<inputdialogtask>
+				<fieldtask name="ws.nogui.prompt"
+				           label="No_GUI"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label"
+				           label="No_GUI_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label2"
+				           label="No_GUI_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label3"
+				           label="No_GUI_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.nogui.label4"
+				           label="No_GUI_explain4"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+	</target>
+
+	<!-- How does this work in a non-gui env?? i.e. remote collector -->
+	<target name="end_tcpmon_trace" if="ws.RuntimeProblem">
+		<wsnlsecho key="Step_stop_TCPMon_trace"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Displaying instructions to stop the TCPMon trace"
+		           replace="${autopdts};;${step.count}"
+		           id="1191"
+		           level="info" />
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask>
+				<fieldtask name="ws.endtrace.prompt"
+				           label="End_trace"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label"
+				           label="End_trace_explain"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label"
+				           label="End_trace_explain1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label2"
+				           label="End_trace_explain2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.file"
+				           label="${autopdtmp}/autopd"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.endtrace.label3"
+				           label="End_trace_explain3"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="ws_generate_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<property name="was.trace.string" value="com.ibm.ws.webservices.*=all=enabled" />
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Web Services Feature Pack Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the managed node experiencing the web services
+						feature pack problem. It will set the appropriate trace string and start the 
+							TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+							and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1198363" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the 
+web services feature pack problem. It will set the appropriate trace string and start the 
+TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration, and trace 
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Web Services Feature Pack Problem => 
+				This problem category is run on the managed node experiencing the web services
+				feature pack problem. It will set the appropriate trace string and start the 
+					TCP Monitor. After the problem has been reproduced the tcpmon, logs, configuration,
+					and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

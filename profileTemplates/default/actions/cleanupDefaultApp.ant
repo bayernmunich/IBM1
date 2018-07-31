@@ -1,0 +1,85 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="cleanupDefaultApp" default="cleanupDefaultApp" basedir=".">
+
+    
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>		         
+    <taskdef name="checkForOmittedApps" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.CheckForOmittedApps"/>
+       &importExternalLogs;        		         
+    <target name="checkForOmitted"
+		description="Checks to see if the default application install was omitted" 
+	   >
+        <checkForOmittedApps appToCheck="defaultAppDeployAndConfig" property="isAppOmitted"/>
+  
+        <condition property="isDefaultAppsOmitted" value="true">
+           <equals arg1="${isAppOmitted}" arg2="true"/>
+        </condition>
+   
+        <wscmtlog> Value of isDefaultAppsOmitted = ${isDefaultAppsOmitted}</wscmtlog>
+
+    </target>
+
+  <target name="checkForAllOmitted">
+        <checkForOmittedApps appToCheck="All" property="allAppsOmitted"/>
+  
+        <condition property="noAppsInstalled" value="true">
+           <equals arg1="${allAppsOmitted}" arg2="true"/>
+        </condition>
+   
+        <condition property="uninstallDefault" value="true">
+        <and>
+           <equals arg1="${isDefaultAppsOmitted}" arg2="true"/>       
+            <not>
+	      <equals arg1="${noAppsInstalled}" arg2="true"/>
+           </not>
+        </and>
+
+        </condition>
+        <wscmtlog> Value of noAppsInstalled = ${noAppsInstalled}</wscmtlog>
+
+        <wscmtlog> Value of isDefaultAppsOmitted = ${isDefaultAppsOmitted}</wscmtlog>
+
+        <echo>  Value of uninstallDefault = ${uninstallDefault} </echo>
+        <wscmtlog> Value of uinstallDefault = ${uninstallDefault}</wscmtlog>
+
+    </target>
+
+    <target name="uninstallDefaultApps"
+            description="Uninstall the default apps"
+            if="uninstallDefault"
+            >
+            
+        <wscmtlog>Uninstalling the default applications, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/uninstallDefaultApplication.log</wscmtlog>
+         <!-- fail on error was true, but changed to false to accomodate F69142-65189 --> 
+         <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/uninstallDefaultApplication.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminApp uninstall DefaultApplication"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>   
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/uninstallDefaultApplication.log" />
+            <param name="description" value="Uninstalling the default applications" />
+            <param name="precondition" value="foetrue" />
+        </antcall>			
+                 
+    </target> 
+    
+    <target name="cleanupDefaultApp"
+        description="Adjusts the config tree to remove actifacts created by omitted actions."
+        depends="
+            checkForOmitted, 
+	    checkForAllOmitted,
+            uninstallDefaultApps"/>
+</project>

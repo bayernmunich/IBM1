@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<struts-config>
+  <form-beans>
+     <form-bean      name="WebServicesPublishWSDLInfoForm" type="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>
+     <form-bean      name="GetServerNameForm" type="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>
+     <form-bean      name="WSDeployOptionsForm" type="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>          
+     <form-bean      name="GetUrlPrefixesForm" type="com.ibm.ws.console.webservices.publish.GetUrlPrefixesForm"/>
+
+
+        <form-bean name="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm" type="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm"/>
+        <form-bean name="com.ibm.ws.console.webservices.editbind.ProvideClientDetailForm" type="com.ibm.ws.console.webservices.editbind.ProvideClientDetailForm"/>
+        <form-bean name="com.ibm.ws.console.webservices.editbind.PreferredPortDetailForm" type="com.ibm.ws.console.webservices.editbind.PreferredPortDetailForm"/>
+        <form-bean name="com.ibm.ws.console.webservices.editbind.ClientPortInfoDetailForm" type="com.ibm.ws.console.webservices.editbind.ClientPortInfoDetailForm"/>
+        <form-bean name="com.ibm.ws.console.webservices.publish.ExportWSDLZipForm" type="com.ibm.ws.console.webservices.publish.ExportWSDLZipForm"/>
+
+  </form-beans>
+
+  <global-forwards>
+        <forward name="webservices.deploy.GetServerName" path="webservices.deploy.GetServerName"/>
+        <forward name="webservices.deploy.WSDeployOptions" path="webservices.deploy.WSDeployOptions"/>
+        <forward name="webservices.deploy.WebServicesPublishWSDLInfo" path="webservices.deploy.WebServicesPublishWSDLInfo"/>
+  </global-forwards>
+
+  <action-mappings>
+     <action name="GetServerNameForm" path="/getServerName" type="com.ibm.ws.console.webservices.deploy.action.GetServerNameAction"/>
+     <action name="WSDeployOptionsForm" path="/wSDeployOptions" type="com.ibm.ws.console.webservices.deploy.action.WSDeployOptionsAction"/>          
+
+
+        <action name="com.ibm.ws.console.webservices.editbind.forwardCmd"
+                path="/com.ibm.ws.console.webservices.editbind.forwardCmd"
+                type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="ProvideScope.config.view" path="ProvideScope.config.view"/>
+            <forward name="ProvideClient.config.view" path="ProvideClient.config.view"/>
+            <forward name="PreferredPort.config.view" path="PreferredPort.config.view"/>
+            <forward name="ClientPortInfo.config.view" path="ClientPortInfo.config.view"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailForm"
+            path="/provideScopeDetail"
+            type="com.ibm.ws.console.webservices.editbind.ProvideScopeDetailAction"
+            input="ProvideScope.config.view">
+            <forward name="error" path="ProvideScope.config.view"/>
+            <forward name="success" path="WebModuleDeployment.config.view"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.webservices.editbind.ProvideClientDetailForm"
+            path="/provideClientDetail"
+            type="com.ibm.ws.console.webservices.editbind.ProvideClientDetailAction"
+            input="ProvideClient.config.view">
+            <forward name="error" path="ProvideClient.config.view"/>
+            <forward name="success" path="EJBModuleDeployment.config.view"/>
+            <forward name="successWeb" path="WebModuleDeployment.config.view"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.webservices.editbind.PreferredPortDetailForm"
+            path="/preferredPortDetail"
+            type="com.ibm.ws.console.webservices.editbind.PreferredPortDetailAction"
+            input="PreferredPort.config.view">
+            <forward name="error" path="PreferredPort.config.view"/>
+            <forward name="success" path="ProvideClient.config.view"/>
+        </action>
+
+        <action
+            name="com.ibm.ws.console.webservices.editbind.ClientPortInfoDetailForm"
+            path="/clientPortInfoDetail"
+            type="com.ibm.ws.console.webservices.editbind.ClientPortInfoDetailAction"
+            input="ClientPortInfo.config.view">
+            <forward name="error" path="ClientPortInfo.config.view"/>
+            <forward name="success" path="ProvideClient.config.view"/>
+        </action>
+
+
+    </action-mappings>
+
+<!-- begin publish wsdl mappings
+-->
+    <action-mappings>
+        <action name="GetUrlPrefixesForm"
+            path="/GetUrlPrefixesForm"
+            type="com.ibm.ws.console.webservices.publish.action.GetUrlPrefixesAction">
+            <forward name="apply" path="publishWSDLFiles.main.view"/>
+            <forward name="cancel" path="ApplicationDeployment.config.view"/>
+            <forward name="ok" path="ApplicationDeployment.config.view"/>
+        </action>
+    </action-mappings>
+    
+<!-- begin HTTP -->    
+    <action-mappings>    
+        <action name="com.ibm.ws.console.publishWSDLFiles.forwardCmd.do"
+            path="/com.ibm.ws.console.publishWSDLFiles.forwardCmd" 
+            type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="publishWSDLFiles.main.view" path="publishWSDLFiles.main.view"/>
+	</action>
+    </action-mappings>            
+<!-- end HTTP -->
+    
+    <action-mappings>
+        <action
+            name="com.ibm.ws.console.webservices.publish.ExportWSDLZipForm"
+            path="/exportWSDLApp" 
+            type="com.ibm.ws.console.webservices.publish.action.ExportWSDLZipAction" 
+            input="ExportWSDL.config.view">
+            <forward name="error" path="ExportWSDL.config.view"/>
+            <forward name="success" path="ApplicationDeployment.config.view"/>
+            <forward name="apply" path="ApplicationDeployment.config.view"/>
+        </action> 
+    </action-mappings>                                       
+
+<!-- end publish wsdl mappings
+-->
+
+
+<!-- begin Binding Choices  aks WebServicesPublishWSDLInfo  -->
+    <action-mappings>
+        <action name="WebServicesPublishWSDLInfoForm"
+            path="/webServicesPublishWSDLInfo"
+            type="com.ibm.ws.console.webservices.publish.action.WebServicesPublishWSDLInfoAction">
+            <forward name="this" path="bindingChoices.main.view"/> 
+
+        </action>
+    </action-mappings>            
+    
+    <action-mappings>
+        <action name="com.ibm.ws.console.bindingChoices.forwardCmd.do"
+            path="/com.ibm.ws.console.bindingChoices.forwardCmd" 
+            type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="bindingChoices.main.view" path="bindingChoices.main.view"/>
+	</action>
+    </action-mappings>            
+
+     <action-mappings>
+         <action name="com.ibm.ws.console.exportWSDL.forwardCmd.do"
+             path="/com.ibm.ws.console.exportWSDL.forwardCmd"
+             type="com.ibm.ws.console.core.action.ForwardAction">
+             <forward name="ExportWSDL.config.view" path="ExportWSDL.config.view"/>
+       </action>
+     </action-mappings>
+
+<!-- end Binding Choices  -->
+
+<!-- begin Deployment Descriptor Extension mapping -->
+<!-- Vewing deployment descriptor extension used to be owned by webui.wssecurity. 
+     Since LIDB2931, webui.webservices includes this funtionality. -->
+
+    <action-mappings>
+		<action name="com.ibm.ws.console.webservices.ddviewer.viewCmd" 
+                path="/com.ibm.ws.console.webservices.ddviewer.viewCmd" 
+                type="com.ibm.ws.console.webservices.ddviewer.DeploymentDescriptorsViewer">
+			        <forward name="success_dd"  path="WSDDViewer.config.view" />         
+			        <forward name="success_dde" path="WSDDEViewer.config.view" />
+                    <forward name="failure"     path="WSDDError.config.view"/>
+        </action>
+    </action-mappings>
+
+<!-- end Deployment Descriptor Extension mapping -->
+
+</struts-config>

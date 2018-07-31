@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+          "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<struts-config>
+    <form-beans>
+        <form-bean name="com.ibm.ws.console.perf.pmi.PMIServiceDetailForm60" type="com.ibm.ws.console.perf.pmi.PMIServiceDetailForm60"/>
+        <form-bean name="com.ibm.ws.console.perf.pmi.PMIDummyForm" type="com.ibm.ws.console.perf.pmi.PMIServiceDetailForm60"/>
+        <form-bean name="com.ibm.ws.console.perf.pmi.PMIShowCountersCollectionForm" type="com.ibm.ws.console.perf.pmi.PMIShowCountersCollectionForm"/>
+        <form-bean name="com.ibm.ws.console.perf.pmi.PMICounterForm" type="com.ibm.ws.console.perf.pmi.PMICounterForm"/>    
+	<form-bean name="com.ibm.ws.console.perf.pmi.itcam.ITCAMServiceDetailForm" type="com.ibm.ws.console.perf.pmi.itcam.ITCAMServiceDetailForm"/> 
+    </form-beans>
+
+    <global-forwards>
+        <forward name="pmi.server.collection" path="pmi.server.collection"/>
+    </global-forwards>
+
+    <action-mappings>
+         <action input="pmi.custom.view" name="com.ibm.ws.console.perf.pmi.PMIDummyForm" path="/pmiCustom" type="com.ibm.ws.console.perf.pmi.PMICustomAction">
+            <forward name="pmi.custom.view" path="pmi.custom.view"/>
+        </action>                                                   
+        
+        <action input="PMIService.config.view60" name="com.ibm.ws.console.perf.pmi.PMIServiceDetailForm60" path="/pMIServiceDetail60" type="com.ibm.ws.console.perf.pmi.PMIServiceDetailAction60">
+            <forward name="error" path="PMIService.config.view60"/>
+            <forward name="success" path="pmi.server.collection"/>
+        </action>
+        <action name="com.ibm.ws.console.perf.pmi.forwardCmd" path="/com.ibm.ws.console.perf.pmi.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+            <forward name="PMIService.config.view60" path="PMIService.config.view60"/>
+	    <forward name="ITCAMService.config.view" path="ITCAMService.config.view"/>            
+        </action>
+        <action name="com.ibm.ws.console.perf.pmi.PMIShowCountersCollectionForm" path="/pmiShowCounters" type="com.ibm.ws.console.perf.pmi.PMIShowCountersAction">
+			<forward name="pmi.show.counters.view" path="pmi.show.counters.view" />
+		</action>
+
+        <action
+            name="com.ibm.ws.console.servermanagement.GenericServerCollectionForm"
+            path="/pMIServerCollectionAction" type="com.ibm.ws.console.perf.pmi.PMIServerCollectionAction">
+            <forward name="pmi60" path="com.ibm.ws.console.perf.pmi.forwardCmd.do?forwardName=PMIService.config.view60&amp;sfname=services"/>
+            <forward name="pmi50" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=PMIService.config.view"/>
+        </action>
+
+        <action input="ITCAMService.config.view" name="com.ibm.ws.console.perf.pmi.itcam.ITCAMServiceDetailForm" path="/eCAMServiceDetail" type="com.ibm.ws.console.perf.pmi.itcam.ITCAMServiceDetailAction">
+            <forward name="error" path="ITCAMService.config.view"/>
+            <forward name="success" path="ITCAMService.config.view"/>
+        </action>       
+                        
+    </action-mappings>
+</struts-config>

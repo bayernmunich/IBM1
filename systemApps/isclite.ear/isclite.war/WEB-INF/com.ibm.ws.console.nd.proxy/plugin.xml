@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<plugin id="com.ibm.ws.console.nd.proxy" 
+	name="proxy" version="1.0.0" 
+	vendor-name="IBM Corp. - WebSphere Server Group" 
+	embedded="true" 
+	context-root="proxy_nd">
+	
+	<requires>
+		<import plugin="com.ibm.ws.console.core"/>
+		<import plugin="com.ibm.ws.console.servermanagement"/>
+		<import plugin="com.ibm.ws.console.environment"/>
+		<import plugin="com.ibm.ws.console.perftuningadmin"/>
+		<import plugin="com.ibm.ws.console.highavailabilitymgmt"/>
+	</requires>
+	
+	<extension point="com.ibm.ws.console.core.navigatorTask">
+		<tasks>			
+        	<task id="proxyClusters" 
+				icon="/com.ibm.ws.console.proxy/images/onepix.gif" 
+				label="nav.view.proxyClusters" 
+				view="/navigatorCmd.do?forwardName=ProxyCluster.content.main" 
+				external="false" weight="20">
+				<category id="clusters"/>
+			</task>
+		</tasks>	
+	</extension>
+	
+	<!-- clustering start -->
+	
+	<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="distmanagement.ServerCluster1" contextType="ProxyCluster">
+        <link
+              categoryId="additional.properties"
+              label="ServerCluster.members.displayName"
+              description="ProxyClusterMember.cluster.description"
+              weight="10" actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyClusterMember.content.main&amp;sfname=members"
+              summaryViewURI="ProxyClusterMember.summary.view">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="proxy.ProxyCluster.collection1" contextType="ProxyCluster">
+    	<action
+              enablesFor="Collection"
+              scope="Cell"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="proxyClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="proxyClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="proxyClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="proxyClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.rippledstart"
+              actionURI="proxyClusterCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.immediateStop"
+              actionURI="proxyClusterCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ProxyCluster.config.general.properties" contextType="ProxyCluster">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm.isZosNodeGroup"  value="true"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.proxy.topology.ProxyClusterDetailForm.isZosNodeGroup"  value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="proxy.ProxyClusterMember.collection1" contextType="ProxyClusterMember">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="proxyClusterMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="proxyClusterMemberCollection.do">
+        </action>
+        <!-- Begin LIDB4138-39 -->
+        <action
+              enablesFor="Collection"
+              scope="Cluster"
+              role="administrator,configurator,operator,monitor"
+              label="button.templates"
+              actionURI="proxyClusterMemberCollection.do">
+        </action>
+        <!-- End LIDB4138-39 -->
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="proxyClusterMemberCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="proxyClusterMemberCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="proxy.ProxyClusterMember.collectionItem1" contextType="ProxyClusterMember">
+        <item
+              attributeName="memberName"
+              sortable="sort"
+              itemURI="proxyClusterMemberCollection.do?EditAction=true"
+              label="ClusterMember.memberName.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Node.displayName">
+        </item>
+        <item
+	      attributeName="nodeVersion"
+	      sortable="sort"
+	      itemURI=""
+	      label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- Added for 366276.3 -->
+<extension point="com.ibm.websphere.wsc.preferences">
+    <preferenceSet id="proxy.ProxyClusterMember.preferenceSet1" contextType="ProxyClusterMember">
+       <preference
+          label="collection.preferences.showStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ProxyClusterMember/Preferences#showStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showImmStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ProxyClusterMember/Preferences#showImmStopConf"
+          size="32"/>
+       <preference
+          label="collection.preferences.showTerminateConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ProxyClusterMember/Preferences#showTerminateConf"
+          size="32"/>
+    </preferenceSet>
+</extension>
+<!-- End 366276.3 -->
+<!-- Begin LIDB4138-39 -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="proxy.ProxyClusterMemberTemplate.collectionItem1" contextType="ProxyClusterMemberTemplate">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="proxyClusterMemberTemplateCollection.do?EditAction=true"
+              label="template.name">
+        </item>
+        <item
+              attributeName="platform"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.platform.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.version.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="template.description">
+        </item>
+    </collectionItem>
+</extension>
+<!-- End LIDB4138-39 -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="proxy.ProxyCluster.collectionItem1" contextType="ProxyCluster">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="proxyClusterCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item 
+        		attributeName="protocol" 
+        		sortable="sort" 
+        		itemURI="" 
+				label="ProxyServer.transport.protocol.displayName">
+		</item>			
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="ServerCluster.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="proxy.ProxyClusterMember.detailTab1" contextType="ProxyClusterMember">
+        <tab
+              label="tab.runtime"
+              contentURI="ProxyClusterMember.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ProxyClusterMember.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="proxy.ProxyCluster.detailTab1" contextType="ProxyCluster">
+        <tab
+              label="tab.runtime"
+              contentURI="ProxyCluster.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ProxyCluster.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="ProxyCluster.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="ProxyClusterTopology.detailTab1" contextType="ProxyClusterTopology">
+        <tab
+              label="tab.topology"
+              role="ignore"
+              contentURI="ProxyClusterTopology.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- Begin LIDB3726-2 -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ProxyClusterMember.config.general.properties" contextType="ProxyClusterMember">
+         <field attributeName="developmentMode" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="parallelStartEnabled" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="shortName" perspective="config">
+            <compatibility>
+		        <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+ 	        </compatibility>
+         </field >
+         <field attributeName="runIn64bitJVMMode" perspective="config">
+            <compatibility>
+               <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+               <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+            </compatibility>
+        </field >         
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyCluster1" contextType="ProxyCluster">
+	       	<categoryDefinition weight="10" id="proxy.settings.properties" 	       	
+				parent="root" label="addprops.category.label.proxysettings"/>
+		    						
+		    <categoryDefinition weight="20" id="proxyserver.properties" 
+		    	parent="proxy.settings.properties" 
+				label="addprops.category.label.httpproxy"/>	
+				
+			<categoryDefinition weight="10" id="proxyvirtualhostconfiguration.properties" 
+				parent="proxy.settings.properties" 
+				label="addprops.category.label.proxyvirtualhostconfiguration"/>	
+				
+			<link categoryId="proxyvirtualhostconfiguration.properties" weight="30" 
+				label="Proxy.proxyVirtualHosts.displayName" 
+				description="Proxy.proxyVirtualHosts.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyVirtualHost.content.main&amp;lastPage=ProxyCluster.config.view">
+		   		<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|SIP|HTTPSIP)"/>
+                </compatibility>
+		   	</link>
+			<link categoryId="proxyvirtualhostconfiguration.properties" weight="40" 
+				label="Proxy.proxyRuleExpressions.displayName" 
+				description="Proxy.proxyRuleExpressions.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyRuleExpression.content.main&amp;lastPage=ProxyCluster.config.view">
+		   		<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|SIP|HTTPSIP)"/>
+                </compatibility>
+		   	</link>
+			<link categoryId="proxyvirtualhostconfiguration.properties" weight="50" 
+				label="Proxy.proxyActions.displayName" 
+				description="Proxy.proxyActions.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyAction.config.view&amp;lastPage=ProxyCluster.config.view">
+	        	<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|SIP|HTTPSIP)"/>
+                </compatibility>
+	        </link>
+	        
+	        <link categoryId="proxyserver.properties" weight="30" 
+				label="ProxySettings.displayName" 
+				description="ProxySettings.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxySettings.config.view&amp;lastPage=ProxyCluster.config.view">
+			  	<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxyserver.properties" weight="40"
+				label="RoutingPolicy.routingRules.displayName" 
+				description="RoutingPolicy.routingRules.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=RoutingRule.content.main&amp;lastPage=ProxyCluster.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxyserver.properties" weight="50"
+				label="StaticCachePolicy.staticCacheRules.displayName" 
+				description="StaticCachePolicy.staticCacheRules.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=StaticCacheRule.content.main&amp;lastPage=ProxyCluster.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxyserver.properties" weight="60"
+				label="RewritingRules.displayName" 
+				description="RewritingRules.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=RewritingRule.content.main&amp;lastPage=ProxyCluster.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+           
+			<link categoryId="proxyserver.properties" weight="80"
+				label="Proxy.cacheInstance.displayName" 
+				description="Proxy.cacheInstance.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyCacheInstance.content.main&amp;lastPage=ProxyCluster.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+			
+            <link categoryId="proxyserver.properties" weight="90" 
+                label="Proxy.denialOfService.displayName" 
+                description="Proxy.denialOfService.description" 
+                actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=DenialOfService.config.view&amp;lastPage=ProxyCluster.config.view">
+                <compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+            </link>			
+	</linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyClusterMemberServer1" contextType="ProxyClusterMember">
+	       	<categoryDefinition weight="10" id="proxy.settings.properties" 
+				parent="root" label="addprops.category.label.proxysettings"/>
+		    						
+		    <categoryDefinition weight="20" id="proxyserver.properties" 
+				parent="proxy.settings.properties" 
+				label="addprops.category.label.httpproxy"/>	
+		    	
+            <categoryDefinition weight="20" id="proxy.containers.properties" 
+				parent="root"
+				 label="addprops.category.label.containers"/>
+			<categoryDefinition weight="10" id="proxy.webcontainer.properties" 
+				parent="proxy.containers.properties" 
+				label="addprops.category.label.webcontainers"/>
+			<categoryDefinition weight="20" id="proxy.ejbcontainer.properties" 
+				parent="proxy.containers.properties" 
+				label="addprops.category.label.ejbcontainers"/>
+			<categoryDefinition weight="30" id="proxy.containerservices.properties" 
+				parent="proxy.containers.properties" 
+				label="addprops.category.label.containerservices"/>
+			<categoryDefinition weight="40" 
+				id="proxy.businessprocessservices.properties" 
+				parent="proxy.containers.properties" 
+				label="addprops.category.label.businessprocessservices"/>
+						
+			<categoryDefinition weight="30" 
+				id="proxy.serverinfrastructure.properties" 
+				parent="root" 
+				label="addprops.category.label.serverinfrastructure"/>
+			<categoryDefinition weight="10" 
+				id="proxy.javaprocessmanagement.properties" 
+				parent="proxy.serverinfrastructure.properties" 
+				label="addprops.category.label.javaprocessmanagement"/>
+			<categoryDefinition weight="20" id="proxy.administration.properties" 
+				parent="proxy.serverinfrastructure.properties" 
+				label="addprops.category.label.administration"/>
+				
+			<categoryDefinition weight="40" id="proxy.communications.properties" 
+				parent="root" label="addprops.category.label.communications"/>
+			<categoryDefinition weight="10" id="proxy.messaging.properties" 
+				parent="proxy.communications.properties" 
+				label="addprops.category.label.messaging"/>
+				
+			<categoryDefinition weight="50" id="proxy.performance.properties" 
+				parent="root" label="addprops.category.label.performance"/>
+			<categoryDefinition weight="60" id="proxy.security.properties" 
+				parent="root" label="addprops.category.label.security"/>
+				
+			<categoryDefinition weight="70" id="proxy.troubleshooting.properties" 
+				parent="root" label="addprops.category.label.troubleshooting"/>
+				
+			<!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+			
+           	<link categoryId="proxyserver.properties" weight="30" 
+				label="ProxySettings.displayName" 
+				description="ProxySettings.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxySettings.config.view&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>           
+			<link categoryId="proxyserver.properties" weight="70" 
+				label="Proxy.channelfw.transports.displayName" 
+				description="Proxy.channelfw.transports.description" 
+				actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ProxyClusterMember.config.view&amp;chainAcceptorFilter=ProxyInboundChannel&amp;chainEndPointFilter=null&amp;chainDisplayKey=Proxy.channelfw.transports.displayName">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxyserver.properties" weight="80"
+				label="Proxy.cacheInstance.displayName" 
+				description="Proxy.cacheInstance.description" 
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyCacheInstance.content.main&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+                   <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTP|HTTPSIP)"/>
+                </compatibility>
+			</link>
+									
+			<link categoryId="proxy.containerservices.properties" 
+				label="ApplicationServer.applicationServerServices.TransactionService.displayName" 
+				description="ApplicationServer.applicationServerServices.TransactionService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[6-9]"/>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.containerservices.properties" 
+				label="ApplicationServer.applicationServerServices.TransactionService.displayName" 
+				description="ApplicationServer.applicationServerServices.TransactionService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" 	value="5"/>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.containerservices.properties" 
+				label="Server.services.ObjectRequestBroker.displayName" 
+				description="Server.services.ObjectRequestBroker.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			
+			<link categoryId="proxy.webcontainer.properties" 
+				label="ApplicationServer.components.WebContainer.displayName" 
+				description="ApplicationServer.components.WebContainer.description" 
+				actionURI="com.ibm.ws.console.servermanagement.AppserverWebContainer.do?sfname=components&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.webcontainer.properties" 
+				label="webcontainer.threadpool.displayName" 
+				description="webcontainer.threadpool.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.webcontainer.properties" 
+				label="webcontainer.sessionmanager.displayName" 
+				description="webcontainer.sessionmanager.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+			</link>
+			<link categoryId="proxy.webcontainer.properties" 
+				label="webcontainer.httptransports.displayName" 
+				description="webcontainer.httptransports.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.webcontainer.properties" 
+				label="webcontainer.channelfw.transports.displayName" 
+				description="webcontainer.channelfw.transports.description" 
+				actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ProxyClusterMember.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+				</compatibility>
+			</link>
+
+			<link categoryId="proxy.ejbcontainer.properties" 
+				label="ApplicationServer.components.EJBContainer.displayName" 
+				description="ApplicationServer.components.EJBContainer.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBContainer.config.view&amp;sfname=components&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.ejbcontainer.properties" 
+				label="EJBCache.displayName" description="EJBCache.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBCache.config.view&amp;sfname=cacheSettings&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.ejbcontainer.properties" 
+				label="EJBTimer.displayName" description="EJBTimer.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBTimer.config.view&amp;#38;sfname=timerSettings&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			
+			
+            <link categoryId="proxy.performance.properties"
+                label="Server.services.PMIService.displayName"
+                description="Server.services.PMIService.description"
+                actionURI="com.ibm.ws.console.perf.pmi.forwardCmd.do?forwardName=PMIService.config.view60&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+                <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                </compatibility>
+            </link>
+            <link categoryId="proxy.performance.properties"
+                label="Server.services.PMIService.displayName"
+                description="Server.services.PMIService.description"
+                actionURI="com.ibm.ws.console.perf.pmi.forwardCmd.do?forwardName=PMIService.config.view60&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view"
+                perspective="runtime">
+                <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                </compatibility>
+            </link>
+
+            <link
+                 categoryId="additional.properties"
+                 label="HAManagerService.displayName"
+                 description="HAManagerService.description"
+                 actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;resourceUri=hamanagerservice.xml&amp;lastPage=ProxyClusterMember.config.view">
+                 <compatibility>
+                     <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+                 </compatibility>
+            </link>
+            <link
+                 categoryId="additional.properties"
+                 label="Server.services.DebugService.displayName"
+                 description="Server.services.DebugService.description"
+                 actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=DebugService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+            </link> 
+            <link
+                 categoryId="additional.properties"
+                 label="ThreadPools.displayName"
+                 description="ThreadPools.description"
+                 actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+            </link>            
+                 
+                                    
+            <link
+              categoryId="proxy.security.properties"
+              label="ServerSecurity.displayName"
+              description="ServerSecurity.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerSecurity.config.view&amp;amp;lastPage=ProxyClusterMember.config.view">
+            </link>            
+			 
+			<link categoryId="proxy.troubleshooting.properties" 
+				label="ServerManagement.logsAndTrace.displayName" 
+				description="ServerManagement.logsAndTrace.description" 
+				actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProxyClusterMember.config.view">
+                <compatibility>
+                       <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxy.messaging.properties" 
+				label="MessageListenerService.displayName" 
+				description="MessageListenerService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MessageListenerService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+ 
+			<link categoryId="proxy.administration.properties" 
+				label="Component.properties.displayName" 
+				description="Component.properties.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.administration.properties" 
+				label="Server.adminService.displayName" 
+				description="Server.adminService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.troubleshooting.properties" 
+				label="ServerManagement.TraceService.displayName" 
+				description="ServerManagement.TraceService.description" 
+				actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=ProxyClusterMember.config.view">
+                <compatibility>
+                    <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+                </compatibility>
+			</link>
+            <link   categoryId="proxy.troubleshooting.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=CellManager.config.view">
+              <compatibility>
+                  <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+                  <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+              </compatibility>
+            </link>
+            
+			<link categoryId="proxy.additional.properties" 
+				label="Server.services.DebugService.displayName" 
+				description="Server.services.DebugService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=DebugService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.troubleshooting.properties" 
+				label="ServerManagement.RASLoggingService.displayName" 
+				description="ServerManagement.RASLoggingService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=RASLoggingservice.config.view&amp;lastPage=ProxyClusterMember.config.view">
+                <compatibility>
+                    <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+                </compatibility>
+			</link>
+			<link categoryId="proxy.administration.properties" 
+				label="Server.customServices.displayName" 
+				description="Server.customServices.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.administration.properties" 
+				label="Server.components.displayName" 
+				description="Server.components.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=ProxyClusterMember.config.view">
+			</link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="ProcessDef.displayName" 
+				description="ProcessDef.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem"
+					    value="(os400|aix|hpux|linux|solaris|windows)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="ProcessDef.displayName" 
+				description="ProcessDef.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.nodeOperatingSystem" 
+						value="(os390)"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.additional.properties" 
+				label="Server.services.PMIService.displayName" 
+				description="Server.services.PMIService.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view">
+				<compatibility>
+					<match key="com.ibm.websphere.baseProductMajorVersion" 
+						value="([5])"/>
+				</compatibility>
+			</link>
+			<link categoryId="proxy.communications.properties" weight="10" 
+				label="NamedEndPoint.displayName" 
+				description="NamedEndPoint.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=ProxyClusterMember.config.view" 
+				summaryViewURI="NamedEndPoint.summary.view">
+			</link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="Classloader.displayName" 
+				description="Classloader.description" 
+				actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Classloader.content.main&amp;sfname=classloaders">
+			</link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="ProcessDef.execution.displayName" 
+				description="ProcessDef.execution.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+			</link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="ProcessDef.monitoringPolicy.displayName" 
+				description="ProcessDef.monitoringPolicy.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+			</link>
+			<link
+              categoryId="proxy.javaprocessmanagement.properties" 
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=ProxyClusterMember.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+			<link categoryId="proxy.javaprocessmanagement.properties" 
+				label="ProcessDef.environment.displayName" 
+				description="ProcessDef.environment.description" 
+				actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=environment&amp;lastPage=ProxyClusterMember.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+			</link>
+		</linkSet>
+	</extension>	
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyClusterMember.runtime1" contextType="ProxyClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5zos.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="clustermember.performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ProxyClusterMember.config.view"
+              perspective="runtime">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=ProxyClusterMember.config.view&amp;origin=ClusterMember.config.view"
+              perspective="runtime">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="proxyclustermember.servermanagement.threadpools.services" contextType="ProxyClusterMember">
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+        </link>
+    </linkSet>
+</extension>
+
+	
+	
+	<!-- Clustering end -->
+	
+	
+</plugin>

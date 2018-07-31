@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   <!-- Editor for ER Diagram -->
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="%ERDiagramEditor.Label"
+            icon="icons/erdiagram.gif"
+            contributorClass="com.ibm.datatools.diagram.er.internal.ui.parts.editors.ERDiagramActionBarContributor"
+            class="com.ibm.datatools.diagram.er.internal.ui.parts.editors.ERDiagramPhysicalEditor"
+            id="ERPhysicalDiagramEditor">
+      </editor>
+   </extension>
+   
+   <!-- Navigation for the Explorers -->		
+   <extension point="org.eclipse.ui.popupMenus"> 
+      <objectContribution
+            objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERTableEditPart"
+            id="com.ibm.datatools.diagram.core.navigationToExplorer">
+         <action
+               label="%navigateToExplorer"
+               class="com.ibm.datatools.diagram.internal.core.navigation.ShowInExplorerAction"
+               menubarPath="navigateMenu/showInMenu/showIn"
+               enablesFor="1"
+               icon="platform:/plugin/com.ibm.datatools.core.ui/icons/project_explorer.gif"
+               id="com.ibm.datatools.diagram.core.navigationAction">
+         </action>
+      </objectContribution>
+   </extension>
+	
+	<extension point = "org.eclipse.datatools.connectivity.sqm.core.ui.labelService">
+		<contributor
+			type = "com.ibm.datatools.diagram.core.explorer.virtual.ISchemaDiagram"
+			iconLocation = "/icons/erdiagram.gif"
+			displayType = "%diagram">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.diagram.core.explorer.virtual.ISchemaDiagramFolder"
+			iconLocation = "/icons/erdiagramfolder.gif"
+			displayType = "%diagramfolder">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.diagram.core.explorer.virtual.IDatabaseOverviewDiagramFolder"
+			iconLocation = "/icons/erdiagramfolder.gif"
+			displayType = "%diagramfolder">
+		</contributor>
+		<contributor
+			type = "com.ibm.datatools.datanotation.DataDiagram"
+			iconLocation = "/icons/erdiagram.gif"
+			displayType = "%diagram">
+		</contributor>
+	</extension>
+
+<!-- Global Actions for our ER Diagram -->
+   <extension
+         point="org.eclipse.gmf.runtime.common.ui.services.action.globalActionHandlerProviders">
+      <GlobalActionHandlerProvider
+            class="org.eclipse.gmf.runtime.diagram.ui.render.providers.DiagramUIRenderGlobalActionHandlerProvider"
+            id="erdiagramglobalprovider">
+         <Priority
+               name="Highest">
+         </Priority>
+         <ViewId
+               id="ERPhysicalDiagramEditor">
+            <ElementType
+                  class="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart">
+               <GlobalActionId
+                     actionId="cut">
+               </GlobalActionId>
+               <GlobalActionId
+                     actionId="copy">
+               </GlobalActionId>
+               <GlobalActionId
+                     actionId="paste">
+               </GlobalActionId>
+            </ElementType>
+         </ViewId>
+         <Policy
+               class="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramGlobalActionHandlerPolicy">
+         </Policy>
+      </GlobalActionHandlerProvider>
+      <!--fix issue for 41089-->
+       <GlobalActionHandlerProvider
+            class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramGlobalActionHandlerProvider"
+            id="erdiagramglobalsaveprovider">
+         <Priority
+               name="Lowest">
+         </Priority>
+         <ViewId
+               id="ERPhysicalDiagramEditor">
+            <ElementType
+                  class="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart">
+               <GlobalActionId
+                     actionId="save">
+               </GlobalActionId>
+            </ElementType>
+         </ViewId>
+         <Policy
+               class="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramGlobalActionHandlerPolicy">
+         </Policy>
+      </GlobalActionHandlerProvider>
+   </extension>
+
+  <extension point="org.eclipse.gmf.runtime.common.ui.services.action.contributionItemProviders">
+      <contributionItemProvider class="com.ibm.datatools.diagram.er.internal.ui.providers.PhysicalIEContributionItemProvider"  checkPluginLoaded="false">
+         <Priority name="Low"/>
+         <partContribution id="ERPhysicalDiagramEditor">
+            <partAction menubarPath="/file/print" id="printPreviewAction">
+            </partAction>
+         </partContribution>
+         <partContribution id="SQLModelBlankDiagram">
+            <partAction menubarPath="/file/print" id="printPreviewAction">
+            </partAction>
+         </partContribution>
+       </contributionItemProvider>
+   </extension>
+ 
+   <!-- Filtering Menus for Tables -->
+   <extension
+         point="org.eclipse.gmf.runtime.common.ui.services.action.contributionItemProviders">
+      <contributionItemProvider
+            class="com.ibm.datatools.diagram.er.internal.ui.providers.PhysicalIEContributionItemProvider">
+         <Priority
+               name="Highest">
+         </Priority>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filterFormatGroup"
+                  id="showRelatedElements">
+            </popupAction>        
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.ERDiagramEditPart">
+	              <method
+	            	name="getDiagramView().getDiagram().getKind()"
+	            	value="Physical">
+	              </method>
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filterFormatGroup"
+                  id="showImplicitRelationships">
+            </popupAction>        
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showKey">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showColumn">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showIndex">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showTrigger">
+            </popupAction>        
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showColumn">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showTrigger">
+            </popupAction>        
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERDerivedTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showColumn">
+            </popupAction> 
+            <popupAction
+                  path="/filtersMenu/compartmentMenu/individualCompartmentsGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showIndex">
+            </popupAction>
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERDerivedTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/miscellaneousGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showDataType">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/miscellaneousGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showLabel">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/miscellaneousGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showNullable">
+            </popupAction>        
+            <popupAction
+                  path="/filtersMenu/miscellaneousGroup"
+                  id="com.ibm.datatools.diagram.er.ui.showForeignKeyDecoration">
+            </popupAction>        
+         </popupContribution>
+ 	
+   <!-- Add Menu for Table and Views-->
+         <!--add key and column menu-->
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/umlAddGroup"
+                  id="AddDataMenu">
+            </popupMenu>
+            <popupMenuGroup
+                  path="/AddDataMenu/"
+                  id="AddDataGroup">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/AddDataMenu/AddDataGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addKey">
+            </popupAction>        
+            <popupAction
+                  path="/AddDataMenu/AddDataGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addColumn">
+            </popupAction>             
+         </popupContribution>
+          <!--Trigger menu support-->
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/umlAddGroup"
+                  id="AddDataMenu">
+            </popupMenu>
+            <popupMenuGroup
+                  path="/AddDataMenu/"
+                  id="AddDataGroup">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart"
+                  policyClass ="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramAddTriggerPopupMenuContributionPolicy">
+            </popupStructuredContributionCriteria>   
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart"
+                  policyClass ="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramAddTriggerPopupMenuContributionPolicy">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/AddDataMenu/AddDataGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addTrigger">
+            </popupAction>        
+         </popupContribution>
+         <!--Index menu support-->
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/umlAddGroup"
+                  id="AddDataMenu">
+            </popupMenu>
+            <popupMenuGroup
+                  path="/AddDataMenu/"
+                  id="AddDataGroup">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart"
+                  policyClass ="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramAddIndexPopupMenuContributionPolicy">
+            </popupStructuredContributionCriteria>   
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERDerivedTableEditPart"
+                  policyClass ="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramAddIndexPopupMenuContributionPolicy">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/AddDataMenu/AddDataGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addIndex">
+            </popupAction>        
+         </popupContribution>
+        
+          <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/filtersMenu/expandFilterGroup"
+                  id="Filtering">
+            </popupMenu>
+            <popupMenuGroup
+                   id="FilteringGroup1"
+                   path="/filtersMenu/Filtering/"
+                   separator="false">
+             </popupMenuGroup>
+            <popupMenuGroup
+                  id="FilteringGroup"
+                  path="/filtersMenu/Filtering/"
+                  separator="true">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup"
+                  id="com.ibm.datatools.diagram.er.ui.filterForeignKey">
+            </popupAction>
+            <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup"
+                  id="com.ibm.datatools.diagram.er.ui.filterNonForeignKey">
+            </popupAction>
+            <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup"
+                  id="com.ibm.datatools.diagram.er.ui.filterNullable">
+            </popupAction> 
+            <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup"
+                  id="com.ibm.datatools.diagram.er.ui.filterNotNullable">
+            </popupAction>
+            
+              <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup1"
+                  id="com.ibm.datatools.diagram.er.ui.filterByName">
+            </popupAction>
+             <popupAction
+                  path="/filtersMenu/Filtering/FilteringGroup1"
+                  id="com.ibm.datatools.diagram.er.ui.filterByDataType">
+            </popupAction>
+           </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/filtersMenu/expandFilterGroup"
+                  id="Sorting">
+            </popupMenu>
+            <popupMenuGroup
+                  id="SortingGroup"
+                  path="/filtersMenu/Sorting/"
+                  separator="false">
+            </popupMenuGroup>      
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/filtersMenu/Sorting/SortingGroup"
+                  id="com.ibm.datatools.diagram.er.ui.sortNatural">
+            </popupAction> 
+            <popupAction
+                  path="/filtersMenu/Sorting/SortingGroup"
+                  id="com.ibm.datatools.diagram.er.ui.sortNaturalPK">
+            </popupAction>
+            <popupAction
+                  path="/filtersMenu/Sorting/SortingGroup"
+                  id="com.ibm.datatools.diagram.er.ui.sortAlphabetical">
+            </popupAction>
+            <popupAction
+                  path="/filtersMenu/Sorting/SortingGroup"
+                  id="com.ibm.datatools.diagram.er.ui.sortAlphabeticalDesc">
+            </popupAction>
+            <popupAction
+                  path="/filtersMenu/Sorting/SortingGroup"
+                  id="com.ibm.datatools.diagram.er.ui.sortDataType">
+            </popupAction>
+           </popupContribution>
+        
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  path="/umlAddGroup"
+                  id="AddDataMenu">
+            </popupMenu>
+            <popupMenuGroup
+                  path="/AddDataMenu/"
+                  id="AddDiagramGroup">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.ERDiagramEditPart">
+	              <method
+	            	name="getDiagramView().getDiagram().getKind()"
+	            	value="Physical">
+	              </method>
+	              <method
+	            	name="getDiagramView().getDiagram().getViewKind()"
+	            	value="ProjectExplorer">
+	              </method>
+	               <method
+	            	name="getDiagramView().getDiagram().getEAnnotation(DatabaseLevelOverviewDiagram)" 
+	            	value="null">
+	              </method>
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  path="/AddDataMenu/AddDiagramGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addTable">
+            </popupAction>        
+            <popupAction
+                  path="/AddDataMenu/AddDiagramGroup"
+                  id="com.ibm.datatools.diagram.er.ui.addView">
+            </popupAction>        
+         </popupContribution>
+         <!--select parent and child for Foreign Key relationship-->
+       	 <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.relationships.ERForeignKeyRelationshipEditPart">
+            </popupStructuredContributionCriteria>   
+            <popupAction
+                  path="/navigateMenu/showGroup"
+                  id="com.ibm.datatools.diagram.er.ui.selectFKParent">
+            </popupAction>        
+            <popupAction
+                  path="/navigateMenu/showGroup"
+                  id="com.ibm.datatools.diagram.er.ui.selectFKChild">
+            </popupAction>             
+         </popupContribution>
+      <!-- Straight Lines -->
+         <partContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.parts.IDiagramWorkbenchPart">
+            <partAction
+                  toolbarPath="/arrangeMenu/arrangeGroup"
+                  id="toolbararrangeSelectedConnectors">
+            </partAction>                
+         </partContribution>
+         <popupContribution
+         		class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.logical.internal.ie.editparts.generalizations.IEGeneralizationEditPart">
+            </popupStructuredContributionCriteria> 
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.logical.internal.ie.editparts.relationships.IERelationshipEditPart">
+            </popupStructuredContributionCriteria> 
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.relationships.ERViewRelationshipEditPart">
+            </popupStructuredContributionCriteria> 
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.relationships.ERForeignKeyRelationshipEditPart">
+            </popupStructuredContributionCriteria> 
+            <popupAction
+                  path="/formatMenu/arrangeMenu/arrangeGroup"
+                  id="arrangeSelectedConnectors">
+            </popupAction>
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupPredefinedItem
+                  id="deleteFromModelAction"
+                  path="/editGroup"
+                  remove="true">
+            </popupPredefinedItem>
+            <popupStructuredContributionCriteria
+                  objectClass="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart"
+                  policyClass="com.ibm.datatools.diagram.er.internal.ui.policies.ERDiagramPopupMenuContributionPolicy">
+            </popupStructuredContributionCriteria>
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupMenu
+                  id="Connections"
+                  path="/filterFormatGroup">
+            </popupMenu>
+            <popupMenuGroup
+                  id="ConnectionsGroup"
+                  path="/Connections/">
+            </popupMenuGroup>
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.ERDiagramEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  id="com.ibm.datatools.diagram.er.ui.actions.DisplayConnectionsOnTopAction"
+                  path="/Connections/ConnectionsGroup">
+            </popupAction>
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria
+                  objectClass="com.ibm.datatools.diagram.internal.er.editparts.tables.ERTableEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction
+                  id="com.ibm.datatools.diagram.er.ui.save_to_global_style"
+                  path="/formatMenu/additionsGroup">
+            </popupAction>
+         </popupContribution>
+         <popupContribution
+               class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupPredefinedItem
+                  id="sortfilterAction"
+                  path="/filtersMenu/compartmentMenu"
+                  remove="true">
+            </popupPredefinedItem>
+         </popupContribution>
+         <!--Remove the disabled Properties Context Menu -->
+          <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+               <popupPredefinedItem id="properties" path="/propertiesGroup" remove="true">
+	           </popupPredefinedItem>         
+          </popupContribution>
+           <!--Remove the rmp Properties Context Menu -->
+           <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+               <popupPredefinedItem id="showPropertiesDialogAction" path="/propertiesGroup" remove="true">
+	           </popupPredefinedItem>         
+          </popupContribution>
+           <!--Add the eclipse Properties Context Menu back -->
+          <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">      		
+                        <popupStructuredContributionCriteria
+                      		  objectClass="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart">
+                        </popupStructuredContributionCriteria>
+                 <popupAction
+                  id="showPropertiesViewAction"
+                  path="/propertiesGroup">
+                 </popupAction>       
+           </popupContribution>
+          <!--Remove the show compartment title action from compartment context menu-->
+          <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria objectClass="org.eclipse.gmf.runtime.diagram.ui.editparts.ResizableCompartmentEditPart"/>
+            <popupPredefinedItem
+                  id="showCompartmentTitle"
+                  path="/filtersMenu/miscellaneousGroup"
+                  remove="true">
+            </popupPredefinedItem>
+         </popupContribution> 
+	  </contributionItemProvider>
+   </extension>
+   	
+   <!-- Modeling Assistant -->	
+   <extension 
+   		point="org.eclipse.gmf.runtime.emf.ui.modelingAssistantProviders">
+      <modelingAssistantProvider 
+      	class="com.ibm.datatools.diagram.er.internal.ui.providers.TableAssistantProvider">
+         <Priority 
+         	name="Low">
+         </Priority>    
+         <object 
+         	class="com.ibm.datatools.diagram.internal.er.editparts.tables.ERBaseTableEditPart(com.ibm.datatools.diagram.er)" id="TABLE">
+         </object>
+         <object 
+         	class="com.ibm.datatools.diagram.internal.er.editparts.tables.ERViewTableEditPart(com.ibm.datatools.diagram.er)" id="VIEW">
+         </object>
+         <context 
+         	elements="TABLE, VIEW">
+         </context>        
+      </modelingAssistantProvider>
+   </extension>
+   <extension
+         point="org.eclipse.gmf.runtime.common.ui.services.action.contributionItemProviders">
+      <contributionItemProvider
+            checkPluginLoaded="true"
+            class="com.ibm.datatools.diagram.er.internal.ui.providers.ERDiagramUIRenderContributionItemProvider">
+         <Priority
+               name="Highest">
+         </Priority>
+         <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria objectClass="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart"/>
+            <popupPredefinedItem
+                  id="CopyToImageAction"
+                  path="/fileMenu/saveGroup"
+                  remove="true"/>
+
+         </popupContribution> 
+         <popupContribution class="org.eclipse.gmf.runtime.diagram.ui.providers.DiagramContextMenuProvider">
+            <popupStructuredContributionCriteria objectCount="*" objectClass="org.eclipse.gmf.runtime.diagram.ui.editparts.IGraphicalEditPart">
+            </popupStructuredContributionCriteria>
+            <popupAction path="/fileMenu/saveGroup" id="CopyToImageAction">
+            </popupAction>
+         </popupContribution>
+      </contributionItemProvider>
+   </extension>
+
+</plugin>

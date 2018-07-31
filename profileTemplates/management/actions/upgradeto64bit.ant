@@ -1,0 +1,253 @@
+<project name="Update z/OS XD Console on WAS 7.0" default="all">
+
+  <!-- This is for z/OS only.  For distributed, it is done in the 98SinstallConsoleExt.ant -->
+
+  <target name="all" depends="init, listProfiles"/>
+
+  <taskdef name="wscmtlog"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+  <taskdef name="foreach"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ForEachAntTask"/>
+  <taskdef name="convertencoding"
+	        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.FileEncodingAntTask"/>
+
+
+
+  <!-- Document startup -->
+  <target name="init">
+    <tstamp/>
+    <wscmtlog>Updating 31bit mode to 64bit mode</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+   <wscmtlog>WS_CMT_CELL_NAME = ${WS_CMT_CELL_NAME}</wscmtlog>
+
+    <!-- Determine OS family -->
+    <condition property="isZOS" value="true">
+    	<os family="z/os"/>
+    </condition>
+
+    <wscmtlog>Detected isZOS to be: ${isZOS}</wscmtlog>
+    <wscmtlog>Detected isZOS to be: ${isZOS}</wscmtlog>
+
+     <!-- 7x -->
+    <!-- Detects and sets properties based on version of was -->
+    <loadfile property="productString" srcfile="${WAS_HOME}/properties/version/WAS.product"/>
+    <condition property="isND7x" value="true">
+        <contains string="${productString}" substring="&lt;version&gt;7."/>
+    </condition>
+    <wscmtlog>isND7x = ${isND7x}</wscmtlog>
+    
+    <condition property="profileRegistry"  value="${WAS_HOME}/properties/profileRegistry.xml" else="${WAS_HOME}/profileRegistry.xml" >
+                  <and>
+                    <available file="${WAS_HOME}/properties/profileRegistry.xml"/>
+                 </and>
+    </condition>
+    
+    <wscmtlog>profileRegistry = ${profileRegistry} </wscmtlog>
+
+
+  </target>
+
+<target name="detectCurrentOSFamily"
+                description="Detecs the current OS family (UNIX or Windows)">
+
+            <condition property="currentOSFamily" value="windows">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="cmdescape" value="&quot;">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="currentOSFamily" value="unix">
+                <os family="unix"/>
+            </condition>
+
+            <condition property="cmdescape" value="">
+                <os family="unix"/>
+            </condition>
+
+            <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+        </target>
+
+        <target name="convertWASHomeToUNIXStylePath">
+            <path id="id.was.home">
+                <pathelement location="${WAS_HOME}"/>
+            </path>
+
+            <pathconvert targetos="unix"
+                property="WAS_HOME_UNIX_STYLE"
+                refid="id.was.home"/>
+        </target>
+
+        <target name="setScriptExtension"
+                description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+            <condition property="scriptExtension" value="sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="scriptExtension" value="bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+        </target>
+
+
+   <target name="resolveMANAGEPROFILESExecutableForTheCurrentPlatform"
+                description="Sets MANAGEPROFILES_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${MANAGEPROFILES_EXECUTABLE}</wscmtlog>
+
+        </target>
+
+        <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+                description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+        </target>
+
+
+
+  <target name="listProfiles" description="list the Profiles currently on the box">
+
+           <wscmtlog message = "listProfiles" />
+           <wscmtlog>list Profiles ...</wscmtlog>
+           <xmlproperty file="${profileRegistry}" validate="false" collapseAttributes="true"/>
+           <wscmtlog message="profile name found=${profiles.profile.name}"/>
+     	 	
+           <foreach target="getProfilePath" list="${profiles.profile.name}" propertyName="profileName"/>
+
+    </target>
+
+   <target name="getProfilePath" description="get the Profiles path"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveMANAGEPROFILESExecutableForTheCurrentPlatform">
+          <wscmtlog message = "get the ProfilePath" />
+     
+    <exec executable="${MANAGEPROFILES_EXECUTABLE}"
+                 failonerror="false"
+                 output="${WAS_HOME}/logs/ProfilesPath.log">
+                 <arg value="-getPath"/>
+                 <arg value="-profileName"/>
+                 <arg value="${profileName}"/>
+           </exec>
+           <loadfile
+                 property="allProfilePath"
+                 srcFile="${WAS_HOME}/logs/ProfilesPath.log"
+                 failonerror="false">
+           </loadfile>
+
+            <wscmtlog message = "${allProfilePath}" />
+            <foreach target="checkProfileAugment"
+                list="${allProfilePath}"
+                propertyName="profilePath">
+            </foreach>
+
+    </target>
+
+    <target name="checkProfileAugment" depends="checkProfileAugment.check" if="isAugmented">
+             <wscmtlog message = "checkProfileAugment: profilePath = ${profilePath}" />
+            <antcall target="main">
+                  <param name="PROFILE_PATH" value="${profilePath}"/>
+            </antcall>
+    </target>
+
+    <target name="checkProfileAugment.check" description="Check to see if profile augment">
+        <wscmtlog message ="checkProfileAugment" />
+              <condition property="isAugmented">
+                  <and>
+                    <available file="${profilePath}/properties/version/wxdop.augment"/>
+                 </and>
+               </condition>
+    </target>
+
+
+
+  <!-- Call iscdeploy on z/OS  -->
+  <target name="main" if="isZOS">
+
+  	<available file="${profilePath}/installedFilters/wlm/dmgr" type="dir" property="isDmgr"/>
+  	<wscmtlog>Detected isDmgr is = ${isDmgr}</wscmtlog>
+      <antcall target="updateZOSODRTemplateFor64BitMode"></antcall>
+  	<antcall target="updateDefaultXDZOStemplate"></antcall>
+  	<antcall target="removeHeapDetectCode"></antcall>
+  	  		
+    <wscmtlog> complete </wscmtlog>
+  </target>
+
+  <target name="updateZOSODRTemplateFor64BitMode"  description="Updates zos ODR templates to include the 64 bit mode by default for ND 7.0+ only." >
+    <wscmtlog message = "updateZOSODRTemplateFor64BitMode" />
+        <wscmtlog message = "${profilePath}/logs/upgradeto611.log" />
+    <exec executable="${WAS_HOME}/bin/wsadmin.sh"
+         output="${profilePath}/logs/upgradeto611.log">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-lang"/>
+            <arg value="jython"/>
+            <arg value="-f"/>
+            <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/updateZOSODRTemplateFor64BitMode.py"/>
+            <arg value="-washome"/>
+            <arg value="${WAS_HOME}"/>
+     </exec>
+  </target>
+ 
+ 
+  <!-- Update default z/OS XD template for 64 bit mode -->
+  <target name="updateDefaultXDZOStemplate" if="isDmgr">
+
+  	<wscmtlog>${profilePath}</wscmtlog>
+  	<wscmtlog>update defaultXDZOS template</wscmtlog>
+  	    <replace encoding="ISO8859-1" dir="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultXDZOS/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+          <replace encoding="ISO8859-1" dir="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/odr_zos/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+          <replace encoding="ISO8859-1" dir="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/sip_odr_server_zos/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+          <replace encoding="ISO8859-1" dir="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/servers/http_sip_odr_server_zos/">
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+
+  </target>
+	
+  <target name="removeHeapDetectCode" description="Convert from 31 to 64 bit">
+  	<wscmtlog message="profile path=${profilePath}"/>
+  	<wscmtlog message="Convert from 31 to 64 bit"/>  	
+
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+  		   	<replacefilter token="-agentlib:HeapDetect64" value=""/>
+			<replacefilter token="-agentlib:HeapDetect" value=""/>
+  	</replace>
+  	
+ </target>
+
+
+
+</project>
+

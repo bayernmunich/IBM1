@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"協同作業視窗","SHOW_COLLABORATION_WINDOW":"顯示協同作業視窗","COBROWSE":"共同瀏覽"})

@@ -1,0 +1,82 @@
+<!-- ***************************************************************************
+Licensed Materials - Property of IBM
+
+5724-I63, 5724-H88, 5724-H89, 5655-N02, 5724-J08
+ 
+Copyright IBM Corp. 2007 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or
+disclosure restricted by GSA ADP Schedule Contract with
+IBM Corp.
+***************************************************************************  -->
+<project name="modifyMaxHeapSize" default="install" basedir=".">
+
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles" />
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask"
+			classpath="${WAS_HOME}/plugins/com.ibm.ws.runtime.jar" />
+	
+	<property name="fullFilePath" value="${WAS_HOME}\bin\manageprofiles.bat"/>
+	<property name="lowHeapSize" value="-Xmx256M"/>
+	<property name="highHeapSize" value="-Xmx512M"/>
+
+	<target name="increaseMaximumHeapSize" description="Increase maximum heap size parameter in WAS_HOME\bin\manageprofiles.bat">
+		<wscmtlog>*** Proceeding to increase maximum heap size parameter -Xmx from 256M to 512M***</wscmtlog>
+		<replaceTokenInFile path="${fullFilePath}" token="${lowHeapSize}" value="${highHeapSize}" property="isReplaced" ignorecase="false" />
+		<wscmtlog>*** Did maximum heap size parameter in ${fullFilePath} get modified?: ${isReplaced} ***</wscmtlog>
+	</target>
+
+	<target name="decreaseMaximumHeapSize" description="Decrease maximum heap size parameter in WAS_HOME\bin\manageprofiles.bat">
+		<wscmtlog>*** Proceeding to reverse changes made to maximum heap size parameter -Xmx ***</wscmtlog>
+		<replaceTokenInFile path="${fullFilePath}" token="${highHeapSize}" value="${lowHeapSize}" property="isReplaced" ignorecase="false" />
+		<wscmtlog>*** Did maximum heap size parameter in ${fullFilePath} get modified?: ${isReplaced} ***</wscmtlog>
+	</target>
+	
+	<target name="isWindows" description="Determines whether the current OS is Windows">
+		<condition property="windowsOSFound" value="true">
+			<os family="windows"/>
+		</condition>
+	</target>
+
+	<!-- 
+   ***************************************************************************
+   TARGET: logStartupProperties
+   Log startup properties
+   ***************************************************************************
+   -->
+	<target name="logStartupProperties" description="Log properties passed to script" depends="isWindows" if="windowsOSFound">
+		<tstamp>
+			<format property="timestamp" pattern="MM/dd/yyyy hh:mm aa" />
+		</tstamp>
+		<wscmtlog>*** Task to perform: Increase maximum heap size parameter in ${fullFilePath} ***</wscmtlog>
+		<antcall target="increaseMaximumHeapSize" />
+	</target>
+
+	<!-- 
+   ***************************************************************************
+   TARGET: callPostinst
+   ***************************************************************************
+   -->
+	<target name="install" description="Calls postinst with various parameters" depends="logStartupProperties" />
+
+	<!-- 
+   ***************************************************************************
+   TARGET: logStartupUninstallProperties
+   Log startup properties
+   ***************************************************************************
+   -->
+	<target name="logStartupUninstallProperties" description="Log properties passed to script" depends="isWindows" if="windowsOSFound">
+		<tstamp>
+			<format property="timestamp" pattern="MM/dd/yyyy hh:mm aa" />
+		</tstamp>
+		<wscmtlog>*** Task to perform: Reverse the changes made to maximum heap size parameter in ${fullFilePath} ***</wscmtlog>
+		<antcall target="decreaseMaximumHeapSize" />
+	</target>
+
+	<!-- 
+   ***************************************************************************
+   TARGET: callPostinstUninstall
+   ***************************************************************************
+   -->
+	<target name="uninstall" description="Calls postinst with various parameters" depends="logStartupUninstallProperties" />
+</project>
+

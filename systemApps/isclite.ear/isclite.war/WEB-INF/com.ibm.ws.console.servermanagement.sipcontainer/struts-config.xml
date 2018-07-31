@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-I63, 5724-H88, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 1997, 2007
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp. 
+-->
+
+
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+    <form-beans>
+    
+        <!-- Begin WAS.webui.j2ee.SIPContainer -->
+        <form-bean name="com.ibm.ws.console.servermanagement.sipcontainer.SIPContainerDetailForm" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPContainerDetailForm"/>    
+        <!-- End WAS.webui.j2ee.SIPContainer -->    
+       
+        <!-- SIP Stack --> 
+        <form-bean name="com.ibm.ws.console.servermanagement.sipcontainer.SIPStackDetailForm"
+                   type="com.ibm.ws.console.servermanagement.sipcontainer.SIPStackDetailForm"/>
+                   
+        <!-- SIP Timers -->           
+        <form-bean name="com.ibm.ws.console.servermanagement.sipcontainer.SIPTimersDetailForm" 
+                   type="com.ibm.ws.console.servermanagement.sipcontainer.SIPTimersDetailForm"/>
+     
+     	<!-- SIP Digest -->	
+		<form-bean name="com.ibm.ws.console.sipcontainer.digestauthentication.SIPDigestDetailForm" 
+		    	   type="com.ibm.ws.console.sipcontainer.digestauthentication.SIPDigestDetailForm"/>
+
+	 	<!-- SIP Application Router Collection -->           
+        <form-bean name="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterCollectionForm" 
+                   type="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterCollectionForm"/>
+                   
+        <!-- SIP Application Router Detail -->           
+        <form-bean name="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterDetailForm" 
+                   type="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterDetailForm"/>
+
+		    
+    </form-beans>
+    
+    <global-forwards>
+    </global-forwards>
+
+    <action-mappings>
+
+        <action
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPContainerDetailForm"
+            path="/sipContainerDetail" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPContainerDetailAction" input="SIPContainer.config.view">
+            <forward name="error" path="SIPContainer.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view"/>
+        </action>
+        
+        <action name="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd"
+                path="/com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+                <forward name="SIPContainer.config.view" path="SIPContainer.config.view"/>
+                <forward name="SIPStack.config.view" path="SIPStack.config.view"/>
+                <forward name="SIPTimers.config.view" path="SIPTimers.config.view"/>
+                <forward name="SIPDigest.config.view" path="SIPDigest.config.view"/>
+        </action>
+        
+        <action input="SIPStack.config.view"
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPStackDetailForm"
+            path="/sipStackDetail" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPStackDetailAction">
+            <forward name="error" path="SIPStack.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SIPContainer.config.view"/>
+        </action>
+        
+        <action input="SIPTimers.config.view"
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPTimersDetailForm"
+            path="/sipTimersDetail" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPTimersDetailAction">
+            <forward name="error" path="SIPTimers.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SIPStack.config.view"/>
+        </action>
+                
+        <!-- SIP Digest -->
+	  <action input="SIPDigest.config.view"
+            name="com.ibm.ws.console.sipcontainer.digestauthentication.SIPDigestDetailForm"
+            path="/sipDigestDetail" type="com.ibm.ws.console.sipcontainer.digestauthentication.SIPDigestDetailAction">
+            <forward name="error" path="SIPDigest.config.view"/>
+            <forward name="success" path="AdminSecurity.config.view"/>
+	  </action>    
+
+	  <action
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPApplicationRouterDetailForm"
+            path="/sipApplicationRouterDetail" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPApplicationRouterDetailAction" input="SIPApplicationRouter.config.view">
+            <forward name="error" path="SIPApplicationRouter.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterCollectionForm"
+            path="/sipApplicationRouterCollection" type="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterCollectionAction">
+            <forward name="failure" path="/error.jsp"/>
+            <forward name="success" path="SIPApplicationRouter.config.view"/>
+            <forward name="sipApplicationRouterCollection" path="SIPApplicationRouter.content.main"/>
+        </action>
+        
+        <action input="SIPApplicationRouter.config.view"
+            name="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterDetailForm"
+            path="/sipApplicationRouterDetail" type="com.ibm.ws.console.sipcontainer.sipapplicationrouter.SIPApplicationRouterDetailAction">
+            <forward name="error" path="SIPApplicationRouter.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SIPApplicationRouter.content.main"/>
+        </action>
+            
+        <!-- action
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPTransportDetailForm"
+            path="/sipTransportDetail" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPTransportDetailAction" input="SIPTransport.config.view">
+            <forward name="error" path="SIPTransport.config.view"/>
+            <forward name="success" path="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPTransport.content.main"/>
+            <forward name="SIPTransportCollection" path="SIPTransport.content.main"/>
+        </action>
+        
+        <action
+            name="com.ibm.ws.console.servermanagement.sipcontainer.SIPTransportCollectionForm"
+            path="/sipTransportCollection" type="com.ibm.ws.console.servermanagement.sipcontainer.SIPTransportCollectionAction" input="SIPTransport.content.main">
+            <forward name="error" path="SIPContainer.config.view"/>
+            <forward name="success" path="SIPTransport.config.view"/>
+            <forward name="SIPTransportCollection" path="SIPTransport.content.main"/>
+        </action --> 
+    </action-mappings>
+ 
+</struts-config>

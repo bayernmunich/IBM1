@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!-- IBM Confidential OCO Source Material                                                -->
+<!-- (C) COPYRIGHT International Business Machines Corp. 2006,2013                       -->
+<!-- The source code for this program is not published or otherwise divested             -->
+<!-- of its trade secrets, irrespective of what has been deposited with the              -->
+<!-- U.S. Copyright Office.                                                              -->
+
+<plugin id="com.ibm.ws.console.middlewareserver"
+        name="middlewareserver"
+        version="6.1.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="middlewareserver">
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+</requires>
+
+<!-- 7.0 changes -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+    	<task id="allmiddlewareservers"
+              icon="images/onepix.gif"
+              label="nav.view.AllServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=MiddlewareServer"
+              external="false"
+              weight="2">
+           <category id="servermanagement"/>
+        </task>
+        <task id="libertyserver"
+              icon="images/onepix.gif"
+              label="nav.view.LibertyServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=LIBERTY_SERVER"
+              external="false"
+              weight="15">
+           <category id="servertypes"/>
+        </task>
+        <task id="phpserver"
+              icon="images/onepix.gif"
+              label="nav.view.PHPServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=PHP_SERVER"
+              external="false"
+              weight="23">
+           <category id="servertypes"/>
+        </task>
+        <task id="wasceserver"
+              icon="images/onepix.gif"
+              label="nav.view.WASCEServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=WASCE_SERVER"
+              external="false"
+              weight="25">
+           <category id="servertypes"/>
+        </task>
+        <task id="tomcatserver"
+              icon="images/onepix.gif"
+              label="nav.view.TomCatServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=TOMCAT_SERVER"
+              external="false"
+              weight="60">
+           <category id="servertypes"/>
+        </task>
+        <task id="weblogicserver"
+              icon="images/onepix.gif"
+              label="nav.view.WebLogicServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=WEBLOGIC_SERVER"
+              external="false"
+              weight="65">
+           <category id="servertypes"/>
+        </task>
+        <task id="jbossserver"
+              icon="images/onepix.gif"
+              label="nav.view.JBossServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=JBOSS_SERVER"
+              external="false"
+              weight="70">
+           <category id="servertypes"/>
+        </task>
+        <task id="wasforeignserver"
+              icon="images/onepix.gif"
+              label="nav.view.WASAppServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=WASAPP_SERVER"
+              external="false"
+              weight="80">
+           <category id="servertypes"/>
+        </task>
+        <task id="apacheserver"
+              icon="images/onepix.gif"
+              label="nav.view.ApacheServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=APACHE_SERVER"
+              external="false"
+              weight="85">
+           <category id="servertypes"/>
+        </task>
+        <task id="customhttpserver"
+              icon="images/onepix.gif"
+              label="nav.view.CustomHTTPServers"
+              view="/navigatorCmd.do?forwardName=MiddlewareServer.content.main&amp;middlewareServerType=CUSTOMHTTP_SERVER"
+              external="false"
+              weight="90">
+           <category id="servertypes"/>
+        </task>
+    </tasks>
+</extension>
+
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- begin actionSet -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.MiddlewareServer.action1" contextType="MiddlewareServer">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.templates"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="middlewareserver.button.submitAction"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,configurator"
+              label="middlewareserver.button.modeAction"
+              actionURI="MiddlewareServerCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.MiddlewareServerOps.action1" contextType="MiddlewareServerOps">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="MiddlewareServerOpsCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="MiddlewareServerOpsCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="middlewareserver.button.execute"
+              actionURI="MiddlewareServerOpsCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.MiddlewareServerTemplate.action1" contextType="MiddlewareServerTemplate">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="MiddlewareServerTemplateCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="MiddlewareServerTemplateCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.MiddlewareServerExternals.action1" contextType="MiddlewareServerExternals">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.remove"
+              actionURI="MiddlewareServerExternalCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.toggle"
+              actionURI="MiddlewareServerExternalCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- end actionSet -->
+
+<!-- begin CollectionItems -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.MiddlewareServer.collectionItem1" contextType="MiddlewareServer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="MiddlewareServerCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+              attributeName="clusterName"
+              sortable="sort"
+              itemURI=""
+              label="Server.clusterName.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+        <item
+         	  attributeName="maintStatus"
+        	  sortable="nosort"
+        	  label="middlewareserver.maintenanceMode.label"
+        	  statusServlet="/ibm/console/serverMaintStatus" >
+        </item>
+        <item
+              attributeName="expandedVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="displayType"
+              sortable="sort"
+              itemURI=""
+              label="Server.type.displayName">
+        </item>
+        <item
+              attributeName="action"
+              sortable="nosort"
+              itemURI=""
+              label="middlewareserver.action.displayAction">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.MiddlewareServerOps.collectionItem1" contextType="MiddlewareServerOps">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="MiddlewareServerOpsCollection.do?EditAction=true"
+              label="middlewareserver.operation.displayName">
+        </item>
+        <item
+              attributeName="osnames"
+              sortable="sort"
+              itemURI=""
+              label="middlewareserver.operation.displayOsnames">
+        </item>
+        <item
+              attributeName="executableName"
+              sortable="sort"
+              itemURI=""
+              label="middlewareserver.operation.displayOperation">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.MiddlewareServerExternals.collectionItem1" contextType="MiddlewareServerExternals">
+        <item
+              attributeName="filePath"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="middlewareserver.external.displayPath">
+        </item>
+        <item
+              attributeName="fileprivledges"
+              sortable="sort"
+              itemURI=""
+              label="middlewareserver.external.displayPrivledges">
+        </item>
+     </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.MiddlewareServerTemplate.collectionItem1" contextType="MiddlewareServerTemplate">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="template.name">
+        </item>
+        <item
+              attributeName="platform"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.platform.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.version.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="template.description">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.MiddlewareServerTemplate.collectionItem2" contextType="MiddlewareServer.selectserver.main">
+         <item attributeName="server" sortable="sort" label="label.server"/>
+         <item attributeName="node" sortable="sort" label="label.node"/>
+         <item
+              attributeName="expandedVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- end CollectionItems -->
+
+<!-- begin detailTabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MiddlewareServer.detailTab1" contextType="MiddlewareServer">
+        <tab
+              label="tab.configuration"
+              contentURI="MiddlewareServer.config.tab.view">
+        </tab>
+        <tab
+              label="tab.configview"
+              contentURI="MiddlewareServer.file.view">
+        </tab>
+        <tab
+              label="tab.logview"
+              contentURI="MiddlewareServer.file.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MiddlewareServerOps.ProcDef.detailTab1" contextType="MiddlewareServerOpsProcDef">
+        <tab
+              label="tab.configuration"
+              contentURI="MiddlewareServerOps.ProcDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MiddlewareServerOps.JavaProcDef.detailTab1" contextType="MiddlewareServerOpsJavaProcDef">
+        <tab
+              label="tab.configuration"
+              contentURI="MiddlewareServerOps.JavaProcDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- end detailTabs -->
+
+<!-- begin link -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.MiddlewareServer1" contextType="MiddlewareServer">
+        <link
+              categoryId="additional.properties"
+              weight="10"
+              label="middlewareserver.serverops.displayName"
+              description="middlewareserver.serverops.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerOps.content.main&amp;sfname=processDefinitions&amp;lastPage=MiddlewareServer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=Middlewareserver.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="middlewareserver.external.config.svc.link.displayName"
+              description="middlewareserver.external.config.link.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.externalConfiguration.main&amp;sfname=processDefinitions&amp;viewType=config"
+              role="administrator,configurator">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="middlewareserver.external.log.svc.link.displayName"
+              description="middlewareserver.external.log.link.description"
+		 		 		   actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.externalLog.main&amp;sfname=processDefinitions&amp;viewType=log"
+              role="administrator,configurator">
+		 		 </link>
+
+<!--
+        <link
+              categoryId="additional.properties"
+              label="middlewareserver.edit.configuration.file.displayName"
+              description="middlewareserver.edit.configuration.properties.description"
+              actionURI="MiddlewareServerDetail.do?action=fileView&amp;viewType=config">
+    	</link>
+        <link
+              categoryId="additional.properties"
+              label="middlewareserver.log.file.displayName"
+              description="middlewareserver.log.file.description"
+              actionURI="MiddlewareServerDetail.do?action=fileView&amp;viewType=logs">
+    	</link>
+-->
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.middlewareserver.related1" contextType="MiddlewareServer">
+        <link
+              categoryId="related.items"
+              weight="10"
+              label="middlewareserver.variables.link.displayName"
+              description="middlewareserver.variables.link.description"
+              actionURI="MiddlewareServerDetail.do?EditVariables=true">
+       </link>
+        <link
+              categoryId="related.items"
+              weight="20"
+              label="ApplicationServer.installedApps.displayName"
+              description="ApplicationServer.installedApps.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareApps.content.main&amp;lastPage=Middlewareserver.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.processDef.MiddlewareServer1" contextType="MiddlewareServerOpsProcDef">
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=MiddlewareServerOps.ProcDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=Property.content.main&amp;sfname=environment&amp;lastPage=MiddlewareServerOps.ProcDef.config.view">
+        </link>
+     </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.processDef.MiddlewareServer1" contextType="MiddlewareServerOpsJavaProcDef">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=MiddlewareServerOps.JavaProcDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=MiddlewareServerOps.JavaProcDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=Property.content.main&amp;sfname=environment&amp;lastPage=MiddlewareServerOps.JavaProcDef.config.view">
+        </link>
+     </linkSet>
+</extension>
+<!-- end link -->
+
+		 <!-- Variables -->
+		
+		 <extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="middlewareserver.variables.collection" contextType="MWSVariableSubstitutionEntry">
+  		 		 <item
+		 		 		   attributeName="symbolicName"
+		 		 		   sortable="sort"
+		 		 		   itemURI="mwsVariableSubstitutionEntryCollection.do?EditAction=true"
+		 		 		   label="environment.label.name">
+		 		 </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="VariableSubstitutionEntry.value.displayName" >
+        </item>
+       		 <item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="environment.label.scope" >
+        </item>
+    </collectionItem>
+		 </extension>
+		 <extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="middlewareserver.variables.action" contextType="MWSVariableSubstitutionEntry">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="mwsVariableSubstitutionEntryCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="mwsVariableSubstitutionEntryCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+		 </extension>
+		 <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="middlewareserver.variables.detailTab" contextType="MWSVariableSubstitutionEntry">
+        <tab
+              label="tab.configuration"
+              contentURI="mwsVariableSubstitutionEntry.config.tab.view">
+        </tab>
+    </detailTab>
+		 </extension>
+		
+		 <extension point="com.ibm.websphere.wsc.form">
+		 		 <form id="MiddlewareServer.config.general.properties" contextType="MiddlewareServer">
+		 		 		 <field attributeName="shortName" perspective="tab.configuration">
+		 		 		 		 <compatibility>
+		 		 		 		 		 <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+		 		 		 		 </compatibility>
+		 		 		 </field >
+		 		 </form>
+		 </extension>
+		 <!-- end Variables -->
+
+<extension point="com.ibm.websphere.wsc.servers">
+    <linkSet contextType="servers">
+        <link
+              label="ONDEMAND_ROUTER_Display"
+              forward="proxyCollection.do?SERVER_TYPE=ONDEMAND_ROUTER">
+        </link>
+        <link
+              label="PHP_SERVER_Display"
+              forward="phpServerCollection.do">
+        </link>
+        <link
+              label="WASCE_SERVER_Display"
+              forward="AddARepresentationServer.do?create=true&amp;middlewareServerType=WASCE_SERVER">
+        </link>
+
+     </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.servers">
+    <linkSet contextType="foreignservers">
+        <link
+              label="APACHE_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=APACHE_SERVER">
+        </link>
+        <link
+              label="WEBLOGIC_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=WEBLOGIC_SERVER">
+        </link>
+        <link
+              label="TOMCAT_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=TOMCAT_SERVER">
+        </link>
+        <link
+              label="WASCE_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=WASCE_SERVER">
+        </link>
+        <link
+              label="JBOSS_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=JBOSS_SERVER">
+        </link>
+        <link
+              label="WASAPP_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=WASAPP_SERVER">
+        </link>
+        <link
+              label="CUSTOMHTTP_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=CUSTOMHTTP_SERVER">
+        </link>
+        <link
+              label="LIBERTY_SERVER_Display"
+              forward="AddARepresentationServer.do?create=false&amp;middlewareServerType=LIBERTY_SERVER">
+        </link>
+
+     </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.apacheservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.ApacheServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.apachetomcatservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.ApacheTomcatServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.customhttpservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.CustomHttpServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.jbossservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.JBossServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.phpservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.PhpServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.wasappservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.WasappServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.wasceservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.WasCEServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.weblogicservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.WebLogicServerController"/>
+</extension>
+<extension point="com.ibm.websphere.wsc.treeitem">
+	<resourceType tree="authgrouptree" id="com.ibm.libertyservers" name="auth.tree.servers.name" parent="com.ibm.nodes" controller="com.ibm.ws.console.middlewareserver.authgrouptree.LibertyServerController"/>
+</extension>
+
+</plugin>

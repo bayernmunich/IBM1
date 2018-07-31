@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<plugin id="com.ibm.ws.console.probdetermination"
+        name="probdetermination"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="probdetermination">  
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="probmanagementcategory" parent="root" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="category.problem.determination"/>
+        <task id="probdeterminationtask" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="task.problem.determination" view="/navigatorCmd.do?forwardName=Logsandtrace.content.main" external="false" weight="10">
+            <category id="probmanagementcategory"/>
+        </task>
+        <task id="configproblems" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="configproblems.main.label" view="/navigatorCmd.do?forwardName=configproblems.content.main" external="false" weight="20">
+            <category id="probmanagementcategory"/>
+        </task>
+        <categoryDefinition id="configproblemcategory" parent="probmanagementcategory" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="nav.swg.com.ibm.ws.configvalidation" weight="50"/>
+        <task id="configproblemserrors" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="configproblems.messageType.1" view="/com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=configproblems.content.main.list&amp;init=false&amp;type=errors" external="false" weight="10">
+            <category id="configproblemcategory"/>
+        </task>
+        <task id="configproblemswarnings" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="configproblems.messageType.2" view="/com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=configproblems.content.main.list&amp;init=false&amp;type=warnings" external="false" weight="20">
+            <category id="configproblemcategory"/>
+        </task>
+        <task id="configproblemsinfo" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="configproblems.messageType.0" view="/com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=configproblems.content.main.list&amp;init=false&amp;type=info" external="false" weight="30">
+            <category id="configproblemcategory"/>
+        </task>
+        <task id="sysdumptask" icon="/com.ibm.ws.console.probdetermination/images/onepix.gif" label="SystemDump.displayName" view="/navigatorCmd.do?forwardName=SystemDump.content.main" external="false" weight="35">
+            <category id="probmanagementcategory"/>
+        </task>
+
+    </tasks>
+</extension>
+
+<extension point="com.ibm.ws.console.core.status">
+    <statusItems>
+        <statusItem id="configproblems.events"
+            contextType="configproblems"
+            title=""
+            link=""
+            rendererUri="/com.ibm.ws.console.probdetermination/config_problems.jsp"
+            refresh="60000"
+            largeIcon=" "
+            smallIcon=" "/>
+    </statusItems>    
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="probdetermination.configproblems.content.main.list1" contextType="configproblems.content.main.list">
+        <item
+              attributeName="text"
+              sortable="nosort"
+              itemURI="configProbCollection.do?EditAction=true"
+              label="configproblems.message.label">
+        </item>
+        <item
+              attributeName="documentFullUri"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="configproblems.scope.label">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="probdetermination.Logsandtrace1" contextType="Logsandtrace">
+            <!--<item
+                  attributeName="server"
+                  sortable="sort"
+                  itemURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list"
+                  label="server.label">
+            </item>-->
+            <item
+                  attributeName="server"
+                  sortable="sort"
+                  itemURI="/ibm/console/logsAndTraceCollection.do?linkClicked=true"
+                  label="server.label">
+            </item>
+            <item
+                  attributeName="node"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.label">
+            </item>
+            <item
+                 attributeName="hostName"
+                 sortable="sort"
+                 itemURI=""
+                 label="Host.name.displayName">
+             </item>
+            <item
+                  attributeName="version"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.version.displayName">
+            </item>
+             <item
+                  attributeName="type"
+                  sortable="sort"
+                  itemURI=""
+                  label="type.label">
+            </item>
+             <item
+                  attributeName="status"
+                  sortable="sort"
+                  itemURI=""
+                  label="status.label">	    	    	                      
+                  <compatibility>
+                        <match key="com.ibm.ws.console.problemdetermination.form.LogAndTraceCollectionForm.showServerStatus" value="true"/>
+         	     </compatibility>
+            </item>
+        </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="probdetermination.logsandtrace.contentList" contextType="logsandtrace.contentList">
+      <categoryDefinition weight="10" id="general.properties" parent="root" label="config.general.properties"/>
+      <!-- Diagnostic Trace Link -->
+        <link
+              weight="10"
+              categoryId="general.properties"
+              label="diag.trace.label"
+              description="diag.trace.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=TraceService.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <link
+              weight="10"
+              categoryId="general.properties"
+              label="diag.trace.label"
+              description="diag.trace.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=TraceService.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <link
+              weight="10"
+              categoryId="general.properties"
+              label="diag.trace.label"
+              description="diag.trace.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=TraceService.config.view_5&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+             </compatibility>
+        </link>
+        <!-- JVM Logs Link -->
+        <link
+              weight="11"
+              categoryId="general.properties"
+              label="jvm.logs.label"
+              description="jvm.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=JVMLog.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <link
+              weight="11"
+              categoryId="general.properties"
+              label="jvm.logs.label"
+              description="jvm.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=JVMLog.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <!-- Process Logs -->
+        <link
+              weight="12"
+              categoryId="general.properties"
+              label="process.logs.label"
+              description="process.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <link
+              weight="12"
+              categoryId="general.properties"
+              label="process.logs.label"
+              description="process.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <!-- IBM Service Logs -->
+        <link
+              weight="13"
+              categoryId="general.properties"
+              label="service.logs.label"
+              description="service.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=RASLoggingservice.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+          <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+ 	     </compatibility>
+        </link>
+        <link
+              weight="13"
+              categoryId="general.properties"
+              label="service.logs.label"
+              description="service.logs.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=RASLoggingservice.config.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list">
+          <compatibility>
+                    <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+ 	     </compatibility>
+        </link>
+        <!-- Change Logs Details -->
+        <link
+              weight="14"
+              categoryId="general.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+          </compatibility>
+        </link>
+        <link
+              weight="14"
+              categoryId="general.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;EditAction=true&amp;lastPage=Logsandtrace.content.list_7">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+          </compatibility>
+        </link>
+        <!-- z/os -->
+        <link
+              categoryId="general.properties"
+              label="hpel.change.logtype.label"
+              description="hpel.change.logtype.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPELChoose.zosconfig.view&amp;EditAction=true">
+           <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+           </compatibility>
+        </link>
+        <!-- HTTP access logs logging -->
+	   <link categoryId="general.properties"
+              weight="15"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=Logsandtrace.content.list_7&amp;sfname=services">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+        </compatibility>
+      </link>
+	  
+	  <link categoryId="general.properties"
+              weight="15"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=Logsandtrace.content.list&amp;sfname=services">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+        </compatibility>
+      </link>
+      
+      <link categoryId="general.properties"
+              weight="15"
+            label="HTTPAccessLoggingService.zos.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=Logsandtrace.content.list_7&amp;sfname=services">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-7]"/>
+        </compatibility>
+      </link>
+      <link categoryId="general.properties"
+              weight="15"
+            label="HTTPAccessLoggingService.zos.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=Logsandtrace.content.list&amp;sfname=services">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+        </compatibility>
+      </link>
+        
+        
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="traceservice.additional.properties.list" contextType="TraceService">
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="handlers.configspec.label"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=TraceService.config.view">
+          		<compatibility>
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="handlers.configspec.label"
+		            perspective="runtime"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=TraceService.config.view">
+          		<compatibility>
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+	</linkSet>
+</extension>
+<!-- tabsLayout -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="probdetermination.JVMLog1" contextType="JVMLog">
+        <tab
+              label="tab.configuration"
+              contentURI="jvmLog.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="monitor"
+              contentURI="jvmLog.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="probdetermination.ConfigSpec1" contextType="ConfigSpec">
+        <tab label="tab.configuration" contentURI="ConfigSpec.config.tab.view">
+        </tab>
+        <tab label="tab.runtime" role="administrator,operator" contentURI="ConfigSpec.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="probdetermination.TraceService1" contextType="TraceService">
+        <tab
+              label="tab.configuration"
+              contentURI="TraceService.config.tab.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="TraceService.config.tab.view_5">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+          </compatibility>
+        </tab>
+        <tab
+	              label="tab.runtime"
+	              role="administrator,operator"
+	              contentURI="TraceService.runtime.tab.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+          </compatibility>
+        </tab>
+        <tab
+	              label="tab.runtime"
+	              role="administrator,operator"
+	              contentURI="TraceService.runtime.tab.view_5">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+          </compatibility>
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="probdetermination.Outputredirect1" contextType="probdetermination.Outputredirect">
+        <tab
+              label="tab.configuration"
+              contentURI="Outputredirect.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="monitor"
+              contentURI="Outputredirect.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="probdetermination.RASLoggingservice1" contextType="RASLoggingservice">
+        <tab
+              label="tab.configuration"
+              contentURI="RASLog.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+
+
+
+
+
+
+
+
+<!-- New HPEL STUFF -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hpel.choose.tab" contextType="HPELChoose">
+        <tab
+              label="tab.configuration"
+              contentURI="HPELChoose.config.tab.view">
+			<compatibility>
+				<match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+			</compatibility>
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="HPELChoose.zosconfig.tab.view">
+			<compatibility>
+				<match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+			</compatibility>
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hpel.config.tab" contextType="HPELConfig">
+        <tab
+              label="tab.configuration"
+              contentURI="HPELConfig.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="monitor"
+              contentURI="HPELConfig.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="hpel.additional.properties.list" contextType="HPELConfig">
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELConfig.config.view">
+          		<compatibility>
+          		<!-- TODO fix me this need to v8 onward -->
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+		            perspective="runtime"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELConfig.config.view">
+          		<compatibility>
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+		<link
+			categoryId="related.items"
+			label="view.hpel.logs.label"
+			description="view.hpel.logs.description"
+			actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELConfig.config.view">
+			<compatibility>
+				<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+			</compatibility>
+		</link>
+		<link
+			categoryId="related.items"
+			label="view.hpel.logs.label"
+			description="view.hpel.logs.description"
+			perspective="runtime"
+			actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELConfig.config.view">
+			<compatibility>
+				<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+			</compatibility>
+		</link>
+
+	</linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hpel.bintrace.config.tab" contextType="HPELBinTrace">
+        <tab
+              label="tab.configuration"
+              contentURI="HPELBinTrace.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="monitor"
+              contentURI="HPELBinTrace.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="hpel.additional.properties.list" contextType="HPELBinTrace">
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELBinTrace.config.view">
+          		<compatibility>
+          		<!-- TODO fix me this need to v8 onward -->
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+		            perspective="runtime"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELBinTrace.config.view">
+          		<compatibility>
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+        <link
+              categoryId="related.items"
+              label="view.hpel.logs.label"
+              description="view.hpel.logs.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELBinTrace.config.view">
+        </link>
+		<link
+			categoryId="related.items"
+			label="view.hpel.logs.label"
+			description="view.hpel.logs.description"
+            perspective="runtime"
+            		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELBinTrace.config.view">
+        		<compatibility>
+               		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+     		</compatibility>
+        	</link>
+	</linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="hpel.textlog.config.tab" contextType="HPELTextLog">
+        <tab
+              label="tab.configuration"
+              contentURI="HPELTextLog.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              role="monitor"
+              contentURI="HPELTextLog.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="hpel.additional.properties.list" contextType="HPELTextLog">
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELTextLog.config.view">
+          		<compatibility>
+          		<!-- TODO fix me this need to v8 onward -->
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+		<link
+			categoryId="additional.properties"
+              		label="handlers.configspec.label"
+              		description="logging.spec.description"
+		            perspective="runtime"
+              		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPELTextLog.config.view">
+          		<compatibility>
+                 		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+ 	     		</compatibility>
+        	</link>
+        <link
+              categoryId="related.items"
+              label="view.hpel.logs.label"
+              description="view.hpel.logs.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELTextLog.config.view">
+        </link>
+		<link
+			categoryId="related.items"
+			label="view.hpel.logs.label"
+			description="view.hpel.logs.description"
+            perspective="runtime"
+            		actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPELTextLog.config.view">
+        		<compatibility>
+               		<match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+     		</compatibility>
+        	</link>
+	</linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="logfile.viewTopology" contextType="hpellogview">
+        <tab     label="ClassLoaderViewer.topology.displayName" contentURI="logfile.hpel.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- fix here -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hpel.landingpage.1" contextType="hpel.contentList">
+        <link
+              categoryId="related.items"
+              label="view.hpel.logs.label"
+              description="view.hpel.logs.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=logfile.hpel.view&amp;lastPage=HPEL.content.list">
+        </link>
+        <link
+              categoryId="related.items"
+              label="handlers.configspec.label"
+              description="logging.spec.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=HPEL.content.list">
+        </link>
+        <link
+              categoryId="related.items"
+              label="hpel.change.logtype.label"
+              description="hpel.change.logtype.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPELChoose.config.view&amp;lastPage=HPEL.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <link
+              categoryId="related.items"
+              label="hpel.change.logtype.label"
+              description="hpel.change.logtype.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPELChoose.zosconfig.view&amp;lastPage=HPEL.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+     	     </compatibility>
+        </link>
+        <link
+              categoryId="related.items"
+              label="hpel.process.logs.label"
+              description="hpel.process.logs.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;lastPage=HPEL.content.list">
+              <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+     	     </compatibility>
+        </link>
+        <!-- http access logging -->
+	  <link categoryId="related.items"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=HPEL.content.list&amp;sfname=services&amp;parentType=Server">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+        </compatibility>
+      </link>
+      
+      <link categoryId="related.items"
+            label="HTTPAccessLoggingService.zos.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=HPEL.content.list&amp;sfname=services&amp;parentType=Server">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[8-9]"/>
+        </compatibility>
+      </link>
+        
+    </linkSet>
+    
+</extension>
+    <!-- system dump -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.SystemDump.collectionItem1" contextType="SystemDump">
+            <item
+                  attributeName="server"
+                  sortable="sort"
+                  itemURI=""
+                  label="server.label">
+            </item>
+            <item
+                  attributeName="node"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.label">
+            </item>
+            <item
+                 attributeName="hostName"
+                 sortable="sort"
+                 itemURI=""
+                 label="Host.name.displayName">
+             </item>
+            <item
+                  attributeName="version"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.version.displayName">
+            </item>
+             <item
+                  attributeName="type"
+                  sortable="sort"
+                  itemURI=""
+                  label="type.label">
+            </item>
+             <item
+                  attributeName="status"
+                  sortable="sort"
+                  itemURI=""
+                  label="status.label">	    	    	                      
+                  <compatibility>
+                        <match key="com.ibm.ws.console.probdetermination.systemdump.GenericServerCollectionForm.showServerStatus" value="true"/>
+         	     </compatibility>
+            </item>
+        </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.SystemDump.action1" contextType="SystemDump">
+        <action
+              enablesFor="Collection"
+              label="systemdump.heap"
+              actionURI="systemDumpCollection.do?type=heap"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="systemdump.javacore"
+              actionURI="systemDumpCollection.do?type=core"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="systemdump.systemdump"
+              actionURI="systemDumpCollection.do?type=system"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+
+</plugin>
+

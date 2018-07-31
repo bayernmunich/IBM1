@@ -1,0 +1,118 @@
+#
+# (C) Copyright IBM Corp. 2004,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you
+# in the  use of  the product. The code is provided 'AS IS', without warranty or
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+
+#-----------------------------------------------------------------
+# deleteodr.jacl - deletes an odr server
+#-----------------------------------------------------------------
+#
+#  Deletes the odr server on specified node
+#
+#  This is a bi-modal script: it can be included in the wsadmin
+#  command invocation like this:
+#     wsadmin -f deleteodr.jacl nodeY odr_name
+#
+#  or the script can be sourced from the wsadmin command line if:
+#     wsadmin> source deleteodr.jacl
+#     wsadmin> deleteodr nodeY odr_name
+#
+#  The script expects some parameters:
+#      arg1 - node name
+#      arg2 - odr name (optional)
+#-----------------------------------------------------------------
+
+proc deleteodr {nodeName serverName} {
+
+   set retval 1
+
+   #--------------------------------------------------------------
+   # set up globals
+   #--------------------------------------------------------------
+   global AdminConfig
+   global AdminControl
+   global AdminApp
+
+   #--------------------------------------------------------------
+   # do some sanity checking
+   #     -- do we have a server by this name on the node?
+   #--------------------------------------------------------------
+   set server [$AdminConfig getid /Node:$nodeName/Server:$serverName]
+   puts "deleteodr: checking for existence of server $serverName on node $nodeName"
+   if {[llength $server] == 0} {
+      puts "deleteodr: Error -- server $serverName not found on node $nodeName"
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   #     -- is a nodeSync MBean available on this node?
+   #--------------------------------------------------------------
+   puts "deleteodr: checking for the existence of a NodeSync MBean on node $nodeName"
+   set nodeSync [$AdminControl completeObjectName type=NodeSync,node=$nodeName,*]
+   if {[llength $nodeSync] == 0} {
+      puts "deleteodr: Error -- NodeSync MBean not found for name $nodeName"
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   # Delete server
+   #--------------------------------------------------------------
+   puts "deleteodr: deleting  server $serverName ....."
+   $AdminConfig remove $server
+
+   #--------------------------------------------------------------
+   # Save all the changes
+   #--------------------------------------------------------------
+   puts "deleteodr: saving the configuration"
+   $AdminConfig save
+
+   #--------------------------------------------------------------
+   # Find out if serverStartupSyncEnabled is true for this node
+   # We just deleted this server, so if this attribute is set to
+   # "false" we have to perform a sync.  If we do not, the node we
+   # are installing on may have an out-of-date copy of the config
+   # data.
+   #--------------------------------------------------------------
+   set enabled [$AdminControl getAttribute $nodeSync serverStartupSyncEnabled]
+   if {[string compare $enabled "false"] == 0} {
+      puts "deleteodr: Invoking synchronization for node $nodeSync because serverStartupSyncEnabled is set to false..."
+      $AdminControl invoke $nodeSync sync
+      puts "deleteodr: Done with synchronization."
+   }
+
+   #--------------------------------------------------------------
+   # start the server - not done
+   #--------------------------------------------------------------
+   #puts "deleteodr: starting server $serverName ..."
+   #$AdminControl startServer $serverName $nodeName
+
+   set retval 0
+   puts "deleteodr: done."
+   return $retval
+}
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+if { ($argc == 1) } {
+   set nodeName         [lindex $argv 0]
+   set serverName		"odr"
+   deleteodr $nodeName $serverName
+} elseif { ($argc == 2) } {
+   set nodeName         [lindex $argv 0]
+   set serverName		[lindex $argv 1]
+   deleteodr $nodeName $serverName
+} else {
+   puts ""
+   puts "deleteodr: this script takes 2 parametes: node name <odr_name>"
+   puts "e.g.:     deleteodr  mynode"
+   puts "e.g.:     deleteodr  mynode  myodr"
+   puts ""
+   puts "odr_name default value is: "odr"
+}

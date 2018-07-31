@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                                     -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N01, 5722-WE2 (C) COPYRIGHT International Business Machines Corp. 2008   -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                                            -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                                -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                                -->
+<!-- ===================================================================================================================== -->
+
+<plugin id="com.ibm.ws.console.sca.security"
+        name="sca.security"
+        version="8.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="scasecurity">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.appmanagement"/>
+    <import plugin="com.ibm.ws.console.blamanagement"/>
+    <import plugin="com.ibm.ws.console.scamanagement"/>
+</requires>
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- Extension point to plugin into BLA install panels -->
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.RoleToUserMapping.step" stepName="RoleToUserMapping" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+<extension point="com.ibm.ws.console.core.wizardStep">
+    <step name="BLAAddCU.RunAsRoleToUserMapping.step" stepName="RunAsRoleToUserMapping" contextType="websphere.blamanagement.addcu"/>
+</extension>
+
+<!-- Extension point to link into view/edit panels -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="additional.properties" contextType="CUDetail">
+        <link categoryId="additional.properties" label="sca.rolesToUserMapping"
+            description="sca.rolesToUserMapping"  weight="30"
+            actionURI="sca.viewEdit.rolesToUserMapping.do?forwardName=sca.viewEdit.rolesToUserMapping">
+            <compatibility>
+                <match class="com.ibm.ws.console.sca.security.form.CompatabilityForm" key="com.ibm.ws.console.sca.security.displayRoleMapping" value="true"/>
+            </compatibility>
+        </link>
+    </linkSet>
+
+    <linkSet id="additional.properties" contextType="CUDetail">
+        <link categoryId="additional.properties" label="sca.runAsRolesToUserMapping"
+            description="sca.runAsRolesToUserMapping"  weight="30"
+            actionURI="sca.viewEdit.runAsRolesToUserMapping.do?forwardName=sca.viewEdit.runAsRolesToUserMapping">
+            <compatibility>
+                <match class="com.ibm.ws.console.sca.security.form.CompatabilityForm" key="com.ibm.ws.console.sca.security.displayRunAsRoleMapping" value="true"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+</plugin>

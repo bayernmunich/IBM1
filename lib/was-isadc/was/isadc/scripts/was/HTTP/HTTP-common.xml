@@ -1,0 +1,1292 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="HTTP-common" >
+
+	<dirname property="http.common.basedir" file="${ant.file.HTTP-common}"/>
+	<dirname property="http.common.parentdir" file="${http.common.basedir}"/>
+	<dirname property="http.common.grandparentdir" file="${http.common.parentdir}"/>
+	<dirname property="http.common.bundle.basedir" file="${http.common.grandparentdir}"/>
+
+<!-- 
+
+		The target is used to initialize the IHS scripts.
+		
+ -->
+<target name="ihs_setup" description="Initialize the IHS scripts" >
+
+<if isTrue="${ihs.local}" >
+	<mkdir dir="${autopdtmp}/IHSProblems" />
+	<autopddelete>
+		<fileset dir="${autopdtmp}/IHSProblems">
+			<include name="*" />
+		</fileset>
+	</autopddelete>
+</if>	
+
+</target>
+
+
+<!-- 
+	This target is used to query which products are in a machine
+ -->
+
+<target name="querythismachine" description="prompt the user for what servers are on this machine.">
+<!-- Sets wasnothere, autoWAS, manualWAS-->
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_query_servers_on_machine" message="[{0}] Step {1}: Finding out where IBM HTTP Server and WebSphere Application Server reside" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	<autopdinput message="prompt_servers_location" validargs="IHS,Both" addproperty="HTTP.thisServer" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+
+	<echo message="HTTP.thisServer is ${HTTP.thisServer}"/>
+	
+	<condition property="ihs.local">
+		<or>
+			<equals arg1="IHS" arg2="${HTTP.thisServer}" />
+			<equals arg1="Both" arg2="${HTTP.thisServer}" />
+		</or>
+	</condition>
+
+	<condition property="ihs.only">
+		<equals arg1="IHS" arg2="${HTTP.thisServer}" />
+	</condition>
+
+	<condition property="wsas.local">
+		<equals arg1="Both" arg2="${HTTP.thisServer}" />
+	</condition>
+	<echo message="wsas.local: ${wsas.local}"/>
+	<echo message="ihs.local: ${ihs.local}"/>
+
+	<if isTrue="${ihs.only}">
+		<property name="collection.only" value="true" />
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="Input_Required" type="prompt" bundle="autopdtoolstrings"/>
+			<fieldtask name="label" label="Explain_WSAS_Problem_Collection" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="WSAS.Logging" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				label="Your_choice" 
+				list="auto:manual:none" 
+				listDetails="auto:manual:none" type="selectlist" />
+		</inputdialogtask_v2>
+		<!-- explain that WSAS logging is needed to figure some problems, what sort of WSAS logging on the remote 
+		system would they like to do? run an autopd script, manual or none at all? -->
+	</if>	
+	<condition property="autoWAS">
+			<and>
+				<equals arg1="auto" arg2="${WSAS.Logging}"/>
+				<not>
+					<equals arg1="true" arg2="${wsas.local}"/>
+				</not>
+			</and>
+	</condition>
+		
+	<condition property="wasnothere">
+			<not>
+					<equals arg1="true" arg2="${wsas.local}"/>
+			</not>
+	</condition>
+		
+	<condition property="detect.was.status.needed">
+		<equals arg1="true" arg2="${wsas.local}"/>
+	</condition>
+		
+	<condition property="manualWAS">
+		<and>
+			<equals arg1="manual" arg2="${WSAS.Logging}"/>
+			<not>
+				<equals arg1="true" arg2="${wsas.local}"/>
+			</not>
+		</and>
+	</condition>
+
+	<if isTrue="${manualWAS}" >
+	    <inputdialogtask_v2 bundle="properties/SSEQTP/autopdtoolstrings_was">
+			<fieldtask name="prompt" label="Input_the_Version_of_IBM_WebSphere_Application_Server_for_the_Log_Files" type="prompt" />
+			<fieldtask name="was.product.version" label="Application_Server_Version" defaultValue="" type="plaintext" />
+		</inputdialogtask_v2>
+	
+		<wsnlsecho key="WAS_product_version" 
+			bundle="autopdtoolstrings" 
+			message="WebSphere Application Server product version: {0}" 
+			replace="${was.product.version}" 
+		    id="2291"
+		    level="info"
+		    component="\scripts\was\HTTP-common.xml" />
+		
+		<versionlevel property="was.version.level" 
+			version="${was.product.version}" 
+			level="4.0:5.0:5.1:6.0" />
+		
+		<wsnlsecho key="WAS_product_level" 
+			bundle="autopdtoolstrings" 
+			message="WebSphere Application Server product level: {0}" 
+			replace="${was.version.level}" 
+		    id="2292"
+		    level="info"
+		    component="\scripts\portal-was-sharedtargets.xml" />
+			
+		<condition property="isWASVersion5.0">
+			<equals arg1="5.0" arg2="${was.version.level}" />
+		</condition>
+		
+		<condition property="isWASVersion5.1">
+			<equals arg1="5.1" arg2="${was.version.level}" />
+		</condition>
+		
+		<condition property="isWASVersion6.0">
+			<equals arg1="6.0" arg2="${was.version.level}" />
+		</condition>
+	</if>
+
+	<echo message="manual is ${manualWAS} auto is ${autoWAS} wasnothere is ${wasnothere}"/>
+
+</target>
+
+
+<target name="setRemoteWASAuto" description="UI to guide the user through the first step of synced tracing" if="autoWAS">
+	<echo message="setremoauto"/>
+	<inputdialogtask_v2 noCancel="true" doSkip="true">
+	<fieldtask name="prompt" label="WAS_Remote_Setup_auto" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common1" label="WAS_Remote_Setup_auto1"  type="label" accessibilityName="WAS_Remote_Setup_auto1" accessibilityDesc="WAS_Remote_Setup_auto1" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common2" label="WAS_Remote_Setup_auto2"  type="label" accessibilityName="WAS_Remote_Setup_auto2" accessibilityDesc="WAS_Remote_Setup_auto2" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common3" label="Ok_to_proceed"  type="label" accessibilityName="Ok_to_proceed" accessibilityDesc="Ok_to_proceed" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+</inputdialogtask_v2>
+</target>
+
+<target name="collectRemoteWASAuto" description="UI to guide the user through the first step of synced tracing" if="autoWAS">
+<echo message="collectremoauto"/>
+	<inputdialogtask_v2 noCancel="true" doSkip="true">
+	<fieldtask name="prompt" label="WAS_Remote_Collect_auto" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common4" label="IHS_Remote_Collect_auto1"  type="label" accessibilityName="WAS_Remote_Collect_auto1" accessibilityDesc="WAS_Remote_Collect_auto1" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common5" label="WAS_Remote_Collect_auto2"  type="label" accessibilityName="WAS_Remote_Collect_auto2" accessibilityDesc="WAS_Remote_Collect_auto2" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common51" label="IHS_Remote_Collect_auto3"  type="label" accessibilityName="WAS_Remote_Collect_auto51" accessibilityDesc="WAS_Remote_Collect_auto51" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="HTTP.common6" label="Ok_to_proceed"  type="label" accessibilityName="Ok_to_proceed" accessibilityDesc="Ok_to_proceed" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+</inputdialogtask_v2>
+</target>
+
+<target name="setRemoteWASManual" description="UI to guide the user through the first step of synced tracing" if="manualWAS">
+<echo message="setremomanual"/>
+<!-- 
+<saveresourcebundleproperty 
+	bundle="properties/SSEQTP/autopdtoolstrings_was"
+	key="WAS_Remote_Collect_manual5" 
+	propertyName="entertracestring" 
+	message="4. In Trace Specification, enter the following trace string: {0}."
+	replace="Servlet_Engine=all=enabled:HTTP_Transport=all=enabled"/>
+ -->
+	<property name="was.trace.string" value="Servlet_Engine=all=enabled:HTTP_Transport=all=enabled" />
+	
+	<if isTrue="${isWASVersion5}" >
+
+			<inputdialogtask_v2 noCancel="true" doSkip="true">
+				<fieldtask name="prompt" label="Instructions_to_set_up_trace_on_failing_server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft1" label="1In_the_Administrative_Console_expand_the_Troubleshooting_section_and_click_on_Logs_and_Trace"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft2" label="2Click_on_the_link_for_your_server"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft3" label="3Click_on_Diagnostic_Trace"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft4" label="4In_the_Trace_Specification_enter_the_following"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft5" label="${was.trace.string}"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft6" label="5Click_on_Apply"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft7" label="6Save_and_sync_your_configuration"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_sync_problem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="HTTP.common14" label="Ok_to_proceed"  type="label" accessibilityName="Ok_to_proceed" accessibilityDesc="Ok_to_proceed" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			</inputdialogtask_v2>	
+	</if>
+
+	<if isTrue="${isWASVersion6.0}">
+			<inputdialogtask_v2 noCancel="true" doSkip="true">
+				<fieldtask name="prompt" label="Instructions_to_set_up_trace_on_failing_server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft8" label="1In_the_Administrative_Console_expand_the_Servers_section_and_click_on_Application_Servers"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft9" label="2Click_on_the_link_for_your_server"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft10" label="3Click_on_change_log_details"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft11" label="4In_the_textbox_enter_the_following" type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft12" label="${was.nodeagent.trace.string}"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft13" label="5Click_on_Apply"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_set_trace" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft14" label="6Save_and_sync_your_configuration"  type="label" accessibilityName="was_set_trace" accessibilityDesc="was_sync_problem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="HTTP.common22" label="Click_OK_to_proceed_once_you_have_finished_these_steps"  type="label" accessibilityName="Ok_to_proceed" accessibilityDesc="Ok_to_proceed" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask_v2>	
+	</if>
+
+</target>
+
+<target name="collectRemoteWASManual" description="UI to guide the user through the first step of synced tracing" if="manualWAS">
+<echo message="collectremomanual"/>
+	<inputdialogtask_v2 noCancel="true" doSkip="true">
+	<fieldtask name="prompt" label="WAS_Remote_Collect_manual" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="WAS_Remote_Collect_manual1" label="WAS_Remote_Collect_manual1"  type="label" accessibilityName="WAS_Remote_Collect_manual1" accessibilityDesc="WAS_Remote_Collect_manual1" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="WAS_Remote_Collect_manual2" label="WAS_Remote_Collect_manual2"  type="label" accessibilityName="WAS_Remote_Collect_manual2" accessibilityDesc="WAS_Remote_Collect_manual2" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="WAS_Remote_Collect_manual3" label="WAS_Remote_Collect_manual3"  type="label" accessibilityName="WAS_Remote_Collect_manual3" accessibilityDesc="WAS_Remote_Collect_manual3" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<fieldtask name="WAS_Remote_Collect_manual4" label="Ok_to_proceed"  type="label" accessibilityName="Ok_to_proceed" accessibilityDesc="Ok_to_proceed" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+</inputdialogtask_v2>
+</target>
+
+
+<!-- 
+
+	This target is used to obtain the version of IHS server and property information from http configuration files
+	
+ -->
+<target name="get_ihs_root" description="obtain IHS root directory">
+
+<if isTrue="${ihs.local}" >
+
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_ihs.gatherlocal" message="[{0}] Step {1}: Gathering Local IHS server information" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<inputdialogtask_v2>
+		<fieldtask name="prompt" label="prompt_IHS_Root_Directory" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="ihs.root" label="answer"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was" initialValueSource="persisted"/>
+	</inputdialogtask_v2>
+ 	
+  	<echo message="ihs.root: ${ihs.root}" />
+
+
+	<available file="${ihs.root}/bin/Apache.exe" type="file" property="ihs.apacheexist" /> 
+	<available file="${ihs.root}/bin/apachectl" type="file" property="ihs.apachectlexist" /> 
+	<available file="${ihs.root}/bin/httpd" type="file" property="ihs.httpdexist"/>
+
+	<condition property="ihs.root.valid" >
+		<or>
+			<isTrue value="${ihs.apacheexist}" />
+			<isTrue value="${ihs.apachectlexist}" />
+			<isTrue value="${ihs.httpdexist}" />
+		</or>
+	</condition>				
+
+	<echo message="ihs.root.valid: ${ihs.root.valid}" />
+ 	<if isNotTrue="${ihs.root.valid}">
+		<inputdialogtask_v2 noCancel="true">
+			<fieldtask name="prompt" label="You_have_input_a_wrong_IHS_root_directory_run_the_script_again" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+		<fail>You inputed a wrong root directory of IBM HTTP Server.</fail>		
+	</if>
+	
+	<persistproperty property="ihs.root" />
+
+	<normalize_filename filename="${ihs.root}" key="ihs.root.normalized"/>
+	<trim_filename key="ihs.root.trimmed" filename="${ihs.root.normalized}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+</if>
+</target>
+
+<target name="select_http_conf" description="Select HTTP configuration file" >
+
+<if isTrue="${ihs.local}" >
+	<available file="${ihs.root}/conf/httpd.conf" type="file" property="ihs.confexist" />
+
+	<echo message="ihs.confexist: ${ihs.confexist}" />
+
+	<if isTrue="${ihs.confexist}">  
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="Verify_the_conf_file_location_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="ihs.conf.location.name" label="Info_to_verify_the_conf_file_location_of_IBM_HTTP_Server" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="ihs.conf.location" label="File_location" type="filebrowser" defaultValue="${ihs.root}/conf/httpd.conf" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+	</if>
+	<if isNotTrue="${ihs.confexist}">
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="Input_the_conf_file_location_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="ihs.conf.location" label="File_location" type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+	</if>
+
+	<echo message="ihs.conf.location: ${ihs.conf.location}" />
+
+	<available file="${ihs.conf.location}" type="file" property="ihs.conf.location.available" />
+
+	<if isTrue="${ihs.conf.location.available}" >
+		<dirname property="ihs.conf.location.dirname" file="${ihs.conf.location}" />
+		<normalize_filename filename="${ihs.conf.location.dirname}" key="ihs.conf.location.dirname.normalized"/>
+		<trim_filename key="ihs.conf.location.trimmed" filename="${ihs.conf.location.dirname.normalized}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+		<basename property="ihs.conf.location.basename" file="${ihs.conf.location}" />
+	</if>
+
+	<if isTrue="${ihs.conf.location.available}" >	
+		<ihs_conf_properties filename="${ihs.conf.location}">
+			<confProperty name="ihs.ssl.enable" confKey="SSLEnable" matchType="present" tokenNumber="1" />
+			<confProperty name="ihs.keyfiles" confKey="keyfile" matchType="multipleLine" tokenNumber="2" delimiter="|" />
+			<confProperty name="ihs.ssl.loadmodule" confKey="LoadModule" matchType="patternPresent" pattern="ibm_ssl_module.*modules/mod_ibm_ssl" />		
+			<confProperty name="ihs.error.log" confKey="ErrorLog" matchType="multipleLine" tokenNumber="2" delimiter="|"/>
+			<confProperty name="ihs.access.log" confKey="CustomLog" matchType="multipleLine" tokenNumber="2" delimiter=","/>
+		</ihs_conf_properties> 
+
+		<echo message="ihs.ssl.enable: ${ihs.ssl.enable}" />
+		<echo message="ihs.keyfiles: ${ihs.keyfiles}" />
+		<echo message="ihs.ssl.loadmodule: ${ihs.ssl.loadmodule}" />
+		<echo message="ihs.error.log: ${ihs.error.log}" />
+		<echo message="ihs.access.log: ${ihs.access.log}" />
+
+		<filter_http_rotate_logs name="ihs.access.log.list" list="${ihs.access.log}" delimiter="," prefix="|" />
+		<echo message="ihs.access.log.list: ${ihs.access.log.list}" />
+		<filepath_complete key="ihs.error.log.list" files="${ihs.error.log}" delimiter="|" defaultPrefix="${ihs.root}/" />
+		<filepath_complete key="ihs.access.log.list" files="${ihs.access.log.list}" delimiter="," defaultPrefix="${ihs.root}/" />
+		<filepath_complete key="ihs.keyfiles.list" files="${ihs.keyfiles}" delimiter="|" defaultPrefix="${ihs.root}/" />
+		
+		<echo message="ihs.error.log.list: ${ihs.error.log.list}" />
+		<echo message="ihs.access.log.list: ${ihs.access.log.list}" />
+	    <echo message="ihs.keyfiles.list: ${ihs.keyfiles.list}" /> 
+	</if>
+
+	<if isNotTrue="${ihs.conf.location.available}" >
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="You_have_provided_a_wrong_IHS_configuration_file_run_the_script_again" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>		
+		</inputdialogtask_v2>		
+		<fail>The configuration file you provided is not available</fail>		
+	</if>
+</if>
+</target>
+
+<target name="select_key_file" description="Select key file of IHS" if="has.ssl.problem">
+
+<if isTrue="${ihs.local}" >	
+	<condition property="ihs.keyfiles.isSet">
+		<isset property="ihs.keyfiles" />
+	</condition>
+	<if isTrue="${ihs.keyfiles.isSet}" >
+		<condition property="has.multiple.keyfiles" >
+			<contains string="${ihs.keyfiles.list}" substring="|" />
+		</condition>
+		<echo message="has.multiple.keyfiles: ${has.multiple.keyfiles}" />
+		<if isTrue="${has.multiple.keyfiles}" >
+			<inputdialogtask_v2>
+				<fieldtask name="prompt" label="Select_Key_File_Used_by_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ihs.keyfile" label="Key_file" list="${ihs.keyfiles.list}" listDetails="${ihs.keyfiles.list}" type="selectlist" accessibilityName="Key_file" accessibilityDesc="Key_file" bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|"/>
+			</inputdialogtask_v2>
+		</if>
+		<if isNotTrue="${has.multiple.keyfiles}" >
+			<property name="ihs.keyfile" value="${ihs.keyfiles.list}" />
+		</if>
+	</if>		
+    <echo message="ihs.keyfile: ${ihs.keyfile}" />					
+	<available file="${ihs.keyfile}" type="file" property="ihs.keyfile.available" />
+</if>    
+</target>
+
+
+<target name="determine_ssl_related_problem" description="Determine if SSL is involved in the problme" >
+<if isTrue="${ihs.local}" >	
+	<autopdinput message="prompt_ssl_problem" validargs="yes,no" addproperty="ssl.problem" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+    <echo message="ssl.problem: ${ssl.problem}" />					
+	<condition property="has.ssl.problem" >
+		<equals arg1="${ssl.problem}" arg2="yes" />
+	</condition>
+	<echo message="has.ssl.problem: ${has.ssl.problem}" />
+</if>
+
+</target>
+
+<target name="verify_ssl_enable" description="Verify if the SSL is enabled"  if="has.ssl.problem">
+	<if isNotTrue="${ihs.ssl.enable}" >
+		<inputdialogtask_v2 noCancel="true">
+			<fieldtask name="prompt" label="The_SSL_isnt_set_to_enabled_in_configuration_file_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+		<fail>The SSL isn't set to enabled in configuration file of IBM HTTP Server</fail>				
+	</if>
+	<if isNotTrue="${ihs.ssl.loadmodule}" >
+		<inputdialogtask_v2 noCancel="true">
+			<fieldtask name="prompt" label="The_SSL_module_isnt_loaded_in_configuration_file_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>			
+		</inputdialogtask_v2>
+		<fail>The SSL isn't set to enabled in configuration file of IBM HTTP Server</fail>				
+	</if>
+	<if isNotTrue="${ihs.keyfile.available}" >
+		<inputdialogtask_v2 noCancel="true">
+			<fieldtask name="prompt" label="The_key_file_dont_exists_in_the_configuration_file_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>			
+		</inputdialogtask_v2>
+		<fail>The required keyfile directive is either missing or commented out.  Please correct this before collecting logs.  Collection is terminating</fail>				
+	</if>
+</target>
+
+<target name="backupihspropslocal" description="Make backup of http log files and related properties">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_back_up_all_log_entries_and_related_properties_from_IHS" message="[{0}] Step {1}: Backing up all related properties from IBM HTTP Server" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<mkdir dir="${autopdtmp}/ihsbak" />
+
+	<copy todir="${autopdtmp}/ihsbak" preservelastmodified="true">
+		<fileset file="${ihs.conf.location}"/>
+	</copy>
+
+<!-- 
+	<copy todir="${autopdtmp}/ihsbak" preservelastmodified="true">
+		<fileset dir="${ihs.root}/logs">
+			<exclude name="admin*"/>
+			<include name="*" />
+		</fileset>
+	</copy>
+-->
+</target>
+
+
+<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="generate_trace_string" description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_generate_trace_strings" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Generating trace strings" replace="${autopdts};;${step.count}" />
+
+		<property name="was.trace.string" value="Servlet_Engine=all=enabled:HTTP_Transport=all=enabled" />
+		<echo message="Trace specification string: ${was.trace.string}" />				
+	</target>
+
+<target name="setIHSlogpropslocal" description="setting the HTTP server loglevel to debug">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_Set_IHS_logging_config" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: changing the tracing setup for IHS." replace="${autopdts};;${step.count}" />
+	<changeconf confPath="${ihs.conf.location}" property="LogLevel" value="debug" newFile="${ihs.root}/conf/httpddbg.conf" />
+	<copy tofile="${ihs.conf.location}" file="${ihs.root}/conf/httpddbg.conf" overwrite="true" failonerror="true" />
+	<autopddelete>
+		<fileset file="${ihs.root}/conf/httpddbg.conf"/>
+	</autopddelete>
+	
+</target>
+
+<target name="collect_ihs_info" description="Collect log tracing and other config information from IBM IHS Server">
+<if isTrue="${ihs.local}" >
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_trace_information_of_IHS" message="[{0}] Step {1}: Collecting IBM HTTP Server trace information" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="Gather_IHS_information" message="Gathering IBM HTTP Server information" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<if isNotTrue="isOS400">
+			<levelreporttask format="html" filename="${autopdtmp}/autopd/levelreport.html" />
+		</if>
+
+	
+	<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >				
+		<zipfileset file="${ihs.conf.location}" prefix="autopdzip/${ihs.conf.location.trimmed}" />
+	</zip>				
+
+	<zip_multiple_files destfile="${pmrfilename}" update="true" prefix="autopdzip/" prefixTrimmed=".:\\|.:/|..:\\|..:/|/" srcfiles="${ihs.error.log.list}" delimiter="|" fileSuffix="*" />
+	<zip_multiple_files destfile="${pmrfilename}" update="true" prefix="autopdzip/" prefixTrimmed=".:\\|.:/|..:\\|..:/|/" srcfiles="${ihs.access.log.list}" delimiter="|" fileSuffix="*" />
+</if>	
+</target>
+
+
+<!-- This target lies on the alternate path invoked when the script is entered
+	at the "autopdmainrecovery" target. 
+-->
+<target name="collect_was_ihs_recoverylocal" description="Collect log tracing and other config information for recovery from Portal Server">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_collect_information_from_IHS_for" message="[{0}] Step {1}: Recovery-Collecting IHS information for {2}" replace="${autopdts};;${step.count};;${autopdProblem}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true" >
+
+		<zipfileset file="${ihs.conf.location}" prefix="autopdzip/${ihs.conf.location.trimmed}" />
+	</zip>
+	<zip_multiple_files destfile="${recovery_pmrfilename}" update="true" prefix="autopdzip/" prefixTrimmed=".:\\|.:/|..:\\|..:/|/" srcfiles="${ihs.error.log.list}" fileSuffix="*"/>
+	<zip_multiple_files destfile="${recovery_pmrfilename}" update="true" prefix="autopdzip/" prefixTrimmed=".:\\|.:/|..:\\|..:/|/" srcfiles="${ihs.access.log.list}" fileSuffix="*"/>
+	
+</target>
+
+<!-- This target restores log files from the backup directory where they were copied by
+ 	 the 'backupihsprops' target.
+-->	
+<target name="restore_ihs_local" description="Restore IBM HTTP server state">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_restore_all_IHS_information" message="[{0}] Step {1}: Restoring all IHS information" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<copy tofile="${ihs.conf.location}" file="${autopdtmp}/ihsbak/${ihs.conf.location.basename}" overwrite="true" failonerror="false" />
+<!--  		
+		<autopddelete>
+			<fileset dir="${ihs.root}/logs">
+				<exclude name="admin*"/>
+				<include name="*"/>
+			</fileset>
+			<fileset file="${ihs.root}/conf/httpd.conf"/>
+		</autopddelete>
+-->
+<!-- 
+		<copy todir="${ihs.root}/logs" preservelastmodified="true">
+			<fileset dir="${autopdtmp}/ihsbak">
+				<exclude name="admin*"/>
+				<include name="*" />
+			</fileset>
+		</copy>
+-->		
+</target>
+
+
+<target name="stop_web_server1" description="Stop Web server" >
+<if isTrue="${ihs.local}" >
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_stop_web_server" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Stopping Web Server" replace="${autopdts};;${step.count}" />	
+	<autopdinput message="To_perform_this_collection_please_manually_stop_Web_Server_now" validargs="I_have_stopped_Web_server,quit" addproperty="do.stop.web.server" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<wsnlsecho key="do.stop.web.server" bundle="properties/SSEQTP/autopdtoolstrings_was" message="do.stop.web.server is {0}" replace="${do.stop.web.server}" />
+	<condition property="do.abort">
+		<equals arg1="quit" arg2="${do.stop.web.server}" />
+	</condition>
+	<fail if="do.abort">Automated Problem Determination Tool aborted by user.</fail>
+</if>	
+</target>
+
+<target name="start_web_server1" description="Start Web server" >
+<if isTrue="${ihs.local}" >
+	<echo message=" " />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<stepcount />
+	<wsnlsecho key="Step_start_web_server" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Starting Web Server" replace="${autopdts};;${step.count}" />	
+	<autopdinput message="To_perform_this_collection_please_manually_start_Web_Server_now" validargs="I_have_started_Web_server,quit" addproperty="do.start.web.server" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	<wsnlsecho key="do.start.web.server" bundle="properties/SSEQTP/autopdtoolstrings_was" message="do.start.web.server is {0}" replace="${do.start.web.server}" />
+	<condition property="do.abort">
+		<equals arg1="quit" arg2="${do.start.web.server}" />
+	</condition>
+	<fail if="do.abort">Automated Problem Determination Tool aborted by user.</fail>
+</if>	
+</target>
+
+<target name="get_my_ihs_plugin_cfg_location" description="this looks in the IHS httpd.conf file to get the WAS config location">
+<if isTrue="${ihs.local}" >
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_Get_Plugin-cfg_from_conf" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Getting plugin-cfg location from httpd.conf file." replace="${autopdts};;${step.count}" />			
+	<changeconf confPath="${ihs.conf.location}" property="WebSpherePluginConfig" currVal="ihs.plugincfg" />
+	<available file="${ihs.plugincfg}" type="file" property="ihs.pluginexist" /> 
+	<if isTrue="${ihs.pluginexist}">
+		<property name="http_plugin_cfg.location" value="${ihs.plugincfg}"/>
+	</if>
+<!-- remainder taken from portal-was shared for compatibility-->
+	<available file="${http_plugin_cfg.location}" type="file" property="plugin-cfg.available" />
+	<if isTrue="${plugin-cfg.available}" >
+		<dirname property="http_plugin_cfg.location.dirname" file="${http_plugin_cfg.location}" />
+		<xmlproperty file="${http_plugin_cfg.location}" />
+		<echo message="http plug-cfg.xml is available" />
+	</if>
+	<property name="http_plugin_cfg_log" value="${Config.Log(Name)}" />	
+<!--  		<echo message="Config.Log(Name): ${Config.Log(Name)}" />
+		<echo message="http plugin config location: ${http_plugin_cfg.location}" />
+		<echo message="http plugin log location: ${http_plugin_cfg_log}" /> -->
+	<available file="${http_plugin_cfg_log}" type="file" property="http_plugin_cfg_log.available" />	
+	<if isTrue="${http_plugin_cfg_log.available}" >
+		<dirname property="http_plugin_cfg_log.dirname" file="${http_plugin_cfg_log}"/>
+	</if>
+	<echo message="http_plugin_cfg_log: ${http_plugin_cfg_log}" />	
+	<echo message="http_plugin_cfg.location: ${http_plugin_cfg.location}" />		
+	<normalize_filename filename="${http_plugin_cfg_log.dirname}" key="http_plugin_cfg_log.dirname.normalized"/>
+	<trim_filename key="http_plugin_cfg_log.trimmed" filename="${http_plugin_cfg_log.dirname.normalized}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>	
+	<normalize_filename filename="${http_plugin_cfg.location.dirname}" key="http_plugin_cfg.location.dirname.normalized"/>
+	<trim_filename key="http_plugin_cfg.location.trimmed" filename="${http_plugin_cfg.location.dirname.normalized}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>	
+</if>	
+</target>
+
+<target name="pause2" description="Perform a Pause until input received">
+	<echo message=" " />
+	<autopdinput message="Please_Proceed" validargs="proceed,Quit" addproperty="do.proceed" />
+	<wsnlsecho key="do.proceed" bundle="autopdtoolstrings" message="do.proceed is {0}" replace="${do.proceed}" />
+	<condition property="do.abort1">
+		<equals arg1="Quit" arg2="${do.proceed}" />
+	</condition>
+	<fail if="do.abort1">Automated Problem Determination Tool aborted by user.</fail>
+</target>
+
+<target name="recovery_alert" description="insert a message to the user informing them of a recovery commencing.">
+	<echo message="STARTING TO DO RECOVERY " />
+</target>
+
+
+<target name="getProblemParameters" description="record the particulars of the error's occurence">
+<!--     
+This target collects from the user:
+	* The date and time of failure.
+    * The browser version.
+    * The full URL that resulted in failure. For example:
+ -->
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_get_IHS_Problem_parameters" message="[{0}] Step {1}: Restoring all IHS information" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	<inputdialogtask_v2 noCancel="true" doSkip="true">
+		<fieldtask name="prompt" label="Provide_description_of_IHS_Failure" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="whenIHSFailed" label="When_IHS_Failure"  type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="whatIHSFailed" label="What_IHS_Failure"  type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="whoIHSFailed" label="Who_IHS_Failure"  type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+	</inputdialogtask_v2>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >The IHS Failure occurred at:${line.separator}</concat>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >${whenIHSFailed}${line.separator}</concat>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >The IHS Failure occurred on the URL:${line.separator}</concat>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >${whatIHSFailed}${line.separator}</concat>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >The IHS Failure occurred using the Browser:${line.separator}</concat>
+		<concat destfile="${autopdtmp}/IHSProblems/ErrorSituation.txt" append="true" >${whoIHSFailed}${line.separator}</concat>
+
+	<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >
+		<zipfileset file="${autopdtmp}/IHSProblems/ErrorSituation.txt" prefix="autopdzip/IHSProblems" />
+	</zip>
+
+</target>
+
+
+<target name="get_ihs_version" description="Obtain IHS version" >
+
+<if isTrue="${ihs.local}" >	
+	<!-- Step 2: Grab install_root/conf/httpd.conf -->
+	<delete file="${autopdtmp}/IHSProblems/Apache.out" />
+<!-- get the Apache Version -->
+
+	<if isTrue="${ihs.apacheexist}">
+		<exec executable="${ihs.root}/bin/Apache.exe" dir="${ihs.root}" output="${autopdtmp}/IHSProblems/Apache.out" append="true" os="${os.windows}">
+			<arg line=" -v" />
+		</exec>
+	</if>
+	<if isTrue="${ihs.apachectlexist}">
+		<exec executable="${ihs.root}/bin/apachectl" dir="${ihs.root}/bin" output="${autopdtmp}/IHSProblems/Apache.out" append="true" os="${os.unixkind}">
+			<arg line=" -V" />
+		</exec>		
+	</if>
+	<if isTrue="${ihs.httpdexist}">
+		<exec executable="${ihs.root}/bin/httpd" dir="${ihs.root}/bin" output="${autopdtmp}/IHSProblems/Apache.out" append="true" os="${os.unixkind}">
+			<arg line=" -ver" />
+		</exec>		
+	</if>
+	<available file="${autopdtmp}/IHSProblems/Apache.out" type="file" property="ihs.Apacheoutexist"/>
+ 	<if isTrue="${ihs.Apacheoutexist}">
+ 		<concat destfile="${autopd.echolog.instance}" append="true">
+    		<fileset file="${autopdtmp}/IHSProblems/Apache.out" />
+  		</concat>
+  		<was_status key="ihs.version"  pattern="(IBM_HTTP_Server/)(.*)(\ Apache.*)"  group="2" filename="${autopdtmp}/IHSProblems/Apache.out" />
+  		<echo message="ihs.version: ${ihs.version}" />
+	</if>
+
+<!-- 
+ 	<if isNotTrue="${ihs.Apacheoutexist}">
+  		<echo message="ihs.version: ${ihs.version}" />
+		<fail>The version number of IBM HTTP Server couldn't be found.</fail>		
+	</if>
+-->
+	<condition property="ihs.version.isnot.set" >
+		<isset property="ihs.version" />
+	</condition>
+	
+ 	<if isNotTrue="${ihs.version.isnot.set}"> 	
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="The_tool_couldnt_figure_out_the_version_of_IHS_provide_the_IHS_Version" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="ihs.version" label="ihs_version"  type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was" initialValueSource="persisted"/>
+		</inputdialogtask_v2>
+	</if>
+</if>
+
+</target>
+
+
+<target name="get_gskit_version" description="Obtain gskit version" >
+
+<if isTrue="${has.gskit.problem}" >
+	<!-- Prompt for drive that Gskit is on? no, asuming c:\ -->
+	<if isTrue="${isWindows}" >
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="prompt_gskit_driver" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="gskit.driver" label="Driver"  type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+		<persistproperty property="gskit.driver" />
+		<echo message="gskit.driver: ${gskit.driver}" />
+		<trim_filename key="gskit.driver" filename="${gskit.driver}" suffixTrim=":"/>
+		<echo message="trimmed gskit.driver: ${gskit.driver}" />
+	</if>
+
+	<versionlevel property="ihs.version.level" 
+		version="${ihs.version}" 
+		level="1.3.12:1.3.19:1.3.26:1.3.28:2.0.42:2.0.47:6.0" />
+	<echo message="ihs.version.level: ${ihs.version.level}" />	
+	<wsnlsecho key="IHS_product_level" 
+		bundle="autopdtoolstrings" 
+		message="IBM HTTP Server product level: {0}" 
+		replace="${ihs.version.level}" 
+	    id="2292"
+	    level="info"
+	    component="\scripts\was\http\HTTP-common.xml" />
+
+	<condition property="useGSKit4">
+			<equals arg1="1.3.12" arg2="${ihs.version.level}" />
+	</condition>
+	<condition property="useGSKit5">
+		<or>
+			<equals arg1="1.3.19" arg2="${ihs.version.level}" />
+			<equals arg1="1.3.26" arg2="${ihs.version.level}" />
+			<equals arg1="2.0.42" arg2="${ihs.version.level}" />
+		</or>
+	</condition>
+	<condition property="useGSKit7">
+		<or>
+			<equals arg1="1.3.28" arg2="${ihs.version.level}" />
+			<equals arg1="2.0.47" arg2="${ihs.version.level}" />
+			<equals arg1="6.0" arg2="${ihs.version.level}" />
+		</or>
+	</condition>
+	<echo message="useGSKit4: ${useGSKit4}" />	
+	<echo message="useGSKit5: ${useGSKit5}" />
+	<echo message="useGSKit7: ${useGSKit7}" />	
+</if>
+</target>  
+
+<target name="get_gskit_version_command" description="Obtain GSKit version command" >
+<if isTrue="${has.gskit.problem}" >
+	<if isTrue="${isLinux}" >
+		<property name="gskit.root.prefix" value="/usr/local/ibm" />  	
+	</if>
+	<if isTrue="${isAIX}" >
+		<property name="gskit.root.prefix" value="/usr/opt/ibm" />  	
+	</if>
+	<if isTrue="${isSunOS}" >
+		<property name="gskit.root.prefix" value="/opt/ibm" />  	
+	</if>
+	<if isTrue="${isWindows}" >
+		<property name="gskit.root.prefix" value="${gskit.driver}:/Program Files/IBM" />  	
+	</if>
+
+	<echo message="gskit.root.prefix: ${gskit.root.prefix}" />
+	
+	<if isTrue="${useGSKit4}" >
+		<property name="gskit.root" value="${gskit.root.prefix}/gsk4" />
+	</if>
+	<if isTrue="${useGSKit5}" >
+		<property name="gskit.root" value="${gskit.root.prefix}/gsk5" />
+	</if>
+	<if isTrue="${useGSKit7}" >
+		<property name="gskit.root" value="${gskit.root.prefix}/gsk7" />
+	</if>
+
+	<echo message="gskit.root: ${gskit.root}" />
+	
+	<if isTrue="${useGSKit4}" >
+		<property name="gskit.version.command" value="${gskit.root.prefix}/gsk4/bin/gsk4ver" />
+	</if>
+	<if isTrue="${useGSKit5}" >
+		<property name="gskit.version.command" value="${gskit.root.prefix}/gsk5/bin/gsk5ver" />
+	</if>
+	<if isTrue="${useGSKit7}" >
+		<property name="gskit.version.command" value="${gskit.root.prefix}/gsk7/bin/gsk7ver" />
+	</if>
+	
+	<echo message="gskit.version.command: ${gskit.version.command}" />
+</if>	
+</target>
+
+<target name="get_win_GSkit_version" description="Record the GSkit version in Windows" if="isWindows">
+<if isTrue="${has.gskit.problem}" >
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="step_GSK_version_fetch_win" message="[{0}] Step {1}: Getting the GSKit version level for Windows" replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	<available file="${gskit.version.command}.exe" type="file" property="gskit.version.command.existing" />
+
+	<echo message="gskit.version.command.existing: ${gskit.version.command.existing}" />
+
+	<if isTrue="${gskit.version.command.existing}">
+		<copy file="${http.common.bundle.basedir}/scripts/was/shell/gskit-template.bat" tofile="${http.common.bundle.basedir}/scripts/was/shell/gskit-filled.bat" overwrite="true">
+			<filterset>
+				<filter token="gskit.home" value="${gskit.root}" />
+				<filter token="gskit.command" value='"${gskit.version.command}.exe"' />
+			</filterset>
+		</copy>
+		<delete file="${autopdtmp}/IHSProblems/GSKit_version.out" />
+		<exec executable="${http.common.bundle.basedir}/scripts/was/shell/gskit-filled.bat" dir="${http.common.bundle.basedir}/scripts/was/shell/windows" output="${autopdtmp}/IHSProblems/GSKit_version.out" append="true">
+		</exec>	
+		<concat destfile="${autopd.echolog.instance}" append="true">
+	    	<fileset file="${autopdtmp}/IHSProblems/GSKit_version.out" />
+	    </concat>	
+	</if>
+
+	<if isNotTrue="${gskit.version.command.existing}">
+		<inputdialogtask_v2  noCancel="true" doSkip="true">
+			<fieldtask name="prompt" label="No_gsKit_was_found" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+		<concat destfile="${autopdtmp}/IHSProblems/GSKnotfound.txt" append="true" >There was no GSKit found from which to extract the version.${line.separator}</concat>
+		<wsnlsecho key="no_GSK_found" message="Problem: was not able to locate a GSKit install" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</if>
+</if>	
+</target>
+ 
+
+<target name="get_unix_GSkit_version" description="record the GSkit version in use" unless="isWindows">
+<if isTrue="${has.gskit.problem}" >
+	<echo message=" " />
+
+	<available file="${gskit.version.command}" type="file" property="gskit.version.command.existing" />
+
+	<if isTrue="${gskit.version.command.existing}">
+		<copy file="${http.common.bundle.basedir}/scripts/was/shell/gskit-template.sh" tofile="${http.common.bundle.basedir}/scripts/was/shell/gskit-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="gskit.home" value="${gskit.root}" />
+				<filter token="gskit.command" value="${gskit.version.command}" />
+			</filterset>
+		</copy>
+		<delete file="${autopdtmp}/IHSProblems/GSKit_version.out" />
+		<exec executable="sh" dir="${http.common.bundle.basedir}/scripts/was/shell" output="${autopdtmp}/IHSProblems/GSKit_version.out" append="true">
+			<arg line="-f ${http.common.bundle.basedir}/scripts/was/shell/gskit-filled.sh" />
+		</exec>	
+		<concat destfile="${autopd.echolog.instance}" append="true">
+	    	<fileset file="${autopdtmp}/IHSProblems/GSKit_version.out" />
+	    </concat>
+	</if>
+
+	<if isNotTrue="${gskit.version.command.existing}">
+		<inputdialogtask_v2 noCancel="true" doSkip="true">
+			<fieldtask name="prompt" label="No_gsKit_was_found" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+		<concat destfile="${autopdtmp}/IHSProblems/GSKnotfound.txt" append="true" >There was no GSKit found from which to extract the version.${line.separator}</concat>
+		<wsnlsecho key="no_GSK_found" message="Problem: was not able to locate a GSKit install" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</if>
+</if>	
+</target>
+
+
+
+<!-- 
+# CMS key database file (.kdb).
+	The CMS Key database file is defined by the KeyFile directive in the httpd.conf file:
+	KeyFile  /fully qualified path to key file/key.kdb
+	For example:/usr/HTTPServer/ssl/key.kdb
+	Note: Include the password.
+# Password stashfile (.sth).
+	For example:/usr/HTTPServer/ssl/key.sth
+# Request database (.rdb).
+	For example:/usr/HTTPServer/ssl/key.rdb
+# Server and Client Certificate (.arm, .p12, .cer, .der, and so on).
+# CA Signer Certificate (Verisign, Thwarte, Entrust, internalCA, and so on).
+	For example: CAroot.cer, CA.arm, CAROOT.der, and so on.
+-->
+
+<target name="get_ihs_security_props" description="getting the IBM HTTP server security properties"  if="has.ssl.problem">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="step_get_keyfile_names" message="[{0}] Step {1}: Finding all the key, stash, and certificate files relating to security." replace="${autopdts};;${step.count}" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	<trim_filename suffixTrim=".kdb" key="genericKeyfile" filename="${ihs.keyfile}"/>
+	<available file="${genericKeyfile}.kdb" type="file" property="keyfileexists" />
+	<if isNotTrue="${keyfileexists}">
+		<inputdialogtask_v2 noCancel="true" doSkip="true">
+			<fieldtask name="prompt" label="prompt_key_kdb_file" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="file.key.kdb" label="answer"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2> 
+	</if>
+
+<!--  
+	<available file="${genericKeyfile}.sth" type="file" property="stashfileexists" />
+	<available file="${genericKeyfile}.rdb" type="file" property="rdbfileexists" />
+	<available file="${genericKeyfile}.crl" type="file" property="crlfileexists" />
+	
+	<if isNotTrue="${stashfileexists}">
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="prompt_key_sth_file" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="file.key.sth" label="answer"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+	</if>
+	<if isNotTrue="${rdbfileexists}">
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="prompt_key_rdb_file" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="file.key.rdb" label="answer"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2> 
+	</if>
+	<if isNotTrue="${crlfileexists}">
+		<inputdialogtask_v2>
+			<fieldtask name="prompt" label="prompt_key_crl_file" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="file.key.crl" label="answer"  type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2> 
+	</if>
+
+-->	
+	<if isTrue="${keyfileexists}">
+		<property name="file.key.kdb" value="${genericKeyfile}.kdb"/>
+	</if>
+<!--  
+	<if isTrue="${stashfileexists}">
+		<property name="file.key.sth" value="${genericKeyfile}.sth"/>
+	</if>
+	<if isTrue="${rdbfileexists}">
+		<property name="file.key.rdb" value="${genericKeyfile}.rdb"/>
+	</if>
+	<if isTrue="${crlfileexists}">
+		<property name="file.key.crl" value="${genericKeyfile}.crl"/>
+	</if>
+-->
+	<inputdialogtask_v2 doSkip="true" noCancel="true">
+		<fieldtask name="prompt" label="Input_password_for_the_key_file_of_IBM_HTTP_Server" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="kdbpassword0" label="If_you_click_Skip_the_password_information_wont_include_in_the_collection_file_you_will_need_to_submit_the_information_to_IBM_support_separately"  type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		<fieldtask name="kdbpassword" label="key_db_password"  type="password" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+	</inputdialogtask_v2> 
+	
+	<concat destfile="${autopdtmp}/IHSProblems/keyfile.pwd" append="true" >kdb password: ${kdbpassword}${line.separator}</concat>
+		
+</target>
+
+<target name="getNetStat" description="run Netstat -na and capture the output">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_getnetstat" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Getting a netstat run to verify network services" replace="${autopdts};;${step.count}" />			
+
+
+	<property name="netstat.out.path" value="${autopdtmp}/IHSProblems/netstat.out" />
+	<if isTrue="${isWindows}" >	
+		<copy file="${http.common.bundle.basedir}/scripts/was/shell/windows/collect-state-template.bat" tofile="${http.common.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value='"${netstat.out.path}"' />
+			</filterset>
+		</copy>
+
+		<exec executable="${http.common.bundle.basedir}/scripts/was/shell/windows/collect-state-filled.bat" dir="${http.common.bundle.basedir}/scripts/was/shell/windows" output="${autopd.echolog.instance}" append="true">
+		</exec>
+	</if>
+			
+	<if isNotTrue="${isWindows}" >
+		<property name="vmstat.log.path" value="${autopdtmp}/autopd/vmstat.log" />		
+		<copy file="${http.common.bundle.basedir}/scripts/was/shell/collect-state-template.sh" tofile="${http.common.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path}" />
+				<filter token="vmstat.out" value="${vmstat.log.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${http.common.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${http.common.bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>	
+	</if>
+
+</target>
+
+<target name="setlocalGSKtrace" description="set the environment variable for the GSK trace file">
+		<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_setgsktrace" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Setting GSKTrace in the system variables." replace="${autopdts};;${step.count}" />			
+	
+	<saveresourcebundleproperty 
+	bundle="properties/SSEQTP/autopdtoolstrings_was"
+	key="Please_set_local_windows_system_variable_GSK_TRACE" 
+	propertyName="setgsktracelocalwindowsnlskey" 
+	message="Please set the windows system environment variable, GSK_TRACE_FILE to {0}/IHSProblems/gsk.log"
+	replace="${autopdtmp}"/>
+	
+	<saveresourcebundleproperty 
+	bundle="properties/SSEQTP/autopdtoolstrings_was"
+	key="Please_set_local_non-Windows_system_variable_GSK_TRACE" 
+	propertyName="setgsktracelocalnonwindowsnlskey" 
+	message="For the user that executes the httpserver, Please set the environment variable, GSK_TRACE_FILE to {0}/IHSProblems/gsk.log"
+	replace="${autopdtmp}"/>
+	
+	<if isTrue="${isWindows}">
+		<autopdinput message="${setgsktracelocalwindowsnlskey}" validargs="GSK_System_Variable_set,Quit" addproperty="done.variable" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+	</if>
+	<if isNotTrue="${isWindows}">
+		<autopdinput message="${setgsktracelocalnonwindowsnlskey}" validargs="GSK_System_Variable_set,Quit" addproperty="done.variable" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+	</if>
+	<condition property="do.abort.set.gsk.variable">
+		<equals arg1="Quit" arg2="${done.variable}" />
+	</condition>
+	<fail if="do.abort.set.gsk.variable">Automated Problem Determination Tool aborted by user.</fail>
+
+</target>
+
+<target name="addSSLTrace" description="Add the Property (directive) of SSLTrace to the httpd.conf" if="ihs.local">
+	<echo message=" " />
+	<stepcount />
+	<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	<wsnlsecho key="Step_addSSLtrace" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Setting SSLTrace in the HTTPD.conf file." replace="${autopdts};;${step.count}" />			
+	<changeconf confPath="${ihs.conf.location}" property="SSLTrace" value=" " newFile="${ihs.root}/conf/httpddbg.conf" />
+	<copy tofile="${ihs.conf.location}" file="${ihs.root}/conf/httpddbg.conf" overwrite="true" failonerror="true" />
+	<autopddelete>
+		<fileset file="${ihs.root}/conf/httpddbg.conf"/>
+	</autopddelete>
+</target>
+
+<target name="collect_SSL_related_files" description="this target will go zip into our pmr the plugin-key.kdb and .sth files">
+<if isTrue="${ihs.local}" >	
+	<echo message=" " />
+	<stepcount />
+	<wsnlsecho key="Step_Collect_key_info" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Collecting into zip the kdb, sth, rdb, crl, and other key files" replace="${autopdts};;${step.count}" />			
+
+	<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >		
+		<zipfileset dir="${autopdtmp}/IHSProblems" prefix="autopdzip/IHSProblems" >
+		    <exclude name="httpd.conf" />
+			<include name="**/*"/>
+		</zipfileset>
+	</zip>
+	<if isTrue="${plugin-cfg.available}" >
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >		
+	  		<zipfileset file="${http_plugin_cfg.location}" prefix="autopdzip/${http_plugin_cfg.location.trimmed}" />
+		</zip>
+	</if>
+	
+	<if isTrue="${http_plugin_cfg_log.available}" >
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >		
+	  		<zipfileset file="${http_plugin_cfg_log}" prefix="autopdzip/${http_plugin_cfg_log.trimmed}" />
+		</zip>
+	</if>
+
+	<available file="${file.key.kdb}" type="file" property="file.key.kdb.available" />
+	<if isTrue="${file.key.kdb.available}">
+		<dirname property="file.key.kdb.dir" file="${file.key.kdb}"/>
+		<basename property="file.key.kdb.name" file="${file.key.kdb}" />
+		<trim_filename suffixTrim=".kdb" key="file.key.kdb.name.prefix" filename="${file.key.kdb.name}"/>
+		
+		<echo message="file.key.kdb.name.prefix: ${file.key.kdb.name.prefix}" />
+		<echo message="file.key.kdb.dir: ${file.key.kdb.dir}" />
+		<normalize_filename filename="${file.key.kdb.dir}" key="file.key.kdb.dir.normalized"/>
+		<trim_filename key="file.key.kdb.dir.trimmed" filename="${file.key.kdb.dir.normalized}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >		
+			<zipfileset dir="${file.key.kdb.dir}" prefix="autopdzip/${file.key.kdb.dir.trimmed}" >
+				<include name="${file.key.kdb.name.prefix}.kdb"/>
+				<include name="${file.key.kdb.name.prefix}.sth"/>
+				<include name="${file.key.kdb.name.prefix}.rdb"/>
+				<include name="${file.key.kdb.name.prefix}.crl"/>								
+			</zipfileset>
+		</zip>		
+		
+	</if>
+</if>
+</target>
+
+<target name="reset_local_GSK_trace" description="reset the environment variable for the GSK trace file">
+	<echo message=" " />
+	<stepcount />
+	<wsnlsecho key="Step_Get_GSK_Log" bundle="properties/SSEQTP/autopdtoolstrings_was" message="[{0}] Step {1}: Getting GSKit output log and resetting the trace variable." replace="${autopdts};;${step.count}" />			
+	<if isTrue="${isWindows}">
+		<autopdinput message="reset_GSK_variable_windows" validargs="GSK_System_Variable_reset,Quit" addproperty="done.variable" />
+	</if>
+	<if isNotTrue="${isWindows}">
+				<autopdinput message="reset_GSK_variable_nix" validargs="GSK_System_Variable_reset,Quit" addproperty="done.variable" />
+	</if>
+	<available file="${autopdtmp}/IHSProblems/gsk.log" type="file" property="gsk.logexist"/>
+	<if isNotTrue="${gsk.logexist}">
+		<wsnlsecho key="GSK_Collect_error" bundle="properties/SSEQTP/autopdtoolstrings_was" message="Error: There was no GSKit Trace file found." />			
+	</if>
+	<if isTrue="${gsk.logexist}">
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >		
+			<zipfileset file="${autopdtmp}/IHSProblems/gsk.log" prefix="autopdzip" />
+		</zip>
+	</if>
+</target>
+
+
+<!--  *********************CURRENTLY UNUSED CODE************************** -->
+<target name="setremoteGSKtrace" description="set the environment variable for the GSK trace file">
+	<if isTrue="${isWindows}">
+		<autopdinput message="Please_set_remote_windows_system_variable_for_GSK_trace" validargs="GSK_System_Variable_set,Quit" addproperty="done.variable" />
+	</if>
+	<if isNotTrue="${isWindows}">
+		<autopdinput message="Please_set_remote_non-Windows_system_variable_for_GSK_trace" validargs="GSK_System_Variable_set,Quit" addproperty="done.variable" />
+	</if>
+</target>
+
+<target name="collect_was_ihsremoteauto" description="Collect log tracing and other config information from Application Server">
+<!--
+<autopdinput message="IHS_logs_pt_2_auto" validargs="Done,Quit" addproperty="auto.complete" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+stop the remote webserver,
+collect_was_ihs stuff, 
+and restoreihs
+and mark recovery completed
+and send off the stuff
+ -->
+
+	<inputdialogtask_v2>
+			<fieldtask name="HTTP.common30" label="1. Indicate to your IHS machine that you have reproduced the problem."  type="label" accessibilityName="IHS_Remote_Collect" accessibilityDesc="IHS_Remote_Collect" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common31" label="2. Submit the collected zipfile to IBM service/support"  type="label" accessibilityName="IHS_Remote_Collect" accessibilityDesc="IHS_Remote_Collect" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common32" label="3. The remote script will restore your normal settings and conclude."  type="label" accessibilityName="IHS_Remote_Collect" accessibilityDesc="IHS_Remote_Collect" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</inputdialogtask_v2>	
+
+</target>
+
+<target name="collect_was_ihsremotemanual" description="Collect log tracing and other config information from Application Server" if="ihs.remoteManual">
+<!--	<autopdinput message="IHS_logs_pt_2_manual" validargs="done,Quit" addproperty="manual.complete" />
+stop the remote webserver,
+collect the newly-created logs in ihsroot/logs
+and restore the files you backed up from ihsroot/logs
+restore your httpd.conf
+and zip-send off the stuff collected
+ -->
+
+	<inputdialogtask_v2>
+			<fieldtask name="prompt" label="IHS_Remote_Manual" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common33" label="1. Stop the IHS instance on your remote server."  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common34" label="2. Collect the new log files in installroot/logs/* as well as the plugin log files." type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common35" label="3. Collect the log files from the IHS plugin as well as the plugin-cfg.xml file"  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common36" label="4. Zip the two sets of log files as well as the 2 configuration files together and submit them to IBM."  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common37" label="5. Restore your httpd.conf file to the installroot/IHS/conf directory"  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common38" label="6. Restore your two sets of logs to their respective locations"  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common39" label="7. Restore your original plugin-cfg.xml file."  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="HTTP.common40" label="8. You are now finished with your IHS collections.  You may want to now restart your IHS instance for normal operation."  type="label" accessibilityName="IHS_Remote_Manual" accessibilityDesc="IHS_Remote_Manual" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</inputdialogtask_v2>	
+
+
+</target>
+
+	<!-- This target is unique to this script, because it deals with a specific set of files backed up. 
+	-->
+	<target name="backup_http_plugin-cfg.xml" description="Make backup of http-cfg.xml">
+<if isTrue="${ihs.local}" >
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Back_up_the_http_plugin-cfg.xml" 
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Backing up http_plugin-cfg.xml from WebSphere Application Server" 
+				   replace="${autopdts};;${step.count}" 
+				   id="1095" level="info" component="\scripts\was\was-sharedtargets.xml"/>		
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true">
+			<fileset file="${http_plugin_cfg.location}" />
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}" overwrite="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="plugin-cfg.xml" />
+			</fileset>
+		</copy>	
+</if>			
+	</target>
+
+	<!-- This target is unique to this script, because it deals with a specific set of files backed up. 
+	-->
+	<target name="backup_http_plugin-cfg_with_condition" description="Make backup of http-cfg.xml" if="backup.http.plugin.cfg.xml.needed">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Back_up_the_http_plugin-cfg.xml" 
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Backing up http_plugin-cfg.xml from WebSphere Application Server" 
+				   replace="${autopdts};;${step.count}" 
+				   id="1095" level="info" component="\scripts\was\was-sharedtargets.xml"/>		
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true">
+			<fileset file="${http_plugin_cfg.location}" />
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}" overwrite="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="plugin-cfg.xml" />
+			</fileset>
+		</copy>		
+	</target>
+
+
+
+<!-- This target is used to reset http plug in trace -->
+	<target name="set_http_plugin_trace" description="Reset http plug in trace" >
+<if isTrue="${ihs.local}" >
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_reset_trace_level_of_http_plugin" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Resetting trace level of http plugin" 
+				   replace="${autopdts};;${step.count}" 
+				   id="1090" level="info" component="\scripts\was\was-sharedtargets.xml"/>	
+	 
+	 	<if isTrue="${plugin-cfg.available}" >
+<!-- DEPRECATED - autopdxmlproperty  
+			<http_plugin_cfg_changer xmlfilename="${http_plugin_cfg.location}" elementname="Log">
+					<property name="LogLevel" value="trace" />
+			</http_plugin_cfg_changer>
+-->
+
+			<autopdxmlproperty filename="${http_plugin_cfg.location}"
+							   path="Config.Log"
+							   property="LogLevel"
+							   value="trace"/>
+
+		</if> 
+
+</if>		
+	</target>
+
+<!-- This target is used to reset http plug in trace -->
+	<target name="set_http_plugin_trace_with_condition" description="Reset http plug in trace" if="set.http.plugin.trace.needed">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_reset_trace_level_of_http_plugin" 
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Resetting trace level of http plugin" 
+				   replace="${autopdts};;${step.count}" 
+			id="1090" level="info" component="\scripts\was\was-sharedtargets.xml"/>	
+	 
+	 	<if isTrue="${plugin-cfg.available}" >
+<!-- DEPRECATED - autopdxmlproperty in its place 
+			<http_plugin_cfg_changer xmlfilename="${http_plugin_cfg.location}" elementname="Log">
+					<property name="LogLevel" value="trace" />
+			</http_plugin_cfg_changer>
+-->
+			<autopdxmlproperty filename="${http_plugin_cfg.location}"
+							   path="Config.Log"
+							   property="LogLevel"
+							   value="trace"/>
+		</if> 
+	</target>
+	
+
+	<!-- This target is unique to this script, because it deals with a specific set of log 
+		files, properties, etc. 
+	-->
+	<target name="restore_http_plugin-cfg" description="Restore plugin cfg file">
+<if isTrue="${ihs.local}" >
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_restore_http_plugin-cfg.xml" 
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Restoring http plugin-cfg.xml" 
+				   replace="${autopdts};;${step.count}" 
+				   id="1091" level="info" component="\scripts\was\was-sharedtargets.xml" />
+
+		<copy tofile="${http_plugin_cfg.location}" 
+			  file="${autopdtmp}/autopd/plugin-cfg.xml" 
+			  overwrite="true" 
+			  failonerror="false" />
+</if>	
+	</target>
+
+
+	<!-- This target is unique to this script, because it deals with a specific set of log 
+		files, properties, etc. 
+	-->
+	<target name="restore_http_plugin-cfg_with_condition" description="Restore plugin cfg file" if="restore.http.phugin.cfg.needed">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_restore_http_plugin-cfg.xml" 
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				   message="[{0}] Step {1}: Restoring http plugin-cfg.xml" 
+				   replace="${autopdts};;${step.count}" 
+			       id="1091" 
+			       level="info" 
+			       component="\scripts\was\was-sharedtargets.xml" />
+
+		<copy tofile="${http_plugin_cfg.location}" 
+			  file="${autopdtmp}/autopd/plugin-cfg.xml" 
+			  overwrite="true" 
+			  failonerror="false" />
+	
+	</target>
+
+
+	<target name="IHS_sync_WSAS_instructions">
+	
+		<inputdialogtask_v2 noCancel="true">
+			<fieldtask name="prompt1" 
+			label="WSAS_remote_prompt1" 
+			type="prompt"  
+			bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask_v2>
+
+		<inputdialogtask_v2 noCancel="true" doSkip="true">
+			<fieldtask name="prompt" 
+					   label="I_have_finished_the_collection_on_IBM_WebSphere_Application_Server_machine" 
+					   type="prompt" 
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask_v2>	
+		
+		
+		
+	</target>
+
+
+</project>

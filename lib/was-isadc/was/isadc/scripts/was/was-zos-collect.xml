@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Invoke RAS Collector" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Invoke RAS Collector}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml"/>
+
+
+	<property name="autopdProblem" value="RAS_Collect_Tool" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-ras" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+					query_pmrfilename,
+		
+					ask_for_middleware_root,
+		
+				collect_was_information, 
+	
+		run_ras_collector, 
+					
+		zip_autopd_log, 
+		 
+		ftp_logs_to_ecurep, 
+		script_completed_v2">
+	</target>
+	<target name="collect_was_information"
+	        description="Collect log tracing and other config information from Application Server">
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+				<!--
+				<include name="collector.jar" />
+				-->
+				<include name="autopd-collection-environment-v2.xml" />				
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="run_ras_collector" description="Run the collector tool" unless="wasnothere">
+
+		<wsnlsecho message="" console="true" /> 
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Run_WAS_Collector"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Running the Collector Tool.Please wait..."
+			replace="${autopdts};;${step.count}"
+			id="2202" level="info" component="scripts\aim\common-setup.xml" />
+		<wsnlsecho key="Run_WAS_Collector0" bundle="properties/SSEQTP/autopdtoolstrings_was" console="true" /> 
+		<wsnlsecho message=" " console="true" /> 
+
+		<exec executable="${was.root}/bin/collector.sh"
+		      dir="${env.HOME}"
+		      output="${autopd.echolog.instance}"
+		      append="true" >
+			<arg line=" -JarOutName ${autopdtmp}/autopd/collector.jar -LogFile ${autopdtmp}/autopd/collector.log" />
+		</exec>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				
+				<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}" >
+					<include name="collector.jar"/>
+				</zipfileset>
+			</zip>
+
+	</target>
+	
+</project>
+

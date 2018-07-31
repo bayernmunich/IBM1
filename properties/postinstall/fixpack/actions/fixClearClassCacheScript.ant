@@ -1,0 +1,192 @@
+<?xml version="1.0"?>
+<project name="fixClearClassCacheScript" default="install" basedir=".">
+
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+	<target name="install"
+			description="Fix clearClassCache on 855 to enable logging JVM results when destroying the Java shared class cache."
+			depends="detectCurrentOSFamily,
+					setOSFileSeparator,
+					setOSScriptExtension,					
+					scriptExists,
+					updateScriptWindows,
+					updateScriptUnix,
+					modifyPermissionsUnix"/>
+
+					
+	<target name="uninstall" description="No uninstall action necessary but this target is required."/>
+
+	
+	<target name="detectCurrentOSFamily"
+			description="Detects the current OS family (UNIX or Windows)">
+		<condition property="currentOSFamily" value="windows">
+			<os family="windows"/>
+		</condition>
+		<condition property="currentOSFamily" value="os/400">
+			<os family="os/400"/>
+		</condition>
+		<condition property="currentOSFamily" value="zos">
+			<os family="z/os"/>
+		</condition>
+		<condition property="currentOSFamily" value="unix">
+			<and>
+				<os family="unix"/>
+				<not>
+					<equals arg1="${os.name}" arg2="OS/400"/>
+				</not>
+			</and>
+		</condition>
+		<condition property="isWindows" value="true">
+			<os family="windows"/>
+		</condition>
+		<condition property="isISeries" value="true">
+			<equals arg1="${os.name}" arg2="OS/400"/>
+		</condition>
+		<condition property="isUnix" value="true">
+			<or>
+				<and>
+					<os family="unix"/>
+					<not>
+						<equals arg1="${os.name}" arg2="OS/400"/>
+					</not>
+				</and>
+				<os family="z/os"/>
+			</or>
+		</condition>
+		<condition property="isZOS" value="true">
+			<os family="z/os"/>
+		</condition>
+		<echo>Detected current OS family to be: ${currentOSFamily}</echo>
+		<echo>Determination as OS/400: ${isISeries}</echo>
+		<echo>Determination as Unix based: ${isUnix}</echo>
+		<echo>Determination as z/OS: ${isZOS}</echo>
+		<wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+		<wscmtlog>Determination as OS/400: ${isISeries}</wscmtlog>
+		<wscmtlog>Determination as Unix based: ${isUnix}</wscmtlog>
+		<wscmtlog>Determination as z/OS: ${isZOS}</wscmtlog>
+	</target>
+
+	
+	<target name="setOSFileSeparator"
+			description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+		<condition property="separatorFile" value="/">
+			<equals arg1="${currentOSFamily}" arg2="unix"/>
+		</condition>
+		<condition property="separatorFile" value="/">
+			<equals arg1="${currentOSFamily}" arg2="zos"/>
+		</condition>
+		<condition property="separatorFile" value="/">
+			<equals arg1="${currentOSFamily}" arg2="os/400"/>
+		</condition>
+		<condition property="separatorFile" value="\">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+		<echo>separatorFile: ${separatorFile}</echo>
+	</target>
+
+	
+	<target name="setOSScriptExtension"
+			description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+		<condition property="OSext" value=".sh">
+			<equals arg1="${currentOSFamily}" arg2="unix"/>
+		</condition>
+		<condition property="OSext" value=".sh">
+			<equals arg1="${currentOSFamily}" arg2="zos"/>
+		</condition>
+		<condition property="OSext" value="">
+			<equals arg1="${currentOSFamily}" arg2="os/400"/>
+		</condition>
+		<condition property="OSext" value=".bat">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+		<echo>OSext: ${OSext}</echo>
+	</target>
+
+	
+	<target name="scriptExists"
+			description="Verify clearClassCache.sh exists in this WAS install">
+			
+<!-- 	Define this property to run command "was_home/bin/ws_ant.sh -buildfile fixClearClassCacheScript.ant" 
+		<property name="WAS_HOME" value="C:\wnd_855_782631" />
+ -->
+		<available file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}" property="clearClassCacheExists"/>
+		<echo>file: ${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}</echo>	
+		<echo>clearClassCacheExists: ${clearClassCacheExists}</echo>
+	</target>
+
+	
+	<target name="checkScriptUpdated" 
+			description="Determine whether this update is already applied"
+			if="clearClassCacheExists">
+		<loadfile property="scriptUpdated" srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}">
+			<filterchain>
+				<linecontains>
+					<contains value="Default usage is quiet with log"/>
+				</linecontains>
+			</filterchain>
+		</loadfile>
+		<echo>scriptUpdated: ${scriptUpdated}</echo>
+	</target>
+
+
+	<target name="updateScriptWindows" 
+			description="Replace all instances of token in clearClassCache.sh on Windows"
+			if="isWindows"
+			depends="checkScriptUpdated"
+			unless="scriptUpdated">
+		<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}">
+			<replacetoken>set CLASSPATH=%WAS_CLASSPATH%</replacetoken>
+			<replacevalue><![CDATA[set CLASSPATH=%WAS_CLASSPATH%
+
+@REM Default usage is quiet with log
+set OUTSTREAM="NUL"
+set LOGDIR="%WAS_HOME:"=%\logs\clearClassCache"
+for /f %%x in ('wmic os get LocalDateTime ^| findstr ^[0-9]') do (set ts=%%x)
+set TIMESTAMP=%ts:~0,14%
+if not exist %LOGDIR% ( mkdir %LOGDIR% )
+if exist %LOGDIR% ( 
+   set OUTSTREAM="%LOGDIR:"=%\%TIMESTAMP: =%.log"
+) else (
+   echo The "%WAS_HOME:"=%\logs" directory must be writable to log results.
+)]]></replacevalue>
+		</replace>	
+		<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}"
+				token="2> NUL"
+				value="2>%OUTSTREAM%" />
+	</target>
+
+
+	<target name="updateScriptUnix" 
+			description="Replace all instances of token in clearClassCache.sh on all unix platforms"
+			if="isUnix"
+			depends="checkScriptUpdated"
+			unless="scriptUpdated">
+		<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}">
+			<replacetoken>. $binDir/setupCmdLine.sh</replacetoken>
+			<replacevalue><![CDATA[. $binDir/setupCmdLine.sh
+
+# Default usage is quiet with log
+outStream="/dev/null"
+timeFormat="%Y""%m""%d""%H""%M""%S"
+timeStamp=`date +${timeFormat}`
+logDir="${WAS_HOME}/logs/clearClassCache"
+if [ ! -d ${logDir} ]; then mkdir -m 755 ${logDir} ; fi
+if [ -w ${logDir} ]; then
+    outStream="${logDir}/${timeStamp}.log"
+else 
+    echo The "${WAS_HOME}/logs" directory must be writable to log results.
+fi
+#echo timeStamp=${timeStamp}, logDir=${logDir}, outStream=${outStream}]]></replacevalue>
+		</replace>	
+		<replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}"
+				token="2> /dev/null"
+				value="2>${outStream}" />
+	</target>
+
+
+	<target name="modifyPermissionsUnix"
+			if="isUnix">
+		<chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}clearClassCache${OSext}" perm="a+x"/>
+	</target>
+
+</project>

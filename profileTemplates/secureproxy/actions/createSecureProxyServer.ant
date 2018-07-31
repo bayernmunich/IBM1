@@ -1,0 +1,224 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="createSecureProxyServer" default="createSecureProxyServer" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+	 <taskdef name="replaceStringRegExp"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>        
+  	&importExternalLogs;             
+	<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>        
+
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii"
+            description="Replaces all instances of the given token for the given file with the given value">
+
+        <wscmtlog>Replacing token: ${token}, with ${tokenValue}, in file ${file}</wscmtlog>
+
+        <replace file="${file}"
+            token="${token}"
+            encoding="UTF-8"
+            value="${tokenValue}"/>
+    </target>
+  	
+  	<target name="convertSupportedProtocols"
+  			description="Replace the comma in supportedProtocols with a space to format for wsadmin">
+    	<wscmtlog>supportedProtocols: ${supportedProtocols}</wscmtlog>
+    	<replaceStringRegExp string="${supportedProtocols}"
+            regexp="\,"
+            value=" "
+            property="convertedSupportedProtocols"/>
+      	<wscmtlog>convertSupportedProtocols: ${convertedSupportedProtocols}</wscmtlog>
+   	</target>
+   	
+   	<target name="setSecurityLevelProperty" 
+            description="Set the security level property (if it was specified)">                    
+             
+        <condition property="securityLevel" value="high">
+       	   <and>
+	      <not>
+	         <isset property="securityLevel"/>
+	      </not>
+	   </and>
+        </condition>
+        <wscmtlog>proxySecurityLevel: ${securityLevel}</wscmtlog>      
+    </target>
+  	 
+    <target name="setCreateServerCommand" 
+            description="Sets the create server command to be executed"> 
+           
+        
+		<condition property="createServerCommand" value="$AdminTask createProxyServer ${nodeName} {-name ${serverName} -specificShortName ${z.server.short.name} -genericShortName ${z.cluster.transition.name} -selectProtocols {-list {${convertedSupportedProtocols}}} -selectSecurityLevel {-securityLevel ${securityLevel}} }">
+
+		    <and>
+				<isset property="isCurrentOSzOS"/>
+			</and>
+        </condition>
+																											        
+        <condition property="createServerCommand" value="$AdminTask createProxyServer ${nodeName} {-name ${serverName} -templateName secure_proxy_server -selectProtocols {-list {${convertedSupportedProtocols}}} -selectSecurityLevel {-securityLevel ${securityLevel}} }">
+		    <and>
+				<not>
+	            	<isset property="isCurrentOSzOS"/>
+	            </not>
+			</and>
+        </condition>                             
+
+
+        <wscmtlog>createServerCommand is: ${createServerCommand}</wscmtlog>
+    </target>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+       <!-- z/OS setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setCurrentOSFamily"
+            description="Sets the current OS Family">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+    
+    <target name="runCreateSecureProxyServerConfig"
+            description="Runs the JACL script to create the secure proxy server">
+            
+        <wscmtlog>Create Secure Proxy Server, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/createSecureProxyServer.log</wscmtlog>
+          <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->                      
+         <wsadmin conntype="none"
+                 lang="jacl"
+                 failonerror="false"
+                  returnproperty="rcProperty"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/createSecureProxyServer.log"
+                 appendTrace="true"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="${createServerCommand};$AdminConfig save"                 
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/createSecureProxyServer.log" />
+            <param name="description" value="Creating Secure Proxy Server" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	        
+    </target>
+	
+	<target name="createDirectories" 
+		description="Creates static routes and static content directories under profile root">
+		
+		<wscmtlog>Create staticRoutes, staticContent, and prefs directories under secure proxy server</wscmtlog>
+		
+		<mkdir dir="${profilePath}/staticRoutes" />
+		<mkdir dir="${profilePath}/staticContent" />
+		<mkdir dir="${profilePath}/prefs/user" />
+	</target>
+	
+	<target name="createDirectoriesUnix" 
+			description="Creates unix user prefs directories" unless="isCurrentOSWindows">
+			
+			<wscmtlog>Create prefs directories under secure proxy server on unix</wscmtlog>
+			
+			<mkdir dir="${profilePath}/prefs/user/.java/.userPrefs" />
+				
+	</target>
+    
+   <target name="zSwitchToJre"
+        description="For z/OS only, DMZ and proxy, switch to jre since jdk may not be installed" if="isCurrentOSzOS">
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/variables.xml"/>
+            <param name="token" value="-Djava.home=$${JAVA_HOME}"/>
+            <param name="tokenValue" value="-Djava.home=$${JAVA_HOME}/jre"/>
+        </antcall>
+
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFileAscii">
+            <param name="file" value="${profilePath}/config/cells/${cellName}/nodes/${nodeName}/servers/${serverName}/server.xml"/>
+            <param name="token" value="$${JAVA_HOME}/bin/java"/>
+            <param name="tokenValue" value="$${JAVA_HOME}/jre/bin/java"/>
+        </antcall>
+   </target>
+
+
+    <target name="setCellVar" description="Sets a cell-scoped variable named WAS_CELL_NAME">
+         <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->           
+        <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+                                 lang="jacl"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/webui_config.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <command value="set varMap [$$AdminConfig getid /Cell:${cellName}/VariableMap:/]"/>
+                 <command value="set nameattr1 [list symbolicName WAS_CELL_NAME]"/>
+                 <command value="set valattr1 [list value ${cellName}]"/>
+                 <command value="set attr1 [list $nameattr1 $valattr1]"/>
+                 <command value="set attrs [list $attr1]"/>
+                 <command value="$$AdminConfig modify $$varMap [subst {{entries {$$attrs}}}]"/>
+                 <command value="$$AdminConfig save"/>
+        </wsadmin>
+        <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/webui_config.log" />
+            <param name="description" value="Settubg a cell-scoped variable named WAS_CELL_NAME" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target>
+
+    <target name="createSecureProxyServer"
+        description="Creates the secure proxy server - ${serverName}"
+        depends="detectCurrentOSFamily,
+            setCurrentOSFamily,
+            convertSupportedProtocols,
+            setSecurityLevelProperty,
+            setCreateServerCommand,
+            runCreateSecureProxyServerConfig,
+    		    createDirectories, createDirectoriesUnix, setCellVar,
+    		    zSwitchToJre"/>           
+
+</project>

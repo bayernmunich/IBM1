@@ -1,0 +1,468 @@
+<html>
+
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>MethodElement</title>
+
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h2>MethodElement</h2>
+
+<p>This type is a class for model objects.</p>
+
+<p>The method element is used to denote a method of an enterprise bean's
+home or remote interface, or a set of methods. The ejb-name element
+must be the name of one of the enterprise beans in declared in the
+deployment descriptor; the optional method-intf element allows to
+distinguish between a method with the same signature that is defined in
+both the home and remote interface; the method-name element specifies
+the method name; and the optional method-params elements identify a
+single method among multiple methods with an overloaded method name.
+
+There are three possible styles of the method element syntax:
+
+1. 	<method>
+		<ejb-name>EJBNAME</ejb-name>
+   		<method-name>*</method-name>
+	</method>
+
+   This style is used to refer to all the methods of the specified
+   enterprise bean's home and remote interfaces.
+
+2. 	<method>
+		<ejb-name>EJBNAME</ejb-name>
+   		<method-name>METHOD</method-name>
+	</method>>
+
+   This style is used to refer to the specified method of the
+   specified enterprise bean. If there are multiple methods with
+   the same overloaded name, the element of this style refers to
+   all the methods with the overloaded name.
+
+
+
+
+
+3. 	<method>
+		<ejb-name>EJBNAME</ejb-name>
+   		<method-name>METHOD</method-name>
+		<method-params>
+   			<method-param>PARAM-1</method-param>
+   			<method-param>PARAM-2</method-param>
+          			...
+   			<method-param>PARAM-n</method-param>
+		</method-params>
+	<method>	
+
+   This style is used to refer to a single method within a set of
+   methods with an overloaded name. PARAM-1 through PARAM-n are the
+   fully-qualified Java types of the method's input parameters (if
+   the method has no input arguments, the method-params element
+   contains no method-param elements). Arrays are specified by the
+   array element's type, followed by one or more pair of square
+   brackets (e.g. int[][]).
+
+
+Used in: method-permission and container-transaction
+
+Examples:
+
+    Style 1: The following method element refers to all the methods of
+		the EmployeeService bean's home and remote interfaces:
+
+		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-name>*</method-name>
+		</method>
+
+	Style 2: The following method element refers to all the create
+		methods of the EmployeeService bean's home interface:
+
+    		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-name>create</method-name>
+		</method>
+
+	Style 3: The following method element refers to the
+		create(String firstName, String LastName) method of the
+	 	EmployeeService bean's home interface.
+
+    		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-name>create</method-name>
+			<method-params>
+				<method-param>java.lang.String</method-param>
+				<method-param>java.lang.String</method-param>
+			</method-params>
+		</method>
+
+	
+	The following example illustrates a Style 3 element with
+	more complex parameter types. The method
+			foobar(char s, int i, int[] iar, mypackage.MyClass mycl,
+				mypackage.MyClass[][] myclaar)
+        would be specified as:
+
+    		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-name>foobar</method-name>
+			<method-params>
+				<method-param>char</method-param>
+				<method-param>int</method-param>
+				<method-param>int[]</method-param>
+				<method-param>mypackage.MyClass</method-param>
+				<method-param>mypackage.MyClass[][]</method-param>
+			</method-params>
+		</method>
+
+	The optional method-intf element can be used when it becomes
+   necessary to differentiate between a method defined in the home
+   interface and a method with the same name and signature that is
+   defined in the remote interface.
+
+	For example, the method element
+
+   		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-intf>Remote</method-intf>
+			<method-name>create</method-name>
+			<method-params>
+				<method-param>java.lang.String</method-param>
+				<method-param>java.lang.String</method-param>
+			</method-params>
+		</method>
+
+	can be used to differentiate the create(String, String) method
+   defined in the remote interface from the create(String, String)
+   method defined in the home interface, which would be defined as
+
+   		<method>
+			<ejb-name>EmployeeService</ejb-name>
+			<method-intf>Home</method-intf>
+			<method-name>create</method-name>
+			<method-params>
+				<method-param>java.lang.String</method-param>
+				<method-param>java.lang.String</method-param>
+			</method-params>
+		</method></p>
+Package:&nbsp;<A HREF="../ejb/classes-frame.html" target="packageFrame">ejb</A><BR>
+<BR>
+Known subtypes:<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="../ejb/QueryMethod.html">QueryMethod</A><BR>
+<BR>
+Classifier ID:&nbsp;&nbsp;-1
+<BR>
+Instance class name:&nbsp;&nbsp;* Unspecified *
+<BR>
+Instance class:&nbsp;&nbsp;* Unspecified *
+<BR>
+<BR>
+
+Collection attributes having this type:
+<BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/AccessIntent.html#methodElements">AccessIntent.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/AppliedAccessIntent.html#methodElements">AppliedAccessIntent.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../compensationejbext/CompensationEJBMethodPolicy.html#methodElements">CompensationEJBMethodPolicy.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/ContainerActivitySession.html#methodElement">ContainerActivitySession.methodElement</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../activitysessionejbext/ContainerActivitySession.html#methodElements">ContainerActivitySession.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejb/ExcludeList.html#methodElements">ExcludeList.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/FinderDescriptor.html#finderMethodElements">FinderDescriptor.finderMethodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../i18nejbext/I18NEJBContainerInternationalization.html#methodElements">I18NEJBContainerInternationalization.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/IsolationLevelAttributes.html#methodElements">IsolationLevelAttributes.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejb/MethodPermission.html#methodElements">MethodPermission.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejb/MethodTransaction.html#methodElements">MethodTransaction.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../appprofileejbext/RunAsTask.html#methodElements">RunAsTask.methodElements</A></B><BR>
+&nbsp;&nbsp;<B><A HREF="../ejbext/SecurityIdentity.html#methodElements">SecurityIdentity.methodElements</A></B><BR>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attributes Summary</B></FONT></TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#name">name</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+The method-name element contains a name of an enterprise bean method,
+or the asterisk (*) character. The asterisk is used when the element
+denotes all the methods of an enterprise bean's remote and home
+interfaces.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#parms">parms</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+The method-params element contains a list of the fully-qualified Java type names of the method parameters.  In the current implementation this is a space delimitted String.  A null string indicates a generic method element that can apply to multiple methods with the same name.  An empty string indicates a method with zero parameters.  In future implementations (post V5), this field will be deprecated and migrated to use the multi-valued params field and the isZeroParams flag.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#type">type</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ejb/MethodElementKind.html">MethodElementKind</A></TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#description">description</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ecore/EString.html">EString</A></TD>
+<TD VALIGN="top" ALIGN="left">
+@version J2EE1.4 deprecated, becomes descriptions
+The description element is used by the ejb-jar file producer to provide text describing the parent element.  The description element should include any information that the ejb-jar file producer wants to provide to the consumer of the ejb-jar file (i.e. to the Deployer). Typically, the tools used by the ejb-jar file consumer will display the description when processing the parent element.
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#enterpriseBean">enterpriseBean</A></B></FONT>&nbsp;:&nbsp;<A HREF="../ejb/EnterpriseBean.html">EnterpriseBean</A> @
+</TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+<TR BGCOLOR="white" CLASS="TableRowColor">
+<TD ALIGN="left" VALIGN="top">
+<FONT><B><A HREF="#descriptions">descriptions</A></B></FONT>&nbsp;:&nbsp;<A HREF="../common/Description.html">Description</A> *
+</TD>
+<TD VALIGN="top" ALIGN="left">
+* No description is available *
+</TD>
+</TR>
+
+</TABLE>
+
+<BR>
+<HR>
+
+<BR>
+
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor" BGCOLOR="#CCCCFF">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Attribute Details</B></FONT></TD>
+</TR>
+</TABLE>
+
+
+<BR>
+<B><A name="name">name</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;The method-name element contains a name of an enterprise bean method,
+or the asterisk (*) character. The asterisk is used when the element
+denotes all the methods of an enterprise bean's remote and home
+interfaces.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="parms">parms</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;The method-params element contains a list of the fully-qualified Java type names of the method parameters.  In the current implementation this is a space delimitted String.  A null string indicates a generic method element that can apply to multiple methods with the same name.  An empty string indicates a method with zero parameters.  In future implementations (post V5), this field will be deprecated and migrated to use the multi-valued params field and the isZeroParams flag.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="type">type</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ejb/MethodElementKind.html">MethodElementKind</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Allowed values:
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&nbsp;-&nbsp;Unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;-&nbsp;Remote
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;-&nbsp;Home
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3&nbsp;-&nbsp;Local
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4&nbsp;-&nbsp;LocalHome
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5&nbsp;-&nbsp;ServiceEndpoint
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+
+<BR>
+<B><A name="description">description</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;@version J2EE1.4 deprecated, becomes descriptions
+The description element is used by the ejb-jar file producer to provide text describing the parent element.  The description element should include any information that the ejb-jar file producer wants to provide to the consumer of the ejb-jar file (i.e. to the Deployer). Typically, the tools used by the ejb-jar file consumer will display the description when processing the parent element.
+
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Data Type:&nbsp;<A HREF="../ecore/EString.html">EString</A>
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Default value:&nbsp;&nbsp;unspecified
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+<BR>
+<BR>
+<B><A name="enterpriseBean">enterpriseBean</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../ejb/EnterpriseBean.html">EnterpriseBean</A> @<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;1
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+<BR>
+<B><A name="descriptions">descriptions</A></B>&nbsp;&nbsp;-&nbsp;&nbsp;* No description is available *
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Reference Type:&nbsp;<A HREF="../common/Description.html">Description</A> *<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Containment:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Container:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Required:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Changeable:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unsettable:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Many:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Ordered:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Lower bound:&nbsp;&nbsp;0
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Upper bound:&nbsp;&nbsp;Unbounded
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Unique:&nbsp;&nbsp;true
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Derived:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Transient:&nbsp;&nbsp;false
+<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;Volatile:&nbsp;&nbsp;false
+
+<BR>
+
+<BR>
+<HR>
+
+<BR>
+<CENTER>
+<h4>(C) COPYRIGHT International Business Machines Corp. 1996-2006</h4>
+</CENTER>
+
+</body>
+
+</html>

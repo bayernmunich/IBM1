@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <!-- ODR collection -->
+    <definition
+        controllerClass="com.ibm.ws.console.odr.controller.OdrController"
+        name="ODR.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="ODR"/>
+        <put name="descTitle" value="nav.view.proxyServersAlt"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.odr"/>
+        <put name="descText" value="ProxyAlt.description"/>
+        <put name="serverType" value="ONDEMAND_ROUTER"/>
+        <putList name="contentList">
+            <add value="Proxy.paging.extend"/>
+            <add value="Proxy.quicksearch.extend"/>
+            <add value="ODR.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition name="ODR.collection.table.extends" path="/com.ibm.ws.console.servermanagement/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.proxy.ProxyCollectionForm"/>
+        <put name="formAction" value="proxyCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.ProxyCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.ProxyCollectionForm"/>
+        <put name="buttons" value="Proxy.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ODR.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" value="text:UI/Collections/ODR/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/ODR/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <!-- Wizard - start -->
+    <definition name="ODR.wizard.steps" path="/secure/layouts/stepsLayout.jsp">
+        <put name="contextType" value="ODR.wizard.steps"/>
+        <put name="titleKey" value="ProxyServerAlt.create.new.title"/>
+        <put name="descKey" value="ProxyServerAlt.create.new.description"/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value=""/>
+        <put name="formType" value=""/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="stepArraySessionKey" value="ONDEMAND_ROUTER_STEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/SelectNodeForProxyServer" value="ODR.new.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/SpecifyProxyServerProperties" value="ODR.new.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/SelectProxyServerTemplate" value="ODR.new.step3"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.proxy/ConfirmCreateProxyServer" value="ODR.new.step4"/>
+        </putList>
+    </definition>
+    <definition extends="ODR.wizard.steps" name="ODR.new.step1">
+        <put name="helpTopic" value="ODR.wizard"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <put name="actionHandler" value="selectNodeForProxyServer"/>
+        <put name="actionForm" value="SelectProxyServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.wizard.CreateNewProxyServerForm"/>
+    </definition>
+    <definition extends="ODR.wizard.steps" name="ODR.new.step2">
+        <!-- bv changed -->
+        <put name="helpTopic" value="ODR.wizard"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <put name="actionHandler" value="specifyProxyServerProperties"/>
+        <put name="actionForm" value="SelectProxyServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.wizard.CreateNewProxyServerForm"/>
+    </definition>
+    <definition extends="ODR.wizard.steps" name="ODR.new.step3">
+        <!-- bv changed -->
+        <put name="helpTopic" value="ODR.wizard"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <put name="actionHandler" value="selectProxyServerTemplate"/>
+        <put name="actionForm" value="SelectProxyServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.wizard.CreateNewProxyServerForm"/>
+    </definition>
+    <definition extends="ODR.wizard.steps" name="ODR.new.step4">
+        <put name="helpTopic" value="ODR.wizard"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <put name="actionHandler" value="confirmCreateProxyServer"/>
+        <put name="actionForm" value="ConfirmCreateProxyServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.wizard.CreateNewProxyServerForm"/>
+    </definition>
+    <!-- Wizard - end -->
+    <definition extends="detail.config.view" name="ODR.config.view">
+        <put name="contextType" value="ODR"/>
+        <put name="helpTopic" value="ODR.detail"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <putList name="list">
+            <add value="ODR.detail.title"/>
+            <add value="ODR.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="ODR.detail.title">
+        <put name="formName" value="com.ibm.ws.console.proxy.ProxyDetailForm"/>
+        <put name="objectTypeImage" value="ODR.smallIcon:pluginId=com.ibm.ws.console.odr"/>
+        <put name="titleKey" value="nav.view.proxyServersAlt"/>
+        <put name="collectionLink" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=Proxy.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="yes"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="ProxyAlt.description"/>
+        <put name="displayName" value="nav.view.proxyServersAlt"/>
+    </definition>
+    <definition name="ODR.detail.tabsLayout" path="/com.ibm.ws.console.servermanagement/tabsLayout.jsp">
+        <put name="selectUri" value="proxyDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.ProxyDetailForm"/>
+        <putList name="tabList">
+            <!-- <item value="tab.configuration" link="Proxy.config.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/>
+				<item value="tab.runtime" link="Proxy.runtime.tab.view" classtype="org.apache.struts.tiles.beans.SimpleMenuItem"/> -->
+        </putList>
+    </definition>
+    <definition extends="detail.config.tab.view" name="ODR.config.tab.view">
+        <putList name="list">
+            <add value="Proxy.detail.buttons.panel"/>
+            <add value="ODR.config.general.properties"/>
+            <add value="Proxy.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.proxysettings.ProxySettingsController"
+        extends="detail.config.view" name="ODRSettings.config.view">
+        <put name="contextType" value="ODRSettings"/>
+        <put name="helpTopic" value="ODR.settings"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <putList name="list">
+            <add value="ODRSettings.detail.title"/>
+            <add value="ODRSettings.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="ODRSettings.detail.title">
+        <put name="formName" value="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm"/>
+        <put name="objectTypeImage" value="ProxySettings.smallIcon:pluginId=com.ibm.ws.console.odr"/>
+        <put name="titleKey" value="ProxySettingsAlt.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ODR.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="instanceDetails"/>
+        <put name="instanceDescription" value="ProxySettingsAlt.description"/>
+        <put name="displayName" value="ProxySettingsAlt.displayName"/>
+    </definition>
+    <definition name="ODRSettings.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="proxySettingsDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm"/>
+        <putList name="tabList">
+            <item
+                classtype="org.apache.struts.tiles.beans.SimpleMenuItem"
+                link="ODRSettings.config.tab.view" value="tab.configuration"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.tab.view" name="ODRSettings.config.tab.view">
+        <putList name="list">
+            <add value="ProxySettings.detail.buttons.panel"/>
+            <add value="ODRSettings.config.general.properties"/>
+            <add value="ProxySettings.config.additional.properties"/>
+            <add value="ProxySettings.config.related.properties"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="ODR.config.general.properties">
+        <put name="formAction" value="proxyDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.ProxyDetailForm"/>
+        <put name="contextType" value="ODR"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.ProxyDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ApplicationServer.name.displayName:name:no:Text:ApplicationServer.name.description:yes:yes"/>
+            <!-- Begin LIDB2775 zOS changes  -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.shortName.displayName:shortName:yes:Text:Server.shortName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.uniqueId.displayName:uniqueId:no:Text:Server.uniqueId.description:yes:yes"/>
+            <!-- End LIDB2775 zOS changes  -->
+            <!-- LI 2727 Begin -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.JvmMode.displayName:runIn64bitJVMMode:no:Checkbox:Server.JvmMode.description:no:yes"/>
+            <!-- LI 2727 End -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.developmentMode.displayName:developmentMode:no:Checkbox:Server.developmentMode.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.parallelStart.displayName:parallelStartEnabled:no:Checkbox:Server.parallelStart.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.provisionComponents.displayName:provisionComponents:no:Checkbox:Server.provisionComponents.description:no:yes"/>
+            <!-- 320383: Provide message that some settings can not be changes post-clustering. -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ODR.unavailableByClustering.group.displayName: :no:custom:ODR.unavailableByClustering.group.displayName:no:yes: : :/com.ibm.ws.console.proxy/ClusterInfo.jsp"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="ODRSettings.config.general.properties">
+        <put name="formAction" value="proxySettingsDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm"/>
+        <put name="formFocus" value="cacheUpdateUri"/>
+        <put name="helpTopic" value="ODR.settings"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.ContentServerConnection:contentServerJsp:no:custom:ProxySettings.section.ContentServerConnection.description:yes:yes: : :/com.ibm.ws.console.proxy/ContentServer.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.Caching:cachingJsp:no:custom:ProxySettings.section.Caching.description:yes:yes: : :/com.ibm.ws.console.proxy/Caching.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ODR.section.Compression:compressionJsp:no:custom:ODR.section.Compression.description:yes:yes: : :/com.ibm.ws.console.odr/Compression.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.Exclusion:exclusionJsp:no:custom:ProxySettingsAlt.section.Exclusion.description:yes:yes: : :/com.ibm.ws.console.proxy/Exclusion.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.Logging:loggingJsp:no:custom:ProxySettingsAlt.section.Logging.description:yes:yes: : :/com.ibm.ws.console.proxy/Logging.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.trustedIntermediaryAddresses.displayName:trustedIntermediaryAddresses:no:TextArea:ProxySettings.trustedIntermediaryAddresses.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.PluginConfigPolicy:pluginConfigPolicyJsp:no:custom:ProxySettings.section.PluginConfigPolicy.description:yes:yes: : :/com.ibm.ws.console.proxy/PluginConfigPolicy.jsp"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProxySettings.section.ErrorPage:errorPagePolicyJsp:no:custom:ProxySettingsAlt.section.ErrorPage.description:yes:yes: : :/com.ibm.ws.console.proxy/ErrorPagePolicy.jsp"/>
+        </putList>
+    </definition>
+    <!-- bug 3261, use proxy's
+
+      <definition name="ODRStaticCacheRule.content.main" 
+                path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.proxy.proxysettings.staticcachepolicy.staticcacherule.StaticCacheRuleController">
+        <put name="descTitle"   value="StaticCachePolicy.staticCacheRules.displayName"/>
+		<put name="contextType" value="StaticCacheRule"/>		
+        <put name="descImage"   value="pluginId=com.ibm.ws.console.odr"/>
+        <put name="descText"    value="StaticCacheRule.description"/>
+        <put name="helpTopic"   value="StaticCacheRule.collection"/>
+        <putList name="contentList">
+           <add value="StaticCacheRule.paging.extend"/>
+           <add value="StaticCacheRule.quicksearch.extend"/>
+           <add value="StaticCacheRule.collection.table.extends"/>
+        </putList>
+        
+    </definition>
+    -->
+    <!--
+	 ! ODR Cluster tile defintions
+	 ! Added: 5-26-2009
+	 -->
+    <definition
+        controllerClass="com.ibm.ws.console.odr.controller.OdrClusterCollectionController"
+        name="OdrCluster.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="OdrCluster"/>
+        <put name="descTitle" value="ODRCluster.pluralName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.odr"/>
+        <put name="descText" value="desc.odrcluster.text"/>
+        <put name="helpTopic" value="OdrCluster.collection"/>
+        <put name="pluginId" value="com.ibm.ws.console.odr"/>
+        <putList name="contentList">
+            <add value="OdrCluster.paging.extend"/>
+            <add value="OdrCluster.quicksearch.extend"/>
+            <add value="OdrCluster.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="OdrCluster.paging.extend">
+        <put name="displayLabelKey" value="ODRCluster.pluralName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formAction" value="OdrClusterCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="OdrCluster.quicksearch.extend">
+        <put name="selectUri" value="OdrClusterCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formAction" value="OdrClusterCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <putList name="searchList">
+            <add value="ODRCluster.pluralName:name"/>
+            <add value="ProxyServer.transport.protocol.displayName:protocol"/>
+            <add value="ServerCluster.status.displayName:status:ExecutionState.STARTED,ExecutionState.STOPPED,ExecutionState.PARTIAL_START,ExecutionState.PARTIAL_STOP,ExecutionState.UNAVAILABLE"/>
+        </putList>
+    </definition>
+    <definition name="OdrCluster.collection.table.extends" path="/com.ibm.ws.console.odr/OdrClusterCollectionTableLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="formAction" value="OdrClusterCollection.do"/>
+        <put name="formType" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="buttons" value="OdrCluster.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.odr.forwardCmd.do?forwardName=OdrCluster.content.main"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="idColumn" value="name"/>
+        <put name="statusType" value="unknown"/>
+        <put name="htmlFilter" value="true"/>
+        <put name="serverType" value="odrcluster"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/OdrCluster/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/OdrCluster/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="OdrCluster.collection.buttons.panel">
+        <put name="buttonCount" value="5"/>
+        <put name="definitionName" value="OdrCluster.collection.buttons.panel"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterCollectionForm"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <!--- ODR Cluster Config View -->
+    <!-- ServerCluster Detail   -->
+    <definition extends="detail.config.view" name="OdrCluster.config.view">
+        <put name="contextType" value="OdrCluster"/>
+        <putList name="list">
+            <add value="OdrCluster.detail.title"/>
+            <add value="OdrCluster.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="OdrCluster.detail.title">
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.odr"/>
+        <put name="titleKey" value="ODRCluster.pluralName"/>
+        <put name="collectionLink" value="navigatorCmd.do?forwardName=OdrCluster.content.main&amp;noChange=true"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="ODRCluster.description"/>
+        <put name="displayName" value="ODRCluster.pluralName"/>
+    </definition>
+    <definition name="OdrCluster.detail.tabsLayout" path="/com.ibm.ws.console.odr/tabsLayout.jsp">
+        <put name="selectUri" value="OdrClusterDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="OdrCluster.config.tab.view">
+        <putList name="list">
+            <add value="OdrCluster.config.general.properties"/>
+            <add value="OdrCluster.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="OdrCluster.detail.buttons.panel">
+        <put name="buttonCount" value="6"/>
+        <put name="definitionName" value="OdrCluster.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties" name="OdrCluster.config.general.properties">
+        <put name="formAction" value="OdrClusterDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.odr.form.OdrClusterDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.mbean.clusterName.displayName:name:yes:Text:Cluster.mbean.clusterName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.shortName.displayName:shortName:no:Text:Cluster.shortName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.uniqueId.displayName:uniqueId:no:Text:Cluster.uniqueId.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ODRCluster.NodeGroupName.displayName:nodeGroupName:no:DynamicSelect:ODRCluster.NodeGroupName.description:no:yes:com.ibm.ws.console.odr.cluster.nodeGroupVal:com.ibm.ws.console.odr.cluster.nodeGroupVal"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.additional.properties" name="OdrCluster.config.additional.properties">
+        <put name="formName" value="com.ibm.ws.console.odr.form.OdrClusterDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeController"
+        name="OdrCluster.runtime.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <put name="formAction" value="OdrClusterDetail.do"/>
+        <putList name="list">
+            <add value="OdrCluster.detail.buttons.panel"/>
+            <add value="OdrCluster.runtime.generic.properties"/>
+        </putList>
+    </definition>
+    <!-- Begin LIDB2401  -->
+    <definition extends="buttons.panel" name="OdrCluster.detail.buttons.panel">
+        <put name="buttonCount" value="1"/>
+        <put name="definitionName" value="OdrCluster.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <!-- End LIDB2401  -->
+    <definition extends="detail.runtime.general.generic.properties" name="OdrCluster.runtime.generic.properties">
+        <put name="formAction" value="proxyClusterDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeForm"/>
+        <put name="formType" value="com.ibm.ws.console.proxy.topology.ProxyClusterRuntimeForm"/>
+        <put name="formFocus" value="clusterName"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="propertyLabel" value="config.general.properties"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Cluster.mbean.clusterName.displayName:clusterName:yes:Text:Cluster.mbean.clusterName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                link="" tooltip="" value="Cluster.mbean.state.displayName:state:no:Text:Cluster.mbean.state.description:yes:yes"/>
+        </putList>
+    </definition>
+</tiles-definitions>

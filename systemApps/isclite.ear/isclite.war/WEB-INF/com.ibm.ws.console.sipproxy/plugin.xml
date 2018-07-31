@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp., 1997, 2012
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp. 
+-->
+
+<plugin id="com.ibm.ws.console.sipproxy"
+        name="sipproxy"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="sipproxy">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+	<import plugin="com.ibm.ws.console.servermanagement"/>
+    <import plugin="com.ibm.ws.console.channelfw"/>
+	<import plugin="com.ibm.ws.console.channelfw.channels"/>
+	<import plugin="com.ibm.ws.console.proxy"/>
+</requires>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyServer2" contextType="Proxy">
+    <!-- linkSet id="servermanagement.ProxyServer2" contextType="ApplicationServer" -->
+        <categoryDefinition weight="30" id="proxyserver.sip.properties" parent="proxy.settings.properties" label="addprops.category.label.sipproxy">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.ODR.on.zOS" value="false"/>
+            </compatibility>
+        </categoryDefinition>
+
+        <link categoryId="proxyserver.sip.properties" weight="10" 
+            label="SipProxySettings.link.displayName"
+            description="SipProxySettings.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipProxySettings.config.view&amp;lastPage=Proxy.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+       	     	<match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+        
+        <link categoryId="proxyserver.sip.properties" weight="20"
+            label="SipRoutingRules.link.displayName" 
+            description="SipRoutingRules.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRule.content.main&amp;lastPage=Proxy.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.proxyClusterMember"  value="false"/>
+       	     	<match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+        
+        <link categoryId="proxyserver.sip.properties" weight="30" 
+            label="SipProxy.channelfw.transports.displayName" 
+            description="SipProxy.channelfw.transports.description" 
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=Proxy.config.view&amp;chainAcceptorFilter=SIPProxyInboundChannel&amp;chainEndPointFilter=null">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+      	     	<match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+
+        <link categoryId="proxyserver.sip.properties" weight="40"
+            label="SipExternalDomains.link.displayName" 
+            description="SipExternalDomains.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipExternalDomain.content.main&amp;lastPage=Proxy.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.proxyClusterMember"  value="false"/>
+      	     	<match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- Added for clustering work to selectively remove JSPs -->                    
+    <extension point="com.ibm.websphere.wsc.form">
+    	<form id="SipProxySettings.config.general.properties" contextType="SipProxySettings">
+    	  <field 
+              attributeName="defaultClusterNameJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+          </field >
+          <field 
+              attributeName="defaultUDPChannelChain"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayServerScope"/>
+              </compatibility>
+         </field >
+          <field 
+              attributeName="defaultTCPChannelChain"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayServerScope"/>
+              </compatibility>
+         </field >
+          <field 
+              attributeName="defaultTLSChannelChain"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayServerScope"/>
+              </compatibility>
+         </field >
+          <field 
+              attributeName="retryAfterValue"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+          </field >
+         <field 
+              attributeName="ipSprayerJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[6]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+         </field >
+         <field 
+              attributeName="loggingJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+         </field >
+    	 <field 
+              attributeName="outboundConnectionJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayServerScope"/>
+              </compatibility>
+         </field >
+         <field 
+              attributeName="advisorMessagesJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+         </field >
+         
+          <field 
+              attributeName="sipNetworkOutageDetectionJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+         </field >
+         
+          <field 
+              attributeName="overloadProtectionJsp"
+              perspective="config">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              </compatibility>
+         </field >
+         
+       </form>
+    </extension>                     
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyClusterMemberServer1" contextType="ProxyClusterMember">
+        <categoryDefinition weight="30" id="proxyserver.sip.properties" parent="proxy.settings.properties" label="addprops.category.label.sipproxy">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </categoryDefinition>
+
+        <link categoryId="proxyserver.sip.properties" weight="10" 
+            label="SipProxySettings.link.displayName"
+            description="SipProxySettings.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipProxySettings.config.view&amp;lastPage=ProxyClusterMember.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+        
+        <link categoryId="proxyserver.sip.properties" weight="30" 
+            label="SipProxy.channelfw.transports.displayName" 
+            description="SipProxy.channelfw.transports.description" 
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ProxyClusterMember.config.view&amp;chainAcceptorFilter=SIPProxyInboundChannel&amp;chainEndPointFilter=null">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProxyCluster2" contextType="ProxyCluster">
+        <categoryDefinition weight="30" id="proxyserver.sip.properties" parent="proxy.settings.properties" label="addprops.category.label.sipproxy">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+            </compatibility>
+        </categoryDefinition>
+
+        <link categoryId="proxyserver.sip.properties" weight="10" 
+            label="SipProxySettings.link.displayName"
+            description="SipProxySettings.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipProxySettings.config.view&amp;lastPage=ProxyCluster.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+        
+        <link categoryId="proxyserver.sip.properties" weight="20"
+            label="SipRoutingRules.link.displayName" 
+            description="SipRoutingRules.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRule.content.main&amp;lastPage=ProxyCluster.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+        
+        <link categoryId="proxyserver.sip.properties" weight="40"
+            label="SipExternalDomains.link.displayName" 
+            description="SipExternalDomains.link.description" 
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipExternalDomain.content.main&amp;lastPage=ProxyCluster.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+                <match key="com.ibm.ws.console.proxy.ProxyDetailForm.protocolInternal"  value="(HTTPSIP|SIP)"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- Begin sipproxy.proxysettings -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.proxysettings.detailTab1" contextType="SipProxySettings">
+        <tab
+              label="tab.configuration"
+              contentURI="SipProxySettings.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="sipproxy.proxysettings.properties.link"
+             contextType="SipProxySettings">
+    	<link categoryId="additional.properties" 
+			label="SipExternalDomains.link.displayName" 
+			description="SipExternalDomains.link.description" 
+			actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipExternalDomain.content.main&amp;sfname=externalDomains">
+			<compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+            </compatibility>
+		</link> 
+    	<link categoryId="additional.properties" 
+			label="SipRoutingRules.link.displayName" 
+			description="SipRoutingRules.link.description" 
+			actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRule.content.main&amp;sfname=routingRules">
+			<compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+            </compatibility>
+		</link> 		             
+    	<link categoryId="additional.properties" 
+			label="SipProxy.Component.properties.displayName" 
+			description="Component.properties.description" 
+			actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+			<compatibility>
+                 <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+            </compatibility>
+		</link>             
+    </linkSet>            
+</extension>
+<!-- End sipproxy.proxysettings -->
+
+<!-- Begin sipproxy.ExternalDomain -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="sipproxy.ExternalDomain.collection1" contextType="SipExternalDomain">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="sipExternalDomainCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="sipExternalDomainCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="sipproxy.ExternalDomain.collectionItem1" contextType="SipExternalDomain">
+        <item
+              attributeName="domainName"
+              sortable="sort"
+              itemURI="sipExternalDomainCollection.do?EditAction=true"
+              label="SipExternalDomain.domainName.displayName">
+        </item>
+        <item
+              attributeName="distinguishedName"
+              sortable="sort"
+              itemURI=""
+              label="SipExternalDomain.distinguishedName.displayName">
+        </item>        
+        <item
+              attributeName="protocol"
+              sortable="sort"
+              itemURI=""
+              label="SipExternalDomain.protocol.displayName">
+        </item>
+        <item
+              attributeName="host"
+              sortable="sort"
+              itemURI=""
+              label="SipExternalDomain.host.displayName">
+        </item>
+        <item
+              attributeName="port"
+              sortable="sort"
+              itemURI=""
+              label="SipExternalDomain.port.displayName">
+        </item>        
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.ExternalDomain.detailTab1" contextType="SipExternalDomain">
+        <tab
+              label="tab.configuration"
+              contentURI="SipExternalDomain.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="sipproxy.ExternalDomain.properties.link"
+             contextType="SipExternalDomain">
+             
+      <link categoryId="additional.properties"
+            label="SipProxy.Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+    </linkSet>            
+</extension -->
+<!-- End sipproxy.ExternalDomain -->
+
+<!-- Begin sipproxy.RoutingRule -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="sipproxy.RoutingRule.collection1" contextType="SipRoutingRule">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="sipRoutingRuleCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="sipRoutingRuleCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.enable"
+              actionURI="sipRoutingRuleCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.disable"
+              actionURI="sipRoutingRuleCollection.do">
+        </action>        
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.setOrder"
+              actionURI="sipRoutingRuleCollection.do">
+        </action>           
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="sipproxy.RoutingRule.collectionItem1" contextType="SipRoutingRule">
+        <item
+              attributeName="order"
+              sortable="sort"
+              itemURI=""
+              label="SipRoutingRules.order.displayName">
+        </item>
+        <item
+              attributeName="conditions"
+              sortable="nosort"
+              itemURI=""
+              label="SipRoutingRules.condition.displayName">
+        </item>         
+        <item
+              attributeName="cluster1"
+              sortable="sort"
+              itemURI="sipRoutingRuleCollection.do?EditAction=true"
+              label="SipRoutingRules.cluster.displayName">
+        </item>
+        <item
+              attributeName="enabled1"
+              sortable="sort"
+              itemURI=""
+              label="SipRoutingRules.enabled.displayName">
+        </item>                
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.RoutingRule.detailTab1" contextType="SipRoutingRule">
+        <tab
+              label="tab.configuration"
+              contentURI="SipRoutingRule.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="sipproxy.RoutingRule.properties.link"
+             contextType="SipRoutingRule">
+             
+      <link categoryId="additional.properties"
+            label="SipRoutingRule.section.conditions.displayName"
+            description="SipRoutingRule.section.conditions.description"
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipRoutingRuleCondition.content.main"/>
+
+      <link categoryId="additional.properties"
+            label="SipProxy.Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+            
+      <link categoryId="related.items"
+            label="Manage.Application.Server.Clusters"
+            description="ServerCluster.description"
+            actionURI="navigatorCmd.do?forwardName=ServerCluster.content.main"/>            
+    </linkSet>            
+</extension>
+<!-- End sipproxy.RoutingRule -->
+
+<!-- Begin sipproxy.RoutingRuleCondition -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="sipproxy.RoutingRuleCondition.collection1" contextType="SipRoutingRuleCondition">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.new"
+              actionURI="sipRoutingRuleConditionCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.delete"
+              actionURI="sipRoutingRuleConditionCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="sipproxy.RoutingRuleCondition.collectionItem1" contextType="SipRoutingRuleCondition">
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI="sipRoutingRuleConditionCollection.do?EditAction=true"
+              label="SipRoutingRuleConditions.type.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="SipRoutingRuleConditions.value.displayName">
+        </item>        
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.RoutingRuleCondition.detailTab1" contextType="SipRoutingRuleCondition">
+        <tab
+              label="tab.configuration"
+              contentURI="SipRoutingRuleCondition.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="sipproxy.RoutingRuleCondition.properties.link"
+             contextType="SipRoutingRuleCondition">
+             
+      <link categoryId="additional.properties"
+            label="SipProxy.Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+    </linkSet>            
+</extension -->
+<!-- End sipproxy.RoutingRule -->
+
+<!-- Begin sipproxy.RoutingRuleOrder -->
+<!-- extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="sipproxy.RoutingRuleOrder.collection1" contextType="SipRoutingRuleOrder">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.apply"
+              actionURI="sipRoutingRuleOrderCollection.do">
+        </action>    
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.ok"
+              actionURI="sipRoutingRuleOrderCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.moveup"
+              actionURI="sipRoutingRuleOrderCollection.do">
+        </action>        
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.movedown"
+              actionURI="sipRoutingRuleOrderCollection.do">
+        </action>
+    </actionSet>
+</extension -->
+
+<!-- extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="sipproxy.RoutingRuleOrder.collectionItem1" contextType="SipRoutingRuleOrder">
+        <item
+              attributeName="cluster"
+              sortable="nosort"
+              itemURI=""
+              label="SipRoutingRules.cluster.displayName">
+        </item>
+        <item
+              attributeName="conditions"
+              sortable="nosort"
+              itemURI=""
+              label="SipRoutingRules.condition.displayName">
+        </item>        
+        <item
+              attributeName="enabled1"
+              sortable="nosort"
+              itemURI=""
+              label="SipRoutingRules.enabled.displayName">
+        </item>                
+    </collectionItem>
+</extension -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.RoutingRuleOrder.detailTab1" contextType="SipRoutingRuleOrder">
+        <tab
+              label="tab.configuration"
+              contentURI="SipRoutingRuleOrder.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End sipproxy.RoutingRuleOrder -->
+
+	<extension point="com.ibm.ws.console.core.help">
+		<toc file="toc.xml" primary="true" />
+	</extension>
+
+<!-- LIDB2356-40 changes begin here -->
+<!-- PK28658: Remove this link, doesn't apply for SIP. -->
+<!--
+	 <extension point="com.ibm.websphere.wsc.link">
+        <linkSet id="SIPModule.deployedObjectProxyConfig1" contextType="SIPModuleDeployment">
+            <link 
+                categoryId="additional.properties"
+                label="SIPModuleProxyProperties.displayName"
+                description="SIPModuleProxyProperties.description"
+                actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=SIPModuleDeployment.config.view">
+		    </link>     
+        </linkSet>
+    </extension>
+-->
+<!-- LIDB2356-40 changes end here -->
+	
+</plugin>

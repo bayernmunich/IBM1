@@ -1,0 +1,263 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2005, 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Web Services Security Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Web Services Security Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_WS_Security_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-webservices" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os,
+ 
+		
+		was_stack_custom_init,		 		  	 		          
+		query_ws_security_information,
+		ws_generate_security_trace_string,	
+		trace_setup_custom, 
+		
+		execute_collector, 
+		execute_vce_info_for_was,
+        common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common,
+					 recovery_completed, 
+				 zip_autopd_log_for_recovery, 
+		 		 autopd_feedbacks_for_recovery,
+				 recovery_script_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<target name="query_ws_security_information">
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_query_ws_sec_must_gather_info"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Querying extra questions as requested by the Web Services Security Must Gather"
+		           replace="${autopdts};;${step.count}"
+		           id="1189"
+		           level="info" />
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+<!--		<fieldtask name="ws.security.question1"
+			           label="ws_security_q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" /> -->
+			<fieldtask name="ws.security.question2"
+			           label="ws_security_q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question3"
+			           label="ws_security_q3"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question4"
+			           label="ws_security_q4"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+<!--
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Provide a simplified test case which demonstrates the problem. Include step-by-step instructions for running the test case. Due to the complex nature of Web services security problems, the fastest way for us to resolve your issue is through a test case. If a test case is not available, provide an EAR file from both the Web service provider and Web service client or provide a Project Interchange file exported from Rational® Application Developer.${line.separator}
+						${ws.security.question1}${line.separator}
+				</concat>
+-->		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Clear, specific problem description, including specific usage information and error scenario.${line.separator}
+					${ws.security.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Did this work at one time before changes were made? Please explain.${line.separator}
+					${ws.security.question3}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What is the Web service client (for example, a servlet running on WebSphere Application Server, a standalone Java? application, .NET client, and so on)?${line.separator}
+					${ws.security.question4}${line.separator}
+		</concat>
+		<inputdialogtask noCancel="true" doSkip="true" >
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.security.question5"
+			           label="ws_security_q5"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question6"
+			           label="ws_security_q6"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question7"
+			           label="ws_security_q7"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question8"
+			           label="ws_security_q8"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.security.question9"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="ws_security_q9"
+			           list="yes:no"
+			           listDetails="yes:no"
+			           type="selectlist" />
+
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What is the Web service provider (WebSphere Application Server, .NET, unknown third party)?${line.separator}
+					${ws.security.question5}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Is the failure reported in the logs from the Web service client or the Web service provider?${line.separator}
+					${ws.security.question6}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			When does the problem occur?${line.separator}
+					${ws.security.question7}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			How often does the problem occur?${line.separator}
+					${ws.security.question8}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Is SSL being used?${line.separator}
+					${ws.security.question9}${line.separator}
+		</concat>
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="ws_generate_security_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+
+		<if isTrue="${isWASVersion6}">
+			<inputdialogtask> 
+				<fieldtask name="prompt1"
+		        		   label="Input_Required_WAS"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2"
+				           label="WS_Security_Trace_Question"
+		        		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.feature.pack.installed"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        		   label="select_one"
+				           list="no:yes"
+				           listDetails="no:yes"
+		        		   type="selectlist" />
+			</inputdialogtask>
+			
+			<condition property="ws.fp.installed">
+				<equals arg1="yes" arg2="${ws.feature.pack.installed}" />
+			</condition>
+
+			<if isTrue="${ws.fp.installed}" >
+				<property name="was.trace.string"
+				    value="*=info:com.ibm.ws.webservices.wssecurity.*=all:com.ibm.wsspi.wssecurity.*=all:com.ibm.ws.wssecurity.*=all:com.ibm.xml.soapsec.*=all:com.ibm.ws.webservices.trace.*=all:com.ibm.ws.websvcs.trace.*=all" />
+			</if>
+			<if isNotTrue="${ws.fp.installed}" >
+				<property name="was.trace.string"
+				    value="*=info:com.ibm.ws.webservices.wssecurity.*=all:com.ibm.wsspi.wssecurity.*=all:com.ibm.ws.wssecurity.*=all:com.ibm.xml.soapsec.*=all:com.ibm.ws.webservices.trace.*=all" />
+			</if>				
+		</if>
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string"
+					  value="com.ibm.ws.webservices.wssecurity.*=all=enabled:com.ibm.wsspi.wssecurity.*=all=enabled:com.ibm.ws.wssecurity.*=all=enabled:com.ibm.xml.soapsec.*=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+		
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Web Services Security Problem&lt;/h2&gt;&lt;p&gt;
+						This problem category is run on the managed node experiencing the web services
+						security problem. It will set the appropriate trace string and all the user to 
+						reproduce the problem. After the problem has been reproduced the logs, configuration,
+						and trace files are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1199335" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the web
+services security problem. It will set the appropriate trace string and all the user to reproduce
+the problem. After the problem has been reproduced the logs, configuration, and trace files are
+collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Web Services Security Problem =>
+This problem category is run on the managed node experiencing the web services
+security problem. It will set the appropriate trace string and all the user to
+reproduce the problem. After the problem has been reproduced the logs, configuration,
+and trace files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

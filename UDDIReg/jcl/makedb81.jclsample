@@ -1,0 +1,63 @@
+//************************************************************         
+//* JOB STREAM TO DEFINE UDDI DATABASE                       *         
+//************************************************************         
+//*                                                          *         
+//* DEFINE JOBLIB                                            *         
+//*                                                          *         
+//************************************************************         
+//JOBLIB   DD DISP=SHR,DSN=BOSS.DB2810.SDSNLOAD                        
+//         DD DISP=SHR,DSN=BOSS.DB2810.RUNLIB.LOAD                     
+//*                                                                    
+//************************************************************         
+//*                                                          *         
+//* USE DSNTIAD TO RUN SQL STATEMENTS                        *         
+//*                                                          *         
+//************************************************************         
+//TIAD1    EXEC PGM=IKJEFT01                                             
+//SYSPRINT DD SYSOUT=*                                                 
+//SYSTSPRT DD SYSOUT=*                                                 
+//SYSTSIN  DD *                                                        
+DSN SYSTEM(DB2)                                                        
+ RUN  PROGRAM(DSNTIAD) PLAN(DSNTIA81) -                                
+      LIB('BOSS.DB2810.RUNLIB.LOAD')                                   
+ END                                                                   
+/*                                                                     
+//*                                                                    
+//SYSIN    DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(TABLE)
+//         DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(INDEX)                       
+//         DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(ALTER)                       
+//         DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(VIEW)                        
+//*                                                                    
+//************************************************************         
+//*                                                          *         
+//* PROCESS THE TRIGGERS FILE REQUIRES                       *         
+//* SQLTERM(#) TO BE DEFINED                                 *         
+//*                                                          *         
+//************************************************************         
+//TIAD2    EXEC PGM=IKJEFT01                                             
+//SYSPRINT DD SYSOUT=*                                                 
+//SYSTSPRT DD SYSOUT=*                                                 
+//SYSTSIN  DD *                                                        
+DSN SYSTEM(DB2)                                                        
+ RUN  PROGRAM(DSNTIAD) PLAN(DSNTIA81) PARMS('SQLTERM(#)') -            
+      LIB('BOSS.DB2810.RUNLIB.LOAD')                                   
+ END                                                                   
+/*                                                                     
+//SYSIN    DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(TRIGGER)                     
+//*                                                                    
+//************************************************************         
+//*                                                          *         
+//* PROCESS REMAINING FILES                                  *         
+//*                                                          *         
+//************************************************************         
+//TIAD3    EXEC PGM=IKJEFT01                                             
+//SYSPRINT DD SYSOUT=*                                                 
+//SYSTSPRT DD SYSOUT=*                                                 
+//SYSTSIN  DD *                                                        
+DSN SYSTEM(DB2)                                                        
+ RUN  PROGRAM(DSNTIAD) PLAN(DSNTIA81) -                                
+      LIB('BOSS.DB2810.RUNLIB.LOAD')                                   
+ END                                                                   
+/*                                                                     
+//SYSIN    DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(INITIAL)                     
+//         DD DISP=SHR,DSN=IBMUSER.UDDI.SQL(INSERT)                      

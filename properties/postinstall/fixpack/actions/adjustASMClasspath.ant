@@ -1,0 +1,673 @@
+<?xml version="1.0"?>
+<project name="adjustASMClasspath" default="install" basedir=".">
+
+    <target name="install"
+            description=""
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+
+                     checkEARExpanderScriptUpdated,
+                     replaceEARExpanderLine,
+
+                     checkClientConfigScriptUpdated,
+                     replaceClientConfigLine,
+
+                     checkClientRARScriptUpdated,
+                     replaceClientRARLine,
+
+                     checkWsdeployScriptUpdated,
+                     replaceWsdeployLine,
+
+                     checkGenPluginScriptUpdated,
+                     replaceGenPluginLine,
+
+                     checkWsAntScriptUpdated,
+                     replaceWsAntLine,
+
+                     checkIscdeployScriptUpdated,
+                     replaceIscdeployLine"/>
+
+
+    <target name="uninstall"
+            description="No uninstall action necessary but this target is required."
+            depends="detectCurrentOSFamily,
+                     setOSFileSeparator,
+                     setOSScriptExtension,
+                     filesExists,
+
+                     checkEARExpanderScriptUpdated,
+                     removeEARExpanderLine,
+
+                     checkClientConfigScriptUpdated,
+                     removeClientConfigLine,
+
+                     checkClientRARScriptUpdated,
+                     removeClientRARLine,
+
+                     checkWsdeployScriptUpdated,
+                     removeWsdeployLine,
+
+                     checkGenPluginScriptUpdated,
+                     removeGenPluginLine,
+
+                     checkWsAntScriptUpdated,
+                     removeWsAntLine,
+
+                     checkIscdeployScriptUpdated,
+                     removeIscdeployLine"/>
+
+
+    <!-- Detect Operating System on WAS Installation-->
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="os/400">
+            <os family="os/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <and>
+                <os family="unix"/>
+                <not>
+                    <equals arg1="${os.name}" arg2="OS/400"/>
+                </not>
+            </and>
+        </condition>
+
+
+        <condition property="unixBased" value="false">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="isWindows" value="true">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="isUnix" value="false">
+            <not>
+                <os family="windows"/>
+            </not>
+        </condition>
+
+        <echo>Detected current OS family to be: ${currentOSFamily}</echo>
+    </target>
+    <!-- Output detected OS Family -->
+
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <!-- Specify file separator, based on currently detected OS -->
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <!-- Specify file extension for script on currently detected OS -->
+    <target name="setOSScriptExtension"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="OSext" value=".sh">
+            <equals arg1="${currentOSFamily}" arg2="z/os"/>
+        </condition>
+
+        <condition property="OSext" value=".bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <condition property="OSext" value="">
+                <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+    </target>
+
+
+    <!-- Verifies existence of files in WAS install -->
+    <target name="filesExists">
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}"  property="EARExpanderExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}" property="clientConfigExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}"    property="clientRARExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}"     property="wsdeployExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}"    property="iscdeployExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" property="genPluginExist"/>
+        <available file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}"       property="wsAntExist"/>
+    </target>
+
+
+    <target name="checkEARExpanderScriptUpdated"
+            if="EARExpanderExist">
+
+        <loadfile property="EARExpanderScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}" />
+
+        <condition property="applyEARExpanderUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${EARExpanderScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${EARExpanderScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkClientConfigScriptUpdated"
+            if="clientConfigExist">
+
+        <loadfile property="ClientConfigScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}" />
+
+        <condition property="applyClientConfigUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${ClientConfigScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${ClientConfigScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkClientRARScriptUpdated"
+            if="clientRARExist">
+
+        <loadfile property="ClientRARScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}" />
+
+        <condition property="applyClientRARUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${ClientRARScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${ClientRARScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkWsdeployScriptUpdated"
+            if="wsdeployExist">
+
+        <loadfile property="WsdeployScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}" />
+
+        <condition property="applyWsdeployUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${WsdeployScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${WsdeployScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkGenPluginScriptUpdated"
+            if="genPluginExist">
+
+        <loadfile property="GenPluginScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" />
+
+        <condition property="applyGenPluginUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${GenPluginScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${GenPluginScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkWsAntScriptUpdated"
+            if="wsAntExist">
+
+        <loadfile property="WsAntScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}" />
+
+        <condition property="applyWsAntUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${WsAntScriptUpdated}" substring="set &quot;CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%&quot;" />
+                </not>
+                <not>
+                    <contains string="${WsAntScriptUpdated}" substring="} -classpath &quot;$WAS_HOME/plugins/com.ibm.ws.prereq.asm.jar:$WAS_CLASSPATH&quot; " />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+    <target name="checkIscdeployScriptUpdated"
+            if="iscdeployExist">
+
+        <loadfile property="IscdeployScriptUpdated"
+                  srcfile="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}" />
+
+        <condition property="applyIscdeployUpdate" value="true">
+            <and>
+                <not>
+                    <contains string="${IscdeployScriptUpdated}" substring="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%" />
+                </not>
+                <not>
+                    <contains string="${IscdeployScriptUpdated}" substring="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;" />
+                </not>
+            </and>
+        </condition>
+    </target>
+
+
+    <!-- Replace token on Windows -->
+
+    <!-- EARExpander.sh/.bat updates -->
+    <target name="replaceEARExpanderLine"
+            depends=""
+            description=""
+            if="applyEARExpanderUpdate">
+
+        <antcall target="updateEARExpanderWindows" />
+        <antcall target="updateEARExpanderUnix"    />
+    </target>
+
+    <target name="updateEARExpanderWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating EARExpander${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}"
+                 token="set CLASSPATH=%WAS_CLASSPATH%"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}set CLASSPATH=%WAS_CLASSPATH%"/>
+    </target>
+
+    <target name="updateEARExpanderUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating EARExpander${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot; \"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot; \"/>
+        <antcall target="modifyEARExpanderPermissions"/>
+    </target>
+
+    <target name="modifyEARExpanderPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeEARExpanderLine"
+            depends=""
+            description=""
+            if="EARExpanderScriptUpdated">
+
+        <echo>Reverting EARExpander${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}EARExpander${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyEARExpanderPermissions"/>
+    </target>
+
+
+    <!-- clientConfig.sh/.bat updates -->
+    <target name="replaceClientConfigLine"
+            depends=""
+            description=""
+            if="applyClientConfigUpdate">
+
+        <antcall target="updateClientConfigWindows" />
+        <antcall target="updateClientConfigUnix"    />
+    </target>
+
+    <target name="updateClientConfigWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating clientConfig${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}"
+                 token="set CLASSPATH=%WAS_CLASSPATH%"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}set CLASSPATH=%WAS_CLASSPATH%"/>
+    </target>
+
+    <target name="updateClientConfigUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating clientConfig${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot; \"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot; \"/>
+        <antcall target="modifyClientConfigPermissions"/>
+    </target>
+
+    <target name="modifyClientConfigPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeClientConfigLine"
+            depends=""
+            description=""
+            if="ClientConfigScriptUpdated">
+
+        <echo>Reverting ClientConfig${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientConfig${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyClientConfigPermissions"/>
+    </target>
+
+    <!-- clientRAR.sh/.bat updates -->
+    <target name="replaceClientRARLine"
+            depends=""
+            description=""
+            if="applyClientRARUpdate">
+
+        <antcall target="updateClientRARWindows" />
+        <antcall target="updateClientRARUnix"    />
+    </target>
+
+    <target name="updateClientRARWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>ASM: Updating clientRAR${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}"
+                 token="set CLASSPATH=%WAS_CLASSPATH%"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}set CLASSPATH=%WAS_CLASSPATH%"/>
+    </target>
+
+    <target name="updateClientRARUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating clientRAR${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot; \"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot; \"/>
+        <antcall target="modifyClientRARPermissions"/>
+    </target>
+
+    <target name="modifyClientRARPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeClientRARLine"
+            depends=""
+            description=""
+            if="ClientRARScriptUpdated">
+
+        <echo>Reverting ClientRAR${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}clientRAR${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyClientRARPermissions"/>
+    </target>
+
+    <!-- wsdeploy.sh/.bat updates -->
+    <target name="replaceWsdeployLine"
+            depends=""
+            description=""
+            if="applyWsdeployUpdate">
+
+        <antcall target="updateWsdeployWindows" />
+        <antcall target="updateWsdeployUnix"    />
+    </target>
+
+    <target name="updateWsdeployWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating wsdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}"
+                 token="&quot;%JAVA_HOME%\bin\java&quot;"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}&quot;%JAVA_HOME%\bin\java&quot;"/>
+    </target>
+
+    <target name="updateWsdeployUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating wsdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot; \"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot; \"/>
+        <antcall target="modifyWsdeployPermissions"/>
+    </target>
+
+    <target name="modifyWsdeployPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeWsdeployLine"
+            depends=""
+            description=""
+            if="WsdeployScriptUpdated">
+
+        <echo>Reverting wsdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}wsdeploy${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyWsdeployPermissions"/>
+    </target>
+
+    <!-- GenPluginCfg.sh/.bat updates -->
+    <target name="replaceGenPluginLine"
+            depends=""
+            description=""
+            if="applyGenPluginUpdate">
+
+        <antcall target="updateGenPluginWindows" />
+        <antcall target="updateGenPluginUnix"    />
+    </target>
+
+    <target name="updateGenPluginWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="set CLASSPATH=%WAS_CLASSPATH%"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}set CLASSPATH=%WAS_CLASSPATH%"/>
+    </target>
+
+    <target name="updateGenPluginUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot; \"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot; \"/>
+        <antcall target="modifyGenPluginPermissions"/>
+    </target>
+
+    <target name="modifyGenPluginPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeGenPluginLine"
+            depends=""
+            description=""
+            if="GenPluginScriptUpdated">
+
+        <echo>Reverting GenPluginCfg${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}GenPluginCfg${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyGenPluginPermissions"/>
+    </target>
+
+    <!-- ws_ant.sh/.bat updates -->
+    <target name="replaceWsAntLine"
+            depends=""
+            description=""
+            if="applyWsAntUpdate">
+
+        <antcall target="updateWsAntWindows" />
+        <antcall target="updateWsAntUnix"    />
+    </target>
+
+    <target name="updateWsAntWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating ws_ant${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}"
+                 token="set &quot;CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.ow.asm.jar;%WAS_CLASSPATH%&quot;"
+                 value="set &quot;CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%&quot;"/>
+    </target>
+
+    <target name="updateWsAntUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating ws_ant${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}"
+                 token="} -classpath &quot;$WAS_HOME/plugins/com.ibm.ws.prereq.ow.asm.jar:$WAS_CLASSPATH&quot; "
+                 value="} -classpath &quot;$WAS_HOME/plugins/com.ibm.ws.prereq.asm.jar:$WAS_CLASSPATH&quot; "/>
+        <antcall target="modifyWsAntPermissions"/>
+    </target>
+
+    <target name="modifyWsAntPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeWsAntLine"
+            depends=""
+            description=""
+            if="WsAntScriptUpdated">
+
+        <echo>Reverting ws_ant${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}"
+                 token="set &quot;CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%&quot;"
+                 value="set &quot;CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.ow.asm.jar;%WAS_CLASSPATH%&quot;"/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}ws_ant${OSext}"
+                 token="} -classpath &quot;$WAS_HOME/plugins/com.ibm.ws.prereq.asm.jar:$WAS_CLASSPATH&quot; "
+                 value="} -classpath &quot;$WAS_HOME/plugins/com.ibm.ws.prereq.ow.asm.jar:$WAS_CLASSPATH&quot; "/>
+        <antcall target="modifyWsAntPermissions"/>
+    </target>
+
+    <!-- iscdeploy.sh/.bat updates -->
+    <target name="replaceIscdeployLine"
+            depends=""
+            description=""
+            if="applyIscdeployUpdate">
+
+        <antcall target="updateIscdeployWindows" />
+        <antcall target="updateIscdeployUnix"    />
+    </target>
+
+    <target name="updateIscdeployWindows"
+            depends=""
+            description=""
+            if="isWindows">
+
+        <echo>Updating iscdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}"
+                 token="set CLASSPATH=%WAS_CLASSPATH%"
+                 value="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%${line.separator}set CLASSPATH=%WAS_CLASSPATH%"/>
+    </target>
+
+    <target name="updateIscdeployUnix"
+            depends=""
+            description=""
+            if="isUnix">
+
+        <echo>Updating iscdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}"
+                 token="&quot;$JAVA_HOME/bin/java&quot;"
+                 value="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;${line.separator}&quot;$JAVA_HOME/bin/java&quot;"/>
+        <antcall target="modifyIscdeployPermissions"/>
+    </target>
+
+    <target name="modifyIscdeployPermissions">
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}" perm="a+x"/>
+    </target>
+
+    <target name="removeIscdeployLine"
+            depends=""
+            description=""
+            if="IscdeployScriptUpdated">
+
+        <echo>Reverting iscdeploy${OSext}</echo>
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}"
+                 token="SET WAS_CLASSPATH=%WAS_HOME%\plugins\com.ibm.ws.prereq.asm.jar;%WAS_CLASSPATH%"
+                 value=""/>
+
+        <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}iscdeploy${OSext}"
+                 token="WAS_CLASSPATH=&quot;$WAS_HOME&quot;/plugins/com.ibm.ws.prereq.asm.jar:&quot;$WAS_CLASSPATH&quot;"
+                 value=""/>
+
+        <antcall target="modifyIscdeployPermissions"/>
+    </target>
+
+</project>

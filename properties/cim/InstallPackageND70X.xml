@@ -1,0 +1,482 @@
+<?xml version="1.0"?>
+<!-- ********************************************************************************************************** -->
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                          -->
+<!-- 5639-D57, 5630-A36, 5630-A37, 5724-D18 (C) COPYRIGHT International Business Machines Corp. 2008      		-->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                                 -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                     -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                     -->
+<!-- ********************************************************************************************************** -->
+<!-- Change activity:                                                                                           -->
+<!-- Ver   Date   Description                                                                                   -->
+<!-- ===  ======  ============================================================================================= -->
+<!-- 3.0  011808  Initial creation                                                                              -->
+<!--      021608  Add ResponseFileHelper and InstallWithRespFileCmd elements                                    -->
+<!--      031408  Updated the PackageFileList and Installer Filename                                            -->
+<!--      041808  Split up the InstallPrepCmd for distributed platforms into Linux and others.                  -->
+<!--      050708  Add hostName parm for manageprofiles command                                                  -->
+<!--      052808  Remove common.zip and added the UninstallLocation element.                                    -->
+<!--      052908  Fixed up several InstallPrepCmd elements and added an AlternateMsg for the PostInstallCmd.    -->
+<!--      060708  Added an InstallPrepCmd specific to HP-UX                                                     -->
+<!--      062508  Enabled the ExclusivePlatforms element for OS400 and added a UninstallPrepCmd for removeNode  -->
+<!--      070908  Replaced a Helper class for an UninstallPrepCmd                                               -->
+<!--      072408  Added a "noFeature" Feature and a Selected attribute for the two Language Pack Features       -->
+<!-- 3.1  070809  Updated the PostInstallCmd for manageprofiles for os400.                                      -->
+<!-- ********************************************************************************************************** -->
+<InstallPackage  DescriptorVersion="3.1"  SelectionGroup="productInstall"  
+		StaticFeatureSet="true"  OptionalFeatureSet="true"  MutuallyExclusiveFeatureSet="false"  FeatureSelectableForUninstall="false" >
+	<PackageShortName> 		ND70   				  										</PackageShortName>  
+	<PackageLongName>  		WebSphere Application Server Network Deployment             </PackageLongName>  
+	<PackageMsgKeyPrefix>	nd.70                 										</PackageMsgKeyPrefix>  
+	<PackageMsgBundleBaseName>	cim.messages.CIMInstallPackageMsgs             			</PackageMsgBundleBaseName>  
+	
+	<ProductShortNames> 	ND                    </ProductShortNames>
+	
+	<!-- PackageDir is the name of the directory that holds the package files -->
+	<PackageDir>            WAS70                 </PackageDir>         
+	<PackageVersionString>  7.0                   </PackageVersionString>  
+	<PackageProvider>	    IBM Corporation       </PackageProvider>	    
+	<PackageProviderURL>	http://www.ibm.com/software/    							</PackageProviderURL>	    
+	    
+	<PackageURL>			http://www.ibm.com/software/webservers/appserv/was/network/	</PackageURL>
+	
+	<!-- Feature-specific License file, if present, supercedes the Package License file -->
+	<PackageLicenseZipPrefix>   was.nd.7000     		</PackageLicenseZipPrefix>
+	<PackageLicenseFile>     	WAS/was.primary.pak/repository/legal/lafiles/LA_${LANG} </PackageLicenseFile>	    
+	<PackageLicenseInfoFile> 	WAS/was.primary.pak/repository/legal/lafiles/LI_${LANG} </PackageLicenseInfoFile> 
+	
+	<PackageFileList>                                   </PackageFileList>	    
+	
+	<FeatureCommonFileList>  							</FeatureCommonFileList>
+
+	<!-- Feature long name and description are localized using the "PackageMsgKeyPrefix" as msg key prefix -->
+	<Feature  Name="noFeature" LongName="Name to use for no feature"  HiddenFromUI="true"  UseIfNoneIntended="true" />
+	<Feature  Name="samplesSelected"  			LongName="Application server samples" />
+	<Feature  Name="languagepack.console.all"	LongName="Language pack for administrative console" Selected="true"	/>
+	<Feature  Name="languagepack.server.all"	LongName="Language pack for server runtime" Selected="true"			/>
+
+	<SpecialInstruction  Name="EmptyInstallDirRequired" />
+
+	<!-- Platform type that must NOT be mixed with other platform types when selecting targets for installation. -->
+	<!-- This is mainly for the User Interface which allow multiple targets to be selected for an operation.     -->
+	<!-- Should be enabled if the OtherInstallLocation element below has its HiddenFromUI attr. set to false.    -->  
+	<ExclusivePlatforms  Platform="os400"/>
+
+
+	<ResponseFileHelper	HelperClass="com.ibm.ws.xd.cimgr.controller.ResponseFileHelperForWAS" />
+
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.DMgrAdminCredHelper" 
+							  MsgKeyRoot="specialParm.nodeagent.dmgrAdminCred" >
+		<ParamName>		DMGR_ADMIN_ID				</ParamName>
+		<ParamName>		DMGR_ADMIN_PWD				</ParamName>
+	</SpecialInstallParameters>
+	
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.DisableOSPrereqChecking" 
+							  MsgKeyRoot="specialParm.disableOSPrereqChecking" 
+							  PromptType="CheckBox"  >
+		<ParamName>		DISABLE_OS_PREREQ_CHECKING	</ParamName>
+	</SpecialInstallParameters>
+
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.AllowNonRootInstall" 
+							  MsgKeyRoot="specialParm.allowNonRootInstall" 
+							  PromptType="CheckBox"  >
+		<ParamName>		ALLOW_NON_ROOT_INSTALL    	</ParamName>
+	</SpecialInstallParameters>
+
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.Use32BitImageOn64BitOS" 
+							  MsgKeyRoot="specialParm.use32BitImageOn64BitOS" 
+							  PromptType="CheckBox"  >
+		<ParamName>		USE_32BIT_IMAGE_ON_64BIT_OS	</ParamName>
+	</SpecialInstallParameters>
+
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.Use32BitImageOn64BitOS" 
+							  Operation="installWithRespFile" 
+							  MsgKeyRoot="specialParm.use32BitImageOn64BitOS" 
+							  PromptType="CheckBox"  >
+		<ParamName>		USE_32BIT_IMAGE_ON_64BIT_OS </ParamName>
+	</SpecialInstallParameters>
+
+	<SpecialUninstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.DMgrAdminCredHelper" 
+							  MsgKeyRoot="specialParm.uninstall.nodeagent.dmgrAdminCred" >
+		<ParamName>		DMGR_ADMIN_ID				</ParamName>
+		<ParamName>		DMGR_ADMIN_PWD				</ParamName>
+	</SpecialUninstallParameters>
+<!--
+	<SpecialUninstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.RemoveProfilesOnUninstall" 
+							  MsgKeyRoot="specialParm.removeProfilesOnUninstall"
+							  PromptType="CheckBox"  >
+		<ParamName>		REMOVE_PROFILES_ON_UNINSTALL</ParamName>
+	</SpecialUninstallParameters>
+-->
+
+	<!-- Verify a clock skew of no more than 300 seconds between the DMgr host and the target host -->
+	<ParameterValidator Operation="install" HelperClass="com.ibm.ws.xd.cimgr.controller.ClockSkewValidatorForWAS" />
+
+	<!-- Verify the list of features specified for install and if none is selected, use "noFeature" as the feature selected -->
+	<!-- The Helper class knows that the check is needed only for install without using a response file.                    -->
+	<ParameterValidator Operation="install" HelperClass="com.ibm.ws.xd.cimgr.controller.FeatureListValidatorForWAS" />
+
+	<!-- ParameterValidator to ensure variable "NON_ROOT_NEW_INSTALL_ON_UNIX" is set to "true" if applicable. --> 
+	<ParameterValidator Operation="install" HelperClass="com.ibm.ws.xd.cimgr.controller.NonRootInstallOfWASOnUnix" />
+
+	<!-- ParameterValidator for os400 to ensure that a DEFAULT_PROFILE_LOCATION is present. If not use a default. --> 
+	<!-- Also used to remove extra variable(s) if any for i5OS targets.                                           --> 
+	<ParameterValidator Operation="install" HelperClass="com.ibm.ws.xd.cimgr.controller.ParameterValidatorForWASi5OS" />
+
+
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.RemoteCommandHelperWithFileTransfer" 				
+				ConditionalOnInstallerFile="was.nd.7.*\.(windows)\..*\.zip" >
+	<!-- The Unix command strings are used if the user logged in to the Windows target using SSH authentication -->
+	<!-- The "chmod ugo+x install.exe" command is required for running the WAS installer in CYGWIN              --> 
+		<CommandStringUnix>  	cd JDK/jre.pak/repository/package.java.jre/java/jre/bin </CommandStringUnix>
+		<CommandStringUnix>  	chmod -R ugo+x * 										</CommandStringUnix>
+		<CommandStringUnix>  	cd ../../../../../../../WAS/ 							</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x install.exe  								</CommandStringUnix>
+		<CommandStringUnix>  	cd framework/utils 										</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x *.exe 										</CommandStringUnix>
+	<!-- The Windows command strings are used when the user logged in to the Windows target using ID and password for authentication --> 
+		<CommandStringWindows>   														</CommandStringWindows>
+		<CommandPath>    		${WORKING_DIR}     										</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+
+	<!-- InstallPrepCmd for distributed AIX and Solaris -->
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.RemoteCommandHelperWithFileTransfer" 				
+				ConditionalOnInstallerFile="was.nd.7.*\.(aix|solaris)\..*\.zip" >
+		<CommandStringUnix>  	cd JDK/jre.pak/repository/package.java.jre/java/jre/bin </CommandStringUnix>
+		<CommandStringUnix>  	chmod -R ugo+x * 										</CommandStringUnix>
+		<CommandStringUnix>  	cd ../../../../../../../WAS 							</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x install 									</CommandStringUnix>
+		<CommandStringUnix>  	cd framework/utils 										</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x *.sh 										</CommandStringUnix>
+		<CommandPath>    		${WORKING_DIR}     										</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+
+	<!-- InstallPrepCmd for HP-UX -->
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.RemoteCommandHelperWithFileTransfer" 				
+				ConditionalOnInstallerFile="was.nd.7.*\.(hpux)\..*\.zip" >
+		<CommandStringUnix>  	cd JDK/jre.pak/repository/package.java.jre/java/jre/bin </CommandStringUnix>
+		<CommandStringUnix>  	chmod -R ugo+x * 										</CommandStringUnix>
+		<CommandStringUnix>  	chmod -R ugo+x ../lib/* 								</CommandStringUnix>
+		<CommandStringUnix>  	cd ../../../../../../../WAS 							</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x install 									</CommandStringUnix>
+		<CommandStringUnix>  	cd framework/utils 										</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x *.sh 										</CommandStringUnix>
+		<CommandPath>    		${WORKING_DIR}     										</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+
+	<!-- InstallPrepCmd for the Linux platform. The WAS package for Linux has an extra *.sh file  -->
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.RemoteCommandHelperWithFileTransfer" 				
+				ConditionalOnInstallerFile="was.nd.7.*\.(linux)\..*\.zip" >
+		<CommandStringUnix>  	cd JDK/jre.pak/repository/package.java.jre/java/jre/bin </CommandStringUnix>
+		<CommandStringUnix>  	chmod -R ugo+x * 										</CommandStringUnix>
+		<CommandStringUnix>  	cd ../../../../../../../WAS 							</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x install *.sh 								</CommandStringUnix>
+		<CommandStringUnix>  	cd framework/utils 										</CommandStringUnix>
+		<CommandStringUnix>  	chmod ugo+x *.sh 										</CommandStringUnix>
+		<CommandPath>    		${WORKING_DIR}     										</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+
+<!-- Not required. For i5/OS all files has the execute bit by default
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.RemoteCommandHelperWithFileTransfer" 				
+				ConditionalOnInstallerFile="was.nd.7.*\.(os400)\..*\.zip" >
+		<CommandStringQShell>  	chmod ugo+x ${WORKING_DIR}/WAS/install					</CommandStringQShell>
+		<CommandPath>    		     													</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+-->
+
+	<InstallPrepCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.PreInstallForWASOptionsFile" >
+		<CommandPath>    		     													</CommandPath>
+		<CommandLogs>    																</CommandLogs>
+		<SuccessMsg>     							   									</SuccessMsg>
+		<AlternateMsg>                  		    									</AlternateMsg>
+	</InstallPrepCmd>
+
+
+	<!-- Before issuing the uninstall cmd we must stops all the running server processes in the node.   -->
+	<!-- including the nodeAgent process. Need to do that for all nodes defined on the target host in   --> 
+	<!-- the specified installation location. Will use an UninstallPrepCmd Helper to make that happen.  -->
+	<UninstallPrepCmd	HelperClass="com.ibm.ws.xd.cimgr.controller.UninstallPrepCmdHelperForWAS" />
+	
+	<UninstallPrepCmd	HelperClass="com.ibm.ws.xd.cimgr.controller.SynchronizedRemoveNode"  >
+		<CommandStringUnix>     removeNode.sh  											</CommandStringUnix>
+		<CommandStringWindows>  removeNode.bat 											</CommandStringWindows>
+		<CommandStringQShell>   removeNode												</CommandStringQShell>
+		<OptionalCommandParms>  -username ${DMGR_ADMIN_ID} -password ${DMGR_ADMIN_PWD}	</OptionalCommandParms>
+		<CommandPath>           ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>           ${USER_INSTALL_ROOT}/logs/removeNode.log 				</CommandLogs>
+		<SuccessMsg>            ADMU2024I        		             					</SuccessMsg>
+		<AlternateMsg>          		            									</AlternateMsg>
+	</UninstallPrepCmd>
+	
+	
+	<InstallLocation> 										</InstallLocation>
+	<DefaultInstallLocation Platform="aix" 			Location="/usr/IBM/WebSphere/AppServer" 				/>
+	<DefaultInstallLocation Platform="os400" 		Location="/QIBM/ProdData/WebSphere/AppServer/V7/ND" 	/>
+	<DefaultInstallLocation Platform="windows" 		Location="C:/Program Files/IBM/WebSphere/AppServer" 	/>
+	<DefaultInstallLocation Platform="_ANY_" 		Location="/opt/IBM/WebSphere/AppServer" 				/>
+	
+	<UninstallLocation>   	${WAS_INSTALL_ROOT}		</UninstallLocation>
+
+	<OtherInstallLocation
+				DescriptionKey="was.os400.default.profile.location"
+				HiddenFromUI="false"
+				EmptyLocationAllowed="false" 
+				ParamName="DEFAULT_PROFILE_LOCATION"	>
+		<DefaultLocation  Platform="os400"	Location="/QIBM/UserData/WebSphere/AppServer/V7/ND"  UserModifiable="true" 	/>
+	</OtherInstallLocation>		
+	
+	<SummaryMessage
+		HelperClass=""
+		Operation="install"
+		Platform="_ANY_"
+		MessageKey="was.install.summary.all"	/>
+
+<!-- *** Not used for now *** 
+	<SummaryMessage
+		HelperClass=""
+		Operation="install"
+		Platform="os400"
+		MessageKey="was.install.summary.400"	/>
+-->
+
+	<SummaryMessage
+		HelperClass=""
+		Operation="installWithRespFile"
+		Platform="_ANY_"
+		MessageKey="was.installWithRespFile.summary.all"	/>
+	
+	<SummaryMessage
+		HelperClass=""
+		Operation="uninstall"
+		Platform="_ANY_"
+		MessageKey="was.uninstall.summary.all"	/>
+	
+	
+	<!-- CommandStringQShell are sent to the target in this form "QSYS/STRQSH CMD( '${Resolved_QShell_CommandString}' )" -->
+	<!-- FeatureListValidatorForWAS above will make sure there is at least one feature specified even if it is the "noFeature" feature. -->
+	<InstallCmd		TimeoutInSecs="1800">
+		<CommandStringUnix>     install     -silent -OPT silentInstallLicenseAcceptance="true" -OPT installType="installNew" -OPT installLocation="${INSTALL_LOCATION}" </CommandStringUnix>
+		<CommandStringWindows>  install.exe -silent -OPT silentInstallLicenseAcceptance="true" -OPT installType="installNew" -OPT installLocation="${INSTALL_LOCATION}" </CommandStringWindows>
+		<CommandStringQShell>   install     -silent -OPT silentInstallLicenseAcceptance="true" -OPT installType="installNew" -OPT installLocation="${INSTALL_LOCATION}" </CommandStringQShell>
+		<OptionalCommandParms>  -OPT disableOSPrereqChecking="${DISABLE_OS_PREREQ_CHECKING}"	</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT allowNonRootSilentInstall="${ALLOW_NON_ROOT_INSTALL}"		</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT profileType="none" -OPT feature="${SELECTED_FEATURE_1}"	</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT feature="${SELECTED_FEATURE_2}"							</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT feature="${SELECTED_FEATURE_3}"							</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT defaultProfileLocation="${DEFAULT_PROFILE_LOCATION}"		</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT checkFilePermissions="${NON_ROOT_NEW_INSTALL_ON_UNIX}"		</OptionalCommandParms>
+<!--		
+		<OptionalCommandParms>  -OPT PROF_profilePath="${INSTALL_LOCATION}/profiles/Custom01" -OPT PROF_profileName="Custom01" -OPT PROF_isDefault="true"	</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT PROF_hostName="${TARGET_HOST}" -OPT PROF_nodeName="${NODE_NAME}" -OPT PROF_cellName="dummyCell"	</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT PROF_federateLater="false" -OPT PROF_dmgrHost="${DMGR_HOST}" -OPT PROF_dmgrPort="${DMGR_SOAP_PORT}"</OptionalCommandParms>
+		<OptionalCommandParms>  -OPT PROF_dmgrAdminUserName="${DMGR_ADMIN_ID}" -OPT PROF_dmgrAdminPassword="${DMGR_ADMIN_PWD}"			</OptionalCommandParms>
+-->		
+		<CommandPath>           ${INSTALL_IMAGE_DIR_PATH}/WAS            				</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/install/log.txt				</CommandLogs>
+		<AlternateLog>			${USER_HOME_DIR}/waslogs/log_.*.txt						</AlternateLog>
+		<SuccessMsg>            INSTCONFSUCCESS           								</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS									</AlternateMsg>
+	</InstallCmd>
+
+	<!-- CommandStringQShell are sent to the target in this form "QSYS/STRQSH CMD( '${Resolved_QShell_CommandString}' )" -->
+	<!-- Note that for i5/OS, the "-silent" keyword option is specified inside the response file.                        --> 
+	<InstallWithRespFileCmd	 TimeoutInSecs="7200"	HelperClass="com.ibm.ws.xd.cimgr.controller.InstallWithResponseFileHelperForWAS"	>
+		<CommandStringUnix>     install     -options "${WORKING_DIR}/${OPTIONS_FILE_NAME}" -silent  </CommandStringUnix>
+		<CommandStringWindows>  install.exe -options "${WORKING_DIR}/${OPTIONS_FILE_NAME}" -silent  </CommandStringWindows>
+		<CommandStringQShell>   install     -options "${WORKING_DIR}/${OPTIONS_FILE_NAME}"          </CommandStringQShell>
+		<CommandPath>           ${INSTALL_IMAGE_DIR_PATH}/WAS            				</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/install/log.txt				</CommandLogs>
+		<AlternateLog>			${USER_HOME_DIR}/waslogs/log_.*.txt						</AlternateLog>
+		<SuccessMsg>            INSTCONFSUCCESS           								</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS									</AlternateMsg>
+	</InstallWithRespFileCmd>
+	
+	<!-- CommandStringQShell are sent to the target in this form: QSYS/STRQSH CMD( '${Resolved_CommandStringQShell}' ) -->
+	<UninstallCmd>
+		<CommandStringUnix>     uninstall      -silent  								</CommandStringUnix>
+		<CommandStringWindows>  uninstall.exe  -silent  								</CommandStringWindows>
+		<CommandStringQShell>   uninstall      -silent 									</CommandStringQShell>
+		<OptionalCommandParms>	-OPT removeProfilesOnUninstall="${REMOVE_PROFILES_ON_UNINSTALL}"	</OptionalCommandParms>
+		<CommandPath>           ${INSTALL_LOCATION}/uninstall 		 	 				</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/uninstall/log.txt				</CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS          								</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS	 								</AlternateMsg>
+	</UninstallCmd>
+	
+	<InstallWorkSpaceSize>  650M    </InstallWorkSpaceSize>  
+	<InstallSize>           1200M   </InstallSize> 
+	
+	<Installer  Platform="aix"      Arch="32bit"   DownloadCategory="aix"  				Lib="jdk.7000.aix.ppc32.zip"
+				Filename="was.nd.7000.aix.ppc32.zip" />
+	<Installer  Platform="aix"      Arch="64bit"   DownloadCategory="aix.ppc64"  		Lib="jdk.7000.aix.ppc64.zip"
+				Filename="was.nd.7000.aix.ppc64.zip" />
+	
+	<Installer  Platform="windows"  Arch="32bit"   DownloadCategory="windows"  			Lib="jdk.7000.windows.ia32.zip"
+				Filename="was.nd.7000.windows.ia32.zip"  />
+	<Installer  Platform="windows"  Arch="amd64"   DownloadCategory="windows.amd64"  	Lib="jdk.7000.windows.amd64.zip"
+				Filename="was.nd.7000.windows.amd64.zip"	 />
+	
+	<Installer  Platform="hpux"     Arch="32bit"   DownloadCategory="hpux" 				Lib="jdk.7000.hpux.parisc.zip"
+				Filename="was.nd.7000.hpux.parisc.zip" />
+	<Installer  Platform="hpux"     Arch="64bit"   DownloadCategory="hpux.ia64" 		Lib="jdk.7000.hpux.ia64.zip"
+				Filename="was.nd.7000.hpux.ia64.zip" />
+	
+	<Installer  Platform="linux"    Arch="i686"    DownloadCategory="linux.ia32"  		Lib="jdk.7000.linux.ia32.zip"
+				Filename="was.nd.7000.linux.ia32.zip" />
+	<Installer  Platform="linux"    Arch="amd64"   DownloadCategory="linux.amd64"  		Lib="jdk.7000.linux.amd64.zip"
+				Filename="was.nd.7000.linux.amd64.zip" />
+	
+	<Installer  Platform="linux"    Arch="ppc"     DownloadCategory="linux.ppc32"  		Lib="jdk.7000.linux.ppc32.zip"
+				Filename="was.nd.7000.linux.ppc32.zip" />
+	<Installer  Platform="linux"    Arch="ppc64"   DownloadCategory="linux.ppc64"  		Lib="jdk.7000.linux.ppc64.zip"
+				Filename="was.nd.7000.linux.ppc64.zip" />
+
+	<Installer  Platform="linux"    Arch="s390"    DownloadCategory="linux.s390"  		Lib="jdk.7000.linux.s390.zip"
+				Filename="was.nd.7000.linux.s390.zip" />
+	<Installer  Platform="linux"    Arch="s390x"   DownloadCategory="linux.s39064"  	Lib="jdk.7000.linux.s390_64.zip"
+				Filename="was.nd.7000.linux.s390_64.zip" />
+
+	<!-- OS400 Systems come with a pre-installed Java environment useable for WAS install -->   
+	<Installer  Platform="os400"    Arch="ppc64"   DownloadCategory="i5os"   Filename="was.nd.7000.os400.ppc64.zip" />
+	
+	<Installer  Platform="solaris"  Arch="sparc"   DownloadCategory="solaris.sparc"  	Lib="jdk.7000.solaris.sparc.zip"
+				Filename="was.nd.7000.solaris.sparc.zip" />
+	<Installer  Platform="solaris"  Arch="sparc64" DownloadCategory="solaris.sparc64"  	Lib="jdk.7000.solaris.sparc64.zip"
+				Filename="was.nd.7000.solaris.sparc64.zip" />
+	<Installer  Platform="solaris"  Arch="x86_64"  DownloadCategory="solaris.x86_64"  	Lib="jdk.7000.solaris.x86_64.zip"
+				Filename="was.nd.7000.solaris.x86_64.zip" />
+
+	<!-- ***  Need to update the list of PackageDeopendency.  *** -->
+	<!-- The package dependencies listed are OR type dependencies -->
+	<PackageDependency>	    
+		<OsName>	Microsoft Windows 2000	</OsName>					
+		<OsVersionString>	 5.0			</OsVersionString>
+		<OsServicePackLevel> Service Pack 4	</OsServicePackLevel>	
+	    <ProductName>		      		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>	Microsoft Windows Server 2003	</OsName>					
+		<OsVersionString>	 5.2			</OsVersionString>
+		<OsServicePackLevel> Service Pack 1	</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>			 AIX		</OsName>					
+		<OsVersionString>	 5.2		</OsVersionString>
+		<OsServicePackLevel> 			</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>			 Linux		</OsName>					
+		<OsVersionString>	 			</OsVersionString>
+		<OsServicePackLevel> 			</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>			 HP-UX		</OsName>					
+		<OsVersionString>	 			</OsVersionString>
+		<OsServicePackLevel> 			</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>			 SunOS		</OsName>					
+		<OsVersionString>	 			</OsVersionString>
+		<OsServicePackLevel> 			</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	<PackageDependency>	    
+		<OsName>			 OS400		</OsName>					
+		<OsVersionString>	 			</OsVersionString>
+		<OsServicePackLevel> 			</OsServicePackLevel>	
+	    <ProductName>		     		</ProductName>			
+		<ProductVersionString>          </ProductVersionString>	
+	</PackageDependency>	
+	
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.helper.PostInstallForNoOptionsFile" 	
+						TargetPlatforms="AIX,Linux,HP-UX,Solaris,Windows" 
+						TimeoutInSecs="1800" >
+		<CommandStringUnix>     manageprofiles.sh  -create -profileName Custom01 -templatePath  ${INSTALL_LOCATION}/profileTemplates/managed  -isDefault true </CommandStringUnix>
+		<CommandStringWindows>  manageprofiles.bat -create -profileName Custom01 -templatePath "${INSTALL_LOCATION}/profileTemplates/managed" -isDefault true </CommandStringWindows>
+		<OptionalCommandParms>  -profilePath "${INSTALL_LOCATION}/profiles/Custom01" 			</OptionalCommandParms>
+		<OptionalCommandParms>  -hostName ${TARGET_HOSTNAME} -federateLater true 				</OptionalCommandParms>
+		<CommandPath>           ${INSTALL_LOCATION}/bin     									</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/manageprofiles/Custom01_create.log 	</CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS													</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS											</AlternateMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.helper.PostInstallForNoOptionsFile" 	
+						TargetPlatforms="os400" 
+						TimeoutInSecs="1800" >
+		<CommandStringQShell>   manageprofiles -create -profileName Custom01 -templatePath ${INSTALL_LOCATION}/profileTemplates/managed -isDefault true </CommandStringQShell>
+		<OptionalCommandParms>  -profilePath "${DEFAULT_PROFILE_LOCATION}/profiles/Custom01" 	</OptionalCommandParms>
+		<OptionalCommandParms>  -hostName ${TARGET_HOSTNAME} -federateLater true 				</OptionalCommandParms>
+		<CommandPath>           ${INSTALL_LOCATION}/bin     									</CommandPath>
+		<CommandLogs>           ${DEFAULT_PROFILE_LOCATION}/profileRegistry/logs/manageprofiles/Custom01_create.log 	</CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS													</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS											</AlternateMsg>
+	</PostInstallCmd>
+
+
+	<!-- Need to use a Command Helper to run the following command in a "synchronized" manner --> 
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.SynchronizedAddNode" 		
+						TargetPlatforms="AIX,Linux,HP-UX,Solaris,Windows" 
+						TimeoutInSecs="1800" >
+		<CommandStringUnix>     addNode.sh  ${DMGR_HOST} ${DMGR_SOAP_PORT} -conntype SOAP -profileName Custom01	</CommandStringUnix>
+		<CommandStringWindows>  addNode.bat ${DMGR_HOST} ${DMGR_SOAP_PORT} -conntype SOAP -profileName Custom01	</CommandStringWindows>
+		<OptionalCommandParms>  -username ${DMGR_ADMIN_ID} -password ${DMGR_ADMIN_PWD}			</OptionalCommandParms>
+		<CommandPath>           ${INSTALL_LOCATION}/profiles/Custom01/bin     					</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/profiles/Custom01/logs/addNode.log 			</CommandLogs>
+		<SuccessMsg>            ADMU0003I														</SuccessMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.SynchronizedAddNode" 		
+						TargetPlatforms="os400" 
+						TimeoutInSecs="1800" >
+		<CommandStringQShell>   addNode     ${DMGR_HOST} ${DMGR_SOAP_PORT} -conntype SOAP -profileName Custom01 </CommandStringQShell>
+		<OptionalCommandParms>  -username ${DMGR_ADMIN_ID} -password ${DMGR_ADMIN_PWD}			</OptionalCommandParms>
+		<CommandPath>           ${DEFAULT_PROFILE_LOCATION}/profiles/Custom01/bin     			</CommandPath>
+		<CommandLogs>           ${DEFAULT_PROFILE_LOCATION}/profiles/Custom01/logs/addNode.log 	</CommandLogs>
+		<SuccessMsg>            ADMU0003I														</SuccessMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.controller.PostInstallForWASOptionsFile" />
+
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.helper.IsApplicableForInstallWithOptionsFile"
+						TargetPlatforms="AIX,Linux,HP-UX,Solaris,Windows" HelperParms="CheckStatusBeforeStart" >
+		<CommandStringUnix>   startNode.sh   </CommandStringUnix>
+		<CommandStringWindows>startNode.bat  </CommandStringWindows>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>         ${USER_INSTALL_ROOT}/logs/nodeagent/startServer.log	</CommandLogs>
+		<SuccessMsg>          ADMU3000I             </SuccessMsg>
+	</PostInstallCmd>
+
+	<PostInstallCmd		HelperClass="com.ibm.ws.xd.cimgr.helper.IsApplicableForInstallWithOptionsFile"
+						TargetPlatforms="os400" HelperParms="CheckStatusBeforeStart" >
+		<CommandStringQShell> startNode 	 </CommandStringQShell>
+		<CommandPath>         ${USER_INSTALL_ROOT}/bin     							</CommandPath>
+		<CommandLogs>   ${USER_INSTALL_ROOT}/logs/was_${NODEAGENT_QEJBSVR_PID}.log	</CommandLogs>
+		<SuccessMsg>          CWNATV01I             </SuccessMsg>
+	</PostInstallCmd>
+
+</InstallPackage>

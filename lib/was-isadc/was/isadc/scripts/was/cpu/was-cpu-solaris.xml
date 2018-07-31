@@ -1,0 +1,217 @@
+<project name="was-cpu-solaris">
+
+	<dirname property="was.cpu.solaris.basedir" file="${ant.file.was-cpu-solaris}"/>
+	<dirname property="was.cpu.solaris.parentdir" file="${was.cpu.solaris.basedir}"/>
+	<dirname property="was.cpu.solaris.grandparentdir" file="${was.cpu.solaris.parentdir}"/>
+	<dirname property="was.cpu.solaris.bundle.basedir" file="${was.cpu.solaris.grandparentdir}"/>
+
+	<target name="run_solaris_high_cpu_targets" if="isSunOS"> 
+
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1115625" />
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Solaris_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for Sun-Solaris..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+		
+		<!-- Task 22830 -->
+		<mkdir dir="${autopdtmp}/autopd/highcpu/solaris" /> 
+		<chmod file="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/solperf.sh" perm="766"/>
+		<exec executable="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/solperf.sh" dir="${autopdtmp}/autopd/highcpu/solaris" 
+			output="${autopd.echolog.instance}" append="true" >
+			<arg line=" ${was.java.process.id}" />
+		</exec>	
+
+<!--
+		<copy file="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/solperf.sh" 
+			tofile="${autopdtmp}/autopd/highcpu/solaris/solperf-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pid" value="${was.java.process.id}" />			
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${autopdtmp}/autopd/highcpu/solaris" 
+			output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdtmp}/autopd/highcpu/solaris/solperf-filled.sh" />
+		</exec>	
+-->		
+	</target> 
+	
+	<target name="collect_solaris_high_cpu_targets" if="isSunOS"> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Solaris_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting High-CPU/Crash Output for Sun-Solaris..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/highcpu/solaris" prefix="${autopdProblem}" > 
+				<include name="*.gz" /> 
+			</zipfileset>
+		</zip> 	
+		
+	</target> 
+
+	<target name="run_solaris_cpu_script" if="isSunOS">
+	
+		<property name="logfile" value="${autopdtmp}/cpu_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1115625" />
+		<!-- Prompt user for sleep interval (default 600) -->
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="600" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	
+		<exec executable="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/Solaris_ps.sh" spawn="true" os="${os.unixkind}">
+			<arg line=" ${sleeptime}" />			
+		</exec>
+
+		<exec executable="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/Solaris_pmap.sh" spawn="true" os="${os.unixkind}">
+			<arg line=" ${sleeptime} ${was.java.process.id}" />			
+		</exec>
+		
+	</target>
+	
+	<target name="kill_solaris_cpu_script" if="isSunOS">
+		<echo message="Cleanup: Kill Sun memory script" />
+
+		<!--  kill memory script -->
+		<copy file="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-template.sh" tofile="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-9" />			
+				<filter token="searchString" value="/was/shell/solaris" />
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${was.cpu.solaris.bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${was.cpu.solaris.bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" />
+		</exec>
+		
+	</target>
+	
+	<target name="solaris_configurations" if="isSunOS">
+		
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Configuration_Setup" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="config.label" label="Set the following heap size parameters" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="heapsize" label="heap_size" defaultValue="512m" type="plaintext" accessibilityName="heapsize" accessibilityDesc="heapsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="permsize" label="perm_size" defaultValue="128m" type="plaintext" accessibilityName="permsize" accessibilityDesc="permsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="newsize" label="new_size" defaultValue="128m" type="plaintext" accessibilityName="newsize" accessibilityDesc="newsize" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+
+		<property name="genericJvmArguments" value="-Xmx${heapsize} -XX:MaxPermSize=${permsize} -XX:MaxNewSize=${newsize} -server -XX:+DisableExplicitGC" />			
+		
+		<copy file="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-template.sh" tofile="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="ulimit-c" value="LD_LIBRARY_PATH=%LD_LIBRARY_PATH%;/usr/lib/lwp" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${ServerName}" />
+			</filterset>
+		</copy>
+		<!-- 
+		
+		-XX:MaxPermSize=128m
+		
+		-XX:MaxNewSize=128m
+		
+		Run in HotSpot Server mode (-server). 
+		
+		-XX:+DisableExplicitGC
+		
+		LD_LIBRARY_PATH to include /usr/lib/lwp before starting jvm
+		
+		 -->
+		 	<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName} ${was.admin.info}" />
+			</exec>
+
+			<exec executable="sh" dir="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" />
+			</exec>
+			
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+				
+			<autopdinput message="Did problem get fixed" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was" validargs="yes,no" addproperty="problem.fixed"/>
+					
+			<if isTrue="${problem.fixed}">
+				<echo message="hello"/>
+			</if>
+	</target>
+	
+	<target name="collect_was_cpu_solaris" if="isSunOS">
+		<!-- jtc*.log (Where?) -->
+	</target>
+	
+	<target name="was_run_cpu_solaris"  if="isSunOS" 
+		description="Runs the wasCPU.sh script for solaris as per the mustgather" >
+		
+		<property name="netstat.out.path" value="${autopdtmp}/autopd/netstat.out" />
+		<property name="vmstat.out.path" value="${autopdtmp}/autopd/vmstat.out" />
+		<property name="prstat.out.path" value="${autopdtmp}/autopd/prstat.out" />		
+		<property name="mpstat.out.path" value="${autopdtmp}/autopd/mpstat.out" />		
+		<property name="lsof.out.path" value="${autopdtmp}/autopd/lsof.out" />		
+		<property name="pfiles.out.path" value="${autopdtmp}/autopd/pfiles.out" />		
+		<property name="pmap.out.path" value="${autopdtmp}/autopd/pmap.out" />		
+		<property name="pldd.out.path" value="${autopdtmp}/autopd/pldd.out" />	
+		<property name="pstack1.out" value="${autopdtmp}/autopd/pstack1.out" />	
+		<property name="pstack2.out" value="${autopdtmp}/autopd/pstack2.out" />	
+		<property name="pstack3.out" value="${autopdtmp}/autopd/pstack3.out" />	
+		
+		<copy file="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/wascpu-solaris.sh" tofile="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/wascpu-solaris-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pid"      value="${was.java.process.id}" />
+				<filter token="netstat.out" value="${netstat.out.path}" />
+				<filter token="vmstat.out" value="${vmstat.out.path}" />
+				<filter token="prstat.out" value="${prstat.out.path}" />
+				<filter token="mpstat.out" value="${mpstat.out.path}" />
+				<filter token="lsof.out" value="${lsof.out.path}" />
+				<filter token="pfiles.out" value="${pfiles.out.path}" />
+				<filter token="pldd.out" value="${pldd.out.path}" />
+				<filter token="pmap.out" value="${pmap.out.path}" />
+				<filter token="pstack1.out" value="${pstack1.out}" />
+				<filter token="pstack2.out" value="${pstack2.out}" />
+				<filter token="pstack3.out" value="${pstack3.out}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/"
+				output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${was.cpu.solaris.bundle.basedir}/scripts/was/shell/solaris/wascpu-solaris-filled.sh" />
+		</exec>
+
+
+	</target>
+	
+	<target name="was_cpu_solaris_collect" if="isSunOS">
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			
+			<zipfileset file="${netstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${vmstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${prstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${mpstat.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${lsof.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pfiles.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pmap.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pldd.out.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${pstack1.out}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${pstack2.out}" prefix="autopdzip/autopd" />						
+			<zipfileset file="${pstack3.out}" prefix="autopdzip/autopd" />						
+
+		</zip>
+			
+	</target>
+</project>

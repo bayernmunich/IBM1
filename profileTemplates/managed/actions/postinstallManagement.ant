@@ -1,0 +1,48 @@
+<project name="postinstallManagement" default="postinstallManagementDefault" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="piMgmt" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.PostinstallManagementAntTask"/>
+    <taskdef name="CreateInstallInfoXMLFile"
+				classname="com.ibm.ws.postinstall.utilities.CreateInstallInfoXMLFile"
+				classpath="${WAS_HOME}/properties/service/postinstaller/lib/postinstaller_mp.jar;${WAS_HOME}/properties/service/postinstaller/lib/com.ibm.ws.runtime.postinstaller.jar"
+		/>
+
+    <target name="postinstallHousekeeping">
+	<wscmtlog>Invoking postinstallManagement ant task with install="${WAS_HOME}" profile="${profilePath}"</wscmtlog>
+	<piMgmt install="${WAS_HOME}" profile="${profilePath}"/>
+	<wscmtlog>pihousekeeping done</wscmtlog>
+    </target>    
+    
+    <target name="runIfZOS" >
+   	<wscmtlog>Checking if OS is z/OS</wscmtlog>
+   	<condition property="isZOS">
+       <os family="z/os" />
+     </condition>
+     
+     <antcall target="recordColdStartLevel" />
+          
+   </target> 
+   
+    <target name="recordColdStartLevel" if="isZOS">
+   	<wscmtlog>Start: creating runConfigActions.properties</wscmtlog>
+   	<mkdir dir="${profilePath}/properties/service/productDir/PreConfigActions" />
+		<exec executable="${WAS_HOME}/properties/service/postinstaller/bin/createRunConfigActionsProperties.sh" >
+  		<arg value="${WAS_HOME}" /> 
+  		<arg value="${profilePath}" /> 
+		</exec>
+   <wscmtlog>End: creating runConfigActions.properties</wscmtlog>
+   </target>
+   
+   <!--Run this target on all platforms, not just z/OS -->
+   <target name="createInstallInventory">
+    <CreateInstallInfoXMLFile
+ 			WAS_HOME="${WAS_HOME}"
+ 			outputFile="${profilePath}/properties/service/productDir/cachedInstalledProducts.xml"
+ 			/>
+ 		</target>
+        
+    <target name="postinstallManagementDefault"
+        description="Postinstaller housekeeping"
+        depends="runIfZOS, createInstallInventory"/> 
+                     
+</project>

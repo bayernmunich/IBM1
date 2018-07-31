@@ -1,0 +1,187 @@
+###############################################################################
+#
+# Licensed Materials - Property of IBM
+# (C) Copyright IBM Corp. 2004, 2010.  ALL RIGHTS RESERVED 
+# 5724-I63, 5724-H88, 5655-N02, 5733-W70
+# US Government Users Restricted Rights - Use, duplication, or disclosure
+# restricted by GSA ADP Schedule Contract with IBM Corp.
+#
+###############################################################################
+#
+# eventcatalog.jacl
+#
+# This JACL script provides functions relating to the Catalog in the
+# Common Event Infrastructure.
+#
+# Usage:
+#
+# Invoke wsadmin and supply the name of this script on the -f parameter.
+#
+# wsadmin -conntype rmi -port <port> -f eventcatalog.jacl
+#                              help |
+#                              -listdefinitions [-file filename]
+#                                                [-name eventdefname]
+#                                                [-pattern]
+#                                                [-resolve] |
+#                              -listcategories [-file filename] |
+#                              -exportdefinitions [-file filename]
+#                                                  [-name eventdefname]
+#                                                  [-pattern]
+#                                                  [-resolve] |
+#                              -importdefinitions -file filename
+#                                                  [-replace]
+#                              [-serverName server_name]
+#Where:   "listdefinitions" lists selected event definitions in ascending
+#                order of name. The event definitions are written to the file
+#                specified in -file filename or, if this is not specified, to
+#                standard output;
+#         "listcategories" lists all mappings between Common Base Event
+#                extensions and event source categories in ascending order of
+#                event source category. The mappings are written to the file
+#                specified in -file filename or, if this is not specified, to
+#                standard output;
+#         "exportdefinitions" lists selected event definitions in a format
+#                that can be imported. The event definitions are written as an
+#                XML document conforming to the XSD schema eventdefinition.xsd.
+#                The XML document is written to the file specified in -file
+#                filename or, if this is not specified, to standard output;
+#         "importdefinitions" reads event definitions from a file and
+#                saves them in the Event Catalog. The event definitions must be
+#                in the format defined by the XSD schema eventdefinition.xsd;
+#         "filename" for a list or export operation, names the file
+#                to receive the output or for an import operation, names the
+#                file that contains event definitions to be imported;
+#         "eventdefname" identifies the event definitions to be
+#                listed or exported. This option names a single event definition
+#                unless -pattern is specified. If -pattern is specified, this
+#                option specifies a pattern that is matched against the names of
+#                the event definitions. The percent character (%) matches any
+#                sequence of zero or more characters. The underscore character (
+#                _) matches any single character. Any occurences of percent
+#                character (%), underscore character (_) or back slash character
+#                (\) in the name must be escaped with the back slash character
+#                (\). All other characters match exactly. If this option is not
+#                specified, all event definitions are listed or exported;
+#         "pattern" causes the specified name to be treated as a pattern;
+#         "resolve" resolves the event definition inheritance hierarchy
+#                and writes event definitions that are each a composite of the
+#                base event definition and all the extended data element and
+#                property descriptions it inherits. If this option is not
+#                specified, the base event definitions are written;
+#         "replace" replaces any existing event definitions that have the
+#                same names as the imported event definitions. By default, an
+#                error is returned and the import operation is rolled back when
+#                an imported event definition has the same name as an existing
+#                event definition;
+#        "node_name" The name of the node where the Event Service is deployed. 
+#               If this parameter is specified, then the serverName parameter must be specified.
+#               You must not specify this parameter if the clusterName parameter is specified.
+#        "server_name" is the name of an application server to which the Event Service
+#               is deployed. This field should only be specified if the Event Service
+#               is deployed to multiple application servers on the local WebSphere node.
+#        "cluster_name" The name of the cluster where the Event Service is deployed.
+#         		You must not specify this parameter if the nodeName or serverName parameter are specified.
+#
+#    You can only use one of the following options:
+#    -listdefinitions, -listcategories, -exportdefinitions and
+#    -importdefinitions.
+#
+#               wsadmin -f eventcatalog.jacl -listdefinitions -clusterName cluster1
+#
+#               wsadmin -f eventcatalog.jacl -listdefinitions -nodeName mynode -serverName server1
+#-----------------------------------------------------------------------------
+
+
+# Add each argument to an array
+
+set argArray [java::new {String[]} [llength $argv]]
+
+set counter 0
+foreach {argOpt} $argv {
+    $argArray set $counter $argOpt
+    set counter [expr $counter+1]
+}
+        
+# Pass the argument array to the Event Catalog CLI helper to be validated.
+# If all arguments are valid, the helper returns an array of three objects.
+# The first object is a string naming the EventCatalog MBean operation 
+# to be called.
+# The second object is an array of objects containing arguments to be
+# passed to the EventCatalog MBean.
+# The third object is an array of strings giving the Java signatures of
+# the arguments in the second object.
+# If any argument is invalid, the helper displays a message and returns null.
+
+set cliHelperObject [java::new com.ibm.events.cli.util.EventCatalogCliHelper]
+set argObjects [$cliHelperObject processArguments $argArray]
+
+# Do nothing if the CLI helper returned null, otherwise call the indicated
+# operation on the EventCatalog MBean
+
+if { [java::isnull $argObjects] == 0 } {
+
+    # Get the object name for the EventCatalog MBean
+    #set node $env(local.node)
+    set node [[$argObjects get 3] toString]
+    if { [string compare $node ""] == 0 } {
+    	set node $env(local.node)
+    }
+    
+    #get the server process if specified
+    set process [[$argObjects get 4] toString]
+
+    #get the cluster name if specified
+    set clusterName [[$argObjects get 5] toString]
+
+	if {[string compare $clusterName ""] != 0} {
+	
+	    set clusterid [$AdminConfig getid /ServerCluster:$clusterName]
+        set members [$AdminConfig list ClusterMember $clusterid]
+		set clname [$AdminConfig showAttribute $clusterid name]
+
+
+		foreach member $members {
+			set mname [$AdminConfig showAttribute $member memberName]
+			set nodename [$AdminConfig showAttribute $member nodeName]
+
+			set objectName  [$AdminControl completeObjectName WebSphere:type=EventCatalog,node=$nodename,process=$mname,*]
+			if [expr [string compare $objectName ""] != 0] then \
+			{
+
+				break
+			}
+		}
+	} else {
+    
+	    if {[string compare $process ""] == 0} {
+			set objectName [$AdminControl completeObjectName WebSphere:type=EventCatalog,node=$node,*]
+	    } else {
+			set objectName [$AdminControl completeObjectName WebSphere:type=EventCatalog,node=$node,process=$process,*]
+	    }
+    }
+    
+    if [expr [string compare $objectName ""] == 0] then {
+        set mBeanName EventCatalogMBean
+        $cliHelperObject reportMBeanNotFound $mBeanName
+        exit
+    }
+    set mBean [java::new javax.management.ObjectName $objectName]
+
+    # Call the MBean and invoke the CLI helper to display the result
+         
+    set operation [java::cast {String} [$argObjects get 0]]
+    set arguments [java::cast {Object[]} [$argObjects get 1]]
+    set argumentSignatures [java::cast {String[]} [$argObjects get 2]]
+
+    java::try {
+        set result [$AdminControl invoke_jmx $mBean $operation $arguments $argumentSignatures]
+        $cliHelperObject processResult [java::cast {java.lang.Object} $result]
+        
+    } catch {Throwable t} {
+       set rc 1
+       java::throw t
+    }
+} \
+else {
+  set rc 1
+}

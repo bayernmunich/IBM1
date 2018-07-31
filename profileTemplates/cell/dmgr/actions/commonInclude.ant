@@ -1,0 +1,208 @@
+<project name="commonInclude">
+
+	<!--common taskdefs-->
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+	<taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+	<taskdef name="replaceStringRegExp" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>
+	<taskdef name="checkForOmittedApps" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.CheckForOmittedApps"/>
+	<taskdef name="detectlocale" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.DetectLocaleAntTask"/>
+	<taskdef name="foreach" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ForEachAntTask"/>
+	<taskdef name="resourcebundle" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ResourceBundleAntTask"/> 
+	<taskdef name="autoconvertencoding" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AutomaticCodePageConversionAntTask"/>    
+	<taskdef name="filename" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.FileNameAntTask"/>
+
+	<target name="detectCurrentOSFamily"
+			description="Detects the current OS family">
+
+		<condition property="currentOSFamily" value="os/400">	<!-- os/400 setting must come before the unix setting -->
+			<equals arg1="${os.name}" arg2="OS/400"/>
+		</condition>
+
+		<condition property="currentOSFamily" value="z/os">		<!-- z/os setting must come before the unix setting -->
+			<os family="z/os"/>
+		</condition>
+
+		<condition property="currentOSFamily" value="linux">
+			<equals arg1="${os.name}" arg2="Linux"/>
+		</condition>
+
+		<condition property="currentOSFamily" value="unix">            
+			<os family="unix"/>
+		</condition>
+
+		<condition property="currentOSFamily" value="windows">
+			<os family="windows"/>
+		</condition>
+
+		<wscmtlog>Detected current OS name is ${os.name}</wscmtlog> 
+		<wscmtlog>Detected current OS family is ${currentOSFamily}</wscmtlog>
+
+		<condition property="resetJvmArgumentsForHP" value="true">	<!-- Determine if the OS is HP. -->
+			<equals arg1="${os.name}" arg2="HP-UX"/>
+		</condition>
+
+		<condition property="resetJvmArgumentsForSun" value="true">	<!-- Determine if the OS is Sun. -->
+			<equals arg1="${os.name}" arg2="SunOS"/>
+		</condition>
+
+		<condition property="distributed" value="true">
+			<not><equals arg1="${currentOSFamily}" arg2="z/os"/></not>
+		</condition>
+
+		<condition property="isOS400" value="true">
+			<equals arg1="${currentOSFamily}" arg2="os/400"/>
+		</condition>
+
+		<condition property="isZOS" value="true">
+			<equals arg1="${currentOSFamily}" arg2="z/os"/>
+		</condition>
+
+	</target>
+
+	<target name="setOSFileSeparator"
+			description="Sets current file separator for platform (file.separator is unreliable on ANT 1.5.4)">
+	
+		<condition property="separatorFile" value="/">
+			<or>
+				<equals arg1="${currentOSFamily}" arg2="os/400"/>
+				<equals arg1="${currentOSFamily}" arg2="z/os"/>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+				<equals arg1="${currentOSFamily}" arg2="linux"/>
+			</or>
+		</condition>
+		
+		<condition property="separatorFile" value="\">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+		
+		<!-- Need to define the quote string for filenames with spaces -->
+		<condition property="stringQuote" value='"'>
+			<or>
+				<equals arg1="${currentOSFamily}" arg2="os/400"/>
+				<equals arg1="${currentOSFamily}" arg2="z/os"/>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+				<equals arg1="${currentOSFamily}" arg2="linux"/>
+			</or>
+		</condition>
+		
+		<condition property="stringQuote" value='\"'>
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+	
+	</target>
+
+	<target name="setOSCRLFSequence"
+			description="Sets CRLF to appropriate CRLF sequence for platform">
+	
+		<condition property="CRLF" value="&#10;">
+			<or>
+				<equals arg1="${currentOSFamily}" arg2="os/400"/>
+				<equals arg1="${currentOSFamily}" arg2="z/os"/>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+				<equals arg1="${currentOSFamily}" arg2="linux"/>
+			</or>
+		</condition>
+	
+		<condition property="CRLF" value="&#13;&#10;">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+	
+	</target>
+
+	<target name="setOSShellScriptExtension"
+			description="Sets variable shellScriptExt to current OS's shell script extension">
+	
+		<condition property="shellScriptExt" value="">
+			<or>
+				<equals arg1="${currentOSFamily}" arg2="os/400"/>
+				<equals arg1="${currentOSFamily}" arg2="z/os"/>
+			</or>
+		</condition>
+		
+		<condition property="shellScriptExt" value="sh">
+			<or>
+				<equals arg1="${currentOSFamily}" arg2="unix"/>
+				<equals arg1="${currentOSFamily}" arg2="linux"/>
+			</or>
+		</condition>
+		
+		<condition property="shellScriptExt" value="bat">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+	
+	</target>
+
+	<target name="defineOSSpecificConfigFlag"
+			description="Defines config'os' depending on the current OS">
+	
+		<condition property="configOS400" value="true">
+			<equals arg1="${currentOSFamily}" arg2="os/400"/>
+		</condition>
+	
+		<condition property="configZOS" value="true">
+			<equals arg1="${currentOSFamily}" arg2="z/os"/>
+		</condition>
+	
+		<condition property="configUNIX" value="true">
+			<equals arg1="${currentOSFamily}" arg2="unix"/>
+		</condition>
+	
+		<condition property="configLinux" value="true">
+			<equals arg1="${currentOSFamily}" arg2="linux"/>
+		</condition>
+	
+		<condition property="configWindows" value="true">
+			<equals arg1="${currentOSFamily}" arg2="windows"/>
+		</condition>
+	
+	</target>
+
+	<target name="setCurrentOSFamily"
+			description="Defines isCurrentOS'os' depending on the current OS">
+	
+		<condition property="isCurrentOSOS400" value="true">	<!-- os/400 setting must come before unix setting -->
+			<equals arg1="${os.name}" arg2="OS/400"/>
+		</condition>
+	
+		<condition property="isCurrentOSZOS" value="true">		<!-- z/os setting must come before unix setting -->
+			<os family="z/os"/>
+		</condition>
+	
+		<condition property="isCurrentOSZOSorOS400" value="true">
+			<or>
+				<equals arg1="${isCurrentOSOS400}" arg2="true"/>
+				<equals arg1="${isCurrentOSZOS}" arg2="true"/>
+			</or>
+		</condition>
+	
+		<wscmtlog>setCurrentOSFamily: isCurrentOSZOSorOS400 is resolved to ${isCurrentOSZOSorOS400}</wscmtlog>
+	
+		<condition property="isCurrentOSUNIX" value="true">
+			<os family="unix"/>
+		</condition>
+	
+		<condition property="isCurrentOSLinux" value="true">
+			<equals arg1="${os.name}" arg2="Linux"/>
+		</condition>
+	
+		<condition property="isCurrentOSWindows" value="true">
+			<os family="windows"/>
+		</condition>
+	
+	</target>
+
+	<!-- The existance of the WAS.product file tells us we are on a full WAS Base install.
+	     Otherwise we are on the Embed product.  EWAS.product should exist instead. -->
+	<target name="detectProductLevel">
+	
+		<condition property="isBase">
+			<available file="${WAS_HOME}/properties/version/WAS.product"/>
+		</condition>
+	
+		<condition property="isEmbed">
+			<isfalse value="${isBase}"/>
+		</condition>
+	
+	</target>
+
+</project>

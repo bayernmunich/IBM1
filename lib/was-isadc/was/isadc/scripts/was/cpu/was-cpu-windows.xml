@@ -1,0 +1,462 @@
+<project name="was-cpu-windows">
+
+	<dirname property="was.cpu.windows.basedir"
+		file="${ant.file.was-cpu-windows}" />
+	<dirname property="was.cpu.windows.parentdir"
+		file="${was.cpu.windows.basedir}" />
+	<dirname property="was.cpu.windows.grandparentdir"
+		file="${was.cpu.windows.parentdir}" />
+	<dirname property="was.cpu.windows.bundle.basedir"
+		file="${was.cpu.windows.grandparentdir}" />
+		
+	<autopdimport file="${was.cpu.windows.bundle.basedir}/scripts/aim/win-common-targets.xml" />
+	<autopdimport file="${was.cpu.windows.bundle.basedir}/scripts/was/hangs-collect/was-hangs-collect-windows.xml" />
+	
+		
+	<target name="run_windows_high_cpu_targets_old"  if="isWindows"
+		depends="prompt_plist, config_cpu_performance_manager,
+				launch_performance_manager,
+				launch_perfmon_client,
+				cpu_manually_config_perfmon, 
+				create_windows_hangs_output,
+				generate_usr.dmp,
+				stop_performance_manager">
+	</target>
+	
+	<target name="run_windows_high_cpu_targets"  if="isWindows"
+		depends="prompt_option_for_high_cpu_windows, 
+				create_windows_hangs_output,
+				generate_usr.dmp,
+				stop_performance_manager">
+	</target>
+	
+	<target name="prompt_option_for_high_cpu_windows" if="isWindows" > 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Windows_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for Windows..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<!-- 23433 - include skip for CPU collection-->
+		<inputdialogtask_v2 doSkip="true" >
+			<fieldtask name="prompt"
+				label="Input_Required_WAS"
+				type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was_cpu_option"
+				label="High_CPU_Windows_Option" list="TPROF (Preferred):PSLIST:PerfMon"
+				listDetails="TPROF (Preferred):PSLIST:PerfMon" type="selectlist"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter=":" />
+		</inputdialogtask_v2>
+		
+		<condition property="tprof.selected">
+			<equals arg1="TPROF (Preferred)" arg2="${was_cpu_option}" />
+		</condition>
+		<condition property="pslist.selected">
+			<equals arg1="PSLIST" arg2="${was_cpu_option}" />
+		</condition>
+		<condition property="perfmon.selected">
+			<equals arg1="PerfMon" arg2="${was_cpu_option}" />
+		</condition>
+		
+<!-- TPROF Selected --> 
+		<if isTrue="${tprof.selected}">
+			
+			<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="TPROF_Label1" 
+						propertyName="Set_TPROF_URL"
+						message="For further information, please refer : {0}"
+						replace="${tprof.web.url}" />
+			</if> 
+			<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="TPROF_Label1" 
+						propertyName="Set_TPROF_URL"
+						message="For further information, please refer : {0}"
+						replace="${tprof.web.url.text}" />
+			</if> 
+
+			<inputdialogtask_v2 bundle="properties/SSEQTP/autopdtoolstrings_was" noCancel="true" >
+				<fieldtask name="prompt1"
+	        		label="Input_Required_WAS"
+			        type="prompt"
+			        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="Empty_Line"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt2"
+					label="TPROF_Label0"
+	        		type="label"
+			        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="${Set_TPROF_URL}"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="tprof.home.dir"
+					label="TPROF_HOME_DIR"
+					type="filebrowser"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			</inputdialogtask_v2>
+
+			<available file="${tprof.home.dir}/bin" type="dir" property="tprof.dir.available" />  
+			
+			
+		</if> 
+
+<!-- PSLIST Selected --> 		
+		<if isTrue="${pslist.selected}">
+			
+			<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="PLIST_Label1" 
+						propertyName="Set_PLIST_URL"
+						message="For further information, please refer : {0}"
+						replace="${pslist.web.url}" />
+			</if> 
+			<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="PLIST_Label1" 
+						propertyName="Set_PLIST_URL"
+						message="For further information, please refer : {0}"
+						replace="${pslist.web.url.text}" />
+			</if> 
+
+			<inputdialogtask_v2 bundle="properties/SSEQTP/autopdtoolstrings_was" noCancel="true" >
+				<fieldtask name="prompt1"
+	        		label="Information_Message"
+			        type="prompt"
+			        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="Empty_Line"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt2"
+					label="PLIST_Label0"
+	        		type="label"
+			        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="${Set_PLIST_URL}"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			</inputdialogtask_v2>
+
+		</if> 
+
+<!-- PerfMon Selected --> 		
+		<if isTrue="${perfmon.selected}">
+			
+
+			<property name="perfmon.input" value="cpu.perfmon"/>
+			<property name="perf.name" value="cpuperf"/>
+			<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1137447" />
+
+
+			<autopdinput message="Question_run_perfmon" validargs="OK,Skip"
+				addproperty="run.perfmon"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<condition property="do.run.perfmon">
+				<equals arg1="${run.perfmon}" arg2="OK" />
+			</condition>
+
+
+			<if isTrue="${do.run.perfmon}">
+				<exec executable="cmd"
+					dir="${bundle.basedir}/scripts/was/shell/windows"
+					output="${autopd.echolog.instance}" append="true">
+					<arg line="/c perfmon" />
+				</exec>
+<!-- Task 21883 --> 
+				<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+					<saveresourcebundleproperty 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							key="Set_CPU_Perfmon1" 
+							propertyName="Set_CPU_Perfmon1_URL"
+							message="To Collect CPU Data On Microsoft Windows® 2003 Server and XP - See {0}"
+							replace="${perfmon.web.url1}" />
+					<saveresourcebundleproperty 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							key="Set_CPU_Perfmon2" 
+							propertyName="Set_CPU_Perfmon2_URL"
+							message="To Collect CPU Data On Microsoft Windows 2008 Server and Windows 7 using Performance Monitor - See {0}"
+							replace="${perfmon.web.url2}" />
+				</if> 
+				<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+					<saveresourcebundleproperty 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							key="Set_CPU_Perfmon1" 
+							propertyName="Set_CPU_Perfmon1_URL"
+							message="To Collect CPU Data On Microsoft Windows® 2003 Server and XP - See {0}"
+							replace="${perfmon.web.url1.text}" />
+					<saveresourcebundleproperty 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							key="Set_CPU_Perfmon2" 
+							propertyName="Set_CPU_Perfmon2_URL"
+							message="To Collect CPU Data On Microsoft Windows 2008 Server and Windows 7 using Performance Monitor - See {0}"
+							replace="${perfmon.web.url2.text}" />
+				</if> 
+				
+
+				<inputdialogtask_v2  
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					noCancel="true">
+					<fieldtask name="prompt4"
+		           		label="Information_Message"
+		           		type="prompt"
+		           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="lable01"
+				        label="${Set_CPU_Perfmon1_URL}"
+		        		type="label"
+		           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="lable02"
+				        label="${Set_CPU_Perfmon2_URL}"
+		        		type="label"
+		           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask_v2>
+				
+				
+<!--			<inputdialogtask>
+					<fieldtask name="prompt" label="CPU_Config_Instructions"
+						type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+					<fieldtask name="prompt1" label="cpu_perf_instructions1"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2" label="cpu_perf_instructions2"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt3" label="cpu_perf_instructions3"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt4" label="cpu_perf_instructions4"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt5" label="cpu_perf_instructions5"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt6" label="cpu_perf_instructions6"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt7" label="cpu_perf_instructions7"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt8" label="cpu_perf_instructions8"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt9" label="cpu_perf_instructions9"
+						type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt10"
+						label="cpu_perf_instructions10" type="label"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+--> 				
+			</if>
+
+		</if> 
+
+	</target> 
+		
+		
+	<target name="prompt_plist" if="isWindows">
+		
+		<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="PLIST_Label1" 
+					propertyName="Set_PLIST_URL"
+					message="For further information, please refer : {0}"
+					replace="${pslist.web.url}" />
+		</if> 
+		<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="PLIST_Label1" 
+					propertyName="Set_PLIST_URL"
+					message="For further information, please refer : {0}"
+					replace="${pslist.web.url.text}" />
+		</if> 
+
+		<inputdialogtask_v2 bundle="properties/SSEQTP/autopdtoolstrings_was" noCancel="true" >
+			<fieldtask name="prompt1"
+        		label="Information_Message"
+		        type="prompt"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+				label="Empty_Line"
+				type="label"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="prompt2"
+				label="PLIST_Label0"
+        		type="label"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+				label="${Set_PLIST_URL}"
+				type="label"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+		</inputdialogtask_v2>
+			
+	</target>
+	
+	<target name="user_dump_instructions" if="isWindows">
+		
+	</target>
+
+	<target name="collect_windows_high_cpu_targets" if="isWindows"> 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Windows_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting High-CPU/Crash Output for Windows..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+<!-- Prompt for Plist -->
+		<if isTrue="${pslist.selected}">
+			
+			<inputdialogtask > 
+				<fieldtask name="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="prompt"
+					label="Input_Required_WAS"  />
+				<fieldtask name="label0"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_PLIST_Log0"  />
+				<fieldtask name="label0"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_PLIST_Log2"  />
+				<fieldtask name="label2"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Empty_Line"  />
+				<fieldtask name="plist.log.dirname"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+					label="Location_Of_PLIST_Log1" />
+			</inputdialogtask> 
+	
+			<available file="${plist.log.dirname}" type="dir" property="plist.dir.available"/>
+			<if isTrue="${plist.dir.available}"> 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${plist.log.dirname}" prefix="${autopdProblem}/PLIST">
+						<include name="pslistlog*.*" /> 
+					</zipfileset>		
+				</zip>
+			</if>
+		</if> 
+
+		<if isTrue="${user.dump.dir.available}"> 
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="{autopdtmp}/autopd/dump"
+					prefix="${autopdProblem}/UserDump">
+						<include name="*.dmp" />
+				</zipfileset>		
+			</zip>
+		</if>
+		
+		<!-- perfmon logs - How to prompt user to get to perfmon logs --> 
+		<if isTrue="${perfmon.selected}"> 
+		
+			<inputdialogtask> 
+				<fieldtask name="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="prompt"
+					label="Input_Required_WAS"  />
+				<fieldtask name="label0"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_PerfMon_Log0"  />
+				<fieldtask name="label1"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_PerfMon_Log1"  />
+				<fieldtask name="label2"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Empty_Line"  />
+				<fieldtask name="perfmon.log.filename"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+					browserTargetType="file"
+					label="Location_Of_PerfMon_Log" />
+			</inputdialogtask> 
+		
+			<available file="${perfmon.log.filename}" property="perfmon.file.available"/>
+			<if isTrue="${perfmon.file.available}"> 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset file="${perfmon.log.filename}" prefix="${autopdProblem}/PerfMon">
+					</zipfileset>		
+				</zip>
+			</if> 
+		</if> 
+			
+		<if isTrue="${tprof.selected}">
+<!-- 			
+			<waitfor maxwait="60" maxwaitunit="second" >
+				<available file="/tmp/was.file.notexisting" type="file" property="was.file.notexisting" />
+			</waitfor>
+
+			<inputdialogtask> 
+				<fieldtask name="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="prompt"
+					label="Input_Required_WAS"  />
+				<fieldtask name="label0"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_TPROF_Log0"  />
+				<fieldtask name="label1"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Location_Of_TPROF_Log1"  />
+				<fieldtask name="label2"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					label="Empty_Line"  />
+				<fieldtask name="tprof.log.filename"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser" 
+					browserTargetType="file"
+					label="Location_Of_TPROF_Log" />
+			</inputdialogtask> 
+		
+			<available file="${tprof.log.filename}" property="tprof.file.available"/>
+--> 			
+			<if isTrue="${tprof.dir.available}"> 
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${tprof.home.dir}/bin" prefix="${autopdProblem}/TPROF">
+						<include name="tprof.out" /> 
+					</zipfileset>		
+				</zip>
+			</if> 
+
+		</if> 
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}/NetStat" > 
+				<include name="netstat_after.out"/> 
+				<include name="netstat_before.out"/> 
+			</zipfileset>
+		</zip>
+		
+	</target> 
+	
+	<!-- Native Leak Targets -->
+	<!-- Provide instructions for setting the perf manager -->
+	<target name="config_cpu_performance_manager" if="isWindows">
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Windows_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for Windows..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<property name="perfmon.input" value="cpu.perfmon"/>
+		<property name="perf.name" value="cpuperf"/>
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1137447" />
+	</target>
+
+	<!-- Collect the user.dmp file generated by Dr Watson -->
+	<target name="collect_was_cpu_windows" if="isWindows" depends="set_win_dump_path">
+
+		<if isTrue="${user.dmp.generated}">
+			<zipfileset dir="${user.dmp.file.dir}"
+				prefix="${autopdProblem}/${user.dmp.file.dir.trimmed}">
+				<include name="user.dmp" />
+			</zipfileset>
+		</if>
+	</target>
+	<!-- End Native Leak Targets -->
+
+</project>

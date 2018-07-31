@@ -1,0 +1,1452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                       -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 1997, 2011   -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                              -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                  -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                  -->
+<!-- ======================================================================================================= -->
+
+<plugin id="com.ibm.ws.console.appmanagement"
+        name="appmanagement"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="appmanagement">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<!-- Begin WAS.webui.core -->
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+<!-- End WAS.webui.core -->
+
+<!-- Begin WAS.webui.common.application -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="appmanagementcategory" parent="root" icon="/com.ibm.ws.console.appmanagement/images/onepix.gif" label="category.application.management" weight="20"/>
+        <categoryDefinition id="applicationtypescategory" parent="appmanagementcategory" icon="/com.ibm.ws.console.appmanagement/images/onepix.gif" label="nav.application.types" weight="20"/>
+        <task id="managetask" icon="/com.ibm.ws.console.appmanagementimages/onepix.gif" label="task.application.manage" view="/navigatorCmd.do?forwardName=ApplicationDeployment.content.main" external="false" weight="10">
+            <category id="applicationtypescategory"/>
+        </task>
+        <task id="newtask" icon="/com.ibm.ws.console.appmanagementimages/onepix.gif" label="NewApps.displayName" link="/com.ibm.ws.console.appmanagement.action.forwardCmd.do?forwardName=newapps.config.view" external="false" role="administrator,configurator,deployer" weight="10">
+            <category id="appmanagementcategory"/>
+        </task>
+        <!-- 668352 Added global settings -->
+        <task id="globalappsettings" icon="/com.ibm.ws.console.appmanagementimages/onepix.gif" label="GlobalAppSettings.displayName" link="/navigatorCmd.do?forwardName=GlobalAppSettings.config.view" external="false" weight="100">
+            <category id="appmanagementcategory"/>
+        </task>
+    </tasks>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.NewApps" contextType="NewApps">
+       <categoryDefinition weight="10" id="ApplicationManagement.NewApps.category" parent="root" label="NewApps.category.displayName"/>
+
+       <link categoryId="ApplicationManagement.NewApps.category"
+             label="NewApps.newBLAApp.displayName"
+             description="NewApps.newBLAApp.description"
+             icon="/images/business-level-application.gif"
+             weight="20"
+             actionURI="bLAManagementCollection.do?button.new=true&#38;lastPage=newapps.config.view">
+       </link>
+       <link categoryId="ApplicationManagement.NewApps.category"
+             label="NewApps.newEnterpriseApp.displayName"
+             description="NewApps.newEnterpriseApp.description"
+             icon="/images/Enterprise-application.gif"
+             weight="10"
+             actionURI="com.ibm.ws.console.appmanagement.action.forwardCmd.do?forwardName=appmanagement.upload&#38;lastPage=newapps.config.view">
+       </link>
+       <link categoryId="ApplicationManagement.NewApps.category"
+             label="NewApps.newAsset.displayName"
+             description="NewApps.newAsset.description"
+             icon="/images/asset.gif"
+             weight="30"
+             actionURI="assetManagementCollection.do?blamanagement.button.import=true&#38;lastPage=newapps.config.view">
+       </link>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.ApplicationDeployment"
+          contextType="ApplicationDeployment">
+
+    <!-- LIDB3509-24.2 Begin -->
+
+       <categoryDefinition weight="10" id="ApplicationDeployment.Modules.category" parent="root" label="ApplicationDeployment.Modules.category.displayName"/>
+       <categoryDefinition weight="20" id="ApplicationDeployment.WebModuleProperties.category" parent="root" label="ApplicationDeployment.WebModuleProperties.category.displayName"/>
+       <categoryDefinition weight="30" id="ApplicationDeployment.EJBModuleProperties.category" parent="root" label="ApplicationDeployment.EJBModuleProperties.category.displayName"/>
+       <categoryDefinition weight="40" id="ApplicationDeployment.ClientModuleProperties.category" parent="root" label="ApplicationDeployment.ClientModuleProperties.category.displayName"/>
+       <categoryDefinition weight="50" id="ApplicationDeployment.SCAModuleProperties.category" parent="root" label="ApplicationDeployment.SCAModuleProperties.category.displayName"/>
+       <categoryDefinition weight="60" id="ApplicationDeployment.DetailProperties.category" parent="root" label="ApplicationDeployment.DetailProperties.category.displayName"/>
+       <categoryDefinition weight="70" id="ApplicationDeployment.References.category" parent="root" label="ApplicationDeployment.References.category.displayName"/>
+       <categoryDefinition weight="80" id="ApplicationDeployment.SQLj.category" parent="root" label="ApplicationDeployment.SQLj.category.displayName"/>
+
+    <!-- Database Profiles category -->
+       <link categoryId="ApplicationDeployment.SQLj.category"
+             label="SQLj.profiles.displayName"
+             description="SQLj.profile.description"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.sqljprofile.customize&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+    <!-- Modules category -->
+
+       <link categoryId="ApplicationDeployment.Modules.category"
+             label="appconfigure.modules.toappservers"
+             weight="10"
+             description="appconfigure.modules.toappservers"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.modules.toappservers&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapModulesToServersFormInScope" value="true"/>
+             </compatibility>
+       </link>
+       <link categoryId="ApplicationDeployment.Modules.category"
+             label="appconfigure.metadatacomplete.formodules"
+             weight="20"
+             description="appconfigure.metadatacomplete.formodules"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.metadatacomplete.formodules&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMetadataCompleteForModulesFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+<!-- new link for module build IDs -->
+       <link categoryId="ApplicationDeployment.Modules.category"
+             label="appconfigure.buildID.formodules"
+             weight="80"
+             description="appconfigure.buildID.formodules"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.buildID.formodules&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isModuleBuildIDFormInScope" value="true"/>
+             </compatibility>
+       </link>
+    <!-- Web Module Properties category -->
+
+       <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+             label="appconfigure.virtualhosts.towebmodules"
+             description="appconfigure.virtualhosts.towebmodules"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.virtualhosts.towebmodules&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapWebModToVHFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+             label="ApplicationDeployment.sessionManagement.displayName"
+             description="ApplicationDeployment.sessionManagement.description"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=SessionManagerEnable.config.view&#38;sfname=sessionManagement&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.hasWebModule" value="true"/>
+             </compatibility>
+       </link>
+
+        <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+              label="appconfigure.contxtroot.forwebmodules"
+              description="appconfigure.contxtroot.forwebmodules"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.contxtroot.forwebmodules&#38;lastPage=ApplicationDeployment.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.appdeployment.isCtxRootForWebModFormInScope" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+              label="appconfigure.enventries.forwebmodules"
+              description="appconfigure.enventries.forwebmodules"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.enventries.forwebmodules&#38;lastPage=ApplicationDeployment.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.appdeployment.isMapEnvEntryForWebModFormInScope" value="true"/>
+              </compatibility>
+	</link>
+
+       <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+             label="appconfigure.jspreload.options"
+             description="appconfigure.jspreload.options"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jspreload.options&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isJSPReloadForWebModFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.WebModuleProperties.category"
+             label="appconfigure.initparam.forservlet"
+             description="appconfigure.initparam.forservlet"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.initparam.forservlet&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapInitParamForServletFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+    <!-- EJB Module Properties category -->
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.jndinames.fornonmessagingbeans"
+             description="appconfigure.jndinames.fornonmessagingbeans"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jndinames.fornonmessagingbeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isBindJndiForEJBNonMessageBindingFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.jndinames.formessagingbeans"
+             description="appconfigure.jndinames.formessagingbeans.description"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jndinames.formessagingbeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isBindJndiForEJBMessageBindingFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.jndinames.forejbbusiness"
+             description="appconfigure.jndinames.forejbbusiness"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jndinames.forejbbusiness&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isBindJndiForEJBBusinessFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <!-- Pluged in from pme.appprofileapplicationext
+       <link
+             categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="ApplicationProfile.displayName"
+             description="ApplicationProfile.description"
+             actionURI="com.ibm.ws.console.pme.appprofileapplicationext.forwardCmd.do?forwardName=ApplicationProfile.content.main&amp;resourceUri=META-INF/ibm-application-ext-pme.xmi&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+       -->
+
+       <!-- Binding J2CActivationSpec to Destination Jndi name -->
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.jndinames.actspec"
+             description="appconfigure.jndinames.actspec"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jndinames.actspec&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isActSpecJNDIFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.datasource.for20cmpbeans"
+             description="appconfigure.datasource.for20cmpbeans"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.datasource.for20cmpbeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isDataSourceFor20CMPBeansFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.datasource.for10cmpbeans"
+             description="appconfigure.datasource.for10cmpbeans"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.datasource.for10cmpbeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isDataSourceFor10CMPBeansFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.datasource.for20entitybeans"
+             description="appconfigure.datasource.for20entitybeans"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.datasource.for20entitybeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isDataSourceFor20EJBModulesFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.datasource.for10entitybeans"
+             description="appconfigure.datasource.for10entitybeans"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.datasource.for10entitybeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isDataSourceFor10EJBModulesFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+             label="appconfigure.unresolvedejbrefs.toejb"
+             description="appconfigure.unresolvedejbrefs.toejb"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.unresolvedejbrefs.toejb&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapUnresolvedEJBRefToEJBFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+        <link categoryId="ApplicationDeployment.EJBModuleProperties.category"
+              label="appconfigure.enventries.forejbmodules"
+              description="appconfigure.enventries.forejbmodules"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.enventries.forejbmodules&#38;lastPage=ApplicationDeployment.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.appdeployment.isMapEnvEntryForEJBModFormInScope" value="true"/>
+              </compatibility>
+	</link>
+    <!-- Detail Properties category -->
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="DeployedObject.targetMappings.displayName"
+             description="DeployedObject.targetMappings.description"
+             weight="10"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=DeploymentTargetMapping.content.main&#38;sfname=targetMappings&#38;lastPage=ApplicationDeployment.config.view">
+             <!-- categoryId="additional.properties" -->
+       </link>
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="ApplicationStartupProperties.displayName"
+             description="ApplicationStartupProperties.description"
+             weight="11"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationStartupProperties.config.view&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="ApplicationBinaryProperties.displayName"
+             description="ApplicationBinaryProperties.description"
+             weight="12"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationBinaryProperties.config.view&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="ApplicationClassLoadingProperties.displayName"
+             description="ApplicationClassLoadingProperties.description"
+             weight="13"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationClassLoadingProperties.config.view&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+       <!-- LIDB3251-18 -->
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="ApplicationTransparencyProperties.displayName"
+             description="ApplicationTransparencyProperties.description"
+             weight="14"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationTransparencyProperties.config.view&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+       <!-- LIDB3251-18 -->
+       <link categoryId="ClientModuleProperties.category"
+             label="ApplicationClientModuleDeployment.displayName"
+             description="ApplicationClientModuleDeployment.description"
+             weight="14"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationClientModuleDeployment.config.view&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="appconfigure.securityroles.tousers"
+             description="appconfigure.securityroles.tousers"
+             weight="30"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.securityroles.tousers&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapRolesToUsersFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="appconfigure.runasroles.tousers"
+             description="appconfigure.runasroles.tousers"
+             weight="40"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.runasroles.tousers&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapRunAsRolesToUsersFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="appconfigure.jaspi.provider"
+             description="appconfigure.jaspi.provider"
+             weight="40"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jaspi.provider&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapJaspiProviderFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <!-- F022172.22175 -->
+       <link categoryId="ApplicationDeployment.DetailProperties.category"
+             label="Component.properties.displayName"
+             description="Property.description"
+             weight="50"
+             actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+       </link>
+
+	   <!-- Deployment descriptor link plugin from webui.ddutils - ws\code\webui.ddutils\src\resources\WEB-INF
+            Also, change the label to: Deployment descriptor 
+       <link
+           categoryId="ApplicationDeployment.DetailProperties.category"
+           label="ManagedObject.viewdd.displayName"
+           description="ManagedObject.viewdd.description"
+           weight="50"
+           actionURI="com.ibm.ws.console.deploymentdescriptor.viewCmd.do?resource=application.xml&#38;lastPage=ApplicationDeployment.config.view">
+       </link>
+       -->
+
+
+       <!-- Last participant support link plugin from webui.pme - ws\code\webui.pme\src\lpsapplicationext\WEB-INF
+            Also, change the label to: Last participant support
+       <link
+           categoryId="ApplicationDeployment.DetailProperties.category"
+           label="LastParticipantSupportExtension.displayName"
+           description="LastParticipantSupportExtension.description"
+           weight="60"
+           actionURI="com.ibm.ws.console.pme.lpsapplicationext.forwardCmd.do?forwardName=LastParticipantSupportExtension.config.view&amp;lastPage=ApplicationDeployment.config.view&amp;resourceUri=ibm-application-ext-pme.xmi">
+       </link>
+       -->
+
+	<!--Anand ISC changes LIDB3228-65-->
+	<link 
+		categoryId="ApplicationDeployment.DetailProperties.category"
+		label="nav.user.management"
+            description="nav.user.management"
+		weight="70"            
+	      actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=console.users.main&#38;lastPage=ApplicationDeployment.config.view">
+	</link>
+	<link
+		categoryId="ApplicationDeployment.DetailProperties.category"
+		label="nav.group.management"
+            description="nav.group.management"            
+		weight="80"            
+            actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=console.groups.main&#38;lastPage=ApplicationDeployment.config.view">
+	</link>
+	<!--Anand ISC changes LIDB3228-65-->
+        <link categoryId="ApplicationDeployment.DetailProperties.category"
+              label="appconfigure.enventries.forapp"
+              description="appconfigure.enventries.forapp"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.enventries.forapp&#38;lastPage=ApplicationDeployment.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.appdeployment.isMapEnvEntryForAppFormInScope" value="true"/>
+              </compatibility>
+	</link>
+
+		
+    <!-- References category -->
+       
+       <link categoryId="ApplicationDeployment.References.category"
+             label="ApplicationDeployment.ApplicationScopeResource.displayName"
+             description="ApplicationDeployment.ApplicationScopeResource.displayName.description"
+             weight="10"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationScopeResource.content.main&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.hasAppScopedResources" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.resrefs.tobeans"
+             description="appconfigure.resrefs.tobeans"
+             weight="20"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.resrefs.tobeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapResRefToEJBFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.ejbrefs.tobeans"
+             description="appconfigure.ejbrefs.tobeans"
+             weight="30"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.ejbrefs.tobeans&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapEJBRefToEJBFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.jndinames.messagedestinationref"
+             description="appconfigure.jndinames.messagedestinationref"
+             weight="40"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.jndinames.messagedestinationref&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapMessageDestinationRefToEJBFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.References.category"
+             label="Classloader.libraries.displayName"
+             description="Classloader.libraries.description"
+             weight="50"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.sharedlib.formodules&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapSharedLibForModFormInScope" value="true"/>
+             </compatibility>
+       </link>
+             
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.sharedlib.relationship"
+             description="Classloader.libraries.description"
+             weight="50"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.sharedlib.relationship&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isSharedLibRelationshipFormInScope" value="true"/>
+             </compatibility>
+       </link>
+             
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.resenvrefs.tores"
+             description="appconfigure.resenvrefs.tores"
+             weight="60"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.resenvrefs.tores&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapResEnvRefToResFormInScope" value="true"/>
+             </compatibility>
+       </link>
+
+       <link categoryId="ApplicationDeployment.References.category"
+             label="appconfigure.unresolvedresrefs.tores"
+             description="appconfigure.unresolvedresrefs.tores"
+             weight="70"
+             actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.unresolvedresrefs.tores&#38;lastPage=ApplicationDeployment.config.view">
+             <compatibility>
+                 <match key="com.ibm.ws.console.appdeployment.isMapUnresolvedResRefToResFormInScope" value="true"/>
+             </compatibility>
+       </link>
+       <link categoryId="ApplicationDeployment.ClientModuleProperties.category"
+              label="appconfigure.enventries.forclientmodules"
+              description="appconfigure.enventries.forclientmodules"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=appconfigure.enventries.forclientmodules&#38;lastPage=ApplicationDeployment.config.view">
+              <compatibility>
+                  <match key="com.ibm.ws.console.appdeployment.isMapEnvEntryForClientModFormInScope" value="true"/>
+              </compatibility>
+	</link>
+       <link categoryId="ApplicationDeployment.ClientModuleProperties.category"
+              label="ApplicationClientModuleDeploymentMode.displayName"
+              description="ApplicationClientModuleDeploymentMode.description"
+              actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationClientModuleDeployment.config.view&#38;lastPage=ApplicationDeployment.config.view">
+	</link>
+
+       <!-- LIDB3509-24.2 End -->
+    </linkSet>
+</extension>
+<!-- LIDB3509-24.2 Remove the related links
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.ApplicationDeployment.related"
+          contextType="ApplicationDeployment">
+     <link label="ApplicationDeployment.webModules.displayName"
+          description="ApplicationDeployment.webModules.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=WebModuleDeployment.content.main&#38;sfname=modules&#38;lastPage=ApplicationDeployment.config.view"/>
+     <link label="ApplicationDeployment.ejbModules.displayName"
+              description="ApplicationDeployment.ejbModules.description"
+              categoryId="related.items"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=EJBModuleDeployment.content.main&#38;sfname=modules&#38;lastPage=ApplicationDeployment.config.view"/>
+     <link label="ApplicationDeployment.connectorModules.displayName"
+               description="ApplicationDeployment.connectorModules.description"
+               categoryId="related.items"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ConnectorModuleDeployment.content.main&#38;sfname=modules&#38;lastPage=ApplicationDeployment.config.view"/>
+     <link label="ApplicationDeployment.clientModules.displayName"
+               description="ApplicationDeployment.cilentModules.description"
+               categoryId="related.items"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ClientModuleDeployment.content.main&#38;sfname=modules&#38;lastPage=ApplicationDeployment.config.view"/>
+  </linkSet>
+</extension>
+-->
+<!--
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.EJBDeploymentTargetMapping.related"
+          contextType="EJBDeploymentTargetMapping">
+    <link label="EJBDeployment.ejb.displayName"
+          description="EJBDeployment.ejb.description"
+          categoryId="related.items"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=EJBDeployment.content.main&amp;sfname=config&amp;lastPage=DeploymentTargetMapping.config.view"/>
+  </linkSet>
+</extension>
+-->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.ApplicationDeployment.collection1" contextType="ApplicationDeployment">
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.start"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator,deployer"
+              label="button.stop"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.install"
+              scope="Server"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.uninstall"
+              scope="Server"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.update"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <!-- LIDB 2303 -->
+        <action
+              enablesFor="Collection"
+            role="administrator,operator,deployer"
+            label="button.ripple"
+            actionURI="applicationDeploymentCollection.do">
+            <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+            </compatibility>
+        </action>
+        <!-- end LIDB 2303 -->
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.removefile"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.export"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.exportddl"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+        <!-- LIDB4585-28 -->
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.exportfile"
+              actionURI="applicationDeploymentCollection.do">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.LibraryRef.collection1" contextType="LibraryRef">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.add"
+              actionURI="libraryRefCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.remove"
+              actionURI="libraryRefCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.EJBDeployment1" contextType="EJBDeployment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="eJBDeploymentCollection.do?EditAction=true"
+              label="EJBDeployment.ejb.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.LibraryRef1" contextType="LibraryRef">
+        <item
+              attributeName="libraryName"
+              sortable="sort"
+              itemURI="libraryRefCollection.do?EditAction=true"
+              label="LibraryRef.libraryName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.ApplicationDeployment1" contextType="ApplicationDeployment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="applicationDeploymentCollection.do?EditAction=true"
+              label="ApplicationDeployment.name.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.status.displayName">
+        </item>
+        <item
+              attributeName="startingWeight"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.startingWeight.displayName">
+              <compatibility>
+                <match key="com.ibm.ws.console.appdeployment.isServerPage" value="true"/>
+              </compatibility>
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.DeploymentTargetMapping1" contextType="DeploymentTargetMapping">
+        <item
+              attributeName="target"
+              sortable="sort"
+              itemURI="custom"
+              label="DeploymentTargetMapping.target.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+		              attributeName="version"
+		              sortable="sort"
+		              itemURI=""
+		              label="node.version.displayName">
+        </item>
+        <item
+		        attributeName="enableText"
+		        sortable="nosort"
+		        itemURI=""
+		        label="Autostart.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.deploymentTargetMapping.collection1" contextType="DeploymentTargetMapping">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.enableAutostart"
+              actionURI="deploymentTargetMappingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.disableAutostart"
+              actionURI="deploymentTargetMappingCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.EJBDeployment1" contextType="EJBDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.LibraryRef1" contextType="LibraryRef">
+        <tab
+              label="tab.configuration"
+              contentURI="LibraryRef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationDeployment1" contextType="ApplicationDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationDeployment.config.tab.view">
+        </tab>
+        <!-- LIDB3727-2 Added the runtime tab -->
+        <tab
+              label="tab.runtime"
+              contentURI="ApplicationDeployment.runtime.tab.view">
+        </tab>
+        <!-- LIDB3509-24.2 Remove the topology tab
+        <tab
+              label="tab.topology"
+              contentURI="ApplicationDeployment.topology.tab.view">
+        </tab>
+        -->
+    </detailTab>
+</extension>
+<!-- LIDB3509-24.2 Begin -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationStartupProperties1" contextType="ApplicationStartupProperties">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationStartupProperties.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationBinaryProperties1" contextType="ApplicationBinaryProperties">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationBinaryProperties.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationClassLoadingProperties1" contextType="ApplicationClassLoadingProperties">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationClassLoadingProperties.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationClientModuleDeployment1" contextType="ApplicationClientModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationClientModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- LIDB3509-24.2 End -->
+<!--LIDB2351-18 -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationTransparencyProperties1" contextType="ApplicationTransparencyProperties">
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationTransparencyProperties.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!--LIDB2351-18 -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.DeploymentTargetMapping1" contextType="DeploymentTargetMapping">
+        <tab
+              label="tab.configuration"
+              contentURI="DeploymentTargetMapping.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.EJBDeploymentTargetMapping1" contextType="EJBDeploymentTargetMapping">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBDeploymentTargetMapping.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ApplicationModuleDeploymentMode" contextType="ModuleDeploymentMode">
+        <tab
+              label="tab.configuration"
+              contentURI="ModuleDeploymentMode.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- START LIDB1966 - new grouping in the application general properties -->
+<!-- LIDB3509-24.2 - Delete the grouping and the fields from ApplicationDeployment.config.view
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ApplicationDeployment.config.general.properties" contextType="ApplicationDeployment">
+	     <field attributeName="startingWeight"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.startupOptions">
+	     </field>
+	     <field attributeName="backgroundApplication"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.startupOptions">
+	     </field>	
+	     <field attributeName="createMBeansForResources"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.startupOptions">
+	     </field>	
+	     <field attributeName="binariesURL"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.binaryManagement">
+	     </field>
+	     <field attributeName="useMetadataFromBinaries"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.binaryManagement">
+	     </field>
+	     <field attributeName="enableDistribution"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.binaryManagement">
+	     </field>	
+         <field attributeName="clusterRipple"
+             perspective="config"
+             categoryId="ApplicationDeployment.group.binaryManagement">
+         </field>
+         <field attributeName="validation"
+                 perspective="config"
+                 categoryId="ApplicationDeployment.group.binaryManagement">
+         </field>
+	     <field attributeName="mode"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.classLoading">
+	     </field>	
+	     <field attributeName="warClassLoaderPolicy"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.classLoading">
+	     </field>
+	     <field attributeName="reloadEnabled"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.classLoading">
+	     </field>
+	     <field attributeName="reloadInterval"
+	            perspective="config"
+	            categoryId="ApplicationDeployment.group.classLoading">
+	     </field>	     	     	     	          	     	
+     </form>
+</extension>
+-->
+<!-- END LID1966 -->
+
+<!-- 668352 Added global settings -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="global.App.Settings.detailTab1" contextType="GlobalAppSettings">
+        <tab
+              label="tab.configuration"
+              contentURI="GlobalAppSettings.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- End WAS.webui.common.application -->
+
+<!-- Begin WAS.webui.j2ee.webmodule -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.WebModuleDeployment"
+          contextType="WebModuleDeployment">
+     <link label="DeployedObject.targetMappings.displayName"
+          description="DeployedObject.targetMappings.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=DeploymentTargetMapping.content.main&#38;sfname=targetMappings"/>
+     <link label="WebModuleDeployment.sessionManagement.displayName"
+              description="WebModuleDeployment.sessionManagement.description"
+              categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=SessionManagerEnable.config.view&#38;sfname=sessionManagement&#38;lastPage=WebModuleDeployment.config.view"/>
+     <!-- F022172.22175 -->
+     <link label="Component.properties.displayName"
+          description="Property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.WebModuleDeployment1" contextType="WebModuleDeployment">
+        <item
+              attributeName="uri"
+              sortable="sort"
+              itemURI="webModuleDeploymentCollection.do?EditAction=true"
+              label="ModuleDeployment.uri.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.WebModuleDeployment1" contextType="WebModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="WebModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.mapModulesToServers.collection1" contextType="appconfigure.modules.toappservers">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="appmanagement.button.remove"
+              actionURI="mapModulesToServers.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.update"
+              actionURI="mapModulesToServers.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.removefile"
+              actionURI="mapModulesToServers.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.exportfile"
+              actionURI="mapModulesToServers.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- End WAS.webui.j2ee.webmodule -->
+
+<!-- Begin WAS.webui.j2ee.ejbmodule -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.EJBModuleDeployment"
+          contextType="EJBModuleDeployment">
+    <link label="DeployedObject.targetMappings.displayName"
+          description="DeployedObject.targetMappings.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=DeploymentTargetMapping.content.main&#38;sfname=targetMappings"/>
+    <!-- F022172.22175 -->
+    <link label="Component.properties.displayName"
+          description="Property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.EJBModuleDeployment1" contextType="EJBModuleDeployment">
+        <item
+              attributeName="uri"
+              sortable="sort"
+              itemURI="eJBModuleDeploymentCollection.do?EditAction=true"
+              label="ModuleDeployment.uri.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.EJBModuleDeployment1" contextType="EJBModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.EJBModuleDeployment.collection1" contextType="EJBModuleDeployment">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="appmanagement.button.remove"
+              actionURI="eJBModuleDeploymentCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.update"
+              actionURI="eJBModuleDeploymentCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.removefile"
+              actionURI="eJBModuleDeploymentCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<!-- End WAS.webui.j2ee.ejbmodule -->
+
+<!-- Begin WAS.webui.j2ee.jca -->
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.ConnectorModuleDeployment"
+          contextType="ConnectorModuleDeployment">
+    <link label="ConnectorModuleDeployment.resourceAdapter.displayName"
+          description="ConnectorModuleDeployment.resourceAdapter.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=J2CResourceAdapter.config.view&amp;sfname=resourceAdapter&amp;lastPage=ConnectorModuleDeployment.config.view"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+  <linkSet id="appmanagement.ConnectorModuleDeployment10"
+          contextType="ConnectorModuleDeployment10">
+    <link label="ConnectorModuleDeployment.resourceAdapter.displayName"
+          description="ConnectorModuleDeployment.resourceAdapter.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=J2CResourceAdapter.10.config.view&amp;sfname=resourceAdapter&amp;lastPage=ConnectorModuleDeployment10.config.view"/>
+  </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.ConnectorModuleDeployment1" contextType="ConnectorModuleDeployment">
+        <item
+              attributeName="uri"
+              sortable="sort"
+              itemURI="connectorModuleDeploymentCollection.do?EditAction=true"
+              label="ModuleDeployment.uri.displayName">
+        </item>
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="ManagedObject.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ConnectorModuleDeployment1" contextType="ConnectorModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="ConnectorModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ConnectorModuleDeployment10" contextType="ConnectorModuleDeployment10">
+        <tab
+              label="tab.configuration"
+              contentURI="ConnectorModuleDeployment10.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.ConnectorModuleDeployment.collection1" contextType="ConnectorModuleDeployment">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="appmanagement.button.remove"
+              actionURI="connectorModuleDeploymentCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.update"
+              actionURI="connectorModuleDeploymentCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.removefile"
+              actionURI="connectorModuleDeploymentCollection.do">
+        </action>
+    </actionSet>
+</extension>
+
+<!-- End WAS.webui.j2ee.jca -->
+
+<!-- Being Unknown -->
+<!--
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.ModuleServerConfiguration.collection1" contextType="ModuleServerConfiguration">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="moduleServerConfigurationCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="moduleServerConfigurationCollection.do">
+        </action>
+    </actionSet>
+</extension>
+-->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.ModuleServerConfiguration1" contextType="ModuleServerConfiguration">
+        <item
+              attributeName="serverName"
+              sortable="sort"
+              itemURI="moduleServerConfigurationCollection.do?EditAction=true"
+              label="ModuleServerConfiguration.serverName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ModuleServerConfiguration1" contextType="ModuleServerConfiguration">
+        <tab
+              label="tab.configuration"
+              contentURI="ModuleServerConfiguration.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End Unknown -->
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.AuthProperty.collection1" contextType="AuthProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              sortable="sort"
+              itemURI=""
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              sortable="sort"
+              itemURI=""
+              label="Property.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              editable="true"
+              sortable="sort"
+              itemURI=""
+              label="Property.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.AuthProperty.buttons1" contextType="AuthProperty">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.new"
+              actionURI="authPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.delete"
+              actionURI="authPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.AuthProperty.tab" contextType="AuthProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="AuthProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.DBProperty.collection1" contextType="DBProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              sortable="sort"
+              itemURI=""
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              sortable="sort"
+              itemURI=""
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.DBProperty.buttons1" contextType="DBProperty">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.new"
+              actionURI="dBPropertyCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.delete"
+              actionURI="dBPropertyCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.DBProperty.tab" contextType="DBProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="DBProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End LIDB2110 -->
+<!-- End Unknown -->
+<!-- Begin LIDB2356-40 -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.SIPModuleDeployment"
+          contextType="SIPModuleDeployment">
+     <link label="DeployedObject.targetMappings.displayName"
+          description="DeployedObject.targetMappings.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=DeploymentTargetMapping.content.main&#38;sfname=targetMappings"/>
+     <link label="WebModuleDeployment.sessionManagement.displayName"
+          description="WebModuleDeployment.sessionManagement.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=SessionManagerEnable.config.view&#38;sfname=sessionManagement&#38;lastPage=SIPModuleDeployment.config.view"/>
+     <!-- F022172.22175 -->
+     <link label="Component.properties.displayName"
+          description="Property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+   </linkSet>
+</extension>
+
+<!-- Client Modules -->
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="appmanagement.ClientModuleDeployment"
+          contextType="ClientModuleDeployment">
+     <link label="DeployedObject.targetMappings.displayName"
+          description="DeployedObject.targetMappings.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=DeploymentTargetMapping.content.main&#38;sfname=targetMappings"/>
+     <link label="Component.properties.displayName"
+          description="Property.description"
+          categoryId="additional.properties"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.ClientModuleDeployment1" contextType="ClientModuleDeployment">
+        <item
+              attributeName="uri"
+              sortable="sort"
+              itemURI="clientModuleDeploymentCollection.do?EditAction=true"
+              label="ModuleDeployment.uri.displayName">
+        </item>
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="ManagedObject.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.ClientModuleDeployment1" contextType="ClientModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="ClientModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Client Modules End -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="applicationmanagement.SIPModuleDeployment1" contextType="SIPModuleDeployment">
+        <tab
+              label="tab.configuration"
+              contentURI="SIPModuleDeployment.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End LIDB2356-40 -->
+
+<!-- LIDB3509-68 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer1" contextType="ApplicationServer">
+      <link categoryId="application.properties"
+            label="ApplicationDeployment.installedApplications.displayName"
+            description="ApplicationDeployment.installedApplications.description"
+            actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.server.content.main&amp;lastPage=ApplicationDeployment.server.content.main&amp;sfname=services&amp;parentType=Server">
+            <!-- BEGIN LIDB4138-39 -->
+            <compatibility>
+                <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+            </compatibility>
+            <!-- END LIDB4138-39 -->
+      </link>
+    </linkSet>
+  </extension>
+<!-- LIDB3509-68 -->
+<!-- LIDB4138-12 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="clustermanagement.ApplicationServer1" contextType="ClusterMember">
+      <link categoryId="application.properties"
+            label="ApplicationDeployment.installedApplications.displayName"
+            description="ApplicationDeployment.installedApplications.description"
+            actionURI="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.server.content.main&amp;lastPage=ApplicationDeployment.server.content.main&amp;sfname=services&amp;parentType=Server">
+      </link>
+    </linkSet>
+  </extension>
+<!-- LIDB4138-12 -->
+
+<!-- LIDB3509-20 Begin -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.AvailableResource.collection1" contextType="AppDeploymentAvailableResource">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.jndiName.displayName">
+        </item>
+        <item
+              attributeName="scope"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.scope.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="applicationmanagement.AvailableResource.buttons1" contextType="AppDeploymentAvailableResource">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.apply"
+              actionURI="appDeploymentAvailableResourceCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.cancel"
+              actionURI="appDeploymentAvailableResourceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="applicationmanagement.ApplicationScopeResource.collection1" contextType="ApplicationScopeResource">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="custom"
+              label="ApplicationDeployment.AvailableResource.name.displayName">
+        </item>
+        <item
+              attributeName="jndiName"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.jndiName.displayName">
+        </item>
+        <item
+              attributeName="resourceType"
+              sortable="sort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.resourceType.displayName">
+        </item>
+        <item
+              attributeName="provider"
+              sortable="sort"
+              itemURI="custom2"
+              label="label.provider">
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              itemURI=""
+              label="ApplicationDeployment.AvailableResource.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LIDB3509-20 End -->
+
+<!-- Grouping fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ApplicationClassLoadingProperties.config.general.properties" contextType="ApplicationClassLoadingProperties">
+             <field attributeName="reloadEnabled"
+                    perspective="config"
+                    categoryId="Classloader.reloadOptions"
+                    weight="1">
+             </field>
+             <field attributeName="reloadInterval"
+                    perspective="config"
+                    categoryId="Classloader.reloadOptions"
+                    weight="1">
+             </field>
+     </form>
+</extension>
+
+</plugin>
+

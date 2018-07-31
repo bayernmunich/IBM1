@@ -1,0 +1,1 @@
+set WAS_USER_SCRIPT=C:\Program Files (x86)\IBM\WebSphere\AppServer\profiles\AppSrv01\bin\setupCmdLine.bat

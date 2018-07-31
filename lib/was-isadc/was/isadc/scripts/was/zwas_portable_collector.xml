@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere for z/OS Portable Collector" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere for z/OS Portable Collector}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_zOS_Collector" />
+	<property name="infocollectProblemType" value="was-general" />
+	<property name="was_log_redirect.needed" value="true" />
+
+	<property name="portable_collector.name" value="zPortableCollector.jar" />
+	<property name="portable_collector.localdir" value="${bundle.basedir}" />
+	<property name="portable_collector.remotedir" value="./" />
+	<property name="portable_collector.remotename" value="zPortableCollector.jar" />
+
+	<property name="portable_collector.defaultpath"
+	          value="${bundle.basedir}/zPortableCollector.jar" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- ============================================================================================================================= -->
+
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+					usage,
+					get_zos_collection_info,
+					create_env_file,
+					zip_zportable_collector,
+					script_completed">
+		<!-- Removed after usage -	instructions, -->
+
+		<echo message="-------------------------------- IMPORTANT -------------" />
+		<echo message="The z/OS portable collector, '${port.col.dir.name}/${portable_collector.name}' is available for transfer to the z/OS machine for a remote collection" />
+		<echo message="" />
+		<echo message="View the readme file contained in the zPortableCollector.jar for instructions" />
+		<echo message="--------------------------------------------------------" />
+
+	</target>
+
+	<target name="get_zos_collection_info"
+	        description="prompt the user for the portable collector information">
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_z_collector_Information"
+			           defaultValue="default"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<fieldtask name="port.col.dir.name"
+			           label="dir_name"
+			           defaultValue="${portable_collector.localdir}"
+			           type="plaintext"
+			           accessibilityName="dir_name"
+			           accessibilityDesc="dir_name"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<autopdproperty name="collection.results.path" value="${port.col.dir.name}" />
+	</target>
+
+	<target name="zip_zportable_collector"
+	        description="zip up the components of the z/OS portable collector">
+
+		<jar destfile="${port.col.dir.name}/${portable_collector.name}">
+			<fileset dir="${script.basedir}/zos" />
+		</jar>
+
+		<!--  set the local directory of the collector -->
+		<!--  set the local name of the collector -->
+	</target>
+
+	<target name="create_env_file"
+	        description="create an environment file for the z/OS collection">
+		<!-- delete the old file -->
+		<!--
+			<delete file="${script.basedir}/zos/setEnvZos.sh" quiet="true"/>
+			
+			<zosenvfile filename="setEnvZos.sh" directory="${port.col.dir.name}" targetOs="zos" 
+			envList="pmrfilename=${pmr.file.name}:was.zos.server.root=${was.zos.server.root}" 
+			delimiter=":"/>	
+		-->
+	</target>
+
+
+	<!-- ============================================================================================================================= -->
+	<target name="check_for_automated"
+	        description="if condition for automation vs. manual">
+		<inputdialogtask>
+			<fieldtask name="do.automated"
+			           label="Problem_Types"
+			           list="automate:manual"
+			           listDetails="Automated Collection:Manual Collection"
+			           type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="do.automation.detected">
+			<equals arg1="${do.automated}" arg2="automate" />
+		</condition>
+
+		<if isTrue="${do.automation.detected}">
+			<antcall target="automated_collection" />
+		</if>
+		<if isNotTrue="${do.automation.detected}">
+			<echo message="do manual detected - we need to explain to the user how to do this task..." />
+		</if>
+	</target>
+
+	<target name="automated_collection"
+	        description="this target automates collection"
+	        depends="ftp_portable_collector_put,
+						telnet_portable_collector,
+						ftp_portable_collector_get,
+						move_jar_to_zip_dir,
+						zip_autopd_log,
+					 	autopd_feedbacks,			         
+			         	ftp_logs_to_ecurep,
+			         	script_completed">
+	</target>
+
+	<target name="manual_collection"
+	        description="manual steps in order to complete a collection">
+
+	</target>
+
+	<target name="usage"
+	        description="&lt;h2&gt;z/OS Portable Collector&lt;/h2&gt;&lt;p&gt;
+					This script will create a portable collector that can 
+					be run on z/OS, under USS, in order to do data collection.&lt;/p&gt;">
+
+		<if isTrue="${useGuiConsole }">
+			<property name="collection.message"
+			          value="NOT Supported - create portable collector." />
+		</if>
+
+		<if isNotTrue="${useGuiConsole }">
+			<property name="collection.message"
+			          value="This script will create a portable collector that can be run on z/OS, under USS, in order to do data collection." />
+		</if>
+
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK,Quit"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="abort.on.quit">
+			<equals arg1="Quit" arg2="${run.current.script}" />
+		</condition>
+
+		<fail if="${abort.on.quit}" message="Script aborted at user's request.">
+					Script aborted at user's request.
+				</fail>
+	</target>
+
+	<target name="instructions"
+	        description="This script will create a portable collector that can be run on z/OS, under USS, in order to do data collection.">
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="WAS_zos_portable_collector_readme"
+			           defaultValue="default"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="usage.instructions"
+			           label="WAS_zos_instructions"
+			           initialValueSource="${bundle.basedir}/scripts/was/zos/SSEQTP/390Readme.ascii.html"
+			           type="textArea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	</target>
+
+	<target name="ftp_portable_collector_put"
+	        description="FTP a portable collector to the chosen destination">
+		<!--
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Step_FTP_zip_file_portable"
+			bundle="autopdtoolstrings" message="put the 'portable collector'"
+			replace="${autopdts};;${step.count}" id="2254" level="info"
+			component="\scripts\sharedtargets.xml" />
+		-->
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_FTP_Information"
+			           defaultValue="default"
+			           type="prompt" />
+			<fieldtask name="ftp.site"
+			           label="ftp_hostname"
+			           defaultValue=""
+			           type="plaintext"
+			           accessibilityName="ftp_hostname"
+			           accessibilityDesc="ftp_hostname"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ftp.user"
+			           label="ftp_username"
+			           defaultValue=""
+			           type="plaintext"
+			           accessibilityName="ftp_username"
+			           accessibilityDesc="ftp_username"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ftp.password"
+			           label="ftp_password_noanon"
+			           defaultValue=""
+			           type="password"
+			           accessibilityName="ftp_password_anon"
+			           accessibilityDesc="ftp_password_anon"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ftp.localfile"
+			           label="ftp_localfile"
+			           defaultValue="${portable_collector.localdir}/${portable_collector.name}"
+			           type="plaintext"
+			           accessibilityName="ftp_localfile"
+			           accessibilityDesc="ftp_localfile"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ftp.remotedir"
+			           label="ftp_remotedir"
+			           defaultValue="${portable_collector.remotedir}"
+			           type="plaintext"
+			           accessibilityName="ftp_remotedir"
+			           accessibilityDesc="ftp_remotedir"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ftp.remotefile"
+			           label="ftp_remotefile"
+			           defaultValue="${portable_collector.name}"
+			           type="plaintext"
+			           accessibilityName="ftp_remotefile"
+			           accessibilityDesc="ftp_remotefile"
+			           bundle="autopdtoolstrings" />
+		</inputdialogtask>
+
+		<commonsftp server="${ftp.site}"
+		            username="${ftp.user}"
+		            password="${ftp.password}"
+		            localDir="${portable_collector.localdir}"
+		            remoteDir="${ftp.remotedir}"
+		            file="${portable_collector.name}"
+		            command="put" />
+	</target>
+
+	<target name="telnet_portable_collector"
+	        description="FTP a portable collector to the chosen destination">
+
+		<commonstelnet server="${ftp.site}"
+		               username="${ftp.user}"
+		               password="${ftp.password}"
+		               command="mkdir zcollector;mv zPortableCollector.jar zcollector;cd zcollector;jar xvf zPortableCollector.jar;chmod 775 *;zcollector.sh ${was.root};exit">
+		</commonstelnet>
+
+	</target>
+
+	<target name="ftp_portable_collector_get"
+	        description="FTP a portable collector to the chosen destination">
+		<!--  
+			<echo message=" " />
+			<stepcount />
+			<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+			<wsnlsecho key="Step_FTP_zip_file_portable"
+			bundle="autopdtoolstrings" message="get the 'portable collector'"
+			replace="${autopdts};;${step.count}" id="2254" level="info"
+			component="\scripts\sharedtargets.xml" />
+		-->
+		<commonsftp server="${ftp.site}"
+		            username="${ftp.user}"
+		            password="${ftp.password}"
+		            localDir="${portable_collector.localdir}"
+		            remoteDir="${ftp.remotedir} "
+		            file="-WASenv.jar"
+		            command="get" />
+	</target>
+
+	<target name="move_jar_to_zip_dir"
+	        description="rename the remote jar to the pmr name entered by the user">
+
+		<echo message="moving jar - ./log" />
+		<move todir="${bundle.basedir}/log">
+			<fileset dir="${bundle.basedir}/">
+				<include name="**/*-WASenv.jar" />
+			</fileset>
+		</move>
+	</target>
+
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="restore_user_default_trace_values,recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+</project>

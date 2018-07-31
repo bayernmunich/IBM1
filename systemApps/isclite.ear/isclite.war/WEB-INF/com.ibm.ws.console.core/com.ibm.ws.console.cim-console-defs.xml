@@ -1,0 +1,1480 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!--
+     5724-J34 (C) COPYRIGHT International Business Machines Corp. 2007
+     The source code for this program is not published or otherwise divested
+     of its trade secrets, irrespective of what has been deposited with the
+     U.S. Copyright Office.
+-->
+
+<tiles-definitions>
+
+    <!-- Install Target Collection Panel -->
+    <definition name="cim.installtarget.main" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installtarget.InstallTargetController">
+        <put name="contextType" value="InstallTarget"/>
+   		<put name="descTitle"   value="cimgr.installtarget.desc.title" />
+		<put name="descImage"   value="pluginId=com.ibm.ws.console.cim" />
+		<put name="descText"    value="cimgr.installtarget.desc.text" />
+        <putList name="contentList">
+            <add value="cim.installtarget.paging.extend"/>
+            <add value="cim.installtarget.quicksearch.extend"/>
+            <add value="cim.installtarget.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formAction"     value="CIMInstallTargetCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.installtarget.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMInstallTargetCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formAction"     value="CIMInstallTargetCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installtarget.main" />
+        <putList name="searchList">
+            <add value="Host.name.displayName:hostname"/>
+            <add value="cimgr.installtarget.keyinstalled.displayName:authenticationTypeDisplayName"/>
+			<add value="cimgr.install.username.heading:username"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.collection.table.extend" extends="collection.table.main">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="25%"/>
+        <put name="idColumn"          value="hostname"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formAction"        value="CIMInstallTargetCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>
+        <put name="buttons"           value="cim.installtarget.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installtarget.main" />
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/InstallTarget/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/InstallTarget/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="2"/>
+        <put name="definitionName" value="cim.installtarget.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+    <!-- Install Target Details (non-WAS nodes) -->
+    <definition name="cim.installtarget.config.view" extends="detail.config.view">
+        <put name="contextType" value="InstallTarget"/>
+        <putList name="list">
+            <add value="cim.installtarget.detail.title"/>
+            <add value="cim.installtarget.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.detail.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cim.installtarget.detail.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.installtarget.main"/>
+        <put name="instanceDetails"     value="hostname"/>
+        <put name="instanceDescription" value="cimgr.installtarget.detail.description"/>
+        <put name="displayName"         value="cimgr.installtarget.detail.displayName"/>
+    </definition>
+
+    <definition name="cim.installtarget.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri"           value="CIMInstallTargetDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="cim.installtarget.config.general.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.config.general.properties" 
+	        	path="/com.ibm.ws.console.cim/installTargetConfigGenPropLayout.jsp"
+        		controllerClass="com.ibm.ws.console.cim.installtarget.InstallTargetDetailController">
+        <put name="formAction"   value="CIMInstallTargetDetail.do"/>
+        <put name="formName"     value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formType"     value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formFocus"    value="hostname"/>
+        <put name="readOnlyView" value="no"/>
+        <put name="showButtons" value="yes"/>
+        <put name="showOkButton" value="yes"/>
+        <put name="showApplyButton" value="yes"/>
+        <put name="showResetButton" value="yes"/>
+        <put name="showCancelButton" value="yes"/>
+        <put name="showTestButton" value="yes"/>
+        <putList name="attributeList">
+            <item  value="cimgr.installtarget.hostname.displayName:hostname:yes:Text:Host.name.description:yes:yes"                             
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.username.displayName:username:no:Text:cimgr.installtarget.username.description:no:yes"       
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.password.displayName:password:no:Password:cimgr.installtarget.password.description:no:yes" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.platformtype.displayName:platform:yes:Select:Node.platform.description:no:yes:windows,aix,hpux,solaris,linux,os400,os390:Platform.WINDOWS,Platform.AIX,Platform.HP,Platform.SOLARIS,Platform.LINUX,Platform.OS400,Platform.ZOS" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+         </putList>
+    </definition>
+
+
+    <!-- Install Target Details (WAS nodes) -->
+    <definition name="cim.wasnode.config.view" extends="detail.config.view">
+        <put name="contextType" value="InstallTarget.wasnode"/>
+        <putList name="list">
+            <add value="cim.wasnode.detail.title"/>
+            <add value="cim.wasnode.detail.tabsLayout"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.wasnode.detail.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cim.installtarget.detail.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.installtarget.main"/>
+        <put name="instanceDetails"     value="hostname"/>
+        <put name="instanceDescription" value="cimgr.installtarget.detail.description"/>
+        <put name="displayName"         value="cimgr.installtarget.detail.displayName"/>
+    </definition>
+
+    <definition name="cim.wasnode.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri"           value="CIMInstallTargetWasDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+
+    <definition name="cim.wasnode.config.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="cim.wasnode.config.general.properties"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.wasnode.config.general.properties" 
+    			path="/com.ibm.ws.console.cim/installTargetConfigGenPropLayout.jsp"
+                controllerClass="com.ibm.ws.console.cim.installtarget.InstallTargetDetailController">
+        <put name="formAction"       value="CIMInstallTargetWasDetail.do"/>
+        <put name="formName"         value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formType"         value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formFocus"        value="hostname"/>
+        <put name="readOnlyView"     value="no"/>
+        <put name="showButtons"      value="yes"/>
+        <put name="showOkButton"     value="yes"/>
+        <put name="showApplyButton"  value="yes"/>
+        <put name="showResetButton"  value="yes"/>
+        <put name="showCancelButton" value="yes"/>
+        <put name="showTestButton"   value="yes"/>
+        <putList name="attributeList">
+            <item  value="cimgr.installtarget.hostname.displayName:no:Text:Host.name.description:yes:yes"                             
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.username.displayName:username:no:Text:cimgr.installtarget.username.description:no:yes"       
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.password.displayName:password:no:Password:cimgr.installtarget.password.description:no:yes" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.platformtype.displayName:platform:no:Select:Node.platform.description:yes:yes:windows,aix,hpux,solaris,linux,os400,os390:Platform.WINDOWS,Platform.AIX,Platform.HP,Platform.SOLARIS,Platform.LINUX,Platform.OS400,Platform.ZOS" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+         </putList>
+    </definition>
+
+
+	<!-- Add new install target -->
+	<definition name="cim.installtarget.add.view" extends="detail.config.view">
+        <put name="contextType" value="InstallTarget.add"/>
+        <putList name="list">
+            <add value="cim.installtarget.detail.title"/>
+            <add value="cim.installtarget.add.tabsLayout"/>
+        </putList>
+    </definition>
+    
+    <definition name="cim.installtarget.add.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri"           value="CIMInstallTargetAdd.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <putList name="tabList">
+        </putList>
+    </definition>
+    
+    <definition name="cim.installtarget.add.tab.view" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="cim.installtarget.add.general.properties"/>
+        </putList>
+    </definition>
+    
+
+    <definition name="cim.installtarget.add.general.properties" 
+       			path="/com.ibm.ws.console.cim/installTargetConfigGenPropLayout.jsp">
+        <put name="formAction"       value="CIMInstallTargetAdd.do"/>
+        <put name="formName"         value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formType"         value="com.ibm.ws.console.cim.installtarget.InstallTargetDetailForm"/>
+        <put name="formFocus"        value="hostname"/>
+        <put name="readOnlyView"     value="no"/>
+        <put name="showButtons"      value="yes"/>
+        <put name="showOkButton"     value="yes"/>
+        <put name="showApplyButton"  value="yes"/>
+        <put name="showResetButton"  value="yes"/>
+        <put name="showCancelButton" value="yes"/>
+        <put name="showTestButton"   value="yes"/>
+        <putList name="attributeList">
+            <item  value="cimgr.installtarget.hostname.displayName:hostname:yes:Text:Host.name.description:no:yes"                             
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.username.displayName:username:no:Text:cimgr.installtarget.username.description:no:yes"       
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.password.displayName:password:no:Password:cimgr.installtarget.password.description:no:yes" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="cimgr.installtarget.platformtype.displayName:platform:yes:Select:Node.platform.description:no:yes:windows,aix,hpux,solaris,linux,os400,os390:Platform.WINDOWS,Platform.AIX,Platform.HP,Platform.SOLARIS,Platform.LINUX,Platform.OS400,Platform.ZOS" 
+                   link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+         </putList>
+    </definition>
+
+	<!-- Remove install target confirmation -->
+	<definition name="cim.installtarget.remove.confirmation" extends="detail.config.view">
+        <put name="contextType" value="InstallTarget.remove"/>
+        <putList name="list">
+            <add value="cim.installtarget.remove.confirmation.title"/>
+            <add value="cim.installtarget.remove.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installtarget.remove.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>	
+        <put name="objectTypeImage"     value=""/>
+        <put name="titleKey"            value="cimgr.installtarget.remove.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installtarget.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="removeInstallTargetConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.installtarget.remove.desc"/>
+        <put name="displayName"         value="remove.node.title"/>
+    </definition>
+
+    <definition name="cim.installtarget.remove.confirmation.detail" path="/com.ibm.ws.console.cim/removeTargetConfirmation.jsp">
+        <put name="contextType" value="InstallTarget.remove"/>
+        <put name="confirmDescription" value="cimgr.installtarget.remove.confirm.desc"/>
+    </definition>
+	
+
+	<!-- Install SSH Public Key Wizard -->
+	<definition name="cim.sshkey.wizard" path="/secure/layouts/stepsLayout.jsp">
+        <put name="contextType"         value="cim.sshkey.wizard"/>
+        <put name="titleKey"            value="cimgr.sshkey.wizard.title"/>
+        <put name="descKey"             value="cimgr.sshkey.wizard.description"/>
+        <put name="actionHandler"       value=""/>
+        <put name="actionForm"          value=""/>
+        <put name="formType"            value=""/>
+        <put name="reqdTaskSessionKey"  value=""/>
+        <put name="stepArraySessionKey" value="CIMGR_SSHKEY_STEPARRAY"/>
+        <put name="disableStepsLink"    value="true"/>
+        <put name="helpTopic" value="cimgr.wizard.sshkey" />
+		<put name="pluginId" value="com.ibm.ws.console.cim" />
+        <putList name="stepsList">
+            <item value="cim.sshkey.password.settings" 
+                  link="/com.ibm.ws.console.cim/CIMPasswordSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.sshkey.public.key.location" 
+                  link="/com.ibm.ws.console.cim/CIMPublicKeyLocation" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.sshkey.summary" 
+                  link="/com.ibm.ws.console.cim/CIMSshKeySummary" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.sshkey.password.settings" extends="cim.sshkey.wizard">
+        <put name="actionHandler" value="CIMPasswordSettings"/>
+        <put name="actionForm"    value="CIMPasswordSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.sshkeywizard.SshKeyWizardForm"/>
+    </definition>
+
+    <definition name="cim.sshkey.public.key.location" extends="cim.sshkey.wizard">
+        <put name="actionHandler" value="CIMPublicKeyLocation"/>
+        <put name="actionForm"    value="CIMPublicKeyLocationForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.sshkeywizard.SshKeyWizardForm"/>
+    </definition>
+	
+    <definition name="cim.sshkey.summary" extends="cim.sshkey.wizard">
+        <put name="actionHandler" value="CIMSshKeySummary"/>
+        <put name="actionForm"    value="CIMSshKeySummaryForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.sshkeywizard.SshKeyWizardForm"/>
+    </definition>
+
+
+	<!-- Install ssh key status -->
+	<definition name="cim.sshkey.status" extends="detail.config.view">
+        <put name="contextType" value="cim.sshkey.status"/>
+        <putList name="list">
+            <add value="cim.sshkey.status.title"/>
+            <add value="cim.sshkey.status.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.sshkey.status.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installtarget.InstallTargetCollectionForm"/>	
+        <put name="objectTypeImage"     value=""/>
+        <put name="titleKey"            value="cim.sshkey.status.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installtarget.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="installSshKeyStatusTitle"/>
+        <put name="instanceDescription" value="cimgr.sshkey.status.desc"/>
+        <put name="displayName"         value="cim.sshkey.status.title"/>
+    </definition>
+
+    <definition name="cim.sshkey.status.detail" path="/com.ibm.ws.console.cim/installSshKeyStatus.jsp">
+        <put name="contextType" value="cim.sshkey.status"/>
+    </definition>
+
+
+
+
+	<!-- Available Install Collection -->
+	<definition name="cim.availinstall.main" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.availinstall.AvailInstallController">
+        <put name="contextType" value="AvailInstall"/>
+   		<put name="descTitle"   value="cimgr.availinstall.desc.title" />
+		<put name="descImage"   value="pluginId=com.ibm.ws.console.cim" />
+		<put name="descText"    value="cimgr.availinstall.desc.text" />
+        <putList name="contentList">
+            <add value="cim.availinstall.selection"/>
+            <add value="cim.availinstall.paging.extend"/>
+            <add value="cim.availinstall.quicksearch.extend"/>
+            <add value="cim.availinstall.collection.table.extend"/>
+        </putList>
+    </definition>
+
+	<definition name="cim.availinstall.selection" path="/com.ibm.ws.console.cim/packageSelection.jsp">
+        <put name="formName"       value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.availinstall.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formAction"     value="CIMAvailInstallCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.availinstall.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMAvailInstallCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formAction"     value="CIMAvailInstallCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.availinstall.main" />
+        <putList name="searchList">
+            <add value="cimgr.installtarget.name.displayName:name"/>
+            <add value="Host.name.displayName:hostname"/>
+            <add value="Node.displayName:nodeNameDisplayName"/>
+            <add value="node.version.displayName:version"/>
+			<add value="Node.platform.displayName:platformDisplayName"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.availinstall.collection.table.extend" path="/com.ibm.ws.console.cim/availableInstallCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="25%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formAction"        value="CIMAvailInstallCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.availinstall.AvailInstallCollectionForm"/>
+        <put name="buttons"           value="cim.availinstall.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.availinstall.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/AvailInstall/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/AvailInstall/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.availinstall.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="2"/>
+        <put name="definitionName" value="cim.availinstall.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+	
+
+	<!-- Install Wizard -->
+	<definition name="cim.install.wizard" path="/secure/layouts/stepsLayout.jsp">
+        <put name="contextType"         value="cim.install.wizard"/>
+        <put name="titleKey"            value="cimgr.install.wizard.title"/>
+        <put name="descKey"             value="cimgr.install.wizard.description"/>
+        <put name="actionHandler"       value=""/>
+        <put name="actionForm"          value=""/>
+        <put name="formType"            value=""/>
+        <put name="reqdTaskSessionKey"  value=""/>
+        <put name="stepArraySessionKey" value="CIMGR_INSTALL_STEPARRAY"/>
+        <put name="disableStepsLink"    value="true"/>
+        <put name="helpTopic" value="cimgr.wizard.install" />
+		<put name="pluginId" value="com.ibm.ws.console.cim" />
+        <putList name="stepsList">
+            <item value="cim.install.license.agreement" 
+            	  link="/com.ibm.ws.console.cim/CIMLicenseAgreement"  
+            	  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.authentication.type" 
+                  link="/com.ibm.ws.console.cim/CIMAuthenticationType"  
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.authentication.settings" 
+                  link="/com.ibm.ws.console.cim/CIMAuthenticationSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.responsefile.settings" 
+                  link="/com.ibm.ws.console.cim/CIMResponseFileSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.location.settings" 
+                  link="/com.ibm.ws.console.cim/CIMLocationSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.location.settings.additional1" 
+                  link="/com.ibm.ws.console.cim/CIMAdditionalLocationSettings1" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.location.settings.additional2" 
+                  link="/com.ibm.ws.console.cim/CIMAdditionalLocationSettings2" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.location.settings.additional3" 
+                  link="/com.ibm.ws.console.cim/CIMAdditionalLocationSettings3" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.node.augmentation" 
+                  link="/com.ibm.ws.console.cim/CIMAugmentation" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.parameter1" 
+                  link="/com.ibm.ws.console.cim/CIMParameter1" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.parameter2" 
+                  link="/com.ibm.ws.console.cim/CIMParameter2" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.parameter3" 
+                  link="/com.ibm.ws.console.cim/CIMParameter3" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.parameter4" 
+                  link="/com.ibm.ws.console.cim/CIMParameter4" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.parameter5" 
+                  link="/com.ibm.ws.console.cim/CIMParameter5" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.install.summary" 
+                  link="/com.ibm.ws.console.cim/CIMInstallSummary" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.install.license.agreement" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMLicenseAgreement"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.LicenseAgreementForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+
+    <definition name="cim.install.authentication.type" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAuthenticationType"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AuthenticationTypeForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.authentication.settings" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAuthenticationSettings"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AuthenticationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.responsefile.settings" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMResponseFileSettings"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ResponseFileSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.location.settings" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMLocationSettings"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.LocationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.location.settings.additional1" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAdditionalLocationSettings1"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AdditionalLocationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.location.settings.additional2" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAdditionalLocationSettings2"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AdditionalLocationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.location.settings.additional3" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAdditionalLocationSettings3"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AdditionalLocationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.node.augmentation" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMAugmentation"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AugmentationForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+	
+    <definition name="cim.install.parameter1" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMParameter1"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+	
+    <definition name="cim.install.parameter2" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMParameter2"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.parameter3" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMParameter3"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.parameter4" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMParameter4"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.parameter5" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMParameter5"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.summary" extends="cim.install.wizard">
+        <put name="actionHandler" value="CIMInstallSummary"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.InstallSummaryForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.install.view.license" path="/com.ibm.ws.console.cim/viewLicenseAgreement.jsp">
+    </definition>
+
+	<!-- Uninstall Wizard -->
+	<definition name="cim.uninstall.wizard" path="/secure/layouts/stepsLayout.jsp">
+        <put name="contextType"         value="cim.uninstall.wizard"/>
+        <put name="titleKey"            value="cimgr.uninstall.wizard.title"/>
+        <put name="descKey"             value="cimgr.uninstall.wizard.description"/>
+        <put name="actionHandler"       value=""/>
+        <put name="actionForm"          value=""/>
+        <put name="formType"            value=""/>
+        <put name="reqdTaskSessionKey"  value=""/>
+        <put name="stepArraySessionKey" value="CIMGR_INSTALL_STEPARRAY"/>
+        <put name="disableStepsLink"    value="true"/>
+        <put name="helpTopic" value="cimgr.wizard.uninstall" />
+		<put name="pluginId" value="com.ibm.ws.console.cim" />
+        <putList name="stepsList">
+            <item value="cim.uninstall.authentication.type" 
+                  link="/com.ibm.ws.console.cim/CIMAuthenticationType"  
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.authentication.settings" 
+                  link="/com.ibm.ws.console.cim/CIMAuthenticationSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.location.settings" 
+                  link="/com.ibm.ws.console.cim/CIMLocationSettings" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.parameter1" 
+                  link="/com.ibm.ws.console.cim/CIMParameter1" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.parameter2" 
+                  link="/com.ibm.ws.console.cim/CIMParameter2" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.parameter3" 
+                  link="/com.ibm.ws.console.cim/CIMParameter3" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.parameter4" 
+                  link="/com.ibm.ws.console.cim/CIMParameter4" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.parameter5" 
+                  link="/com.ibm.ws.console.cim/CIMParameter5" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+            <item value="cim.uninstall.summary" 
+                  link="/com.ibm.ws.console.cim/CIMInstallSummary" 
+                  classtype="com.ibm.ws.console.core.item.AppInstallItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.uninstall.authentication.type" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMAuthenticationType"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AuthenticationTypeForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.authentication.settings" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMAuthenticationSettings"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.AuthenticationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.location.settings" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMLocationSettings"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.LocationSettingsForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+	
+    <definition name="cim.uninstall.parameter1" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMParameter1"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+	
+    <definition name="cim.uninstall.parameter2" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMParameter2"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.parameter3" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMParameter3"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.parameter4" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMParameter4"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.parameter5" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMParameter5"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.ParameterForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+    <definition name="cim.uninstall.summary" extends="cim.uninstall.wizard">
+        <put name="actionHandler" value="CIMInstallSummary"/>
+        <put name="actionForm"    value="com.ibm.ws.console.cim.installwizard.InstallSummaryForm"/>
+        <put name="formType"      value="com.ibm.ws.console.cim.installwizard.InstallWizardForm"/>
+    </definition>
+
+
+
+
+    <!-- Install History Collection Panel -->
+    <definition name="cim.installhistory.main" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installhistory.InstallHistoryController">
+        <put name="contextType" value="InstallHistory"/>
+   		<put name="descTitle"   value="cimgr.installhistory.desc.title" />
+		<put name="descImage"   value="pluginId=com.ibm.ws.console.cim" />
+		<put name="descText"    value="cimgr.installhistory.desc.text" />
+        <putList name="contentList">
+            <add value="cim.installhistory.paging.extend"/>
+            <add value="cim.installhistory.quicksearch.extend"/>
+            <add value="cim.installhistory.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installhistory.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formAction"     value="CIMInstallHistoryCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.installhistory.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMInstallHistoryCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formAction"     value="CIMInstallHistoryCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installhistory.main" />
+        <putList name="searchList">
+            <add value="Host.name.displayName:installTarget"/>
+            <add value="cimgr.installhistory.operation.displayName:operation"/>
+            <add value="cimgr.installhistory.package.feature.displayName:displayFeature"/>
+            <add value="cimgr.installhistory.creation.time.displayName:creationDisplayTime"/>
+			<add value="cimgr.installhistory.completion.time.displayName:completionDisplayTime"/>
+			<add value="cimgr.installhistory.completion.status.displayName:completionStatus"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installhistory.collection.table.extend" path="/com.ibm.ws.console.cim/installHistoryCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="20%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formAction"        value="CIMInstallHistoryCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>
+        <put name="buttons"           value="cim.installhistory.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installhistory.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/InstallHistory/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/InstallHistory/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installhistory.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="2"/>
+        <put name="definitionName" value="cim.installhistory.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+	<!-- Remove install history confirmation -->
+	<definition name="cim.installhistory.remove.confirmation" extends="detail.config.view">
+        <put name="contextType" value="InstallHistory.remove"/>
+        <putList name="list">
+            <add value="cim.installhistory.remove.confirmation.title"/>
+            <add value="cim.installhistory.remove.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installhistory.remove.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installhistory.InstallHistoryCollectionForm"/>	
+        <put name="objectTypeImage"     value=""/>
+        <put name="titleKey"            value="cimgr.installhistory.remove.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installhistory.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="removeInstallHistoryConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.installhistory.remove.desc"/>
+        <put name="displayName"         value="remove.node.title"/>
+    </definition>
+
+    <definition name="cim.installhistory.remove.confirmation.detail" path="/com.ibm.ws.console.cim/removeHistoryConfirmation.jsp">
+        <put name="contextType" value="InstallHistory.remove"/>
+        <put name="confirmDescription" value="cimgr.installhistory.remove.confirm.desc"/>
+    </definition>
+	
+	<!-- Install Log  -->
+	<definition name="cim.installhistory.log.view" extends="detail.config.view">
+        <put name="contextType" value="InstallHistory.log"/>
+        <putList name="list">
+            <add value="cim.installhistory.log.view.title"/>
+            <add value="cim.installhistory.log.view.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installhistory.log.view.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installhistory.InstallLogForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cim.installhistory.log.view.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installhistory.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="installTarget"/>
+        <put name="instanceDescription" value="cimgr.installhistory.log.view.desc"/>
+        <put name="displayName"         value="remove.node.title"/>
+    </definition>
+
+    <definition name="cim.installhistory.log.view.detail" path="/com.ibm.ws.console.cim/viewLog.jsp">
+    </definition>
+
+    <!-- Pending Install Collection Panel -->
+    <definition name="cim.pendinginstall.main" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.pendinginstall.PendingInstallController">
+        <put name="contextType" value="PendingInstall"/>
+   		<put name="descTitle"   value="cimgr.pendinginstall.desc.title" />
+		<put name="descImage"   value="pluginId=com.ibm.ws.console.cim" />
+		<put name="descText"    value="cimgr.pendinginstall.desc.text" />
+        <putList name="contentList">
+            <add value="cim.pendinginstall.paging.extend"/>
+            <add value="cim.pendinginstall.quicksearch.extend"/>
+            <add value="cim.pendinginstall.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.pendinginstall.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formAction"     value="CIMPendingInstallCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.pendinginstall.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMPendingInstallCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formAction"     value="CIMPendingInstallCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.pendinginstall.main" />
+        <putList name="searchList">
+            <add value="Host.name.displayName:installTarget"/>
+            <add value="cimgr.installhistory.operation.displayName:operation"/>
+            <add value="cimgr.installhistory.package.feature.displayName:displayFeature"/>
+            <add value="cimgr.installhistory.creation.time.displayName:creationDisplayTime"/>
+			<add value="cimgr.status.displayName:status"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.pendinginstall.collection.table.extend" 
+                path="/com.ibm.ws.console.cim/pendingInstallCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="20%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formAction"        value="CIMPendingInstallCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>
+        <put name="buttons"           value="cim.pendinginstall.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.pendinginstall.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/PendingInstall/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/PendingInstall/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.pendinginstall.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="1"/>
+        <put name="definitionName" value="cim.pendinginstall.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+	<!-- Cancel pending install confirmation -->
+	<definition name="cim.pendinginstall.cancel.confirmation" extends="detail.config.view">
+        <put name="contextType" value="PendingInstall.cancel"/>
+        <putList name="list">
+            <add value="cim.pendinginstall.cancel.confirmation.title"/>
+            <add value="cim.pendinginstall.cancel.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.pendinginstall.cancel.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.pendinginstall.PendingInstallCollectionForm"/>	
+        <put name="objectTypeImage"     value=""/>
+        <put name="titleKey"            value="cimgr.pendinginstall.cancel.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.pendinginstall.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="cancelPendingInstallConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.pendinginstall.cancel.desc"/>
+        <put name="displayName"         value="remove.node.title"/>
+    </definition>
+
+    <definition name="cim.pendinginstall.cancel.confirmation.detail" path="/com.ibm.ws.console.cim/cancelPendingConfirmation.jsp">
+        <put name="contextType" value="PendingInstall.cancel"/>
+        <put name="confirmDescription" value="cimgr.pendinginstall.cancel.confirm.desc"/>
+    </definition>
+
+    <!-- Install Package Collection Panel -->
+    <definition name="cim.installpackage.main" path="/secure/layouts/contentLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installpackage.InstallPackageController">
+        <put name="contextType" value="InstallPackage"/>
+   		<put name="descTitle"   value="cimgr.installpackage.desc.title" />
+		<put name="descImage"   value="pluginId=com.ibm.ws.console.cim" />
+		<put name="descText"    value="cimgr.installpackage.desc.text" />
+        <putList name="contentList">
+            <add value="cim.installpackage.paging.extend"/>
+            <add value="cim.installpackage.quicksearch.extend"/>
+            <add value="cim.installpackage.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formAction"     value="CIMInstallPackageCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.installpackage.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMInstallPackageCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formAction"     value="CIMInstallPackageCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.main" />
+        <putList name="searchList">
+            <add value="cimgr.installpackage.package.displayName:packageLongName"/>
+            <add value="cimgr.installpackage.version.displayName:version"/>
+            <add value="cimgr.installpackage.descriptor.type.displayName:packageType"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.collection.table.extend" path="/com.ibm.ws.console.cim/installPackageCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="10%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formAction"        value="CIMInstallPackageCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>
+        <put name="buttons"           value="cim.installpackage.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/InstallPackage/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/InstallPackage/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="2"/>
+        <put name="definitionName" value="cim.installpackage.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+	<!-- Remove install package confirmation -->
+	<definition name="cim.installpackage.remove.confirmation" extends="detail.config.view">
+        <put name="contextType" value="InstallPackage.remove"/>
+        <putList name="list">
+            <add value="cim.installpackage.remove.confirmation.title"/>
+            <add value="cim.installpackage.remove.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.remove.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.InstallPackageCollectionForm"/>	
+        <put name="objectTypeImage"     value=""/>
+        <put name="titleKey"            value="cimgr.installpackage.remove.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="removeInstallPackageConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.installpackage.remove.desc"/>
+        <put name="displayName"         value="cimgr.installpackage.remove.title"/>
+    </definition>
+
+    <definition name="cim.installpackage.remove.confirmation.detail" path="/com.ibm.ws.console.cim/removePackageConfirmation.jsp">
+        <put name="contextType" value="InstallPackage.remove"/>
+        <put name="confirmDescription" value="cimgr.installpackage.remove.confirm.desc"/>
+    </definition>
+	
+    <!-- Install Package Detail Panel -->
+    <definition name="cim.installpackage.details" path="/secure/layouts/configboxLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installpackage.PackageDetailsController">
+         <put name="contextType" value="PackageDetails"/>
+         <putList name="list">
+            <add value="cim.installpackage.details.title"/>
+            <add value="cim.installpackage.details.info"/>
+            <add value="cim.installpackage.details.quicksearch.extend"/>
+            <add value="cim.installpackage.details.collection.table.extend"/>
+            <add value="cim.installpackage.details.paging.extend"/>
+        </putList>
+    </definition>
+
+	<definition name="cim.installpackage.details.info" path="/com.ibm.ws.console.cim/packageDetails.jsp">
+    </definition>
+
+    <definition name="cim.installpackage.details.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.InstallPackageDetailForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.installpackage.details.desc.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.installpackage.details"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="packageLongName"/>
+        <put name="instanceDescription" value="cimgr.installpackage.details.desc.text"/>
+        <put name="displayName"         value="cimgr.installpackage.details.desc.title"/>
+    </definition>
+
+    <definition name="cim.installpackage.details.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formAction"     value="CIMPackageDetailsCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.installpackage.details.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMPackageDetailsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formAction"     value="CIMPackageDetailsCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.details" />
+        <putList name="searchList">
+            <add value="cimgr.installpackage.details.filename:fileDisplayName"/>
+            <add value="cimgr.installpackage.details.fileSize:fileSize"/>
+            <add value="cimgr.installpackage.details.fileStatus:fileStatus"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.details.collection.table.extend" path="/com.ibm.ws.console.cim/packageDetailsCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="20%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formAction"        value="CIMPackageDetailsCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="buttons"           value="cim.installpackage.details.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.details" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/PackageDetails/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/PackageDetails/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.details.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="3"/>
+        <put name="definitionName" value="cim.installpackage.details.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+	<!-- Remove package file confirmation -->
+	<definition name="cim.installpackage.details.remove.confirmation" extends="detail.config.view">
+        <put name="contextType" value="PackageDetails.remove"/>
+        <putList name="list">
+            <add value="cim.installpackage.details.remove.confirmation.title"/>
+            <add value="cim.installpackage.details.remove.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.details.remove.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.installpackage.details.remove.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.details"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="removePackageDetailsConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.installpackage.details.remove.desc"/>
+        <put name="displayName"         value="cimgr.installpackage.details.remove.title"/>
+    </definition>
+
+    <definition name="cim.installpackage.details.remove.confirmation.detail" path="/com.ibm.ws.console.cim/removeFileConfirmation.jsp">
+        <put name="contextType" value="PackageDetails.remove"/>
+        <put name="confirmDescription" value="cimgr.installpackage.details.remove.confirm.desc"/>
+    </definition>
+    
+    <!-- Package Details Collection Download confirmation -->
+	<definition name="cim.installpackage.details.download.confirmation" extends="detail.config.view">
+        <put name="contextType" value="PackageDetails.download"/>
+        <putList name="list">
+            <add value="cim.installpackage.details.download.confirmation.title"/>
+            <add value="cim.installpackage.details.download.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installpackage.details.download.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.download.download.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installpackage.details"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="downloadConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.download.download.desc"/>
+        <put name="displayName"         value="cimgr.download.download.title"/>
+    </definition>
+
+    <definition name="cim.installpackage.details.download.confirmation.detail" path="/com.ibm.ws.console.cim/downloadConfirmation.jsp">
+        <put name="contextType" value="PackageDetails.download"/>
+        <put name="confirmDescription" value="cimgr.download.download.confirm.desc"/>
+        <put name="formAction"         value="CIMPackageDetailsDownloadConfirm.do"/>
+        <put name="formName"           value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        <put name="formType"           value="com.ibm.ws.console.cim.installpackage.PackageDetailsCollectionForm"/>
+        
+    </definition>
+    
+    
+    <!-- Download Collection Panel -->
+    <definition name="cim.download.main" path="/secure/layouts/configboxLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installpackage.DownloadController">
+         <put name="contextType" value="Download"/>
+         <putList name="list">
+            <add value="cim.download.title"/>
+            <add value="cim.download.location"/>
+            <add value="cim.download.quicksearch.extend"/>
+            <add value="cim.download.collection.table.extend"/>
+            <add value="cim.download.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.download.desc.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.download.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="title"/>
+        <put name="instanceDescription" value="cimgr.download.desc.text"/>
+        <put name="displayName"         value="cimgr.download.desc.title"/>
+    </definition>
+
+	<definition name="cim.download.location" path="/com.ibm.ws.console.cim/downloadOptions.jsp"/>
+
+    <definition name="cim.download.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"     value="CIMDownloadCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.download.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMDownloadCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"     value="CIMDownloadCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.download.main" />
+        <putList name="searchList">
+            <add value="cimgr.download.filename:filename"/>
+            <add value="cimgr.download.type:type"/>
+            <add value="cimgr.download.fileSize:fileSize"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.collection.table.extend" path="/com.ibm.ws.console.cim/downloadCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="20%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"        value="CIMDownloadCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="buttons"           value="cim.download.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.download.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/Download/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/Download/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="3"/>
+        <put name="definitionName" value="cim.download.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+
+    <!-- Download Collection Panel (descriptor) -->
+    <definition name="cim.download.descriptor.main" path="/secure/layouts/configboxLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installpackage.DownloadController">
+         <put name="contextType" value="Download.descriptor"/>
+         <putList name="list">
+            <add value="cim.download.descriptor.title"/>
+            <add value="cim.download.descriptor.location"/>
+            <add value="cim.download.descriptor.quicksearch.extend"/>
+            <add value="cim.download.descriptor.collection.table.extend"/>
+            <add value="cim.download.descriptor.paging.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.descriptor.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.download.descriptor.desc.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.download.descriptor.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="title"/>
+        <put name="instanceDescription" value="cimgr.download.descriptor.desc.text"/>
+        <put name="displayName"         value="cimgr.download.descriptor.desc.title"/>
+    </definition>
+
+	<definition name="cim.download.descriptor.location" path="/com.ibm.ws.console.cim/downloadDescriptorOptions.jsp"/>
+
+    <definition name="cim.download.descriptor.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"     value="CIMDownloadDescriptorCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.download.descriptor.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMDownloadDescriptorCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"     value="CIMDownloadDescriptorCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.download.descriptor.main" />
+        <putList name="searchList">
+            <add value="cimgr.download.filename:filename"/>
+            <add value="cimgr.download.type:type"/>
+            <add value="cimgr.download.fileSize:fileSize"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.descriptor.collection.table.extend" path="/com.ibm.ws.console.cim/downloadDescriptorCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="20%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formAction"        value="CIMDownloadDescriptorCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="buttons"           value="cim.download.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.download.descriptor.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/Download/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/Download/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+	<!-- DownloadCollection Download confirmation -->
+	<definition name="cim.download.download.confirmation" extends="detail.config.view">
+        <put name="contextType" value="Download.download"/>
+        <putList name="list">
+            <add value="cim.download.download.confirmation.title"/>
+            <add value="cim.download.download.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.download.download.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.download.download.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.download.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="downloadConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.download.download.desc"/>
+        <put name="displayName"         value="cimgr.download.download.title"/>
+    </definition>
+
+    <definition name="cim.download.download.confirmation.detail" path="/com.ibm.ws.console.cim/downloadConfirmation.jsp">
+        <put name="contextType" value="Download.download"/>
+        <put name="confirmDescription" value="cimgr.download.download.confirm.desc"/>
+        <put name="formAction"         value="CIMDownloadConfirm.do"/>
+        <put name="formName"           value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        <put name="formType"           value="com.ibm.ws.console.cim.installpackage.DownloadCollectionForm"/>
+        
+    </definition>
+    
+
+    <!-- Install Platform Collection Panel -->
+    <definition name="cim.installplatform.main" path="/secure/layouts/configboxLayout.jsp" 
+                controllerClass="com.ibm.ws.console.cim.installpackage.InstallPlatformController">
+         <put name="contextType" value="InstallPlatform"/>
+         <putList name="list">
+            <add value="cim.installplatform.title"/>
+            <add value="cim.installplatform.info"/>
+            <add value="cim.installplatform.ftp"/> 
+            <add value="cim.installplatform.quicksearch.extend"/>
+            <add value="cim.installplatform.collection.table.extend"/>
+            <add value="cim.installplatform.paging.extend"/>
+        </putList>
+    </definition>
+
+	<definition name="cim.installplatform.info" path="/com.ibm.ws.console.cim/packageDetails.jsp">
+    </definition>
+	<definition name="cim.installplatform.ftp" path="/com.ibm.ws.console.cim/downloadPlatformOptions.jsp"/>
+	
+    <definition name="cim.installplatform.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.InstallPackageDetailForm"/>
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.installpackage.details.desc.title"/>
+        <put name="collectionLink"      value="navigatorCmd.do?forwardName=cim.installplatform.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="packageLongName"/>
+        <put name="instanceDescription" value="cimgr.installplatform.desc.text"/>
+        <put name="displayName"         value="cimgr.installplatform.desc.title"/>
+    </definition>
+
+    <definition name="cim.installplatform.paging.extend" extends="paging.main">
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formAction"     value="CIMInstallPlatformCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+    </definition>
+    
+    <definition name="cim.installplatform.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri"      value="CIMInstallPlatformCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formAction"     value="CIMInstallPlatformCollection.do"/>
+        <put name="formName"       value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formType"       value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+   		<put name="parent"         value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installplatform.main" />
+        <putList name="searchList">
+            <add value="cimgr.installplatform.platform:platformDisplayName"/>
+            <add value="cimgr.installplatform.packageStatus:packageStatus"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installplatform.collection.table.extend" path="/com.ibm.ws.console.cim/installPlatformCollection.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes"    value="true"/>
+        <put name="sortIconLocation"  value="right"/>
+        <put name="columnWidth"       value="35%"/>
+        <put name="idColumn"          value="refId"/>
+        <put name="iterationName"     value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formAction"        value="CIMInstallPlatformCollection.do"/>
+        <put name="formName"          value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formType"          value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="buttons"           value="cim.installplatform.collection.buttons.panel"/>
+   		<put name="parent"            value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installplatform.main" />
+   		<put name="statusType"        value="unknown"/>
+   		<put name="htmlFilter"        value="false"/>
+        <putList name="collectionList">
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/InstallPlatform/Preferences#maximumRows:25" 
+                  link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/InstallPlatform/Preferences#retainSearchCriteria:32" 
+                  link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" 
+                  classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installplatform.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount"    value="3"/>
+        <put name="definitionName" value="cim.installplatform.collection.buttons.panel"/>
+        <put name="includeForm"    value="no"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+
+	<!-- Install Platform remove package file confirmation -->
+	<definition name="cim.installplatform.remove.confirmation" extends="detail.config.view">
+        <put name="contextType" value="InstallPlatform.remove"/>
+        <putList name="list">
+            <add value="cim.installplatform.remove.confirmation.title"/>
+            <add value="cim.installplatform.remove.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installplatform.remove.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.installpackage.details.remove.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installplatform.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="removeInstallPlatformConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.installplatform.remove.desc"/>
+        <put name="displayName"         value="cimgr.installplatform.remove.title"/>
+    </definition>
+
+    <definition name="cim.installplatform.remove.confirmation.detail" path="/com.ibm.ws.console.cim/platformRemoveFileConfirmation.jsp">
+        <put name="contextType" value="InstallPlatform.remove"/>
+        <put name="confirmDescription" value="cimgr.installplatform.remove.confirm.desc"/>
+    </definition>
+    
+    <!-- Install Platform Collection Download confirmation -->
+	<definition name="cim.installplatform.download.confirmation" extends="detail.config.view">
+        <put name="contextType" value="InstallPlatform.download"/>
+        <putList name="list">
+            <add value="cim.installplatform.download.confirmation.title"/>
+            <add value="cim.installplatform.download.confirmation.detail"/>
+        </putList>
+    </definition>
+
+    <definition name="cim.installplatform.download.confirmation.title" extends="detail.title">
+        <put name="formName"            value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>	
+        <put name="objectTypeImage"     value="pluginId=com.ibm.ws.console.cim"/>
+        <put name="titleKey"            value="cimgr.download.download.title"/>
+        <put name="collectionLink"      value="com.ibm.ws.console.cim.forwardCmd.do?forwardName=cim.installplatform.main"/>
+        <put name="includeLink"         value="yes"/>
+        <put name="instanceDetails"     value="downloadConfirmationTitle"/>
+        <put name="instanceDescription" value="cimgr.download.download.desc"/>
+        <put name="displayName"         value="cimgr.download.download.title"/>
+    </definition>
+
+    <definition name="cim.installplatform.download.confirmation.detail" path="/com.ibm.ws.console.cim/platformDownloadConfirmation.jsp">
+        <put name="contextType"        value="InstallPlatform.download"/>
+        <put name="confirmDescription" value="cimgr.download.download.confirm.desc"/>
+        <put name="formAction"         value="CIMInstallPlatformDownloadConfirm.do"/>
+        <put name="formName"           value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        <put name="formType"           value="com.ibm.ws.console.cim.installpackage.InstallPlatformCollectionForm"/>
+        
+    </definition>
+    
+    <!-- Browse remote file system -->
+    <definition name="cim.remote.node.browse" path="/com.ibm.ws.console.cim/BrowseNodePanel.jsp"  
+                controllerClass="com.ibm.ws.console.cim.nodebrowse.BrowseRemoteController">
+        <put name="contextType"        value="cim.remote.node.browse"/>
+        <put name="titleKey"           value="browse.remote.title"/>
+        <put name="descKey"            value="click.node.name.to.browse"/>
+        <put name="select"             value="single"/>
+        <put name="fileExt"            value="*"/>
+        <put name="backTo"             value=""/>
+        <put name="nodeBrowse"         value="cim.remote.node.browse"/>
+        <put name="dmgronly"           value=""/>
+    </definition>
+
+    <definition name="cim.remote.file.browse" path="/com.ibm.ws.console.cim/BrowseFilePanel.jsp">
+        <put name="contextType"        value="cim.remote.file.browse"/>
+        <put name="titleKey"           value="browse.remote.title"/>
+        <put name="descKey"            value="cimgr.nodebrowse.select.responsefile.description"/>
+    </definition>
+
+	<definition name="cim.responsefile.remote.node.browse" extends="cim.remote.node.browse">
+        <put name="select"             value="single"/>
+        <put name="fileExt"            value="*"/>
+        <put name="backTo"             value="cim.install.responsefile.settings"/>
+        <put name="nodeBrowse"         value="cim.responsefile.remote.node.browse"/>
+        <put name="dmgronly"           value="true"/>
+	</definition>
+	
+</tiles-definitions>

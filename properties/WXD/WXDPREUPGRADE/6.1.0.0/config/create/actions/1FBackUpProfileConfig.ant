@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- IBM Confidential OCO Source Material                                         -->
+<!-- 5724-J34 COPYRIGHT International Business Machines Corp. 2006,2007           -->
+<!-- The source code for this program is not published or otherwise divested      -->
+<!-- of its trade secrets, irrespective of what has been deposited with the       -->
+<!-- U.S. Copyright Office.                                                       -->
+
+<project name='Back Up Profile Config' default='DoBackup' basedir='.'>
+
+    <property name="was.home" value="${WAS_HOME}" />
+    <property name="profile.name" value="${PROFILE_NAME}" />
+    <property name="profile.path" value="${PROFILE_PATH}" />
+    <property name="backups.dir" value="${BACKUPS_DIRECTORY}" />
+    <property name="target.backup.dir" value="${TARGET_BACKUP_DIRECTORY}" />
+    <property name="was.properties.dir" value="${was.home}/properties" />
+    <property name="was.version.dir" value="${was.properties.dir}/version" />
+    <property name="was.version.dtd.dir" value="${was.version.dir}/dtd" />
+    <property name="target.profiles.dir" value="${target.backup.dir}/profiles" />
+    <property name="target.profile.dir" value="${target.profiles.dir}/${profile.name}" />
+    <property name="target.config.dir" value="${target.profile.dir}/config" />
+    <property name="target.cells.dir" value="${target.config.dir}/cells" />
+    <property name="target.properties.dir" value="${target.backup.dir}/properties" />
+    <property name="target.version.dir" value="${target.properties.dir}/version" />
+    <property name="target.was.product" value="${target.version.dir}/WAS.product" />
+    <property name="target.dtd.dir" value="${target.version.dir}/dtd" />
+    <property name="source.config.dir" value="${profile.path}/config" />
+
+    <target name="EchoPassedVariables">
+        <echo message="=====1 was.home is ${was.home}"/>
+        <echo message="=====2 profile.path is ${profile.path}"/>
+        <echo message="=====3 profile.name is ${profile.name}"/>
+        <echo message="=====4 backups.dir is ${backups.dir}"/>
+        <echo message="=====5 target.backup.dir is ${target.backup.dir}"/>
+    </target>  
+
+    <target name="CheckPropertiesVersion" depends="EchoPassedVariables">
+        <available file="${was.version.dir}" type="dir" property="propver.present"/>
+    </target>
+
+    <target name="CheckSourceDir" depends="CheckPropertiesVersion" if="propver.present">
+        <echo message="=====6 was.version.dir is ${was.version.dir}"/>
+        <available file="${source.config.dir}" type="dir" property="source.config.dir.present"/>
+    </target>
+
+    <target name="FindBackupsDir" depends="CheckSourceDir" if="source.config.dir.present">
+        <echo message="=====7 source.config.dir is ${source.config.dir}"/>
+        <available file="${backups.dir}" type="dir" property="backups.dir.found"/>
+    </target>
+    
+    <target name="CreateBackupsDir" depends="FindBackupsDir" unless="backups.dir.found">
+        <echo message="=====  create backups.dir ${backups.dir}"/>
+        <mkdir dir="${backups.dir}"/>
+    </target>
+    
+    <target name="CheckBackupsDir" depends="CreateBackupsDir" if="source.config.dir.present">
+        <echo message="=====8 source.config.dir is ${source.config.dir}"/>
+        <available file="${backups.dir}" type="dir" property="backups.dir.present"/>
+    </target>
+
+    <target name="CheckTargetExists" depends="CheckBackupsDir" if="backups.dir.present">
+        <echo message="=====9 backups.dir is ${backups.dir}"/>
+        <available file="${target.profiles.dir}" type="dir" property="target.profiles.dir.present"/>
+    </target>
+
+    <target name="FailIfTargetExists" depends="CheckTargetExists" if="target.profiles.dir.present">
+        <fail message="===== ${target.backup.dir} already contains a backup for profile $profile.name}."/>
+    </target>
+
+    <target name="CreateTargetBackupDir" depends="FailIfTargetExists" unless="target.profiles.dir.present">
+        <echo message="=====10 target backup.dir is ${target.backup.dir}"/>
+        <mkdir dir="${target.backup.dir}"/>
+    </target>
+
+    <target name="CreateBackup" depends="CreateTargetBackupDir" unless="target.profiles.dir.present">
+        <echo message="=====11 Back up configuration data to ${target.backup.dir}"/>
+        <mkdir dir="${target.config.dir}"/>
+        <echo message="=====12 Copy config to ${target.config.dir} from ${source.config.dir}"/>
+        <copy todir="${target.config.dir}">
+            <fileset dir="${source.config.dir}"/>
+        </copy>
+        <available file="${target.cells.dir}" type="dir" property="target.cells.dir.present"/>
+        <mkdir dir="${target.version.dir}"/>
+        <mkdir dir="${target.dtd.dir}"/>
+        <echo message="=====13 Copy dtds to ${target.dtd.dir} from ${was.version.dtd.dir}"/>
+        <copy todir="${target.dtd.dir}">
+            <fileset dir="${was.version.dtd.dir}"/>
+        </copy>
+        <echo message="=====14 Copy product files to ${target.version.dir} from ${was.version.dir}"/>
+        <copy todir="${target.version.dir}">
+            <fileset dir="${was.version.dir}" includes="**/*.product" />
+        </copy>
+        <available file="${target.was.product}" type="file" property="target.was.product.present"/>
+    </target>
+
+    <target name="CheckBackupProfile" depends="CreateBackup" unless="target.cells.dir.present">
+        <fail message="===== Cells directory ${target.cells.dir} not found.  Backup of profile failed."/>
+    </target>
+
+    <target name="CheckBackupProperties" depends="CheckBackupProfile" unless="target.was.product.present">
+        <fail message="===== Product file ${target.was.product} not found. Backup of properties failed."/>
+    </target>
+
+    <target name="DoBackup" depends="CheckBackupProperties" if="target.was.product.present">
+        <echo message="=====15 Backup Successful."/>
+    </target>
+
+
+</project>

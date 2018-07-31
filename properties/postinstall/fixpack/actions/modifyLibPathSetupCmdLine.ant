@@ -1,0 +1,355 @@
+<project name="modifyLibPathSetupCmdLine" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+     
+    <property name="separatorFile" value="/"/>
+   
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows).">
+
+      <condition property="currentOSFamily" value="windows">
+        <os family="windows"/>
+      </condition>
+
+      <condition property="currentOSFamily" value="os/400">
+      	<os family="os/400"/>
+      </condition>
+      <condition property="currentOSFamily" value="unix">            
+    	    <os family="z/os"/>
+      </condition>
+      <condition property="currentOSFamily" value="unix">            
+          <os family="unix"/>
+      </condition>
+        
+      <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+
+        <condition property="isCurrentOSWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        <condition property="isCurrentOSUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+    </target>
+
+    <target name="resolveSetupCmdLineName"
+            description="Resolves the name of setupCmdLine script for the current platform.">
+
+        <condition property="setupCmdLineName" 
+                value="setupCmdLine.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        <condition property="setupCmdLineName" 
+                value="setupCmdLine.sh">
+            <equals arg1="${currentOSFamily}" 
+                arg2="unix"/>
+        </condition>
+        
+        <condition property="setupCmdLineName" 
+                value="setupCmdLine">
+            <equals arg1="${currentOSFamily}" 
+                arg2="os/400"/>
+        </condition>
+        
+        <wscmtlog>Detected setupCmdLine script name to be: ${setupCmdLineName}</wscmtlog>
+    </target>
+    
+    <target name="setFileName">
+        <property name="file" value="${WAS_HOME}${separatorFile}bin${separatorFile}${setupCmdLineName}"/>
+    	<wscmtlog>File name: ${file}</wscmtlog>
+    </target>
+    
+    <target name="replaceUserClassPathForSetupCmdLineInstallWindows"
+            description="Modify setupCmdLine shell script for Windows."
+            if="isCurrentOSWindows">
+            
+        <replace file="${file}">
+          <replacetoken><![CDATA[call "%WAS_USER_SCRIPT%"]]></replacetoken>
+          <replacevalue><![CDATA[call "%WAS_USER_SCRIPT%"
+        goto WAS_USER_SCRIPT_IS_CALLED]]></replacevalue>
+        </replace>
+        <replace file="${file}">
+          <replacetoken><![CDATA[SET WAS_PATH=%JAVA_NATIVE_LIB_DIR%;%WAS_HOME%\bin;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;%PATH%]]></replacetoken>
+          <replacevalue><![CDATA[SET WAS_PATH=%JAVA_NATIVE_LIB_DIR%;%WAS_HOME%\bin;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;%PATH%
+:WAS_USER_SCRIPT_IS_CALLED]]></replacevalue>
+        </replace>
+    </target>
+
+    <target name="replaceUserClassPathForSetupCmdLineUnInstallWindows"
+            description="Modify setupCmdLine shell script for Windows."
+            if="isCurrentOSWindows">
+            
+        <replace file="${file}">
+          <replacetoken><![CDATA[call "%WAS_USER_SCRIPT%"
+        goto WAS_USER_SCRIPT_IS_CALLED]]></replacetoken>
+          <replacevalue><![CDATA[call "%WAS_USER_SCRIPT%"]]></replacevalue>
+        </replace>
+        <replace file="${file}">
+          <replacetoken><![CDATA[SET WAS_PATH=%JAVA_NATIVE_LIB_DIR%;%WAS_HOME%\bin;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;%PATH%
+:WAS_USER_SCRIPT_IS_CALLED]]></replacetoken>
+          <replacevalue><![CDATA[SET WAS_PATH=%JAVA_NATIVE_LIB_DIR%;%WAS_HOME%\bin;%JAVA_HOME%\bin;%JAVA_HOME%\jre\bin;%PATH%]]></replacevalue>
+        </replace>
+    </target>
+
+    <target name="replaceUserClassPathForSetupCmdLineInstallNonWindows"
+            description="Modify setupCmdLine shell script for Non-Windows."
+    	    unless="isCurrentOSWindows">
+            
+        <replace file="${file}">
+          <replacetoken><![CDATA[if [ "${WAS_USER_SCRIPT:=}" != "" ]; then
+    if [ -f ${WAS_USER_SCRIPT} ]; then
+        . $WAS_USER_SCRIPT
+    elif [ "${INV_PRF_SPECIFIED:=}" = "false" ]; then
+        WAS_USER_SCRIPT_FILE_NOT_EXISTS=true
+    fi
+fi
+
+#Export INV_PRF_SPECIFIED, NO_DFT_PRF_EXISTS and WAS_USER_SCRIPT_FILE_NOT_EXISTS variables
+export INV_PRF_SPECIFIED NO_DFT_PRF_EXISTS WAS_USER_SCRIPT_FILE_NOT_EXISTS
+
+PATH="$JAVA_HOME"/ibm_bin:"$JAVA_HOME"/bin/:"$JAVA_HOME"/jre/bin:$PATH
+WAS_EXT_DIRS="$JAVA_HOME"/lib:"$WAS_HOME"/classes:"$WAS_HOME"/lib:"$WAS_HOME"/installedChannels:"$WAS_HOME"/lib/ext:"$WAS_HOME"/web/help:"$ITP_LOC"/plugins/com.ibm.etools.ejbdeploy/runtime
+WAS_CLASSPATH="$WAS_HOME"/properties:"$WAS_HOME"/lib/startup.jar:"$WAS_HOME"/lib/bootstrap.jar:"$JAVA_HOME"/lib/tools.jar:"$WAS_HOME"/lib/lmproxy.jar:"$WAS_HOME"/lib/urlprotocols.jar]]></replacetoken>
+          <replacevalue><![CDATA[if [ "${WAS_USER_SCRIPT:=}" != "" ] && [ -f "${WAS_USER_SCRIPT}" ]; then
+        . "$WAS_USER_SCRIPT"
+else
+    if [ "${WAS_USER_SCRIPT:=}" != "" ] && [ "${INV_PRF_SPECIFIED:=}" = "false" ]; then
+        WAS_USER_SCRIPT_FILE_NOT_EXISTS=true
+    fi
+    PATH="$JAVA_HOME"/ibm_bin:"$JAVA_HOME"/bin/:"$JAVA_HOME"/jre/bin:$PATH
+    WAS_EXT_DIRS="$JAVA_HOME"/lib:"$WAS_HOME"/classes:"$WAS_HOME"/lib:"$WAS_HOME"/installedChannels:"$WAS_HOME"/lib/ext:"$WAS_HOME"/web/help:"$ITP_LOC"/plugins/com.ibm.etools.ejbdeploy/runtime
+    WAS_CLASSPATH="$WAS_HOME"/properties:"$WAS_HOME"/lib/startup.jar:"$WAS_HOME"/lib/bootstrap.jar:"$JAVA_HOME"/lib/tools.jar:"$WAS_HOME"/lib/lmproxy.jar:"$WAS_HOME"/lib/urlprotocols.jar
+fi
+
+#Export INV_PRF_SPECIFIED, NO_DFT_PRF_EXISTS and WAS_USER_SCRIPT_FILE_NOT_EXISTS variables
+export INV_PRF_SPECIFIED NO_DFT_PRF_EXISTS WAS_USER_SCRIPT_FILE_NOT_EXISTS
+
+]]></replacevalue> 
+        </replace>
+
+    </target>
+
+    <target name="replaceUserClassPathForSetupCmdLineUnInstallNonWindows"
+            description="Modify setupCmdLine shell script for Non-Windows."
+    	    unless="isCurrentOSWindows">
+            
+        <replace file="${file}">
+          <replacevalue><![CDATA[if [ "${WAS_USER_SCRIPT:=}" != "" ]; then
+    if [ -f ${WAS_USER_SCRIPT} ]; then
+        . $WAS_USER_SCRIPT
+    elif [ "${INV_PRF_SPECIFIED:=}" = "false" ]; then
+        WAS_USER_SCRIPT_FILE_NOT_EXISTS=true
+    fi
+fi
+
+#Export INV_PRF_SPECIFIED, NO_DFT_PRF_EXISTS and WAS_USER_SCRIPT_FILE_NOT_EXISTS variables
+export INV_PRF_SPECIFIED NO_DFT_PRF_EXISTS WAS_USER_SCRIPT_FILE_NOT_EXISTS
+
+PATH="$JAVA_HOME"/ibm_bin:"$JAVA_HOME"/bin/:"$JAVA_HOME"/jre/bin:$PATH
+WAS_EXT_DIRS="$JAVA_HOME"/lib:"$WAS_HOME"/classes:"$WAS_HOME"/lib:"$WAS_HOME"/installedChannels:"$WAS_HOME"/lib/ext:"$WAS_HOME"/web/help:"$ITP_LOC"/plugins/com.ibm.etools.ejbdeploy/runtime
+WAS_CLASSPATH="$WAS_HOME"/properties:"$WAS_HOME"/lib/startup.jar:"$WAS_HOME"/lib/bootstrap.jar:"$JAVA_HOME"/lib/tools.jar:"$WAS_HOME"/lib/lmproxy.jar:"$WAS_HOME"/lib/urlprotocols.jar]]></replacevalue>
+          <replacetoken><![CDATA[if [ "${WAS_USER_SCRIPT:=}" != "" ] && [ -f "${WAS_USER_SCRIPT}" ]; then
+        . "$WAS_USER_SCRIPT"
+else
+    if [ "${WAS_USER_SCRIPT:=}" != "" ] && [ "${INV_PRF_SPECIFIED:=}" = "false" ]; then
+        WAS_USER_SCRIPT_FILE_NOT_EXISTS=true
+    fi
+    PATH="$JAVA_HOME"/ibm_bin:"$JAVA_HOME"/bin/:"$JAVA_HOME"/jre/bin:$PATH
+    WAS_EXT_DIRS="$JAVA_HOME"/lib:"$WAS_HOME"/classes:"$WAS_HOME"/lib:"$WAS_HOME"/installedChannels:"$WAS_HOME"/lib/ext:"$WAS_HOME"/web/help:"$ITP_LOC"/plugins/com.ibm.etools.ejbdeploy/runtime
+    WAS_CLASSPATH="$WAS_HOME"/properties:"$WAS_HOME"/lib/startup.jar:"$WAS_HOME"/lib/bootstrap.jar:"$JAVA_HOME"/lib/tools.jar:"$WAS_HOME"/lib/lmproxy.jar:"$WAS_HOME"/lib/urlprotocols.jar
+fi
+
+#Export INV_PRF_SPECIFIED, NO_DFT_PRF_EXISTS and WAS_USER_SCRIPT_FILE_NOT_EXISTS variables
+export INV_PRF_SPECIFIED NO_DFT_PRF_EXISTS WAS_USER_SCRIPT_FILE_NOT_EXISTS
+
+]]></replacetoken> 
+        </replace>
+
+    </target>
+
+	
+    <target name="replaceStringWithRightValuesForSetupCmdLineInstallUNIX"
+            description="Modify setupCmdLine shell script to add double quote around directory to be changed for UNIX."
+            if="isCurrentOSUNIX">
+            
+        <!-- Modify AIX section -->
+        <replace file="${file}">
+          <replacetoken>  AIX)</replacetoken>
+          <replacevalue><![CDATA[  AIX)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+       	
+        <!-- Modify Linux section -->
+        <replace file="${file}">
+          <replacetoken>  Linux)</replacetoken>
+          <replacevalue><![CDATA[  Linux)
+    if test "x$LD_LIBRARY_PATH" = "x"; then
+      LD_LIBRARY_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+       
+        <!-- Modify Solaris section -->
+        <replace file="${file}">
+          <replacetoken>  SunOS)</replacetoken>
+          <replacevalue><![CDATA[  SunOS)
+    if test "x$LD_LIBRARY_PATH" = "x"; then
+      LD_LIBRARY_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+        
+        <!-- Modify HPUX section -->
+        <replace file="${file}">
+          <replacetoken>  HP-UX)</replacetoken>
+          <replacevalue><![CDATA[  HP-UX)
+    if test "x$SHLIB_PATH" = "x"; then
+      SHLIB_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+        
+        <!-- Modify OS390 section -->
+        <replace file="${file}">
+          <replacetoken>  OS/390)</replacetoken>
+          <replacevalue><![CDATA[  OS/390)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+    
+        <!-- Modify others section -->
+        <replace file="${file}">
+          <replacetoken>  *)</replacetoken>
+          <replacevalue><![CDATA[  *)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacevalue>
+        </replace>
+    </target>
+    
+    <target name="replaceStringWithRightValuesForSetupCmdLineInstallOS400"
+            description="Modify setupCmdLine shell script for security fix for UNIX."
+            if="isCurrentOSOS400">
+            
+      <!-- Modify OS400 section -->
+      <replace file="${file}">
+        <replacetoken>LIBPATH=&quot;${JAVA_NATIVE_LIB_DIR}:${LIBPATH}&quot;</replacetoken>
+        <replacevalue><![CDATA[if test "x$LIBPATH" = "x"; then
+    LIBPATH="$WAS_HOME"/nulldllsdir
+fi
+LIBPATH="${JAVA_NATIVE_LIB_DIR}:${LIBPATH}"]]></replacevalue>
+       </replace>
+    </target>
+
+	
+    <target name="replaceStringWithRightValuesForSetupCmdLineUninstallUNIX"
+            description="Revert setupCmdLine shell script change for security fix for UNIX."
+            if="isCurrentOSUNIX">
+	            
+      <!-- Modify AIX section -->
+      <replace file="${file}">
+	          
+        <replacetoken><![CDATA[  AIX)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  AIX)</replacevalue>
+      </replace>
+	       	
+      <!-- Modify Linux section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[  Linux)
+    if test "x$LD_LIBRARY_PATH" = "x"; then
+      LD_LIBRARY_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  Linux)</replacevalue>
+      </replace>
+       
+      <!-- Modify Solaris section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[  SunOS)
+    if test "x$LD_LIBRARY_PATH" = "x"; then
+      LD_LIBRARY_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  SunOS)</replacevalue>
+      </replace>
+        
+      <!-- Modify HPUX section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[  HP-UX)
+    if test "x$SHLIB_PATH" = "x"; then
+      SHLIB_PATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  HP-UX)</replacevalue>
+      </replace>
+	    
+      <!-- Modify OS390 section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[  OS/390)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  OS/390)</replacevalue>
+      </replace>
+	
+      <!-- Modify other section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[  *)
+    if test "x$LIBPATH" = "x"; then
+      LIBPATH="$WAS_HOME"/nulldllsdir
+    fi]]></replacetoken>
+        <replacevalue>  *)</replacevalue>
+      </replace>
+    </target>
+	    
+    <target name="replaceStringWithRightValuesForSetupCmdLineUninstallOS400"
+            description="Modify setupCmdLine shell script to add double quote around directory to be changed for UNIX."
+            if="isCurrentOSOS400">
+	            
+      <!-- Modify OS400 section -->
+      <replace file="${file}">
+        <replacetoken><![CDATA[if test "x$LIBPATH" = "x"; then
+    LIBPATH="$WAS_HOME"/nulldllsdir
+fi
+LIBPATH="${JAVA_NATIVE_LIB_DIR}:${LIBPATH}"]]></replacetoken>
+        <replacevalue>LIBPATH=&quot;${JAVA_NATIVE_LIB_DIR}:${LIBPATH}&quot;</replacevalue>
+      </replace>
+    </target>
+    
+    <target name="giveExecutionPermission">
+      <!-- chmod the setupCmdLine to give a+x permission -->
+      <chmod file="${file}" perm="a+x"/>
+    </target>
+
+    <target name="replaceRegularExpressionWithRightValuesForSetupCmdLineInstall"
+            description="Shield all shell scripts from LIBARTY PATH security hole."
+            depends="replaceUserClassPathForSetupCmdLineInstallWindows,replaceUserClassPathForSetupCmdLineInstallNonWindows,replaceStringWithRightValuesForSetupCmdLineInstallUNIX,replaceStringWithRightValuesForSetupCmdLineInstallOS400"/>
+	
+    <target name="replaceRegularExpressionWithRightValuesForSetupCmdLineUninstall"
+            description="Shield all shell scripts from LIBARTY PATH security hole."
+            depends="replaceUserClassPathForSetupCmdLineUnInstallWindows,replaceUserClassPathForSetupCmdLineUnInstallNonWindows,replaceStringWithRightValuesForSetupCmdLineUninstallUNIX,replaceStringWithRightValuesForSetupCmdLineUninstallOS400"/>
+    
+    <target name="install"
+        description="Shield all shell scripts from LIBARTY PATH security hole."
+        depends="detectCurrentOSFamily,
+          setCurrentOSFamily,
+          resolveSetupCmdLineName,
+          setFileName,
+          replaceRegularExpressionWithRightValuesForSetupCmdLineInstall,
+          giveExecutionPermission"/>
+     
+    <target name="uninstall"
+        description="Shield all shell scripts from LIBARTY PATH security hole."
+        depends="detectCurrentOSFamily,
+          setCurrentOSFamily,
+          resolveSetupCmdLineName,
+          setFileName,
+          replaceRegularExpressionWithRightValuesForSetupCmdLineUninstall,
+          giveExecutionPermission"/>
+          	
+</project>

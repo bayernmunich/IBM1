@@ -1,0 +1,424 @@
+# --------------------------------------------------------------------
+# This script adds an HAManagerPolicy to a specified CoreGroup. An
+# HAManagerPolicy consists of many attributes and it is rather awkward
+# to specify all of them as parameters to a script. Instead the 
+# HAManegerPolicy attributes are specified using a properties file.
+# The "AddPolicy.properties" file is included as a template and can
+# be found in the <install>/properties directory. The name of the
+# properties file is supplied as the only parameter to the script. 
+#
+# The script may be invoked as 
+# wsadmin -conntype NONE -f CreateCoreGroupPolicy.jacl AddPolicy.properties
+#
+# The properties file contains the name of the CoreGroup, the PolicyType,
+# PolicyName, and other policy attributes. The script reads and parses
+# the AddPolicy.properties file to extract all the supplied parameters.
+# 
+# The PolicyType specified must be one of the five categories: OneOfNPolicy,
+# MOfNPolicy, StaticPolicy, AllActivePolicy, and NoOpPolicy.
+#
+# Certain policies may specify specialized attributes, eg, a MOfNPolicy 
+# may specify the 'numActive' attribute. The 'NumActive' property 
+# specified in the AddPolicy.properties file is read only if the 
+# 'PolicyType' property is specified as 'MOfNPolicy'. Irrelevant 
+# properties present in the 'AddPolicy.properties' need not be removed;
+# they can stay there for documentation and future use.
+#   
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+#
+# The procedure loads an entire java xxx.properties file into a 
+# variable and returns it.  
+#  
+# properFileName         The name of the properties file
+#
+# -------------------------------------------------------------------  
+proc loadProperties {propFileName}  {
+   java::import java.io.FileInputStream
+   java::import java.util.Properties
+
+   set fileprop [java::new Properties]
+   set fileStream [java::new FileInputStream $propFileName]
+
+   $fileprop load $fileStream
+   
+   return $fileprop
+} 
+# # #  # # # # # # end of loadProperties procedure  # #  # # # # # #  
+
+# ------------------------------------------------------------------- 
+#
+# The main procudure for creating an HAManagerPolicy
+#
+# The procedure first whether the CoreGroup specified in the 
+# properties file indeed exits. In case the CoreGroup is missing the 
+# script simply exits.
+#
+# In case the specified Policy name also exists under the specified 
+# CoreGroup, the scipt simply exits.
+#
+# Otherwise, it attempts to create the deisired HAManagerPolicy.  
+#
+# props      The variable contains the entire contents of the 
+#            java properties file read earlier in the loadProperties
+#            procedure
+# ------------------------------------------------------------------- 
+proc createAHAManagerPolicy {props}  {
+global AdminConfig
+
+   # first check whether the specified coregroup exists under the cell
+   set coreGroupName [string trim [$props getProperty CoreGroupName] ]
+   set coreGroupId [getCoreGroupIdFromName $coreGroupName]
+   if {$coreGroupId == 0}  {
+      set errorMessage "The specified CoreGroup: \"" 
+      append errorMessage $coreGroupName
+      append errorMessage "\" does not exist. Provide an existing CoreGroup name. Exiting."
+      puts stdout $errorMessage
+      exit
+   }
+
+   # extract the PolicyName
+   set policyName [string trim [$props getProperty PolicyName] ]
+
+   # check whether the policy already exists 
+   set policyId [getPolicyIdFromName $coreGroupId $policyName]
+   if {$policyId != 0}  {
+      set errorMessage "The specified Policy: \"" 
+      append errorMessage $policyName
+      append errorMessage "\" already exists. Provide a new Policy name. Exiting."
+      puts stdout $errorMessage
+      exit
+   }
+
+   # extract all the common policy attributes 
+   set policyType [string trim [$props getProperty PolicyType] ]
+   set policyDescription [string trim [$props getProperty PolicyDescription] ]
+   set isAlivePeriodSec [string trim [$props getProperty IsAlivePeriodSec] ]
+   set quorumEnabled [string trim [$props getProperty QuorumEnabled] ]
+
+   # matchCriteria related properties
+   set numOfMatchCriteria [string trim [$props getProperty NumOfMatchCriteria] ]
+   set indx 0
+   while {$indx < $numOfMatchCriteria}  {
+      set matchCriteriaArray($indx)  [list [string trim [$props getProperty Name_$indx]]  \
+                                           [string trim [$props getProperty Value_$indx]] \
+                                           [string trim [$props getProperty Description_$indx]] ] 
+      incr indx
+   }
+
+   # Now extract the policy-specific attributes and also create the desired policy
+   switch -exact -- $policyType  {
+
+      OneOfNPolicy  { 
+         set policyFactory "com.ibm.ws.hamanager.coordinator.policy.impl.OneOfNPolicyFactory"
+         set failback [string trim [$props getProperty Failback] ]
+         set preferredOnly [string trim [$props getProperty PreferredOnly] ]
+
+         # create the desired OneOfN Policy
+         set policyId [$AdminConfig create "OneOfNPolicy" $coreGroupId [list            \
+                        [list name $policyName] [list description $policyDescription]   \
+                        [list policyFactory $policyFactory]                             \
+                        [list isAlivePeriodSec $isAlivePeriodSec]                       \
+                        [list quorumEnabled $quorumEnabled] [list failback $failback]   \
+                        [list preferredOnly $preferredOnly] ] ]
+
+         # Extract and create Preferred Servers from the properties file
+         createPreferredServers $props $coreGroupId $policyId 0
+      }   
+       
+      MOfNPolicy  { 
+         set policyFactory "com.ibm.ws.hamanager.coordinator.policy.impl.MOfNPolicyFactory"
+         set failback [string trim [$props getProperty Failback] ]
+         set preferredOnly [string trim [$props getProperty PreferredOnly] ]
+         set numActive [string trim [$props getProperty NumActive] ]
+
+         # create the desired MOfN Policy
+         set policyId [$AdminConfig create "MOfNPolicy" $coreGroupId [list              \
+                        [list name $policyName] [list description $policyDescription]   \
+                        [list policyFactory $policyFactory]                             \
+                        [list isAlivePeriodSec $isAlivePeriodSec]                       \
+                        [list quorumEnabled $quorumEnabled] [list failback $failback]   \
+                        [list preferredOnly $preferredOnly] [list numActive $numActive] ] ]
+
+         # Extract and create Preferred Servers from the properties file
+         createPreferredServers $props $coreGroupId $policyId 0
+      }   
+       
+      StaticPolicy  {
+         set policyFactory "com.ibm.ws.hamanager.coordinator.policy.impl.StaticPolicyFactory"
+
+         # create the desired Static Policy
+         set policyId [$AdminConfig create "StaticPolicy" $coreGroupId [list                      \
+                        [list name $policyName] [list description $policyDescription]             \
+                        [list policyFactory $policyFactory]                                       \
+                        [list isAlivePeriodSec $isAlivePeriodSec]                                 \
+                        [list quorumEnabled $quorumEnabled] ]  ]                                            
+
+         # Extract and create Preferred Servers from the properties file
+         createPreferredServers $props $coreGroupId $policyId 1
+      }  
+
+      AllActivePolicy  {
+         set policyFactory "com.ibm.ws.hamanager.coordinator.policy.impl.AllActivePolicyFactory"
+         # no other special attributes
+
+         # create the desired All Active Policy
+         set policyId [$AdminConfig create "AllActivePolicy" $coreGroupId [list                   \
+                         [list name $policyName] [list description $policyDescription]            \
+                         [list policyFactory $policyFactory]                                      \
+                         [list isAlivePeriodSec $isAlivePeriodSec]                                \
+                         [list quorumEnabled $quorumEnabled] ]  ]                      
+      }  
+
+      NoOpPolicy  {
+         set policyFactory "com.ibm.ws.hamanager.coordinator.policy.impl.NoOpPolicyFactory"
+         # no other special attributes
+
+         # create the desired No Op Policy
+         set policyId [$AdminConfig create "NoOpPolicy" $coreGroupId [list                        \
+                        [list name $policyName] [list description $policyDescription]             \
+                        [list policyFactory $policyFactory]                                       \
+                        [list isAlivePeriodSec $isAlivePeriodSec]                                 \
+                        [list quorumEnabled $quorumEnabled] ]  ]                                            
+      }  
+   
+      default  {
+         # encountered an unknown PolicyType in the properties file
+         # issue an error message before exiting.
+         set errorMessage "The specified PolicyType: \"" 
+         append errorMessage $policyType
+         append errorMessage "\" is not a valid policy type. Provide a valid policy type. Exiting."
+         puts stdout $errorMessage
+         exit
+      }
+   }
+   
+   # Now create the matchCriteria   
+   set indx 0
+   while {$indx < $numOfMatchCriteria}  {
+      createAMatchCriteria $policyId [lindex $matchCriteriaArray($indx) 0]  \
+                                     [lindex $matchCriteriaArray($indx) 1]  \
+                                     [lindex $matchCriteriaArray($indx) 2]  
+      incr indx
+   }
+
+   return $policyId  
+}
+# # #  # # # # # # end of createAHAManagerPolicy procedure  # #  # # # # # #  
+
+# ----------------------------------------------------------------------
+# The procedure attempts to create the 'preferredServers' list for 
+# OneOfNPolicy, or MOfNPolicy. The procedure can also create the  
+# 'servers' list for a StaticPolicy.
+#
+# For each requested CoreGroupServer (specified as 'NodeName_X' and 
+# 'ServerName_X' in the properties file), the procedure makes sure that
+# the CoreGroupServer actually exists in the 'coreGroupServers' list. If 
+# the element does not exist, an error message is issued. Otherwise, 
+# an element of 'preferredServers' (or 'servers') is constructed by 
+# using the corresponding CoreGroupServerId from the 'coreGroupServers'
+# list. 
+#
+# props            The properties object
+# coreGroupId      The object id of the CoreGroupo under consideration
+# policyId         The object id of the the partially constructed policy 
+#                  object
+# staticPolicy     A flag. Value 0 implies the policy under construction 
+#                  is not of type StaticPolicy.  
+# ----------------------------------------------------------------------
+proc createPreferredServers {props coreGroupId policyId staticPolicy}  {
+   global AdminConfig
+
+   global coreGroupServerList
+   global numOfCoreGroupServers
+   
+   set numOfPolicyServers [string trim [$props getProperty NumOfPolicyServers] ]
+   
+   set indx 0
+   while {$indx < $numOfPolicyServers}  {
+      set policyServerArray($indx) [list [string trim [$props getProperty NodeName_$indx]]    \
+                                         [string trim [$props getProperty ServerName_$indx]] ]
+      incr indx
+   } 
+
+   if {$numOfPolicyServers > 0}  {
+      # create the global list of existing Core Group Servers attached to the 
+      # Core Group under concern
+      set coreGroupServerList [lindex [$AdminConfig showAttribute $coreGroupId coreGroupServers] 0]
+      set numOfCoreGroupServers [llength $coreGroupServerList] 
+   }
+       
+   # now create the list of preferred servers consisting of CoreGroup Server Ids
+   # start with an empty list 
+   set preferredServerList {}
+
+   set indx 0
+   while {$indx < $numOfPolicyServers}  {
+      set nodeName [lindex $policyServerArray($indx) 0]
+      set serverName [lindex $policyServerArray($indx) 1]
+      set policyServerId [getCoreGroupServerId $nodeName $serverName]
+      if {$policyServerId != 0}  {
+         # found its existence in the 'coreGroupServers' list.
+         # create the policyServer
+         lappend preferredServerList $policyServerId
+      } else {
+          # issue an appropriate error message
+          set errorMessage "There are no existing CoreGroupServer objects with node name: \"" 
+          append errorMessage $nodeName
+          append errorMessage "\", and with server name: \""
+          append errorMessage $serverName 
+          append errorMessage "\". This policy server element is being ignored."
+          puts stdout $errorMessage
+      }
+         
+      incr indx
+   }  
+
+   # finally attach the list of preferred servers to the policy
+   if {$staticPolicy == 0}  {
+      # not a static policy, create the 'preferredServers' list
+      $AdminConfig modify $policyId [list [list preferredServers $preferredServerList] ]
+   } else {
+       # static policy, create the 'servers' list  
+       $AdminConfig modify $policyId [list [list servers $preferredServerList] ]
+   }
+}
+# # #  # # # # # # end of createPreferredServers procedure  # #  # # # # # #  
+
+
+# ----------------------------------------------------------------------
+#
+# The procedure attempts to return the object id of a CoreGroup 
+# given its name.
+#
+# If the CoreGroup does not exist the procedure return 0.
+#
+# coreGroupName      The name of the CoreGroup
+# ----------------------------------------------------------------------
+proc getCoreGroupIdFromName {coreGroupName}  {
+   global AdminConfig
+
+   set coreGroups [$AdminConfig list CoreGroup]
+   set numOfCoreGroups [llength $coreGroups]
+
+   set indx 0
+
+   while {$indx < $numOfCoreGroups}  {
+      set coreGroup [lindex $coreGroups $indx]
+      if { [$AdminConfig showAttribute $coreGroup name] == $coreGroupName }  {
+            return $coreGroup
+      }
+      incr indx
+   }
+   # control reached here, return 0
+   return 0
+}  
+# # #  # # # # # # end of getCoreGroupIdFromName procedure  # #  # # # # # #  
+
+
+# ----------------------------------------------------------------------
+#
+# The procedure creates a MatchCriteria object and returns its object id. 
+#
+# policyId         The object id of the partially constructed Policy object.
+# name             The name of the MatchCriteria
+# value            The value of the MatchCriteria
+# description      The description of the MatchCriteria
+# ----------------------------------------------------------------------
+proc createAMatchCriteria {policyId name value description}  {
+   global AdminConfig
+ 
+   set matchCriteriaId [$AdminConfig create MatchCriteria $policyId [ list [list name $name] \
+                                           [list value $value] \
+                                           [list description $description] ] ]  
+   return $matchCriteriaId
+}
+# # #  # # # # # # end of createAMatchCriteria procedure  # #  # # # # # #  
+
+
+# ----------------------------------------------------------------------
+#
+# Using the supplied Node and Server names the procedure attempts to 
+# return the object id of a CoreGroupServer object searching the 
+# 'coreGroupServers' list.
+#
+# If there are no CoreGroupServer object matching the Node and Server
+# names, the procudure simply returns 0.
+#
+# nodeName      The name of the Node
+# serverName    The name of the Server
+# ----------------------------------------------------------------------
+proc getCoreGroupServerId {nodeName serverName}  {
+   global AdminConfig
+
+   global coreGroupServerList
+   global numOfCoreGroupServers
+
+   # find the CoreGroupServer object having the same nodeName and serverName
+   set indx 0
+
+   while {$indx < $numOfCoreGroupServers}  {
+      set coreGroupServer [lindex $coreGroupServerList $indx]
+      set coreGroupServerNodeName [$AdminConfig showAttribute $coreGroupServer nodeName]     
+      set coreGroupServerServerName [$AdminConfig showAttribute $coreGroupServer serverName]
+      
+      if {$coreGroupServerNodeName == $nodeName}  {
+         if {$coreGroupServerServerName == $serverName}  {
+            return $coreGroupServer
+         }
+      }
+
+      incr indx
+   }
+    
+   # control reached here. There are no existing CoreGroupServers having the 
+   # passed node and server names. Return 0
+   return 0     
+} 
+# # #  # # # # # # end of getCoreGroupServerId procedure  # #  # # # # # #  
+
+# ----------------------------------------------------------------------
+#
+# Given a CoreGroupId and a policy name, the procedure attempts to 
+# return the object id of the policy.  
+#
+# If the Policy does not exist the procedure returns 0.
+#
+# coreGroupId      The object id of the CoreGroup
+# policyName       The name of the policy  
+# ----------------------------------------------------------------------
+proc getPolicyIdFromName {coreGroupId policyName}  {
+   global AdminConfig
+
+   set policyList [lindex [$AdminConfig showAttribute $coreGroupId policies] 0]    
+   set policyListLength [llength $policyList]
+   set indx 0
+
+   while {$indx < $policyListLength}  {
+      set policy [lindex $policyList $indx]
+      if { [$AdminConfig showAttribute $policy name] == $policyName }  {
+         return $policy
+      }
+      incr indx
+   }
+   # control reached here; failed to locate the policy; return 0
+   return 0
+} 
+# # #  # # # # # # end of getPolicyIdFromName procedure  # #  # # # # # #  
+
+   
+# ----------------------------------------------------------------------
+# Main Program
+# ----------------------------------------------------------------------
+set propFile [lindex $argv 0]
+set props [loadProperties $propFile]
+
+# declare the global variables
+set coreGroupServerList {}
+set numOfCoreGroupServers 0
+
+
+createAHAManagerPolicy $props
+
+$AdminConfig save

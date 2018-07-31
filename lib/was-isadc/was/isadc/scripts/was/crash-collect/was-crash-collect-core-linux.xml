@@ -1,0 +1,197 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS set core problem 
+	 for Linux platform. It should be included in the WAS set core Ant scripts. 
+-->
+<project name="was-crash-collect-core-linux" >
+
+	<dirname property="was.crash.collect.core.linux.basedir" file="${ant.file.was-crash-collect-core-linux}"/>
+	<dirname property="was.crash.collect.core.linux.parentdir" file="${was.crash.collect.core.linux.basedir}"/>
+	<dirname property="was.crash.collect.core.linux.grandparentdir" file="${was.crash.collect.core.linux.parentdir}"/>
+	<dirname property="was.crash.collect.core.linux.bundle.basedir" file="${was.crash.collect.core.linux.grandparentdir}"/>
+
+	<!-- This target is used ot create core file output -->
+	<target name="create_linux_core_output" description="Collect a full core" if="isLinux">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1104706" />
+		
+<!--
+		<exec executable="sh" dir="${autopdtmp}/autopd" 
+			output="${autopd.echolog.instance}" append="true">
+				<arg line=" -f ls -al ${core.file.path} > ${autopdtmp}/autopd/timestamp.out" />
+		</exec>	
+--> 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Linux_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating Crash Output for Linux..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<property name="gdbtrace.out.path" value="${autopdtmp}/autopd/gdbtrace_out.txt" />
+
+		<copy file="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux/gdb-template.sh" tofile="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux/gdb-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="timestamp.out" value="${autopdtmp}/autopd/timestamp.out" />
+				<filter token="gdb.command" value="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux/gdb_commands.txt" />
+				<filter token="java.path" value="${was.enhanced.root}/java/jre/bin/java" />
+				<filter token="core.path" value="${core.file.path}" />
+				<filter token="gdb.trace.output" value="${gdbtrace.out.path}" />				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux/gdb-filled.sh" />
+		</exec>	
+
+		<if isTrue="${jextract_prev}"> 
+			<property name="core.sdff.path" value="-o ${autopdtmp}/autopd/core.sdff" />				
+			<copy file="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/jextract-template.sh" 
+				tofile="${autopdtmp}/autopd/crash/linux/jextract-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="jextract.path" value="${was.root}/java/jre/bin/jextract" />
+					<filter token="core.sdff" value="${core.sdff.path}" />
+					<filter token="core.path" value="${core.file.path}" />				
+				</filterset>
+			</copy>
+		</if> 
+		<if isTrue="${jextract_new}">
+			<copy file="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/jextract-template-new.sh" 
+				tofile="${autopdtmp}/autopd/crash/linux/jextract-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="jextract.path" value="${was.root}/java/jre/bin/jextract" />
+					<filter token="core.path" value="${core.file.path}" />				
+				</filterset>
+			</copy>
+		</if> 
+
+		<available file="${core.file.path}" type="file" property="core.file.existing" />
+
+		<if isNotTrue="${core.file.existing}">				
+			<autopdinput message="The_core_file_input_by_user_doesnt_exist_and_continue_collection" validargs="OK,Cancel" addproperty="do.cancel" />
+			<wsnlsecho key="The_core_file_input_by_user_doesnt_exist" bundle="properties/SSEQTP/autopdtoolstrings_was" message="The core file input by user does not exist" 
+				id="2602"
+				level="error"
+				component="was-crahs-collect-core-linux"/>			
+		</if>
+		<if isNotTrue="${core.file.existing}">				
+			<condition property="do.abort.collect.linux.core">
+				<equals arg1="Cancel" arg2="${do.cancel}" />
+			</condition>		
+		</if>
+		<if isNotTrue="${core.file.existing}">
+			<fail if="do.abort.collect.linux.core">Automated Problem Determination Tool aborted by user.</fail>				
+		</if>
+		
+		<if isTrue="${core.file.existing}">	
+			<exec executable="sh" dir="${autopdtmp}/autopd/crash/linux"
+				output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${autopdtmp}/autopd/crash/linux/jextract-filled.sh" />
+			</exec>	
+		</if>
+		
+<!-- Added for libsgrabber.sh --> 
+		<copy file="${was.crash.collect.core.linux.bundle.basedir}/scripts/was/shell/linux/libsgrabber.sh" 
+			tofile="${autopdtmp}/autopd/crash/linux/libsgrabber-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="gdb_script" value="${autopdtmp}/autopd/crash/linux/gdb_script" />
+				<filter token="gdb.log" value="${autopdtmp}/autopd/crash/linux/gdb.log" />
+				<filter token="libs.log" value="${autopdtmp}/autopd/crash/linux/libs.log" />				
+			</filterset>
+		</copy> 
+
+		<exec executable="sh" dir="${autopdtmp}/autopd/crash/linux/" 
+			output="${autopd.echolog.instance}" append="true">
+				<arg line=" -f ${autopdtmp}/autopd/crash/linux/libsgrabber-filled.sh ${was.root}/java/jre/bin/java ${core.file.path}" />
+		</exec>	
+		
+	</target>
+	
+	<!-- This target is used to collect core file and related output -->
+	
+	<target name="collect_linux_was_core" description="Collect was core problem" if="isLinux">
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Linux_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Crash Output for Linux..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+<!--
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_core_output_information_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Application Server core output information" 
+			replace="${autopdts};;${step.count}" 
+			id="1044" 
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-linux.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-linux.xml"/>
+--> 
+		<trim_filename key="var.log.trimmed" filename="/var/log" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>								
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${gdbtrace.out.path}" prefix="${autopdProblem}" />
+<!--
+			<zipfileset file="${core.sdff.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${core.sdff.path}.hdr" prefix="autopdzip/autopd" />
+-->			
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}" > 
+				<include name="*.sdff" /> 
+				<include name="*.zip" /> 
+			</zipfileset>
+			
+			<zipfileset dir="${autopdtmp}/autopd/crash/linux/" prefix="${autopdProblem}"> 
+				<include name="libs.tar.gz" /> 
+			</zipfileset>
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}"> 
+				<include name="timestamp.out" /> 
+			</zipfileset>
+			<zipfileset dir="/var/log" prefix="${autopdProblem}/${var.log.trimmed}">
+				<include name="messages" />
+			</zipfileset>
+
+			<zipfileset dir="${was.enhanced.root}" prefix="autopdzip/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root}/bin" >
+				<include name="javacore*.*" />
+			</zipfileset>									
+		</zip>
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="autopdzip/${jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>
+<!--		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${core.file.dir}" prefix="${autopdProblem}/Core" > 
+				<include name="${core.file.name}" /> 
+			</zipfileset> 
+		</zip> 
+--> 		
+<!--
+		<zipfileset file="${core.file.path}" prefix="autopdzip/${core.file.dir.trimmed}" />
+--> 
+	</target>
+</project>

@@ -1,0 +1,155 @@
+<%
+MessageResources filterMessages = (MessageResources)application.getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
+boolean isCurrentSelectable = false;
+
+%>
+<SCRIPT language="JavaScript">
+	var filterOptions = new Array(<%=searchList.size()%>);
+	var filterText = new Array(<%=searchList.size()%>);
+	
+	<%
+		for (int i=0; i<searchList.size(); i++)
+		{
+			String tempString = (String) searchList.get(i);
+			String[] splitString = tempString.split(":");
+			String[] availableOptionValues = {};
+			if (splitString.length > 2){
+				availableOptionValues = splitString[2].split(",");
+			}
+			%>
+			filterOptions[<%=i%>]=new Array(<%=availableOptionValues.length +1%>);
+			filterOptions[<%=i%>][0]="<%=splitString[1]%>"
+			filterText[<%=i%>]=new Array(<%=availableOptionValues.length%>);
+			<%
+			for (int j=0; j<availableOptionValues.length; j++){
+				%>
+				filterOptions[<%=i%>][<%=j+1%>]="<%=availableOptionValues[j]%>";
+				filterText[<%=i%>][<%=j%>]="<%=filterMessages.getMessage(request.getLocale(),availableOptionValues[j])%>";
+				<%
+			}
+		}
+	%>
+	
+	
+	function updateSearchPattern(){
+		var filterValue = document.getElementById("searchFilter").value;
+		var searchPattern = document.getElementById("searchPattern").value;
+		for (var i=0; i < <%=searchList.size()%>; i++){
+			if(filterValue == filterOptions[i][0]){
+				var selectInput = document.getElementById("SelectBoxFilterInput");
+				var textInput = document.getElementById("rawTextFilterInput");
+				var selectBox = document.getElementById("searchPatternSelect");
+				var textBox = document.getElementById("searchPattern");
+				if(filterOptions[i].length == 1){
+					selectInput.style.display="none";
+					textInput.style.display="";
+					selectBox.name="unused";
+					textBox.name="searchPattern";
+				}
+				else{
+					selectInput.style.display="";
+					textInput.style.display="none";
+					textBox.name="unused";
+					selectBox.name="searchPattern";
+					selectBox.options.length=0;
+					selectBox.options[0]=new Option("*","*");
+					for(var j=0; j < filterOptions[i].length-1; j++){
+						selectBox.options[j+1]=new Option(filterText[i][j],filterOptions[i][j+1]);
+						if(filterText[i][j] == searchPattern){
+							selectBox.options[j+1].selected="True";
+						}
+					}
+				}
+				return;
+			}
+		}
+	}
+</SCRIPT>
+
+            <TBODY ID="filterControls" STYLE="display:none">
+            <TR  width="100%">
+            <TD CLASS="column-filter-expanded" COLSPAN=<%=chkcounter+1%>>
+            <BR><bean:message key="quick.search.search.in.label"/>
+            <table width="10%" border="0" role="presentation">
+            <tr>
+            <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            <LABEL for="searchFilter" title="<bean:message key="quick.search.filter.title"/>"><bean:message key="quick.search.label"/></LABEL><br>
+                <select NAME="searchFilter" ID="searchFilter" onclick="updateSearchPattern()" onkeypress="updateSearchPattern()">
+            <%
+			//We don't want to display any filter option for a column that's not visible.  The collectionList_ext list of CollectionItems
+			//has been filtered with only the colums that will be displayed.  The validSearchItems will be a list of the column values
+			//that are visible. (299949.1)
+			ArrayList validSearchItems = new ArrayList();
+			for (int ci = 0; collectionList_ext != null && ci < collectionList_ext.size(); ci++) {
+				com.ibm.ws.console.core.item.CollectionItem item = (com.ibm.ws.console.core.item.CollectionItem) collectionList_ext.get(ci);
+				String value = item.getValue();
+                                String valueName;
+                                if(value.indexOf(':')!=-1)	
+				valueName = value.substring(0, value.indexOf(':'));
+                                else
+                                valueName = value;
+				validSearchItems.add(valueName);
+			}
+            		Iterator iterSearchList = searchList.iterator();
+            		while (iterSearchList.hasNext())
+            		{
+						String tempString = (String)iterSearchList.next();
+						String[] splitString = tempString.split(":");
+						String optionText = splitString[0];
+						String optionValue = null;
+						if (splitString.length > 1){
+							optionValue = splitString[1];
+						}
+						//Skip any column that's not visible
+						if (collectionList_ext != null && !validSearchItems.contains(optionValue))
+							continue;
+            			if (searchFilter.equals (optionValue))
+            			{
+            %>
+            				<OPTION VALUE="<%=optionValue%>" SELECTED="SELECTED"><bean:message key="<%=optionText%>"/></OPTION>
+            <%
+            			}
+            			else
+            			{
+            %>
+            				<OPTION VALUE="<%=optionValue%>"><bean:message key="<%=optionText%>"/></OPTION>
+            <%
+            			}
+            		}
+            %>
+		</select>
+
+            </td>
+            <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+
+            <table role="presentation">
+            <tbody id="SelectBoxFilterInput" ><tr><td CLASS="column-filter-expanded">
+            <LABEL for="searchPatternSelect" title="<bean:message key="quick.search.pattern.title"/>"><bean:message key="help.navigation.search.terms"/></LABEL><br>
+            <SELECT class="textEntry" NAME="searchPattern" ID="searchPatternSelect" onclick="return onenter(event, this.form)" onkeypress="return onenter(event, this.form)">
+            </SELECT>
+            </td><td CLASS="column-filter-expanded">
+            <INPUT TYPE="submit" NAME="searchAction" ID="searchActionSelect" VALUE="<bean:message key="wsc.collection.filter.go"/>" CLASS="buttons-filter">
+            </td></tr></tbody>
+            <tbody id="rawTextFilterInput" ><tr><td CLASS="column-filter-expanded">
+            <LABEL for="searchPattern" title="<bean:message key="quick.search.pattern.title"/>"><bean:message key="help.navigation.search.terms"/></LABEL><br>
+            <INPUT TYPE="text" class="textEntry" NAME="searchPattern" ID="searchPattern" VALUE="<bean:write name="<%=formName%>" property="searchPattern" scope="session"/>" onclick="return onenter(event, this.form)" onkeypress="return onenter(event, this.form)">
+             </td><td CLASS="column-filter-expanded">
+            <INPUT TYPE="submit" NAME="searchAction" ID="searchAction" VALUE="<bean:message key="wsc.collection.filter.go"/>" CLASS="buttons-filter">
+            </tr></td></tbody>
+			</table>
+            <br><BR>
+            </td>
+            </tr>
+            </table>
+
+
+            </TD>
+            </TR>
+            </TBODY>
+
+<SCRIPT language="JavaScript">
+	updateSearchPattern();
+	if("<%=filterDisplay%>" != "none"){
+		showHideFilter();
+	}
+</SCRIPT>

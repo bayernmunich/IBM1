@@ -1,0 +1,145 @@
+
+<script>
+this.refreshPage = function(id) {
+	scriptScope.storeTableState(scope, name, subdomain);
+	//window.disconnectTabs();
+	var href = "<%=request.getContextPath() + "/" + detailFormAction%>?&selectedRefId=<%=selectedRefId%>&contextType=<%=contextType%>&type=" + type + "&scope=" + scope + "&name=" + name + "&subdomain=" + subdomain + "&filter=" + filter + "&metric=" + metric + "&currWindow=<%=currWindow%>&dataset=" + datasets + "&showShapes=" + showShapes + "&showGoals=" + showGoals;
+	setState = this.doXmlHttpRequest(href);
+	setState = setState.substring(0,setState.indexOf("+endTransmission"));
+	
+	window.clearInterval(intervalId);
+	
+	var tabContainer = dijit.byId("chartTabContainer");
+	if (tabContainer) {
+		var selectedTab = tabContainer.selectedChildWidget;
+		if (selectedTab) {
+			var refId = selectedTab.widgetId;
+			selectedTab.attr("href", "<%=request.getContextPath()%>/com.ibm.ws.console.xdoperations/chartLayout.jsp?refId=" + refId + "&contextType=<%=contextType%>");
+		}
+    } else {
+        // Single chart display
+        href = "<%=request.getContextPath()%>/com.ibm.ws.console.xdoperations/chartLayout.jsp?refId=<%=refId%>&contextType=<%=contextType%>&currWindow=<%=currWindow%>&originalWindow=<%=originalWindow%>&single=true&chartFormat=<%=chartFormat%>";
+        window.location = href;
+    }	
+}
+</script>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" class="framing-table" id="dataSetTable_<%=selectedRefId%>" style="border:1px solid #88A4D7; min-width:500px;">
+	<thead>
+		<tr>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<th nowrap valign="TOP" class="column-head-name" scope="col" id="selectCell" width="1%">
+				<bean:message key="select.text" />
+			</th>
+		<% } %>
+			<th nowrap valign="TOP" class="column-head-name" scope="col" width="1%">
+				<bean:message key="data.pattern" />
+			</th>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<th nowrap valign="TOP" class="column-head-name" scope="col">
+				<bean:message key="data.set.type" />
+			</th>
+		<% } %>
+			<th nowrap valign="TOP" class="column-head-name" scope="col">
+				<bean:message key="data.set" />
+			</th>
+			<th nowrap valign="TOP" class="column-head-name" scope="col">
+				<bean:message key="data.metric" />
+			</th>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<th nowrap valign="TOP" class="column-head-name" scope="col">
+				<bean:message key="data.filter" />
+			</th>
+			<th nowrap valign="TOP" class="column-head-name" scope="col">
+				<bean:message key="data.scale" /> 
+				<A HREF="#" onclick="scriptScope.refreshPage('<%=selectedRefId%>')">
+					<IMG SRC="<%=request.getContextPath()%>/images/refresh.gif" ALT="<bean:message key="refresh.view"/>" title="<bean:message key="refresh.view"/>" align="texttop" border="0" />
+				</A>
+			</th>
+		<% } %>
+		</tr>
+	</thead>
+	<tbody>
+
+<%
+//System.out.println("number of datasets=" + dataSets.size());
+for (int i = 0; i < dataSets.size(); i++) {
+	String key = (String) dataSets.get(i);
+	StringTokenizer st_dataset = new StringTokenizer(key, com.ibm.ws.console.xdoperations.util.Constants.DATASET_NAME_SEPARATOR);
+	String dstype = st_dataset.nextToken();
+	String dsname = st_dataset.nextToken();
+	String dsmetric = st_dataset.nextToken();
+	String dsfilter = st_dataset.nextToken();
+	//System.out.println("type=" + dstype + " name=" + dsname + " dsmetric=" + dsmetric + " dsfilter=" + dsfilter);
+
+	Double scale = (Double) metricScales.get(dsmetric);
+	if (scale == null) {
+		scale = new Double(1.0);
+	}
+	String shape = (String) shapes.get(key);
+	String shapeId = "spacerimage_" + shape + "_" + refId;
+	String scaleStr = scale.toString();
+	String transType = "scope." + dstype + ".name";
+	String transMetric = "xdoperations.metric." + dsmetric + ".name";
+	boolean cumulative = false;
+	if (dsmetric.equalsIgnoreCase(CacheConstants.METRICS[CacheConstants.RTCUM])) {
+		cumulative = true;
+		transMetric = "xdoperations.metric.rt.name";
+	} else if (dsmetric.equalsIgnoreCase(CacheConstants.METRICS[CacheConstants.TTCUM])) {
+		transMetric = "xdoperations.metric.tt.name";
+		cumulative = true;
+	}
+
+	if (dsname.equals(CacheConstants.SELECT_NAME))
+		dsname = msgs.getMessage(request.getLocale(), "select.name");%>
+
+		<tr class="table-row">
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<td valign="top" width="1%" class="collection-table-text" headers="selectCell">
+				<label class="collectionLabel" for="<%=key%>" TITLE='<bean:message key="select.text"/>: <%=key%>'> 
+				<%if (dstype.equals("scgoal") || dstype.equals("hpgoal")) {%>
+					<html:multibox name="ChartDetailForm" property="selectedObjectIds"
+						disabled="true" value="<%=key%>" onclick="scriptScope.checkChecks(this)" styleId="<%=key%>"/> 
+				<%} else {%> 
+					<html:multibox name="ChartDetailForm" property="selectedObjectIds" value="<%=key%>"
+						onclick="scriptScope.checkChecks(this)" styleId="<%=key%>" /> 
+				<%}%> 
+				</label>
+			</td>
+		<% } %>
+			<td valign="top" width="1%" class="collection-table-text">
+				<img src="<%="/ibm/console/com.ibm.ws.console.xdoperations/images/" + shape + ".gif"%>"
+					width="22" height="13" align="absmiddle" alt="" id="<%=shapeId%>">
+			</td>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<td valign="top" class="collection-table-text">
+				<bean:message key="<%=transType%>" />
+			</td>
+		<% } %>
+			<td valign="top" class="collection-table-text"><%=dsname%></td>
+
+			<td valign="top" class="collection-table-text">
+				<bean:message key="<%=transMetric%>" /> 
+				<%if (cumulative) {%> 
+					(<bean:message key="xdoperations.metric.cumulative" />) 
+				<%}%>
+			</td>
+		<% if (!chartLite.equalsIgnoreCase("true")) { %>
+			<td valign="top" class="collection-table-text">
+				<%StringTokenizer st_filter = new StringTokenizer(dsfilter, "/");
+				while (st_filter.hasMoreTokens()) {
+					String proxy = st_filter.nextToken();
+					if (!proxy.equals("none")) {%> 
+						<%=proxy + "\n"%> 
+					<%}%> 
+				<%}%>
+			</td>
+
+			<td valign="top" class="collection-table-text"><%=scaleStr%></td>
+		<% } %>
+		</tr>
+
+		<%}%>
+
+	</tbody>
+</table>
+</div>

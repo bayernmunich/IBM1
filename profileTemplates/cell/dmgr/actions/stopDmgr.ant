@@ -1,0 +1,75 @@
+<project name="stopDmgr" default="stopDmgr" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+    
+    <target name="resolveStopDmgrScriptForTheCurrentPlatform"
+            description="Sets STOP_DMGR_SCRIPT to the right script for the current platform">
+            
+        <condition property="STOP_DMGR_SCRIPT" value="${profilePath}/bin/stopManager">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="STOP_DMGR_SCRIPT" value="${profilePath}/bin/stopManager.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="STOP_DMGR_SCRIPT" value="${profilePath}/bin/stopManager.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>Script to stop DMGR set to: ${STOP_DMGR_SCRIPT}</wscmtlog>
+    </target>
+    
+    <target name="runStopDmgrScript"
+            description="Runs script to stop DMGR">
+            
+        <wscmtlog>Running script to stop DMGR, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/stopDmgr_config.log</wscmtlog>
+            
+        <exec executable="${STOP_DMGR_SCRIPT}" failonerror="false"
+                output="${WS_CMT_LOG_HOME}/${profileName}/stopDmgr_config.log">
+            <env key="JAVA_HOME" value="${WAS_HOME}${separatorFile}java${separatorFile}jre"/>
+        </exec>
+    </target>
+
+    <target name="stopDmgr"
+        description="Runs script to stop DMGR"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            resolveStopDmgrScriptForTheCurrentPlatform,
+            runStopDmgrScript"/>
+</project>

@@ -1,0 +1,54 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="deployOTiS" default="deployOTiS" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+      &importExternalLogs;       
+    <property name="NODE_NAME" value="${WS_CMT_NODE_NAME}"/>
+    <property name="CELL_NAME" value="${WS_CMT_CELL_NAME}"/>
+    <property name="serverName" value="dmgr"/>
+
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+    
+    <target name="deployOTiS"
+            description="Deploys OTiS"
+            depends="convertWASHomeToUNIXStylePath">
+            
+        <wscmtlog>Deploying OTiS, the output will be recorded in: ${WAS_HOME}/logs/otis_config.log</wscmtlog>
+       <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->               
+       <wsadmin conntype="none"
+                 failonerror="false"
+                 returnproperty="rcProperty"
+				 lang="jacl"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/otis_config.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+                 <command value="$AdminApp install &quot;${WAS_HOME_UNIX_STYLE}/systemApps/OTiS.ear&quot; {-server ${serverName} -appname OTiS -zeroEarCopy -skipPreparation -installed.ear.destination $(WAS_INSTALL_ROOT)/systemApps}"/>
+                 <command value="$$AdminConfig save"/>
+        </wsadmin>   
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/otis_config.log" />
+            <param name="description" value="Deploying OTiS" />
+            <param name="precondition" value="foetrue" />
+        </antcall> 		
+    </target>
+</project>

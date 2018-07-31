@@ -1,0 +1,179 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS set core problem 
+	 for Solaris platform. It should be included in the WAS set core Ant scripts. 
+-->
+<project name="was-crash-set-core-solaris" >
+
+	<dirname property="was.crash.set.core.solaris.basedir" file="${ant.file.was-crash-set-core-solaris}"/>
+	<dirname property="was.crash.set.core.solaris.parentdir" file="${was.crash.set.core.solaris.basedir}"/>
+	<dirname property="was.crash.set.core.solaris.grandparentdir" file="${was.crash.set.core.solaris.parentdir}"/>
+	<dirname property="was.crash.set.core.solaris.bundle.basedir" file="${was.crash.set.core.solaris.grandparentdir}"/>
+
+	<!-- This target is used to set up your system to get a full core -->
+	<target name="set_solaris_fullcore" description="Make sure system is set up to accecpt a full core" if="isSunOS">
+
+		<autopdinput message="Make_sure_in_/etc/system_that_the_parameter_sys_coredumpsize_is_not_set_to_0" validargs="OK,Quit" addproperty="isOK" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_running_ulimit_command_to_ensure_you_have_enough_free_file_system_space" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Running the ulimit command to ensure there is enough free space in the file system" 
+			replace="${autopdts};;${step.count}" 
+			id="1072" 
+			level="info"/>
+
+		<copy file="${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-template.sh" tofile="${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="ulimit-c" value="ulimit -c unlimited" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${ServerName}" />
+			</filterset>
+		</copy>
+<!--  
+		<exec executable="sh" dir="${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris" output="${autopd.echolog.instance}" append="true" >
+			<arg line="	-f ${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/ulimit.sh" />
+		</exec>
+-->
+		<saveresourcebundleproperty 
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			key="Make_sure_the_jvm_workingdir_with_write_access_right" 
+			propertyName="jvm.workingdir.nlskey" 
+			message="Make sure the JVM working directory {0} with 'write' access right"
+			replace="${was.jvm.workingDirectory}"/>
+
+		<autopdinput message="${jvm.workingdir.nlskey}" validargs="OK,Quit" addproperty="has.write.right" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.access.right.set">
+			<equals arg1="Quit" arg2="${has.write.right}" />
+		</condition>
+		<fail if="do.abort.access.right.set">Automated Problem Determination Tool aborted by user.</fail>
+
+		<autopdinput message="An_environment_has_been_set_to_accept_a_full_core_of_Application_Server_restart_Application_Server_now" validargs="OK,Quit" addproperty="needRestart"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+
+		<condition property="do.restart">
+			<equals arg1="OK" arg2="${needRestart}" />
+		</condition>
+
+		<if isTrue="${do.restart}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName}" />
+			</exec>
+			<exec executable="sh" dir="${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+		
+	</target>
+	
+	<target name="restart_app_server_from_solaris" description="Restart WebSphere Application Server" if="solaris.has.core" >
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />		
+		<wsnlsecho key="Step_Restarting_WebSphere_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Restarting WebSphere Application Server" 
+			replace="${autopdts};;${step.count}" 
+			id="1059"
+			level="info"/>
+
+		<autopdinput message="An_environment_has_been_set_to_accept_a_full_core_of_Application_Server_restart_Application_Server_now" validargs="OK,Quit" addproperty="needRestart1"  bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+
+		<condition property="do.restart1">
+			<equals arg1="OK" arg2="${needRestart1}" />
+		</condition>
+
+		<if isTrue="${do.restart1}" >
+			<exec executable="${was.enhanced.root}/bin/stopServer.sh" dir="${was.enhanced.root}/bin" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" ${ServerName}" />
+			</exec>
+			<exec executable="sh" dir="${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/" output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${was.crash.set.core.solaris.bundle.basedir}/scripts/was/shell/solaris/startServer-filled.sh" />
+			</exec>
+			<wsnlsecho key="Application_Server_started" 
+				bundle="properties/SSEQTP/autopdtoolstrings_was" 
+				message="Application Server started" 
+				id="1060"
+				level="info"/>
+		</if>
+	
+	</target> 
+
+	<!-- This target is used to try to obtain a full core via an alternate approach -->
+	<target name="second_try_set_solaris_fullcore"  description="Another try to enable fullcore" if="solaris.nocore">
+		<autopdinput message="Test_if_you_obtain_a_core_by_issuing_a_kill_-11_against_the_PID_of_another_running_process" validargs="Yes,No" addproperty="do.checkcore" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="solaris.nocore1">
+			<equals arg1="No" arg2="${do.checkcore}" />
+		</condition>
+		<if isNotTrue="${solaris.nocore1}">
+			<autopdinput message="If_a_core_can_be_obtained_from_the_prevous_test_wait_for_a_crash_to_occur" validargs="OK,Quit" addproperty="do.wait" bundle="properties/SSEQTP/autopdtoolstrings_was" />	
+		</if>	
+	</target>
+
+
+	<!-- This target is used to collect core file and related information -->
+
+	<target name="collect_solaris_was_core" description="Collect was no core, or a truncated core problem"  if="isSunOS">
+		<wsnlsecho key="Time_To_Gather_Logs" 
+			bundle="autopdtoolstrings" 
+			message="Time to gather logs" 
+			id="2218"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-solaris.xml"/>
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_core_information_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Application Server core information" 
+			replace="${autopdts};;${step.count}" 
+			id="1044"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-solaris.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030"
+			level="info"
+			component="\scripts\was\crash-set\was-crash-set-core-solaris.xml"/>
+
+		<dirname property="system.core.dir" file="${system.core.path}" />
+		<trim_filename key="system.core.dir.trimmed" filename="${system.core.dir}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}" prefix="autopdzip/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root.bin.trimmed}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+	
+			<zipfileset file="${system.core.path}" prefix="autopdzip/${system.core.dir.trimmed}">
+			</zipfileset>
+		</zip>	
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="autopdzip/${jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>
+	</target>
+</project>

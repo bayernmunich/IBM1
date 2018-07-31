@@ -1,0 +1,74 @@
+<?xml version="1.0" ?>
+<!DOCTYPE cache SYSTEM "cachespec.dtd">
+
+<cache>
+  <!-- Sample cache entry for SnoopServlet
+       cache entry is based on:
+         1) request parameters if present
+         2) pathinfo if present
+         3) the host header if present
+   -->
+  <cache-entry>
+      <class>servlet</class>
+      <name>/snoop</name>
+      <cache-id>
+         <component id="*" type="parameter">
+            <required>false</required>
+         </component>
+         <component id="" type="pathinfo">
+            <required>false</required>
+         </component>
+         <component id="host" type="header">
+            <required>false</required>
+         </component>
+         <timeout>180</timeout>
+      </cache-id>
+  </cache-entry>
+
+  <!-- Cache Entry for the File Serving Servlet
+       Will cache all static content in the web application -->
+  <cache-entry>
+      <class>static</class>
+      <name>com.ibm.ws.webcontainer.servlet.SimpleFileServlet.class</name>
+      <cache-id>
+         <component id="" type="pathinfo">
+            <required>true</required>
+         </component>
+         <component id="If-Modified-Since" type="header">
+            <required>false</required>
+         </component>
+         <timeout>300</timeout>
+      </cache-id>
+  </cache-entry>
+
+  <!-- Sample cache entry for SnoopServlet to cache it in a specific servlet cache-instance
+	 1) Create a new servlet cache-instance "services/cache/sampleInstance1" using the Admin Console ( Resources -> Cache Instances -> Servlet Cache Instances )
+	 2) Restart the server 
+	 3) Make a request to /snoop/instance
+	 4) Check Cache Monitor statistics for "services/cache/sampleInstance1" and verify the page was cached 
+       
+	 cache entry is based on:
+         1) request parameters if present
+         2) pathinfo if present
+         3) the host header if present
+  -->
+  <cache-instance name="services/cache/sampleInstance1">
+     <cache-entry>
+        <class>servlet</class>
+        <name>/snoop/instance</name>
+        <cache-id>
+           <component id="*" type="parameter">
+              <required>false</required>
+           </component>
+           <component id="" type="pathinfo">
+              <required>false</required>
+           </component>
+           <component id="host" type="header">
+              <required>false</required>
+           </component>
+           <timeout>180</timeout>
+        </cache-id>
+     </cache-entry>
+  </cache-instance>
+
+</cache>

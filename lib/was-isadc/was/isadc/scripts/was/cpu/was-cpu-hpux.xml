@@ -1,0 +1,203 @@
+<project name="was-cpu-hpux">
+
+	<dirname property="was.cpu.hpux.basedir" file="${ant.file.was-cpu-hpux}"/>
+	<dirname property="was.cpu.hpux.parentdir" file="${was.cpu.hpux.basedir}"/>
+	<dirname property="was.cpu.hpux.grandparentdir" file="${was.cpu.hpux.parentdir}"/>
+	<dirname property="was.cpu.hpux.bundle.basedir" file="${was.cpu.hpux.grandparentdir}"/>
+	
+	<target name="run_hpux_high_cpu_targets" if="isHPUX"> 
+		
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1127574" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_HP_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating High-CPU/Crash Output for HP-UX..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+				
+		<copy file="${was.cpu.hpux.bundle.basedir}/scripts/was/shell/hp/hpux_performance.sh" 
+			tofile="${autopdtmp}/autopd/highcpu/hp/hpux_performance-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="pid" value="${was.java.process.id}" />			
+			</filterset>
+		</copy>
+		
+		<exec executable="sh" dir="${autopdtmp}/autopd/highcpu/hp" 
+			output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdtmp}/autopd/highcpu/hp/hpux_performance-filled.sh" />
+		</exec>	
+	
+		<!-- Need to add hpux_glance.sh --> 
+		
+		<inputdialogtask doSkip="true" noCancel="true" actionProperty="doHPGlance"> 
+			<fieldtask name="prompt"
+			    label="Input_Required"
+			    type="prompt"
+			    bundle="autopdtoolstrings" />
+			<fieldtask name="hp.glance.path"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+				label="Path_To_HP_Glance" initialValueSource="persisted" />
+			
+		</inputdialogtask> 
+		<condition property="do.hp.glance">
+				<equals arg1="ok" arg2="${doHPGlance}" casesensitive="false" />
+		</condition>	
+		<condition property="hp.glance.skipped">
+				<equals arg1="skip" arg2="${doHPGlance}" casesensitive="false" />
+		</condition>
+
+		<if isTrue="${hp.glance.skipped}" > 
+			<echo message="Glance Skipped."/>
+		</if>
+			
+		<if isTrue="${do.hp.glance}" >
+
+			<available file="${hp.glance.path}" property="hp.glance.available" /> 
+		
+		
+			<if isNotTrue="${hp.glance.available}"> 
+				<echo message="HP Glance is not available. Proceed without running HP-Glance utiltiy."/> 
+			</if> 
+			<if isTrue="${hp.glance.available}" > 
+				<basename property="glance.name" file="${hp.glance.path}" /> 
+				<condition property="is.name.glance" >
+					<equals arg1="${glance.name}" arg2="glance" /> 
+				</condition>
+				<if isTrue="${is.name.glance}">
+					<echo message="Running HP Glance with ${hp.glance.path}" /> 
+					<copy file="${was.cpu.hpux.bundle.basedir}/scripts/was/shell/hp/hpux_glance.sh" 
+						tofile="${autopdtmp}/autopd/highcpu/hp/hpux_glance-filled.sh" overwrite="true">
+							<filterset>
+								<filter token="glance.path" value="${hp.glance.path}" />			
+							</filterset>
+					</copy>
+			
+					<exec executable="sh" dir="${autopdtmp}/autopd/highcpu/hp" 
+						output="${autopd.echolog.instance}" append="true" >
+						<arg line=" -f ${autopdtmp}/autopd/highcpu/hp/hpux_glance-filled.sh" />
+					</exec>	
+				</if>
+			
+		</if> 
+		</if> 
+			
+	</target> 
+		
+	<target name="collect_hpux_high_cpu_targets" if="isHPUX"> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_HP_CPU_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting High-CPU/Crash Output for HP-UX..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/" prefix="${autopdProblem}/Performance" > 
+				<include name="highcpu/hp/*.out" /> 
+			</zipfileset>
+		</zip> 	
+
+	</target> 
+	
+	<target name="run_hpux_high_cpu" depends="set_hpux_verbose_gc" if="isHPUX">
+	</target>
+	
+	<target name="set_hpux_verbose_gc">
+	
+		<property name="hpux.stdout"
+			value="${was.enhanced.root}/logs/hpux.cpu.trace" />
+		<property name="genericJvmArguments"
+				value="-Xverbosegc:file=${hpux.stdout}" />
+			<property name="restore.was.jvm.arguments" value="true" />
+	</target>
+
+	<target name="run_hpux_cpu_script" if="isHPUX">
+		<property name="logfile" value="${autopdtmp}/cpu_script.output" />
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1166017" />
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Provide_interval_between_each_collect_iteration_and_click_OK" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sleepinterval" label="Interval" defaultValue="120" type="plaintext" accessibilityName="sleepinterval" accessibilityDesc="sleepinterval" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+		<exec executable="${autopdrootdir}/scripts/was/shell/hp/wascpuhp.sh" spawn="true" os="${os.unixkind}">
+			<arg line="${was.java.process.id}" />
+		</exec>
+
+		<exec executable="${autopdrootdir}/scripts/was/shell/hp/top.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile}" />
+		</exec>
+	
+		<exec executable="${autopdrootdir}/scripts/was/shell/hp/vmstat.sh" spawn="true" os="${os.unixkind}">
+			<arg line="-p ${was.java.process.id} -f ${logfile}" />
+		</exec>
+	</target>
+	
+	<target name="kill_hpux_cpu_script" if="isHPUX">
+		<echo message="Cleanup: Kill AIX memory script" />
+
+		<copy file="${bundle.basedir}/scripts/was/shell/kill-all-processes-template.sh" tofile="${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="num" value="-9" />			
+				<filter token="searchString" value="/was/shell/hp" />
+			</filterset>
+		</copy>
+		
+		
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell" output="${autopd.echolog.instance}" append="true" >
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-all-processes-filled.sh" />
+		</exec>
+	</target>
+	
+	<target name="enable_mmap" if="isHPUX">
+
+	 	<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/hp" output="${autopd.echolog.instance}" append="true" >
+			<arg line="export IBM_JAVA_MMAP_JAVA_HEAP=true" />
+		</exec>	
+	 
+	</target>
+	
+	<target name="change_native_heap_hpux" if="isHPUX">
+	
+		<autopdinput message="JVM_32_Bit" validargs="Yes,No" addproperty="JVM.32bit" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		
+		<if isNotTrue="${JVM.32bit}" >
+			<inputdialogtask>
+				<fieldtask name="label" label="Explain_JVM_32_bit" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			</inputdialogtask>
+			
+			<fail>WebSphere Application Server only supports the 32-bit Java Virtual Machine (JVM)</fail>
+		</if>		
+	
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/hp" output="${autopd.echolog.instance}" append="true" >
+			<arg line="bootinfo -K" /> 
+		</exec>
+		
+		<!-- 
+      			where n = (10 - round(Xmx/256)
+		 -->
+		 
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Enter the n value (where n = (10 - round(Xmx/256) ) and press OK" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="nValue" label="Value" defaultValue=""  type="plaintext" accessibilityName="was_mem" accessibilityDesc="was_mem" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>	
+		 
+		<copy file="${autopdrootdir}/scripts/was/shell/hp/memory-setup-template.sh" tofile="${autopdrootdir}/scripts/was/shell/hp/memory-setup-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="n" value="${nValue}" />
+				<filter token="was.enhanced.root" value="${was.enhanced.root}" />
+				<filter token="serverName" value="${serverName}" />
+				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${autopdrootdir}/scripts/was/shell/hp" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${autopdrootdir}/scripts/was/shell/hp/memory-setup-filled.sh" />
+		</exec>	
+	</target>
+</project>

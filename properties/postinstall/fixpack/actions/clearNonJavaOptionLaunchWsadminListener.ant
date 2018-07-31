@@ -1,0 +1,74 @@
+<project name="modifyPathValueLaunchWsadminListener.ant" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask" />
+	
+	<property name="filePath" value="${WAS_HOME}/bin/launchWsadminListener.bat"/>
+	<property name="setPathToken" value='set nonjavaoption=' />
+	<property name="lookFor" value='CALL "%~dp0setupCmdLine.bat" %*' />
+	<property name="replaceWith" value='CALL "%~dp0setupCmdLine.bat" %* ${line.separator}set nonjavaoption=' />
+	
+    <target name="detectPlatform"
+            description="Detects the current OS family">
+        
+        <condition property="isCurrentPlatformWindows" value="true">
+            <os family="windows"/>
+        </condition>
+
+        <wscmtlog>Current platform is: ${os.name}</wscmtlog>
+		<echo>Current platform is: ${os.name}</echo>
+    </target>
+
+	<target name="isAlreadyChanged" description="checks whether the clear nonjvaoption is already added" if="isCurrentPlatformWindows">
+		
+		<loadfile property="launchwsAdminListener" srcFile="${filePath}">
+		</loadfile>
+		
+		<condition property="clearVarneeded">
+		<not>
+			<contains string="${launchwsAdminListener}" substring='CALL "%~dp0setupCmdLine.bat" %* ${line.separator}set nonjavaoption='>
+			</contains>
+		</not>
+		</condition>	
+		
+		<condition property="removeClearVarneeded">
+			<contains string="${launchwsAdminListener}" substring='CALL "%~dp0setupCmdLine.bat" %* ${line.separator}set nonjavaoption='>
+			</contains>
+		</condition>
+		
+		<wscmtlog>Need to clear nonjavaoption variable: ${clearVarneeded}</wscmtlog>
+		<wscmtlog>Is the nonjavaoption variable already cleared?: ${removeClearVarneeded}</wscmtlog>
+		<echo>Need to clear nonjavaoption variable: ${clearVarneeded}</echo>
+		<echo>Is the nonjavaoption variable already cleared?: ${removeClearVarneeded}</echo>
+		
+	</target>	
+	
+	<target name="clearNonJavaOption" description="clears the nonjavaoption variable" depends=
+	"isAlreadyChanged" if="clearVarneeded">
+	    	
+		<replaceTokenInFile path="${filePath}" token="${lookFor}" value="${replaceWith}" property="isReplaced" ignorecase="false" />
+		
+		<wscmtlog>Did ${filePath} get modified:  ${isReplaced} </wscmtlog>
+		<echo>Did ${filePath} get modified:  ${isReplaced} </echo>
+	
+	</target>
+	
+	<target name="unclearNonJavaOption" description="removes the clear nonjvaoption variable" depends ="isAlreadyChanged" if="removeClearVarneeded">
+		<replaceTokenInFile path="${filePath}" token="set nonjavaoption=%nonjavaoption% %1" value="TemperoryReplacement1" property="isRemoved" ignorecase="false" />
+		<replaceTokenInFile path="${filePath}" token="set nonjavaoption=" value="" property="isRemoved2" ignorecase="false" />
+		<replaceTokenInFile path="${filePath}" token="TemperoryReplacement1" value="set nonjavaoption=%nonjavaoption% %1" property="isRemoved3" ignorecase="false" />
+		<wscmtlog>Did modifications to ${filePath} get removed: ${isRemoved}</wscmtlog>
+		<echo>Did modifications to ${filePath} get removed: ${isRemoved}</echo>
+		<wscmtlog>Did modifications to ${filePath} get removed: ${isRemoved2}</wscmtlog>
+		<echo>Did modifications to ${filePath} get removed: ${isRemoved2}</echo>
+		<wscmtlog>Did modifications to ${filePath} get removed: ${isRemoved3}</wscmtlog>
+		<echo>Did modifications to ${filePath} get removed: ${isRemoved3}</echo>
+	</target>
+	
+    <target name="install" depends="detectPlatform, clearNonJavaOption">	
+	</target>
+	
+	<target name="uninstall" depends="detectPlatform, unclearNonJavaOption">
+	</target>
+
+</project>

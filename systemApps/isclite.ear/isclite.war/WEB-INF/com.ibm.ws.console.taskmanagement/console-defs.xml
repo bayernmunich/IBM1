@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <definition
+        controllerClass="com.ibm.ws.console.taskmanagement.controller.RuntimeTaskController"
+        name="taskmanagement.content.main" path="/com.ibm.ws.console.taskmanagement/contentLayout.jsp">
+        <put name="contextType" value="TaskManagement"/>
+        <put name="descTitle" value="taskmanagement.desc.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.taskmanagement"/>
+        <put name="descText" value="taskmanagement.desc.text"/>
+        <putList name="contentList">
+            <add value="taskmanagement.collection.paging.extend"/>
+            <add value="taskmanagement.collection.quicksearch.extend"/>
+            <add value="taskmanagement.collection.table.extend"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="taskmanagement.collection.paging.extend">
+        <put name="collectionForm" value="RuntimeTaskCollectionForm"/>
+        <put name="formAction" value="RuntimeTaskCollection.do"/>
+        <put name="formName" value="RuntimeTaskCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="taskmanagement.collection.quicksearch.extend">
+        <put name="selectUri" value="RuntimeTaskCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="RuntimeTaskCollectionForm"/>
+        <put name="formAction" value="RuntimeTaskCollection.do"/>
+        <put name="formName" value="RuntimeTaskCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskCollectionForm"/>
+        <put name="parent" value="com.ibm.ws.console.taskmanagement.forwardCmd.do?forwardName=taskmanagement.content.main"/>
+        <putList name="searchList">
+            <add value="taskid:taskId"/>
+        </putList>
+    </definition>
+    <definition name="taskmanagement.collection.table.extend" path="/com.ibm.ws.console.taskmanagement/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="RuntimeTaskCollectionForm"/>
+        <put name="formAction" value="RuntimeTaskCollection.do"/>
+        <put name="formName" value="RuntimeTaskCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskCollectionForm"/>
+        <put name="buttons" value="taskmanagement.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.taskmanagement.forwardCmd.do?forwardName=taskmanagement.content.main"/>
+        <put name="idColumn" value="refId"/>
+        <put name="statusType" value="unknown"/>
+        <put name="htmlFilter" value="true"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/RuntimeTask/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/RuntimeTask/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="taskmanagement.collection.buttons.panel">
+        <put name="buttonCount" value="1"/>
+        <put name="includeForm" value="no"/>
+        <put name="definitionName" value="taskmanagement.collection.buttons.panel"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.taskmanagement.controller.RuntimeTaskDetailController"
+        name="tasktarget.content.main" path="/com.ibm.ws.console.taskmanagement/contentLayout.jsp">
+        <put name="contextType" value="TaskTarget"/>
+        <put name="descTitle" value="tasktarget.desc.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.taskmanagement"/>
+        <put name="descText" value="tasktarget.desc.text"/>
+        <putList name="contentList">
+            <!--	<add value="tasktarget.collection.paging.extend" /> -->
+            <add value="tasktarget.collection.quicksearch.extend"/>
+            <add value="tasktarget.collection.table.extend"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="tasktarget.collection.paging.extend">
+        <put name="collectionForm" value="RuntimeTaskDetailForm"/>
+        <put name="formAction" value="RuntimeTaskDetail.do"/>
+        <put name="formName" value="RuntimeTaskDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskDetailForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="tasktarget.collection.quicksearch.extend">
+        <put name="selectUri" value="RuntimeTaskDetail.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="RuntimeTaskDetailForm"/>
+        <put name="formAction" value="RuntimeTaskDetail.do"/>
+        <put name="formName" value="RuntimeTaskDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskDetailForm"/>
+        <put name="parent" value="com.ibm.ws.console.taskmanagement.forwardCmd.do?forwardName=tasktarget.content.main"/>
+        <putList name="searchList">
+            <add value="tasktarget.detail.severity:severity"/>
+        </putList>
+    </definition>
+    <definition name="task.detail.view" path="/com.ibm.ws.console.taskmanagement/taskDetailLayout.jsp">
+        <put name="formAction" value="RuntimeTaskDetail.do"/>
+        <put name="formName" value="RuntimeTaskDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskDetailForm"/>
+        <put name="formFocus" value="refId"/>
+        <put name="readOnlyView" value="yes"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="taskmanagement.detail.originatedtime:formattedTime:no:Text:taskmanagement.detail.originatedtime:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon=""
+                link="RuntimeTaskCollection.do?EditAction=true&amp;"
+                tooltip="" value="taskmanagement.detail.taskid:taskId:no:Text:taskmanagement.detail.taskid:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="taskmanagement.detail.originatorid:originatorId:no:Text:taskmanagement.detail.originatorid:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="taskmanagement.detail.globalseverity:globalSeverity:no:Text:taskmanagement.detail.globalseverity:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="taskmanagement.detail.currentstate:currentState:no:Text:taskmanagement.detail.currentstate:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="taskmanagement.detail.reasonmsg:reasonMsg:no:Text:taskmanagement.detail.reasonmsg:yes:no"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.status.displayName:finalStatus:no:Text:Server.status.displayName:yes:no"/>
+        </putList>
+    </definition>
+    <definition name="tasktarget.collection.table.extend" path="/com.ibm.ws.console.taskmanagement/taskTargetCollectionLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="false"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="RuntimeTaskDetailForm"/>
+        <put name="formAction" value="RuntimeTaskDetail.do"/>
+        <put name="formName" value="RuntimeTaskDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.RuntimeTaskDetailForm"/>
+        <put name="buttons" value="tasktarget.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.taskmanagement.forwardCmd.do?forwardName=tasktarget.content.main"/>
+        <put name="idColumn" value="refId"/>
+        <put name="htmlFilter" value="true"/>
+        <put name="statusType" value="unknown"/>
+        <putList name="statusCols"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/RuntimeTaskDetail/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/RuntimeTaskDetail/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="tasktarget.collection.buttons.panel">
+        <put name="buttonCount" value="1"/>
+        <put name="includeForm" value="no"/>
+        <put name="definitionName" value="tasktarget.collection.buttons.panel"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition name="actionplan.detail.main" path="/com.ibm.ws.console.taskmanagement/actionPlanStepsLayout.jsp">
+        <put name="formName" value="ActionStepCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.taskmanagement.form.ActionStepCollectionForm"/>
+        <put name="detailFormName" value="ActionStepDetailForm"/>
+        <put name="detailFormType" value="com.ibm.ws.console.taskmanagement.form.ActionStepDetailForm"/>
+        <put name="iterationProperty" value="contents"/>
+    </definition>
+</tiles-definitions>

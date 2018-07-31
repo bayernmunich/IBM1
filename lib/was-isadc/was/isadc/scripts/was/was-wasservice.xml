@@ -1,0 +1,386 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS WASService Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS WASService Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+		
+	<property file="${bundle.basedir}/properties/SSEQTP/autopd-was-init.properties" />
+
+	<property name="autopdProblem" value="WAS_WasService_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-wasservice" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+			set_problem_type_with_nls_bundle,
+			setup_autopd_v2, 
+			validate_os, 
+
+			
+			was_stack_custom_init, 
+			terminiate_if_unix, wasservice_cmd_tool,
+			wasservice_collect_info,
+			collect_registry_info, 
+		    zip_wasservice_logs, 
+				
+			execute_collector,
+			execute_vce_info_for_was,
+			common_postamble_general_with_ftp" >
+	</target>
+	
+
+	<target name="terminiate_if_unix" >
+		<if isTrue="${isUnix}" >
+			<echo message="This problem type is supported only on Windows Platform."/>
+			<fail message="This problem type is supported only on Windows Platform."/>
+		</if>
+	</target>
+	
+	
+	<target name="wasservice_collect_info" > 
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="wasservice_collect_info"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the WASService problem"
+		           replace="${autopdts};;${step.count}"
+		           level="info" />
+		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.srvc.question1"
+			           label="SRVC_Q1"
+			           type="selectlist"
+					   list="During WebSphere Application Server installation:Using Profile Creation Tool(PCT):Using WASService command"
+					   listDetails="During WebSphere Application Server installation:Using Profile Creation Tool(PCT):Using WASService command"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.srvc.question2"
+			           label="SRVC_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.srvc.question3"
+			           label="SRVC_Q3"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.srvc.question4"
+			           label="SRVC_Q4"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			If Windows Service for the application server JVM Process not created during Install / Profile creation, please provide the command used.${line.separator}
+					${ws.srvc.question1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Is WebSphere Application Server global security turned on? What type of user registry is used?${line.separator}
+					${ws.srvc.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Can you start or stop the JVM process using a command line tool like startServer or stopServer?${line.separator}
+					${ws.srvc.question3}${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What error or symptoms do you observe?${line.separator}
+					${ws.srvc.question4}${line.separator}
+		</concat>
+
+		<condition property="wasservice.command"> 
+			<equals arg1="Using WASService command" arg2="${ws.srvc.question1}" />
+		</condition> 
+		
+		<if isTrue="${wasservice.command}" >
+			<inputdialogtask noCancel="true" doSkip="true">
+				<fieldtask name="ws.runtime.prompt"
+				           label="Input_Required"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+				<fieldtask name="ws.srvc.question5"
+				           label="SRVC_Q5"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>		
+			
+			<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				Please provide the complete command used to create the service${line.separator}
+						${ws.srvc.question5}${line.separator}
+			</concat>
+
+		</if>
+		
+	</target> 
+	
+	<target name="collect_registry_info" >
+
+		<autopdproperty name="exitloop" value="true" /> 
+		
+		<autopdwhile property="exitloop" > 
+			<inputdialogtask noCancel="true" doSkip="true" actionProperty="user.script.continue" >
+				<fieldtask name="prompt0"
+				           label="WSE_Require_Files0"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label1"
+				           label="WSE_Require_Files1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+					       label="WSE_Require_Files2"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+					       label="WSE_Require_Files2a"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label3"
+					       label="WSE_Require_Files3"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label3"
+					       label="WSE_Require_Files3a"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label3"
+					       label="WSE_Require_Files4"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label4"
+					       label="WSE_Require_Files4a"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label5"
+					       label="WSE_Require_Files5"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label6"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="ws.wse.files1"
+				           label="WSE_Require_Files6"
+				           type="filebrowser"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		
+			<autopd_unset_property name="isSkipped"/>
+			<condition property="isSkipped">
+				<equals arg1="skip" arg2="${user.script.continue}" casesensitive="false" />
+			</condition>
+							
+			<autopd_if isTrue="${isSkipped}">
+				<wsnlsecho key="Skip_Registry_WASService" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					message="Skipping the collection for Registry Information in WASService Problem." />
+				<autopdproperty name="exitloop" value="false"/>  <!-- exit loop -->
+			</autopd_if>
+			
+			<autopd_if isNotTrue="${isSkipped}">
+				
+				<available file="${ws.wse.files1}" type="file" property="available.wse.files1" />
+	
+				<if isNotTrue="${available.wse.files1}" > 
+					<wsnlsecho key="File_Does_Not_Exist" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						message="The file '${ws.wse.files1}' does not eixst. Please enter the correct file or choose Skip." />
+					<inputdialogtask noCancel="true" > 
+						<fieldtask name="prompt0"
+						           label="Information_Message"
+						           type="prompt"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label1"
+					    	       label="File_Not_Existing"
+					        	   type="label"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label1"
+					    	       label="${ws.wse.files1}"
+					        	   type="label"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					</inputdialogtask>
+				
+				</if> 
+				<if isTrue="${available.wse.files1}" > 
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset file="${ws.wse.files1}"  prefix="${autopdProblem}/registry" />
+					</zip>
+					<autopdproperty name="exitloop" value="false" /> <!-- exit loop -->
+				</if>
+
+			</autopd_if> 
+				
+				
+		</autopdwhile> 
+		
+	</target>
+	
+	<target name="zip_wasservice_logs" >
+	
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/logs"
+				prefix="${profileName}/logs/">
+				<include name="winservice_config.log" />
+				<include name="*Service.log" />
+			</zipfileset>
+			<zipfileset dir="${was.enhanced.root}/logs/${ServerName}"
+				prefix="${profileName}/logs/${ServerName}">
+				<include name="startServer.log" />
+				<include name="stopServer.log" />
+				<include name="trace*.log" />
+			</zipfileset>
+			<zipfileset dir="${was.enhanced.root}/properties"
+				prefix="${profileName}/logs/properties">
+				<include name="soap.client.props" />
+			</zipfileset>
+		</zip>
+		
+		
+		<available file="C:\WASServiceTrace.log" type="file" property="available.wsecmd.files1" />
+
+		<if isTrue="${available.wsecmd.files1}" > 
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="C:\WASServiceTrace.log" prefix="${autopdProblem}/WasServiceCmd"/>
+			</zip>
+		</if> 
+			
+		
+	</target>
+	
+	<target name="wasservice_cmd_tool" > 
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Wasservice_Cmd_Tool"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Prompt for using WasService Cmd Tool"
+		           replace="${autopdts};;${step.count}"
+		           level="info" />
+		
+		<if isTrue="${isIsaLiteSwingGui}||${isIsaWorkbench}||${isIsaAgent}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="WasService_Cmd_Label0" 
+					propertyName="WasService_Cmd_URL"
+					message="Please use the WasService Cmd Tool Manually - Check {0}"
+					replace="${wasservice.web.url}" />
+		</if> 
+		<if isTrue="${isIsaLiteConsole}||${isIsaPortable}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="WasService_Cmd_Label0" 
+					propertyName="WasService_Cmd_URL"
+					message="Please use the WasService Cmd Tool Manually - Check {0}"
+					replace="${wasserice.web.url.text}" />
+		</if> 
+		
+
+		<inputdialogtask_v2 noCancel="true" >
+			<fieldtask name="prompt0"
+			           label="Information_Message"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="${WasService_Cmd_URL}"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label1"
+			           label="WasService_Cmd_Label1"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label2"
+			           label="WasService_Cmd_Label2"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label3"
+			           label="WasService_Cmd_Label3"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask_v2>
+	</target> 
+	
+	
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere WASService Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the WASService
+					problem.">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1195440" />
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the WASService
+problem. It will guide user through series of steps and the relevant
+files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere WASService Problem =>
+This problem category is run on the managed node experiencing the WASService  
+problem. It will guide user through series of steps and the relevant 
+files are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

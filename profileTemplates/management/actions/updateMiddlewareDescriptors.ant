@@ -1,0 +1,447 @@
+<project name="updateMiddlewareDescriptors" default="main" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="foreach"  classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ForEachAntTask"/>
+
+    <target name="main" depends="init,listProfiles"/>
+    <target name="updateProfiles" depends="createwasced, createCustHttpAffinityDescr, updateMiddlewareDescriptors, setupExtWasServerVariables, newTemplates, newTomcatTemplates, newLibertyTemplates, updateXDAgentServer, updateODRTemplateMetadata, newWeblogicTemplates" />
+
+    <target name="init">
+        <tstamp/>
+        <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+        <wscmtlog message="WAS_HOME = ${WAS_HOME}"/>
+        <loadproperties srcFile="${WAS_HOME}/properties/wasprofile.properties"/> 
+        <wscmtlog>WS_PROFILE_REGISTRY=${WS_PROFILE_REGISTRY}</wscmtlog>
+        <wscmtlog message="WS_PROFILE_REGISTRY=${WS_PROFILE_REGISTRY}"/>
+    </target>
+  		 		  		 		
+    <target name="detectCurrentOSFamily"
+                description="Detecs the current OS family (UNIX or Windows)">
+
+            <condition property="currentOSFamily" value="windows">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="cmdescape" value="&quot;">
+                <os family="windows"/>
+            </condition>
+
+            <condition property="currentOSFamily" value="unix">
+                <os family="unix"/>
+            </condition>
+
+            <condition property="cmdescape" value="">
+                <os family="unix"/>
+            </condition>
+
+            <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+        </target>
+
+        <target name="convertWASHomeToUNIXStylePath">
+            <path id="id.was.home">
+                <pathelement location="${WAS_HOME}"/>
+            </path>
+
+            <pathconvert targetos="unix"
+                property="WAS_HOME_UNIX_STYLE"
+                refid="id.was.home"/>
+        </target>
+
+        <target name="setScriptExtension"
+                description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+            <condition property="scriptExtension" value="sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="scriptExtension" value="bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+        </target>
+
+        <target name="resolveMANAGEPROFILESExecutableForTheCurrentPlatform"
+                description="Sets MANAGEPROFILES_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="MANAGEPROFILES_EXECUTABLE" value="${WAS_HOME}/bin/manageprofiles.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${MANAGEPROFILES_EXECUTABLE}</wscmtlog>
+
+        </target>
+
+        <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+                description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+            <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.sh">
+                <equals arg1="${currentOSFamily}" arg2="unix"/>
+            </condition>
+
+            <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.bat">
+                <equals arg1="${currentOSFamily}" arg2="windows"/>
+            </condition>
+
+            <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+        </target>
+
+    <target name="createwasced" description="Create wasce descriptors"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+        <wscmtlog message = "createwasced" />
+
+        <exec executable="${WSADMIN_EXECUTABLE}"
+             output="${profilePath}/logs/createwasced.log">
+                <arg value="-conntype"/>
+                <arg value="NONE"/>
+                <arg value="-lang"/>
+                <arg value="jython"/>
+                <arg value="-f"/>
+                <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/createwasced.py"/>
+                <arg value="-washome"/>
+                <arg value="${WAS_HOME}"/>
+         </exec>
+
+    </target>
+
+    <target name="createCustHttpAffinityDescr" description="Create customhttp affinity descriptors"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+            <wscmtlog message = "createCustHttpAffinityDescr" />
+
+
+            <exec executable="${WSADMIN_EXECUTABLE}"
+		output="${profilePath}/logs/createcustomhttpd.log">
+                <arg value="-conntype"/>
+                <arg value="NONE"/>
+                <arg value="-lang"/>
+                <arg value="jython"/>
+                <arg value="-f"/>
+                <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/createCustHttpAffinityDescr.py"/>
+                <arg value="-washome"/>
+                <arg value="${WAS_HOME}"/>
+           </exec>
+
+
+    </target>
+
+    <target name="updateMiddlewareDescriptors" description="Update the Middleware descriptors with time out values"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+
+            <wscmtlog message = "updateMiddlewareDescriptors" />
+            <exec executable="${WSADMIN_EXECUTABLE}"		  		 		   		 		  		 		        		 		  		 		   		 		  		 		
+                output="${profilePath}/logs/updateMiddlewareDescriptors.log">
+                <arg value="-conntype"/>  		 		  		 		        		 		  		 		   		 		  		 		
+                <arg value="NONE"/>
+                <arg value="-lang"/>
+                <arg value="jython"/>
+                <arg value="-f"/>
+                <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/updateMiddlewareDescriptors.py"/>
+                <arg value="-washome"/>
+                <arg value="${WAS_HOME}"/>
+            </exec>
+
+    </target>
+
+      <target name="setupExtWasServerVariables" description="Add new External WebSphere Variables"
+                depends="detectCurrentOSFamily,
+                convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+       <wscmtlog message = "setupExtWasServerVariables" />
+           <exec executable="${WSADMIN_EXECUTABLE}"
+                output="${profilePath}/logs/setupExtWasServerVariables.log">
+                <arg value="-conntype"/>
+                <arg value="NONE"/>
+                <arg value="-lang"/>
+                <arg value="jython"/>
+                <arg value="-f"/>
+                <arg value="${WAS_HOME}/profileTemplates/xd_augment/actions/setupExtWasServerVariables.py"/>
+                <arg value="-washome"/>
+                <arg value="${WAS_HOME}"/>
+            </exec>
+
+    </target>
+
+    <target name="newTemplates"  description="Copy the WASAPP_SERVER and the WASCE_SERVER"
+            depends="backUpServerTemplates">
+
+        <wscmtlog message ="Copy the WASAPP_SERVER and the WASCE_SERVER" />
+        <mkdir dir= "${profilePath}/config/templates/servertypes/WASCE_SERVER" />
+        <copy toDir="${profilePath}/config/templates/servertypes/WASCE_SERVER">
+           <fileset dir="${WAS_HOME}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/WASCE_SERVER" />
+        </copy>
+
+        <mkdir dir= "${profilePath}/config/templates/servertypes/WASAPP_SERVER" />
+        <copy toDir="${profilePath}/config/templates/servertypes/WASAPP_SERVER">
+           <fileset dir="${WAS_HOME}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/WASAPP_SERVER" />
+        </copy>
+    </target>
+
+    <target name="backUpServerTemplates"  description="Backup the WASCE_SERVER server directory"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+
+        <wscmtlog message ="back up the WASCE_SERVER" />
+        <wscmtlog message ="profileName = ${profileName}" />
+        <wscmtlog message ="profilePath = ${profilePath}" />
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup" />
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/" />
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/WASCE_SERVER" />
+        <copy toDir="${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/WASCE_SERVER">
+           <fileset dir="${profilePath}/config/templates/servertypes/WASCE_SERVER" />
+        </copy>
+
+        <wscmtlog message = "wsadmin to get the cell name"/>
+        <property name="singlequote" value="'$AdminConfig list Cell'"/>
+        <wscmtlog message = "singlequote = ${singlequote}"/>
+
+        <exec executable="${WSADMIN_EXECUTABLE}"
+               output="${profilePath}/logs/cellName.log">
+               <arg value="-conntype"/>
+               <arg value="NONE"/>
+               <arg value="-lang"/>
+               <arg value="jython"/>
+               <arg value="-c"/>
+               <arg value="${cmdescape}AdminConfig.list('Cell').split('(')[0].split('[')[0]${cmdescape}"/>
+		 		  		 		
+        </exec>
+
+        <wscmtlog message = "load  the cell name" />
+        <loadfile
+              property="cellName"
+              srcFile="${profilePath}/logs/cellName.log"
+              failonerror="false">
+              <filterchain>
+                 <tailfilter lines="1"/>
+                 <trim/>
+                 <ignoreblank/>
+                 <striplinebreaks/>
+                 <filterreader classname="org.apache.tools.ant.filters.StripLineBreaks">
+                         <param name="linebreaks" value="''"/>
+                 </filterreader>
+              </filterchain>
+        </loadfile>
+
+        <wscmtlog message = "the cellName = ${cellName}"/>
+        <wscmtlog message ="back up the MiddlewareDescriptor" />
+        <wscmtlog message ="profileName = ${profileName}" />
+        <wscmtlog message ="profilePath = ${profilePath}" />
+
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup" />
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}" />
+        <mkdir dir= "${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/middlewaredescriptors"/>
+        <copy toDir="${WAS_HOME}/properties/version/nif/config.ve/backup/${profileName}/middlewaredescriptors" failonerror="false">
+           <fileset dir="${profilePath}/config/cells/${cellName}/middlewaredescriptors" />
+        </copy>
+        <wscmtlog message ="Completed copying middlewaredescriptors: ${WAS_HOME}/config/cells/${cellName}/middlewaredescriptors" />
+        <wscmtlog message ="to ${WAS_HOME}/properties/version/nif/config.ve/backup" />
+
+
+    </target>
+	
+	<target name="newWeblogicTemplates"  description="Copy the new Weblogic templates">
+
+        <wscmtlog message ="Copy the WEBLOGIC_SERVER" />
+        <mkdir dir= "${profilePath}/config/templates/servertypes/WEBLOGIC_SERVER/servers/weblogic10x" />
+        <copy toDir="${profilePath}/config/templates/servertypes/WEBLOGIC_SERVER/servers/weblogic10x">
+           <fileset dir="${WAS_HOME}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/WEBLOGIC_SERVER/servers/weblogic10x" />
+        </copy>
+
+       <wscmtlog message="profile path=${profilePath}"/>
+    	<wscmtlog message="update weblogic10x server serverindex.xml"/>
+       <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/WEBLOGIC_SERVER/serverindex.xml">
+
+            <!-- remove weblogic setting if found -->
+            <replacefilter token="&lt;serverEntries xmi:id=&quot;ServerEntry_1160441823923&quot; serverName=&quot;weblogic10x&quot; serverType=&quot;WEBLOGIC_SERVER&quot;/&gt;"
+                           value="" />
+            <!-- add weblogic setting -->
+            <replacefilter token="&lt;/serverindex:ServerIndex&gt;"
+                           value="  &lt;serverEntries xmi:id=&quot;ServerEntry_1160441823923&quot; serverName=&quot;weblogic10x&quot; serverType=&quot;WEBLOGIC_SERVER&quot;/&gt;${line.separator}&lt;/serverindex:ServerIndex&gt;"/>
+
+       </replace>
+    	<wscmtlog message="update weblogic server template-metadata.xml"/>
+       <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/WEBLOGIC_SERVER/template-metadata.xml">
+
+            <!-- remove weblogic10x setting if found -->
+            <replacefilter token="&lt;properties:PropertySet xmi:id=&quot;PropertySet_1160441825093&quot;&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825093&quot; name=&quot;name&quot; value=&quot;weblogic10x&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825094&quot; name=&quot;com.ibm.websphere.xdProductVersion&quot; value=&quot;6.1.0.0&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825095&quot; name=&quot;com.ibm.websphere.nodeOperatingSystem&quot; value=&quot;&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825096&quot; name=&quot;description&quot; value=&quot;template for representing Apache Tomcat servers of version 6.x&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825097&quot; name=&quot;isSystemTemplate&quot; value=&quot;true&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825098&quot; name=&quot;isDefaultTemplate&quot; value=&quot;false&quot;/&gt;&lt;/properties:PropertySet&gt;"
+                           value="" />
+            <!-- add weblogic10x setting -->
+            <replacefilter token="&lt;/xmi:XMI&gt;"
+                           value="  &lt;properties:PropertySet xmi:id=&quot;PropertySet_1160441825093&quot;&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825093&quot; name=&quot;name&quot; value=&quot;weblogic10x&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825094&quot; name=&quot;com.ibm.websphere.xdProductVersion&quot; value=&quot;6.1.0.0&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825095&quot; name=&quot;com.ibm.websphere.nodeOperatingSystem&quot; value=&quot;&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825096&quot; name=&quot;description&quot; value=&quot;template for representing Weblogic version 10.x servers&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825097&quot; name=&quot;isSystemTemplate&quot; value=&quot;true&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825098&quot; name=&quot;isDefaultTemplate&quot; value=&quot;false&quot;/&gt;&lt;/properties:PropertySet&gt;${line.separator}&lt;/xmi:XMI&gt;"/>
+       </replace>
+
+    </target>
+
+    <target name="newTomcatTemplates"  description="Copy the TOMCAT_SERVER">
+
+        <wscmtlog message ="Copy the TOMCAT_SERVER" />
+        <mkdir dir= "${profilePath}/config/templates/servertypes/TOMCAT_SERVER/servers/tomcat6x" />
+        <copy toDir="${profilePath}/config/templates/servertypes/TOMCAT_SERVER/servers/tomcat6x">
+           <fileset dir="${WAS_HOME}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/TOMCAT_SERVER/servers/tomcat6x" />
+        </copy>
+
+       <wscmtlog message="profile path=${profilePath}"/>
+    	<wscmtlog message="update tomcat server serverindex.xml"/>
+       <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/TOMCAT_SERVER/serverindex.xml">
+
+            <!-- remove tomcat6x setting if found -->
+            <replacefilter token="&lt;serverEntries xmi:id=&quot;ServerEntry_1160441823923&quot; serverName=&quot;tomcat6x&quot; serverType=&quot;TOMCAT_SERVER&quot;/&gt;"
+                           value="" />
+            <!-- add tomcat6x setting -->
+            <replacefilter token="&lt;/serverindex:ServerIndex&gt;"
+                           value="  &lt;serverEntries xmi:id=&quot;ServerEntry_1160441823923&quot; serverName=&quot;tomcat6x&quot; serverType=&quot;TOMCAT_SERVER&quot;/&gt;${line.separator}&lt;/serverindex:ServerIndex&gt;"/>
+
+       </replace>
+    	<wscmtlog message="update tomcat server template-metadata.xml"/>
+       <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/TOMCAT_SERVER/template-metadata.xml">
+
+            <!-- remove tomcat6x setting if found -->
+            <replacefilter token="&lt;properties:PropertySet xmi:id=&quot;PropertySet_1160441825093&quot;&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825093&quot; name=&quot;name&quot; value=&quot;tomcat6x&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825094&quot; name=&quot;com.ibm.websphere.xdProductVersion&quot; value=&quot;6.1.0.0&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825095&quot; name=&quot;com.ibm.websphere.nodeOperatingSystem&quot; value=&quot;&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825096&quot; name=&quot;description&quot; value=&quot;template for representing Apache Tomcat servers of version 6.x&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825097&quot; name=&quot;isSystemTemplate&quot; value=&quot;true&quot;/&gt;"
+                           value="" />
+            <replacefilter token="&lt;properties xmi:id=&quot;Property_1160441825098&quot; name=&quot;isDefaultTemplate&quot; value=&quot;false&quot;/&gt;&lt;/properties:PropertySet&gt;"
+                           value="" />
+            <!-- add tomcat6x setting -->
+            <replacefilter token="&lt;/xmi:XMI&gt;"
+                           value="  &lt;properties:PropertySet xmi:id=&quot;PropertySet_1160441825093&quot;&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825093&quot; name=&quot;name&quot; value=&quot;tomcat6x&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825094&quot; name=&quot;com.ibm.websphere.xdProductVersion&quot; value=&quot;6.1.0.0&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825095&quot; name=&quot;com.ibm.websphere.nodeOperatingSystem&quot; value=&quot;&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825096&quot; name=&quot;description&quot; value=&quot;template for representing Apache Tomcat servers of version 6.x&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825097&quot; name=&quot;isSystemTemplate&quot; value=&quot;true&quot;/&gt;${line.separator}
+    &lt;properties xmi:id=&quot;Property_1160441825098&quot; name=&quot;isDefaultTemplate&quot; value=&quot;false&quot;/&gt;&lt;/properties:PropertySet&gt;${line.separator}&lt;/xmi:XMI&gt;"/>
+       </replace>
+
+    </target>
+    
+    <target name="newLibertyTemplates"  description="Copy the LIBERTY_SERVER">
+        <wscmtlog message="Copy the LIBERTY_SERVER" />
+        <wscmtlog message="profile path=${profilePath}"/>
+        <mkdir dir= "${profilePath}/config/templates/servertypes/LIBERTY_SERVER/servers/liberty85" />
+        <copy toDir="${profilePath}/config/templates/servertypes/LIBERTY_SERVER/servers/liberty85">
+           <fileset dir="${WAS_HOME}/profileTemplates/xd_augment/default/documents/config/templates/servertypes/LIBERTY_SERVER/servers/liberty85" />
+        </copy>
+    </target>
+
+    <target name="updateXDAgentServer" description="Update XDAgent server.xml">
+       <wscmtlog message="profile path=${profilePath}"/>
+    	<wscmtlog message="update middlewareagent server.xml"/>
+       <replace encoding="ISO8859-1" dir="${profilePath}/config/cells">
+            <include name="**/nodes/**/servers/middlewareagent/server.xml"/>
+
+            <!-- remove TransportChannelService from middlewareagent server.xml if found -->
+            <replacefilter token="&lt;services xmi:type=&quot;channelservice:TransportChannelService&quot; xmi:id=&quot;TransportChannelService_1120677326792&quot; enable=&quot;false&quot;/&gt;"
+                           value="" />
+            <!-- add TransportChannelService to middlewareagent server.xml -->
+            <replacefilter token="&lt;/process:Server&gt;"
+                           value="  &lt;services xmi:type=&quot;channelservice:TransportChannelService&quot; xmi:id=&quot;TransportChannelService_1120677326792&quot; enable=&quot;false&quot;/&gt;${line.separator}&lt;/process:Server&gt;" />
+       </replace>
+    </target>
+    
+    <target name="updateODRTemplateMetadata" description="Update the ONDEMAND_ROUTER template-metadata.xml">
+         <wscmtlog message="profile path=${profilePath}"/>
+    	 <wscmtlog message="update ONDEMAND_ROUTER template-metadata.xml"/>
+         <replace encoding="ISO8859-1" file="${profilePath}/config/templates/servertypes/ONDEMAND_ROUTER/template-metadata.xml">
+               <replacefilter token="&lt;/properties:PropertySet&gt;"
+                              value="&lt;properties xmi:id=&quot;Property_1078242599801&quot; name=&quot;matchingProperties&quot; value=&quot;com.ibm.websphere.xdProductShortName,com.ibm.websphere.wxdopProductVersion,com.ibm.websphere.nodeOperatingSystem&quot;/&gt;
+                              ${line.separator}&lt;/properties:PropertySet&gt;"/>
+         </replace>
+    </target>
+    <target name="listProfiles" description="list the Profiles currently on the box">
+
+           <wscmtlog message = "listProfiles" />
+           <wscmtlog>list Profiles ...</wscmtlog>
+           <xmlproperty file="${WS_PROFILE_REGISTRY}" validate="false" collapseAttributes="true"/>
+           <wscmtlog message="profile name found=${profiles.profile.name}"/>
+           <antcall target="processEachProfile"/>
+
+    </target>
+
+   <target name="processEachProfile" if="profiles.profile.name" description="process each profile if profile exists">
+           <wscmtlog message = "in processEachProfile, profiles.profile.name is ${profiles.profile.name}"/>
+           <foreach target="getProfilePath" list="${profiles.profile.name}" propertyName="profileName"/>
+   </target>
+
+   <target name="getProfilePath" description="get the Profiles path"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveMANAGEPROFILESExecutableForTheCurrentPlatform">
+          <wscmtlog message = "get the ProfilePath" />
+
+    <exec executable="${MANAGEPROFILES_EXECUTABLE}"
+                 failonerror="false"
+                 output="${WS_CMT_LOG_HOME}/${profileName}/ProfilesPath.log">
+                 <arg value="-getPath"/>
+                 <arg value="-profileName"/>
+                 <arg value="${profileName}"/>
+    </exec>
+           <loadfile
+                 property="allProfilePath"
+                 srcFile="${WS_CMT_LOG_HOME}/${profileName}/ProfilesPath.log"
+                 failonerror="false">
+           </loadfile>
+
+            <wscmtlog message = "${allProfilePath}" />
+            <foreach target="checkProfileAugment"
+                list="${allProfilePath}"
+                propertyName="profilePath">
+            </foreach>
+
+    </target>
+
+    <target name="checkProfileAugment" depends="checkProfileAugment.check" if="isAugmented">
+             <wscmtlog message = "checkProfileAugment: profilePath = ${profilePath}" />
+            <antcall target="updateProfiles">
+                  <param name="PROFILE_PATH" value="${profilePath}"/>
+            </antcall>
+    </target>
+
+    <target name="checkProfileAugment.check" description="Check to see if profile augment">
+        <wscmtlog message ="checkProfileAugment" />
+              <condition property="isAugmented">
+                  <and>
+                    <available file="${profilePath}/properties/version/wxdop.augment"/>
+                 </and>
+               </condition>
+    </target>
+
+</project>

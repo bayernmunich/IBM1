@@ -1,0 +1,47 @@
+<project name="AddContinuationCharacterToConfigManagerLauncher" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+	
+	<target name="detectCurrentOSFamily"
+            description="Detects the current OS family">
+        
+        <condition property="currentOSFamily" value="z/os">
+			<os family="z/os"/>
+		</condition>
+		
+		<condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+		
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+	
+	<target name="checkIfContinuationCharacter" description="checks whether file encoding needs to be added" if="currentOSFamily">
+		
+		<loadfile property="configManagerLauncher" srcFile="${WAS_HOME}/util/configManagerLauncher.sh">
+
+		</loadfile>
+		
+		<condition property="setContinuationCharacter">
+		<not>
+			<contains string="${configManagerLauncher}" substring="-Dfile.encoding=${FILE_ENCODING} \">
+			</contains>
+		</not>
+		</condition>
+		
+	</target>
+	
+	<target name="addContinuationCharacter" description="Add continuation character" depends="checkIfContinuationCharacter" if="setContinuationCharacter">
+
+		<replaceregexp file="${WAS_HOME}/util/configManagerLauncher.sh" match="-Dfile\.encoding\=\$\{FILE_ENCODING\}\s*\\?\${line.separator}" replace="-Dfile.encoding=${FILE_ENCODING} \\\\${line.separator}">
+		</replaceregexp>
+		
+		<wscmtlog>Successfully added missing continuation character</wscmtlog>
+
+    </target>
+	
+	
+	<target name="install" depends="detectCurrentOSFamily, addContinuationCharacter" />
+		
+	<target name="uninstall"/>
+                        
+</project>

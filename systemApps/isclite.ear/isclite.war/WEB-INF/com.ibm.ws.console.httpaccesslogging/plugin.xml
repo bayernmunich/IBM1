@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- 5724-I63, 5724-H88 (C) COPYRIGHT International Business Machines Corp. 2004 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<plugin id="com.ibm.ws.console.httpaccesslogging"
+        name="httpaccesslogging"
+        version="6.0.0"
+        vendor-name="IBM Corp. - WebSphere Channel Framework"
+        embedded="true"
+        context-root="httpaccesslogging">
+
+  <requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+  </requires>
+
+  <extension point="com.ibm.ws.console.core.help">
+     <toc file="toc.xml" primary="true" />
+  </extension>
+  
+   <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer1" contextType="ApplicationServer">
+	   <link categoryId="troubleshooting.properties"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=ApplicationServer.config.view&amp;sfname=services&amp;parentType=Server">
+        <compatibility>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[6]"/>
+        </compatibility>
+      </link>
+	  
+	  <link categoryId="troubleshooting.properties"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=ApplicationServer.config.view&amp;sfname=services&amp;parentType=Server">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+        </compatibility>
+      </link>
+      
+      <link categoryId="troubleshooting.properties"
+            label="HTTPAccessLoggingService.zos.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=ApplicationServer.config.view&amp;sfname=services&amp;parentType=Server">
+        <compatibility>
+          <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+        </compatibility>
+      </link>
+    </linkSet>
+  </extension>
+
+<!-- BEGIN LIDB3726-2 -->
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="clustermember.servermanagement.ApplicationServer1" contextType="ClusterMember">
+
+      <link categoryId="clustermember.troubleshooting.properties"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=ClusterMember.config.view&amp;sfname=services&amp;parentType=Server">
+
+        <compatibility>
+          <match key="com.ibm.websphere.baseProductMajorVersion"
+                 value="[6-9]"/>
+        </compatibility>
+      </link>
+    </linkSet>
+  </extension>
+<!-- BEGIN LIDB3726-2 -->
+
+  <extension point="com.ibm.websphere.wsc.form">
+    <form id="HTTPAccessLoggingService.config.general.properties"
+          contextType="HTTPAccessLoggingService">	 
+      <field attributeName="enableErrorLogging"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.error"/>
+      <field attributeName="errorFilePath"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.error"/>
+      <field attributeName="errorMaximumSize"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.error"/>
+      <field attributeName="errorMaxBackupFiles"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.error">
+      		 <compatibility>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>
+      </field>                            
+      <field attributeName="errorLogLevel"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.error"/>
+             
+      <field attributeName="enableFRCALogging"
+             perspective="config"         
+             categoryId="HTTPAccessLoggingService.category.FRCA">             
+             <compatibility>
+           		<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>
+      </field>              
+      <field attributeName="FRCAFilePath"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.FRCA"> 
+             <compatibility>
+           		<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>	         
+      </field>                               
+      <field attributeName="FRCAMaximumSize"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.FRCA">            
+             <compatibility>
+           		<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>        
+      </field>             
+      
+      <field attributeName="FRCAMaxBackupFiles"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.FRCA">              
+             <compatibility>
+           		<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>
+      </field>              
+                           
+      <field attributeName="FRCALogFormat"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.FRCA">                                          
+             <compatibility>
+           		<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>
+      </field>              
+             
+      <field attributeName="enableAccessLogging"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.access"/>
+      <field attributeName="accessFilePath"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.access"/>
+      <field attributeName="accessMaximumSize"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.access"/>
+	 <field attributeName="accessMaxBackupFiles"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.access">
+              <compatibility>
+           		<match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>        
+	         </compatibility>
+      </field>                                  
+      <field attributeName="accessLogFormat"
+             perspective="config"
+             categoryId="HTTPAccessLoggingService.category.access"/>                                    
+    </form>
+  </extension>
+</plugin>
+

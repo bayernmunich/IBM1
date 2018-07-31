@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<!-- ********************************************************************************************************** -->
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                                                          -->
+<!-- 5639-D57, 5630-A36, 5630-A37, 5724-D18 (C) COPYRIGHT International Business Machines Corp. 2008, 2011 		-->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM                                                 -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure                                     -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                                                     -->
+<!-- ********************************************************************************************************** -->
+<!-- Change activity:                                                                                           -->
+<!-- Ver   Date   Description                                                                                   -->
+<!-- ===  ======  ============================================================================================= -->
+<!-- 3.0  012608  10996  Initial creation                                                                       -->
+<!--      031808  Updated the Installer Filename attribute.                                                     -->
+<!--      050808  Update Installer Filename attribute for UPDI70                                                -->
+<!--      060508  Added a SpecialInstallParameter to let user override the default behavior                     -->
+<!--      012111  Change the download directory of i5OS UPDI from OS400 to i5OS                                 -->
+<!--      030111  Remove UPDI installer for windows.ia64, linux.ia64 and correct directory for zLinux 64 bit    -->
+<!-- ********************************************************************************************************** -->
+<InstallPackage  DescriptorVersion="3.0"  SelectionGroup="maintenanceTool" >
+	<PackageShortName> 		UPDI70 				   										</PackageShortName>  
+	<PackageLongName>  		Update Installer for WebSphere Application Server 			</PackageLongName>  
+	<PackageMsgKeyPrefix>	updi.70 													</PackageMsgKeyPrefix>  
+	<PackageMsgBundleBaseName>	cim.messages.CIMInstallPackageMsgs             			</PackageMsgBundleBaseName>  
+	
+	<ProductShortName> 		UPDI 						</ProductShortName>
+	
+	<!-- PackageDir is the name of the directory that holds the package files -->
+	<PackageDir>            UPDI70               		</PackageDir>         
+	<PackageVersionString>  7.0               			</PackageVersionString>  
+	<PackageProvider>	    IBM Corporation       		</PackageProvider>	    
+	<PackageProviderURL>	http://www.ibm.com/support	</PackageProviderURL>	    
+	
+	<!-- ***** URL below must be updated to point to the correct doc for UPDI 7.0 ***** --> 
+	<PackageURL>			http://www.ibm.com/support/docview.wss?uid=swg24012718		</PackageURL>
+	
+	<!-- ***** URL below must be updated to point to the correct dir for UPDI 7.0 ***** --> 
+	<FileDownloadURLs>		
+			ftp://public.dhe.ibm.com/software/websphere/appserv/support/tools/UpdateInstaller/7.0.x/
+	</FileDownloadURLs>	    
+
+	<!-- Feature-specific License file, if present, supercedes the Package License file -->
+	<PackageLicenseZipPrefix>         7.*-WS-UPDI-.*		</PackageLicenseZipPrefix>
+	<PackageLicenseFile>     UpdateInstaller/updi.primary.pak/repository/updi.legal/lafiles/LA_${LANG}  </PackageLicenseFile>	    
+	<PackageLicenseInfoFile> UpdateInstaller/updi.primary.pak/repository/updi.legal/lafiles/LI_${LANG}  </PackageLicenseInfoFile> 
+	
+	<PackageFileList>  </PackageFileList>	    
+	
+	<SpecialInstruction  Name="EmptyInstallDirRequired"  />
+	
+	<SpecialInstallParameters HelperClass="com.ibm.ws.xd.cimgr.helper.Use32BitImageOn64BitOS" 
+							  MsgKeyRoot="specialParm.use32BitImageOn64BitOS" 
+							  PromptType="CheckBox"  >
+		<ParamName>		USE_32BIT_IMAGE_ON_64BIT_OS	</ParamName>
+	</SpecialInstallParameters>
+	
+	<InstallLocation> 			${WAS_INSTALL_ROOT}/UpdateInstaller			</InstallLocation>
+	
+<!-- UninstallLocation> 		${WAS_INSTALL_ROOT}/UpdateInstaller		  	</UninstallLocation 	-->
+
+	<!-- The normal success msg for the UPDI install is INSTCONFSUCCESS. However, there is a minor problem with 
+	     the current installer on Windows that would result in a INSTCONFPARTIALSUCCESS. We therefore test for the
+	     "SUCCESS" message as a temporary workaround. Also note that the -is:javahome switch is required for Windows. -->
+	<!-- CommandStringQShell are sent to the target in this form "QSYS/STRQSH CMD( '${Resolved_QShell_CommandString}' )" -->
+	<InstallCmd>
+		<CommandStringUnix>     install 	-silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringUnix>
+		<CommandStringWindows>  install.exe -is:javahome "${WAS_INSTALL_ROOT}/java" -silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringWindows>
+		<CommandStringQShell>   install     -silent -OPT silentInstallLicenseAcceptance="true" -OPT installLocation="${INSTALL_LOCATION}" -OPT disableOSPrereqChecking="true" -OPT allowNonRootSilentInstall="true"</CommandStringQShell>
+		<CommandPath>           ${WORKING_DIR}/UpdateInstaller				</CommandPath>
+		<CommandLogs>           ${INSTALL_LOCATION}/logs/install/log.txt    </CommandLogs>
+		<AlternateLog>          ${USER_HOME_DIR}/updilogs/log.txt           </AlternateLog>
+		<SuccessMsg>            INSTCONFSUCCESS     						</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS						</AlternateMsg>
+	</InstallCmd>
+
+	<!-- CommandStringQShell are sent to the target in this form "QSYS/STRQSH CMD( '${Resolved_QShell_CommandString}' )" -->
+	<UninstallCmd>
+		<CommandStringUnix>     uninstall      -silent  </CommandStringUnix>
+		<CommandStringWindows>  uninstall.exe  -silent  </CommandStringWindows>
+		<CommandStringQShell>	uninstall      -silent	</CommandStringQShell>
+		<CommandPath>           ${INSTALL_LOCATION}/uninstall				</CommandPath>
+		<CommandLogs>   		${INSTALL_LOCATION}/logs/uninstall/log.txt 	</CommandLogs>
+		<SuccessMsg>            INSTCONFSUCCESS                				</SuccessMsg>
+		<AlternateMsg>			INSTCONFPARTIALSUCCESS						</AlternateMsg>
+	</UninstallCmd>
+	
+	<Installer  Platform="aix"      Arch="32bit"  DownloadDir="AixPPC32"  	DownloadCategory="aix" 
+				Filename="7.?*-WS-UPDI-AixPPC32.zip"/>
+	<Installer  Platform="aix"      Arch="64bit"  DownloadDir="AixPPC64"  	DownloadCategory="aix.ppc64" 
+				Filename="7.?*-WS-UPDI-AixPPC64.zip"/>
+				
+	<Installer  Platform="windows"  Arch="32bit"  DownloadDir="WinIA32"   	DownloadCategory="windows" 
+				Filename="7.?*-WS-UPDI-WinIA32.zip"/>
+<!--
+	<Installer  Platform="windows"  Arch="ia64"   DownloadDir="WinIA64"   	DownloadCategory="windows.ia64" 
+				Filename="7.?*-WS-UPDI-WinIA64.zip"/>
+-->
+	<Installer  Platform="windows"  Arch="amd64"  DownloadDir="WinAMD64"  	DownloadCategory="windows.amd64" 
+				Filename="7.?*-WS-UPDI-WinAMD64.zip"/>
+				
+	<Installer  Platform="hpux"     Arch="32bit"  DownloadDir="HpuxPaRISC"  DownloadCategory="hpux" 
+				Filename="7.?*-WS-UPDI-HpuxPaRISC.zip"/>
+	<Installer  Platform="hpux"     Arch="64bit"  DownloadDir="HpuxIA64"  	DownloadCategory="hpux.ia64" 
+				Filename="7.?*-WS-UPDI-HpuxIA64.zip"/>
+				
+	<Installer  Platform="linux"    Arch="i686"   DownloadDir="LinuxIA32" 	DownloadCategory="linux.ia32" 
+				Filename="7.?*-WS-UPDI-LinuxIA32.zip"/>
+<!--
+	<Installer  Platform="linux"    Arch="ia64"   DownloadDir="LinuxIA64" 	DownloadCategory="linux.ia64" 
+				Filename="7.?*-WS-UPDI-LinuxIA64.zip"/>
+-->
+    <Installer  Platform="linux"    Arch="amd64"  DownloadDir="LinuxAMD64"  DownloadCategory="linux.amd64" 
+    			Filename="7.?*-WS-UPDI-LinuxAMD64.zip"/>
+    			
+	<Installer  Platform="linux"    Arch="s390"   DownloadDir="LinuxS390" 	DownloadCategory="linux.s390" 
+				Filename="7.?*-WS-UPDI-LinuxS390.zip"/>
+				
+	<!-- Note that the 64-bit version of the UPDI for Linux for zSeries is moved to "LinuxS390x" folder --> 				
+	<Installer  Platform="linux"    Arch="s390x"  DownloadDir="LinuxS390x" 	DownloadCategory="linux.s39064" 
+				Filename="7.?*-WS-UPDI-LinuxS39064.zip"/>
+				
+	<Installer  Platform="linux"    Arch="ppc"    DownloadDir="LinuxPPC32"  DownloadCategory="linux.ppc32" 
+				Filename="7.?*-WS-UPDI-LinuxPPC32.zip"/>
+				
+    <Installer  Platform="linux"    Arch="ppc64"  DownloadDir="LinuxPPC64"  DownloadCategory="linux.ppc64" 
+    			Filename="7.?*-WS-UPDI-LinuxPPC64.zip"/>
+    			
+	<Installer  Platform="solaris"  Arch="sparc"  DownloadDir="Solaris"   	DownloadCategory="solaris.sparc" 
+				Filename="7.?*-WS-UPDI-SolarisSparc.zip"/>
+	
+	<!-- TODO: May need to update the DownloadDir attribute value when the name is known for SolarisSparc64 -->
+	<Installer  Platform="solaris"  Arch="sparc64" DownloadDir="Solaris"   	DownloadCategory="solaris.sparc64" 
+				Filename="7.?*-WS-UPDI-SolarisSparc64.zip"/>
+
+	<!-- TODO: May need to update the DownloadDir attribute value when the name is known for SolarisX86_64 -->
+	<Installer  Platform="solaris"  Arch="x86_64"  DownloadDir="Solaris"   	DownloadCategory="solaris.x86_64" 
+				Filename="7.?*-WS-UPDI-SolarisX64.zip"/>
+	
+	<!-- TODO: May need to update the DownloadDir attribute value when the name is known for i5OS -->
+	<Installer  Platform="os400"  Arch="ppc64"  DownloadDir="i5OS"   		DownloadCategory="i5os" 
+				Filename="7.?*-WS-UPDI-i5OsPPC.zip"/>
+
+	<!-- The following are special UPDI 7.0 installer packages for specific version of WAS 6.1 and certain O/S -->
+	<SpecialInstaller  Platform="aix"      Arch="32bit"  DownloadDir="AixPPC32"  	DownloadCategory="aix.ppc32.v52" 
+				Filename="7.?*-WS-UPDI-AixPPC32_52.zip"/>
+	<SpecialInstaller  Platform="aix"      Arch="64bit"  DownloadDir="AixPPC64"  	DownloadCategory="aix.ppc64.v52" 
+				Filename="7.?*-WS-UPDI-AixPPC64_52.zip"/>
+	<SpecialInstaller  Platform="hpux"     Arch="64bit"  DownloadDir="HpuxIA64"  	DownloadCategory="hpux.ia64.11i" 
+				Filename="7.?*-WS-UPDI-HpuxIA64_11i.zip"/>
+	<SpecialInstaller  Platform="linux"    Arch="i686"   DownloadDir="LinuxIA32" 	DownloadCategory="linux.ia32.RHEL30" 
+				Filename="7.?*-WS-UPDI-LinuxIA32_RHEL30.zip"/>
+    <SpecialInstaller  Platform="linux"    Arch="x86_64" DownloadDir="LinuxAMD64"	DownloadCategory="linux.x86_64.RHEL30" 
+    			Filename="7.?*-WS-UPDI-LinuxX64_RHEL30.zip"/>
+	<SpecialInstaller  Platform="linux"    Arch="s390"   DownloadDir="LinuxS390" 	DownloadCategory="linux.s390.RHEL30" 
+				Filename="7.?*-WS-UPDI-LinuxS390_RHEL30.zip"/>
+	<SpecialInstaller  Platform="linux"    Arch="s390x"  DownloadDir="LinuxS390x" 	DownloadCategory="linux.s39064.RHEL30" 
+				Filename="7.?*-WS-UPDI-LinuxS39064_RHEL30.zip"/>
+	<SpecialInstaller  Platform="linux"    Arch="ppc"    DownloadDir="LinuxPPC32"  	DownloadCategory="linux.ppc32.RHEL30" 
+				Filename="7.?*-WS-UPDI-LinuxPPC32_RHEL30.zip"/>
+    <SpecialInstaller  Platform="linux"    Arch="ppc64"  DownloadDir="LinuxPPC64"  	DownloadCategory="linux.ppc64.RHEL30" 
+    			Filename="7.?*-WS-UPDI-LinuxPPC64_RHEL30.zip"/>
+				
+	<!-- The package dependencies listed are OR type dependencies -->
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		  ND 		</ProductName>			
+		<ProductVersionString>7.0.0.0   </ProductVersionString>	
+	</PackageDependency>	
+
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		  Base		</ProductName>			
+		<ProductVersionString>7.0.0.0   </ProductVersionString>	
+	</PackageDependency>	
+
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		  ND 		</ProductName>			
+		<ProductVersionString>6.1.0.0   </ProductVersionString>	
+	</PackageDependency>	
+
+	<PackageDependency>	    
+		<OsName>		  _DISTRIBUTED_	</OsName>					
+		<OsVersionString>				</OsVersionString>
+		<OsServicePackLevel>			</OsServicePackLevel>	
+	    <ProductName>		  Base		</ProductName>			
+		<ProductVersionString>6.1.0.0   </ProductVersionString>	
+	</PackageDependency>	
+
+</InstallPackage>

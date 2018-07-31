@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Convert VE Files" default="all" basedir=".">
+
+  <target name="all" depends="init, main"/>
+
+  <target name="init">
+    <property environment="env" />
+
+    <property name="WAS_HOME" value="${env.WAS_HOME}" />
+
+    <!-- Determine OS family -->
+    <condition property="currentOSFamily" value="windows">
+       <os family="windows"/>
+    </condition>
+
+    <condition property="currentOSFamily" value="unix">
+       <os family="unix"/>
+    </condition>
+    <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+
+  </target>
+
+  <!-- main -->
+  <target name="main">
+
+    <!-- copy plugin.VE.xml, console-defs.VE.xml and feature.VE.xml -->
+    <antcall target="copyPluginWASVE"></antcall>
+
+    <!-- rename all XD CIM70 *.xml.VE -->
+    <antcall target="renameXDCIM70"></antcall>
+
+    <!-- Prepare to call iscdeploy script file...  -->
+    <condition property="ISCDEPLOY_EXECUTABLE" value="${WAS_HOME}/bin/iscdeploy.sh">
+       <equals arg1="${currentOSFamily}" arg2="unix"/>
+    </condition>
+
+    <condition property="ISCDEPLOY_EXECUTABLE" value="${WAS_HOME}/bin/iscdeploy.bat">
+       <equals arg1="${currentOSFamily}" arg2="windows"/>
+    </condition>
+
+    <wscmtlog>Calling iscdeploy executable: ${ISCDEPLOY_EXECUTABLE}</wscmtlog>
+
+    <exec executable="${ISCDEPLOY_EXECUTABLE}">
+      <arg value="-restore"/>
+    </exec>
+
+    <!-- Prepare to call wsadmin script file...  -->
+    <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+       <equals arg1="${currentOSFamily}" arg2="unix"/>
+    </condition>
+
+    <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.bat">
+       <equals arg1="${currentOSFamily}" arg2="windows"/>
+    </condition>
+
+    <wscmtlog>Executing defaultHealthPolicies.py</wscmtlog>
+    <exec executable="${WSADMIN_EXECUTABLE}"
+            output="${WAS_HOME}/logs/defaultHealthPolicies.log">
+        <arg value="-lang"/>
+        <arg value="jython"/>
+        <arg value="-connType"/>
+        <arg value="NONE"/>
+        <arg value="-f"/>
+        <arg value="${basedir}/defaultHealthPolicies.py"/>
+    </exec>
+
+    <wscmtlog>Executing setupWASHVVariables.py</wscmtlog>
+    <exec executable="${WSADMIN_EXECUTABLE}"
+            output="${WAS_HOME}/logs/setupWASHVVariables.log">
+        <arg value="-lang"/>
+        <arg value="jython"/>
+        <arg value="-connType"/>
+        <arg value="NONE"/>
+        <arg value="-f"/>
+        <arg value="${basedir}/setupWASHVVariables.py"/>
+        <arg value="-cleanup"/>
+    </exec>
+
+  </target>
+
+
+  <target name="convertWASHomeToUNIXStylePath">
+      <path id="id.was.home">
+          <pathelement location="${WAS_HOME}"/>
+      </path>
+
+      <pathconvert targetos="unix"
+          property="WAS_HOME_UNIX_STYLE"
+          refid="id.was.home"/>
+  </target>
+
+  <!-- copy plugin.VE.xml, console-defs.VE.xml and feature.VE.xml -->
+  <target name="copyPluginWASVE">
+
+    <wscmtlog>copy xdoperations plugin.xml</wscmtlog>
+    <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.xdoperations/plugin.VE.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.xdoperations/plugin.xml"
+            overwrite="true"/>
+
+    <wscmtlog>copy xdoperations console-defs.xml</wscmtlog>
+    <copy   file="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.xdoperations/console-defs.VE.xml"
+          tofile="${WAS_HOME}/systemApps/isclite.ear/isclite.war/WEB-INF/com.ibm.ws.console.xdoperations/console-defs.xml"
+            overwrite="true"/>
+
+    <wscmtlog>copy xd.base feature.xml</wscmtlog>
+    <copy   file="${WAS_HOME}/features/com.ibm.ws.xd.base_6.0.0.0/feature.VE.xml"
+          tofile="${WAS_HOME}/features/com.ibm.ws.xd.base_6.0.0.0/feature.xml"
+            overwrite="true"/>
+
+    <wscmtlog>copy xd.nd feature.xml</wscmtlog>
+    <copy   file="${WAS_HOME}/features/com.ibm.ws.xd.nd_6.0.0.0/feature.VE.xml"
+          tofile="${WAS_HOME}/features/com.ibm.ws.xd.nd_6.0.0.0/feature.xml"
+            overwrite="true"/>
+
+    <wscmtlog>copy xd.cimgr feature.xml</wscmtlog>
+    <copy   file="${WAS_HOME}/features/com.ibm.ws.xd.cimgr_6.1.0.0/feature.VE.xml"
+          tofile="${WAS_HOME}/features/com.ibm.ws.xd.cimgr_6.1.0.0/feature.xml"
+            overwrite="true"/>
+
+  </target>
+
+  <!-- Rename all XD CIM70 *.xml.VE -->
+  <target name="renameXDCIM70">
+
+    <wscmtlog>rename InstallPackageWASCE2.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWASCE2.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWASCE2.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageWASCE21.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWASCE21.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWASCE21.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageXD61.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageXD61.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageXD61.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageXD61Agent.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageXD61Agent.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageXD61Agent.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageWXD61Maintenance.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWXD61Maintenance.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWXD61Maintenance.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageWXD61FP3.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWXD61FP3.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWXD61FP3.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageWXD61FP4.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWXD61FP4.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWXD61FP4.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageWXD61FP5.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageWXD61FP5.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageWXD61FP5.xml"
+            overwrite="true" failonerror="false"/>
+
+    <wscmtlog>rename InstallPackageXD61RP1.xml</wscmtlog>
+    <move   file="${WAS_HOME}/properties/cim/InstallPackageXD61RP1.xml.VE"
+          tofile="${WAS_HOME}/properties/cim/InstallPackageXD61RP1.xml"
+            overwrite="true" failonerror="false"/>
+
+  </target>
+
+
+</project>

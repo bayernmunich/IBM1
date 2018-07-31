@@ -1,0 +1,119 @@
+<project name="updateSetupSdk" default="updateSetupSdk" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="initProperties" description="Initialize variables for tasks">
+        <!-- Load the newprofiledefaultsdk.properties -->
+        <loadproperties srcFile="${WAS_HOME}/properties/sdk/newProfileDefaultSDK.properties"/>
+    </target>
+    
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <wscmtlog>OS name is ${os.name}</wscmtlog>
+
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <!-- Determine if the OS is HP. -->
+        <condition property="resetJvmArgumentsForHP" value="true">
+            <equals arg1="${os.name}" arg2="HP-UX"/>
+        </condition>
+
+        <!-- Determine if the OS is Sun. -->
+        <condition property="resetJvmArgumentsForSun" value="true">
+            <equals arg1="${os.name}" arg2="SunOS"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="setCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="isCurrentOSOS400" value="true">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <!-- z/OS setting must come before the unix setting -->
+        <condition property="isCurrentOSzOS" value="true">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="isCurrentOSOS400orZOS" value="true">
+          <or>
+            <equals arg1="${os.name}" arg2="OS/400"/>
+            <os family="z/os"/>
+          </or>
+        </condition>
+        
+        <condition property="isCurrentOSWindows" value="true">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="isCurrentOSUNIX" value="true">
+            <os family="unix"/>
+        </condition>
+    </target>
+    
+    <target name="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+        <replace file="${file}"
+            token="${token}"
+            value="${tokenValue}"/>
+    </target>
+    
+    <target name="resolveSetupSdkName"
+            description="Resolves the name of setupCmdLine script for the current platform">
+    
+        <condition property="setupSdkName" value="_setupSdk">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="setupSdkName" value="_setupSdk.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="setupSdkName" value="_setupSdk.bat"> 
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+            
+        <wscmtlog>Detected setupSdk script name to be: ${setupSdkName}</wscmtlog>
+    </target>
+    
+    <target name="replaceSdknameTokenInSetupSdkFile">
+        <antcall target="replaceAllInstancesOfGivenTokenWithGivenValueForTheGivenFile">
+            <param name="file" value="${profilePath}/bin/sdk/${setupSdkName}"/>
+            <param name="token" value="PROFILE_COMMAND_SDK=sdkname"/>
+            <param name="tokenValue" value="PROFILE_COMMAND_SDK=${com.ibm.websphere.sdkname.newProfileDefaultSDK}"/>
+        </antcall>
+    </target>
+
+    <target name="setSetupSdkFilePermission"
+        description="Change file permission to be executable"
+        if="isCurrentOSUNIX">
+
+        <chmod perm="ug+x" file="${profilePath}/bin/sdk/${setupSdkName}"/>
+
+    </target>
+
+    <target name="updateSetupSdk"
+        description="Replace strings in the _setupSdk script and ensures it's permissions are correct."
+        depends="initProperties,
+            detectCurrentOSFamily,
+            setCurrentOSFamily,
+            resolveSetupSdkName,
+            replaceSdknameTokenInSetupSdkFile,
+            setSetupSdkFilePermission"/>
+</project>
+

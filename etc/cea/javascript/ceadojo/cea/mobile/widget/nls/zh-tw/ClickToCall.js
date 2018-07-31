@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"協同作業視窗","SHOW_COLLABORATION_WINDOW":"顯示協同作業視窗","CLICK_TO_CALL":"按一下以呼叫"})

@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-topology.xsd" 
+           elementFormDefault="qualified" 
+           attributeFormDefault="unqualified" 
+           version="0.9.3.0" 
+           xml:lang="en" 
+           xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"  
+           xmlns:portal="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-topology.xsd" 
+           xmlns:base="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" 
+           xmlns:security="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-security.xsd" 
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           xmlns:xlink="http://www.w3.org/1999/xlink">
+	<xs:import namespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" schemaLocation="ibm-portal-base.xsd"/>
+	<!--
+        Topology Description - Root Element 
+        -->
+	<xs:element name="ibm-portal-topology" type="portal:IbmPortalTopology"/>
+	<xs:complexType name="IbmPortalTopology">
+		<xs:annotation>
+			<xs:documentation>This is the root element of the PAA topology description and describes the included applications using applicationDefinition</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="application-definition" type="portal:ApplicationDefinition" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>The definition of one or more applications, which are part of this PAA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="about-page" type="xs:string" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>The about page links to a HTML page that gives a short description of the PAA. The value of this element must be a path within the archive that is relative to the location of the deployment descriptor.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="PAA-ref" type="xs:token" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>This element is set, if this archive is not a self-standing application but a secondary (possibly optional) deployment unit of an application that spans multiple PAAs. In this case, this element references the appID element of the main PAA for the application.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- 
+		application definition
+	-->
+	<xs:complexType name="ApplicationDefinition">
+		<xs:annotation>
+			<xs:documentation>The application definition describes an application with its components. The definition consists out of an application tree that lists the component definition (portlets, themes/skins, J2EE resources etc.), a layout tree that defines layouts for portal pages and a navigation tree that associates layouts with application artifacts and integrates them into the navigation of the portal. Parameters can be defined as points of variability
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="title" type="base:Text"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:element name="requires" type="portal:Requires" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="application-parameter" type="portal:ParameterDefinition" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="component-tree" type="portal:ComponentTree"/>
+			<xs:element name="layout-tree" type="portal:LayoutTree"/>
+			<xs:element name="navigation-element" type="portal:NavigationElement" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="appID" type="xs:token" use="required"/>
+		<xs:attribute name="version" type="base:VersionString" use="required"/>
+	</xs:complexType>
+	<!-- 
+		requires
+	-->
+	<xs:complexType name="Requires">
+		<xs:annotation>
+			<xs:documentation>The requires element is used to enumerate prerequisite to this application.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+		<xs:attribute name="version" type="base:VersionString" use="required"/>
+	</xs:complexType>
+	<!--  
+		ParameterDefinition and Parameter Binding
+	-->
+	<xs:complexType name="ParameterDefinition">
+		<xs:annotation>
+			<xs:documentation>Parameters (Points of Variability) within an application definition. 
+		</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="object-token" type="xs:string"/>
+				<xs:element name="object-ref" type="xs:IDREF"/>
+			</xs:choice>
+			<xs:element name="title" type="base:Text" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<!-- The constraints of the values for this template parameter -->
+			<xs:element name="constraints" type="base:Constraint" minOccurs="0"/>
+			<!-- The set of default values for this template parameter -->
+			<xs:element name="defaults" type="base:Text" minOccurs="0"/>
+			<!-- The instantiation-time editor for instances -->
+			<xs:element name="instantiationTimeEditor" type="xs:string" minOccurs="0"/>
+			<!-- The run-time editor for instances -->
+			<xs:element name="runTimeEditor" type="xs:string" minOccurs="0"/>
+			<!-- The list of services to validate the instances -->
+			<xs:element name="verifiers" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID"/>
+		<xs:attribute name="required" type="xs:boolean" use="optional" default="true"/>
+		<xs:attribute name="editable" type="xs:boolean" use="optional" default="true"/>
+	</xs:complexType>
+	<!--  
+		ParameterDefinition and Parameter Binding
+	-->
+	<xs:complexType name="ParameterBinding">
+		<xs:annotation>
+			<xs:documentation>Values for a specific Parameters (Points of Variability) within an application definition. 
+		</xs:documentation>
+		</xs:annotation>
+	</xs:complexType>
+	<!--
+        **** Component Tree Elements
+        -->
+	<!--
+        Component Tree - Root Element of component Tree
+        -->
+	<xs:complexType name="ComponentTree">
+		<xs:annotation>
+			<xs:documentation>The component tree describes all application artifacts. The tree structure of the component definitions can be used for organizing the components in the PAA application. There is no  semantics associated with this organization and the portal may not respect this structure for  organizing the actual portal resources corresponding to it.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="component-tree" type="portal:ComponentTree" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="portal:abstract-component-definition" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+	</xs:complexType>
+	<xs:element name="abstract-component-definition" type="portal:ComponentDefinition" abstract="true">
+		<xs:annotation>
+			<xs:documentation>Abstract base element for including component definitions in the component tree. For each concrete subtype of component definition there must be an element defined that can substitute abstract-component-definition</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!--  
+		component Definition
+	-->
+	<xs:complexType name="ComponentDefinition" abstract="true">
+		<xs:annotation>
+			<xs:documentation>The component definition describes a single application artifact with its properties. 
+            In most cases, the application artifact is actually defined by its own deployment descriptor within the 
+            PAA and the application element is used for referencing it in the PAA deployment descriptor (using a resource-link  
+            subelement), so that it can be integrated into the portal application page layout and navigation. This is an abstract 
+            type that can never be used directly; actual XML documents can only contain derived types</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:element name="preference" type="base:Preference" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Preferences can hold Meta Data, which can be applied when deploying a Portal Application Archive. These preferences are not standardized and their meaning depends on the implementation, which deploys the portal application. A certain behavior is not garantueed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="component-parameter" type="portal:ParameterDefinition" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="optional"/>
+		<xs:attribute name="keyword" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!--  
+		Resource Link 
+	-->
+	<xs:complexType name="ResourceLink" abstract="true">
+		<xs:annotation>
+			<xs:documentation>A resource link specifies a reference resource that is not defined in this deployment descriptor. This is an abstract type that can never be used directly; application elements that use resource links must define concrete derived types. The name attribute specifies the name of the artefact to be used</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		<xs:attribute name="type" type="portal:LinkType" use="optional"/>
+	</xs:complexType>
+	<!-- 
+		LinkType 
+	-->
+	<xs:simpleType name="LinkType">
+		<xs:annotation>
+			<xs:documentation>Defines at which time a resource link can be resolved</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="static">
+				<xs:annotation>
+					<xs:documentation>A static resource link must be resolved at PAA deployment time. The references resource must exist either in the portal or in the PAA at this time</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="dynamic">
+				<xs:annotation>
+					<xs:documentation>A dynamic resource link does not need to be resolved at PAA deployment time. If the referenced resource does not exist at that time, the link may be resolved later.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--  
+		Portlet Definition
+	-->
+	<xs:element name="portlet-definition" type="portal:PortletDefinition" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for including portlet definitions in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="PortletDefinition">
+		<xs:annotation>
+			<xs:documentation>A portlet definition refers to a portlet defined in a portlet.xml deployment descriptor in a portlet WAR file. A portlet can be associated with a window in a layout. Preferences specified here override and extend the peferences that have been specified in the deployment descriptor </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="title" type="base:Text" minOccurs="0"/>
+					<xs:element name="resource-link" type="portal:PortletDefinitionResourceLink"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PortletDefinitionResourceLink">
+		<xs:annotation>
+			<xs:documentation>A link to a portlet definition that is included in the PAA or deployed separately in the portal. The attribute "name" is the name of the portlet, as specified by the portlet-name element in the portlet.xml. If the name of the portlet is not unique within the PAA, an additional portlet-application attribute must be specified. </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink">
+				<xs:attribute name="portletApplication" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>The portlet-app id in portlet.xml to fully qualify the portlet within the Portal.  Since different PAAs could have portlets wiith the same name, it is necessary to name space them.
+                    </xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		Portlet Entity
+	-->
+	<xs:element name="portlet-entity" type="portal:PortletEntity" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for including portlet entities in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="PortletEntity">
+		<xs:annotation>
+			<xs:documentation>A portlet entity specifies a portlet with additional configuration values. A portlet entitiy can be associated with a window in a layout. Preferences specified here override and extend the peferences that have been specified in the deployment decscriptor of the referenced portlet definition. </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="title" type="base:Text" minOccurs="0"/>					
+				</xs:sequence>
+				<xs:attribute name="portletDefinitionRef" type="xs:IDREF" use="required" ecore:reference="portal:PortletDefinition" >
+					<xs:annotation>
+						<xs:documentation>References the portlet definition that describes the portlet.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		Remote Portlet Entity
+	-->
+	<xs:element name="remote-portlet" type="portal:RemotePortlet" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for a remote portlet which is consumed by this application</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="RemotePortlet">
+		<xs:annotation>
+			<xs:documentation>A remote portlet which can be associated 
+            with a window in a layout and is part of this application.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="title" type="base:Text"/>
+					<xs:choice>
+						<xs:element name="registration-state" type="xs:string"/>
+						<xs:element name="registration-property" type="base:Preference" maxOccurs="unbounded"/>
+					</xs:choice>
+					<xs:element name="user-attribute" type="base:Preference" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="RemotePortletResourceLink">
+		<xs:annotation>
+			<xs:documentation>The attribute "name" is the Remote Portlet 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink">
+				<xs:sequence>
+					<xs:element name="url" type="base:Text"/>
+					<xs:element name="producer-title" type="base:Text" minOccurs="0"/>
+					<xs:element name="producer-description" type="base:Text" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		Tile Definition
+	-->
+	<xs:element name="tile-definition" type="portal:TileDefinition" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>Element definition for including tile definitions in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="TileDefinition">
+		<xs:annotation>
+			<xs:documentation>A tile definition refers to a portlet defined in a struts-config.xml or the tiles-def.xml defined as part of the WebSphere Admin Console console module WAR files.
+            A tile can be associated with a window in a layout.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="title" type="base:Text"/>
+					<xs:element name="resource-link" type="portal:TileResourceLink"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="TileResourceLink">
+		<xs:annotation>
+			<xs:documentation>The attribute "name" is the name of the tile, as specified in the struts-config.xml or the tiles-def.xml</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--
+        Page Help
+     -->
+	<xs:element name="page-help" type="portal:PageHelp" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition to include page level help definitions in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="PageHelp">
+		<xs:annotation>
+			<xs:documentation>A page help definition refers to the definition of a unit of help at the page level.  Page level help is useful when the 
+            interaction between artifacts on a page (portlets) must be explained. </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="resource-link" type="portal:PageHelpResourceLink"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PageHelpResourceLink">
+		<xs:annotation>
+			<xs:documentation>The attribute "name" is the PageHelpID is the unique ID that references the page level help artifact. There is a unique PageHelpID per page in the portal
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink">
+				<xs:sequence>
+					<xs:element name="PageHelpPath" type="base:Text">
+						<xs:annotation>
+							<xs:documentation>The PageHelpPath is the relative location in the module's package to the page level help artifact referenced by the PageHelpID
+							</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		Theme
+	-->
+	<xs:element name="theme" type="portal:Theme" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>Element definition for including themes in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="Theme">
+		<xs:annotation>
+			<xs:documentation>A theme defines the visual appearance of portal pages, e.g. page headers and footers, CSS definitions, etc. A theme can be associated with a navigation element.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="resource-link" type="portal:ThemeResourceLink" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ThemeResourceLink">
+		<xs:annotation>
+			<xs:documentation>the attribute "name" is the name of the theme artefact. Will be specified more precisely when there is a more flexible deployment mechanism for themes</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+
+		Skin
+	-->
+	<xs:element name="skin" type="portal:Skin" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for including skins in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="Skin">
+		<xs:annotation>
+			<xs:documentation>A skin defines the visualizaion of a portlet in a layout, e.g. a border that is drawn around the portlet. A skin can be associated with a window in a layout.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="resource-link" type="portal:SkinResourceLink" minOccurs="0"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SkinResourceLink">
+		<xs:annotation>
+			<xs:documentation>the attribute "name" is the name of the skin artefact. Will be specified more precisely when there is a more flexible deployment mechanism for skins</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink"/>				
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- 
+		Wire
+	-->
+	<xs:element name="wire" type="portal:Wire" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for including wires in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="Wire">
+		<xs:annotation>
+			<xs:documentation>A property broker wire that connects two portlet entities</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="title" type="base:Text"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		UrlLink
+	-->
+	<xs:element name="url-link" type="portal:UrlLink" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for including url links in the application tree</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="UrlLink">
+		<xs:annotation>
+			<xs:documentation>A link to a web resource outside the PAA.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:attribute name="url" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>The URL of the web resource. This can be a relative or an absolute URL. 
+							 By default, the specified URL is an absolute URL, unless the attribute "absolute" is set to false above.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="absolute" type="xs:boolean" default="true"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--  
+		Business Component
+	-->
+	<xs:element name="business-object" type="portal:BusinessObject" substitutionGroup="portal:abstract-component-definition">
+		<xs:annotation>
+			<xs:documentation>component definition for describing business components which belong to a application definition</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="BusinessObject">
+		<xs:annotation>
+			<xs:documentation>A component providing business logic.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ComponentDefinition">
+				<xs:sequence>
+					<xs:element name="resource-link" type="portal:BusinessObjectResourceLink">
+						<xs:annotation>
+							<xs:documentation>A link to the BusinessObject Resource</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="data" type="xs:string">
+						<xs:annotation>
+							<xs:documentation>component specific serialized data of the BusinessObject</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="BusinessObjectResourceLink">
+		<xs:annotation>
+			<xs:documentation>A link to the Business Object Resource</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:ResourceLink">
+				<xs:sequence>
+					<xs:element name="ref" type="base:Text"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!--
+        **** Layout Tree Elements
+        -->
+	<!--
+        Layout Tree - Root Element of Layout Tree
+        -->
+	<xs:complexType name="LayoutTree">
+		<xs:annotation>
+			<xs:documentation>The layout tree describes layouts for portal pages. The pages can be fully defined, including their content, or they can be page templates that have content spots, which can be filled when the page is actually included in a navigation tree The tree structure of the layout elements can be used for organiziing the layouts in the PAA. There is no semantics associated with this structure and the portal may not respect this structure for organizing the actual portal resources corresponding to it.    </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="layout-tree" type="portal:LayoutTree" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="layout-element" type="portal:LayoutElement" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--
+        Layout Element - Description of an Layout Template
+        -->
+	<xs:complexType name="LayoutElement">
+		<xs:annotation>
+			<xs:documentation>The layout element describes the layout of content on a portal page. A layout is described by a tree of nested container subelements. The leaves of this tree can define content spots that are secribed by window subelements</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="title" type="base:Text"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:element name="preference" type="base:Preference" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Preferences can hold Meta Data, which can be applied when deploying a Portal Application Archive. These prferences are not standardized and their meaning depends on the implementation, which deploys the portal application. A certain behavior is not garantueed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="portal:abstract-container"/>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+		<xs:attribute name="keyword" type="xs:string" use="optional"/>
+		<xs:attribute name="pageHelpRef" type="xs:IDREF" use="optional"/>
+	</xs:complexType>
+	<!--
+        Container
+        -->
+	<xs:element name="abstract-container" type="portal:Container" abstract="true">
+		<xs:annotation>
+			<xs:documentation>Abstract base element for including containers in a layout tree. For each concrete subtype of Container there must be an element defined that can substitute abstract-container</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="Container" abstract="true">
+		<xs:annotation>
+			<xs:documentation>The container element describes a fragment of a layout. The subelements of the container are arranged depending on the concrete subtype of the container</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element ref="portal:abstract-container" maxOccurs="unbounded"/>
+				<xs:element name="window" type="portal:Window" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:choice>
+			<xs:element name="preference" type="base:Preference" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Preference can hold Meta Data, which can be applied when deploying a Portal Application Archive. These preference are not standardized and their meaning depends on the implementation, which deploys the portal application. A certain behavior is not garantueed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+	</xs:complexType>
+	<xs:element name="simple-container" type="portal:SimpleContainer" substitutionGroup="portal:abstract-container">
+		<xs:annotation>
+			<xs:documentation>Element definition for including rows and columns in the layout</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="SimpleContainer">
+		<xs:annotation>
+			<xs:documentation>A container that arranges its content in a linear sequence</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="portal:Container">
+				<xs:attribute name="orientation" type="portal:SimpleContainerOrientation"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="SimpleContainerOrientation">
+		<xs:annotation>
+			<xs:documentation>Defines the possible orientations of a SimpleContainer</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="row">
+				<xs:annotation>
+					<xs:documentation>Subelements are arranged in a horizontal row from left to right</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="column">
+				<xs:annotation>
+					<xs:documentation>Subelements are arranged in a vertical column from top to bottom</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--
+        window
+    -->
+	<xs:complexType name="Window">
+		<xs:annotation>
+			<xs:documentation>A window describes a place in a layout where content can be inserted. The window can wither contain an application artifact or a nested layout.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="title" type="base:Text" minOccurs="0"/>
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:element name="preference" type="base:Preference" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Preference can hold Meta Data, which can be applied when deploying a Portal Application Archive. These preferences are not standardized and their meaning depends on the implementation, which deploys the portal application. A certain behavior is not garantueed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="layout-element-ref" type="xs:IDREF" minOccurs="0" ecore:reference="portal:LayoutElement">
+					<xs:annotation>
+						<xs:documentation>This includes the specified layout</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="component-definition-ref" type="xs:IDREF" minOccurs="0"  ecore:reference="portal:ComponentDefinition">
+					<xs:annotation>
+						<xs:documentation>This includes the specified application artifact, normally a portlet</xs:documentation>
+					</xs:annotation>
+				</xs:element>				
+			</xs:choice>
+			<xs:element name="portlet-refresh" type="portal:PortletRefresh" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Describes PortletRefresh settings for this window</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+	</xs:complexType>
+	<!--
+        **** Navigation Tree Elements
+        -->
+	<!--
+        Navigation Element
+        -->
+	<xs:complexType name="NavigationElement">
+		<xs:annotation>
+			<xs:documentation>The navigation element describes one element of the navigation hierarchy of a portal application. Navigation elements are arranged in a tree that reflects the structure of the navigation hierarchy that is created in the portal when the PAA is deployed. During PAA deployment, the portal administrator specifies where the navigation ofthe PAA is inserted into the existing navigation hierarchy of the portal. In most cases, a navigation element is associated with a page layout  (specified by the layout-element-ref attribute) that will be displayed when the navigation element is selected. The navigation-content subelements specify how application artifacts are linked to the navigation element, e.g., how content spots in the layout template for this navigation element are filled.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>                  
+			<xs:element name="title" type="base:Text" minOccurs="0"/> <!-- added minimum occurs in support of Product Catagory -->   
+			<xs:element name="description" type="base:Text" minOccurs="0"/>
+			<xs:element name="url-mapping" type="portal:ParentTree" minOccurs="0"/>
+			<xs:element name="preference" type="base:Preference" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="page-params" type="portal:PageParams" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="parent-tree" type="portal:ParentTree" minOccurs="0"/>
+			<xs:element name="navigation-content" type="portal:NavigationContent" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="navigation-element" type="portal:NavigationElement" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+            <!-- replaced type="xs:ID" with type="xs:string" in support of Product Catagory Does uniqueName in the navigation.xml needs to be changed -->    
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/> 
+		<xs:attribute name="layoutElementRef" type="xs:IDREF" use="optional" ecore:reference="portal:LayoutElement"/>
+		<xs:attribute name="hidden" type="xs:boolean" use="optional" />
+		<xs:attribute name="formPersistence" type="xs:boolean" use="optional" />
+		<xs:attribute name="taskType" type="portal:TaskType" default="hiddenTask" use="optional"/>
+		<xs:attribute name="resourceType" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!--
+		Parent Tree 
+		-->
+	<xs:complexType name="ParentTree">
+		<xs:annotation>
+			<xs:documentation>The Parent Tree element allows the instance document creator to specify the parent node and position
+			under the parent node where the current navigation element is to be merged.  The parent node need not be part of the current
+			instance document, but the document author should ensure that the parent node is defined in the Portal before requesting the merge.
+			If a requested parent node does not exist, the node will be merged at the bottom of the navigation tree.
+			Ordinals are non negative numbers that can be optionally defined while requesting to be merged under a particular parent node.
+			They determine the relative order of nodes under a particular parentTree.  If no ordinal is specified, the nodes will be merged in 
+			the deployment order under the specified parent.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="parentTreeRef" type="xs:string"/>
+		<xs:attribute name="ordinal" type="xs:nonNegativeInteger" use="optional"/>
+	</xs:complexType>
+	<!--
+        Navigation Content - Mapping of an application entity to a layout spot
+        -->
+	<xs:complexType name="NavigationContent">
+		<xs:annotation>
+			<xs:documentation> Mapping of an component definition to a window in a layout.  If no window is specified the component definition applies to the entire LayoutElement. Multiple application Elements can point to the same window.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="portlet-refresh" type="portal:PortletRefresh" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Describes PortletRefresh settings for this NavigationContent</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:ID" use="required"/>
+		<xs:attribute name="componentDefinitionRef" type="xs:IDREF" use="required" ecore:reference="portal:ComponentDefinition"/>
+		<xs:attribute name="windowRef" type="xs:IDREF" use="optional" ecore:reference="portal:Window"/>
+	</xs:complexType>	
+	
+	<!--
+		Task Type - List of Task Types that can be applied on a naviation-element of type page/url
+	-->
+	<xs:simpleType name="TaskType">
+		<xs:restriction base="xs:NCName">
+		  <xs:enumeration value="singleTask"/> 
+		  <xs:enumeration value="multiTask"/>
+		  <xs:enumeration value="hiddenTask"/>		  
+		  <xs:enumeration value="modalTask"/>                   
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<!--
+		Page Params - Mapping of Page Parameters to a navigation-element
+	-->
+	<xs:complexType name="PageParams">
+		<xs:annotation>
+			<xs:documentation>The Page Params element allows the instance document creator to specify the page paramters to be used while rendering the page.
+			Two types of page paramters can be specifed, render-param and page-header. render-params will be passed as RenderParamter to all portlets on that page while rendering page.
+			page-header value will be added to HTML Head tag of the rendering page.			
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="render-param" type="portal:RenderParam" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="page-header" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      		</xs:sequence>
+	</xs:complexType>
+
+	<!--
+		Render Parameter for a given PageParams
+	-->	
+	<xs:complexType name="RenderParam">
+			<xs:annotation>
+			<xs:documentation>RenderParameter defined by name/value pair will be passed to all portlets as RenderParameters on a page being rendered.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="name" type="xs:NCName" use="required"/>
+		<xs:attribute name="value" type="xs:string" use="required"/>
+  	</xs:complexType>
+  	
+  	<!-- 
+  	 -->
+  	<xs:complexType name="PortletRefresh">
+	  <xs:attribute name="refreshMode" use="optional" type="portal:RefreshMode"/>
+      <xs:attribute name="refreshInterval" use="optional" type="xs:integer"/>      
+      <xs:attribute name="showTimer" use="optional" type="xs:boolean"/>
+      <xs:attribute name="threshold" use="optional" type="xs:integer"/>
+      <xs:attribute name="userConfigurable" use="optional" type="xs:boolean"/>
+    </xs:complexType>
+    
+    <xs:simpleType name="RefreshMode">
+		<xs:restriction base="xs:NCName">
+		  <xs:enumeration value="unregister"/>
+		  <xs:enumeration value="smart"/> 
+		  <xs:enumeration value="timed"/>
+		  <xs:enumeration value="none"/>                  
+		</xs:restriction>
+	</xs:simpleType>  	
+</xs:schema>

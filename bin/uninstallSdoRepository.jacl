@@ -1,0 +1,330 @@
+#===============================================================================
+#  uninstallSdoRepository.jacl
+#===============================================================================
+#
+#	This script deletes the WAS 5 DataSource on the Derby JDBCProvider
+#	and uninstalls the SDO Repository application.
+#
+#
+# Usage:
+#
+#   wsadmin [-conntype none] -f uninstallSdoRepository.jacl [-removeDb] [targetNodeName serverName]
+#   wsadmin [-conntype none] -f uninstallSdoRepository.jacl -cluster clusterName
+#
+# Where:
+#
+#   '-conntype none' is optional, but is required if the server is not running.
+#   '-removeDb' is optional.  This flag will remove the database configuration.
+#     The database files will NOT be deleted.
+#   targetNodeName   = name of node
+#   serverName = name of server
+#   '-cluster' is used to uninstall the application on a cluster.
+#   clusterName = name of the cluster
+#
+# Examples:
+#
+#   wsadmin -f uninstallSdoRepository.jacl
+#   wsadmin -f uninstallSdoRepository.jacl myNode myServer
+#   wsadmin -f uninstallSdoRepository.jacl -removeDb
+#   wsadmin -f uninstallSdoRepository.jacl -removeDb myNode myServer
+#   wsadmin -f uninstallSdoRepository.jacl -cluster myCluster
+#
+# Note targetNodeName and serverName can be omitted if only one node and one 
+# server exist.
+#
+# On successful completion, this script will exit with a zero exit code.
+# Otherwise it will exit with a non-zero exit code. 
+#
+#===============================================================================
+
+
+#--------------------------------------------------------------
+# Constants
+#--------------------------------------------------------------
+set APP_NAME "SDO Repository"
+
+
+#--------------------------------------------------------------
+# Set up the NLS function
+#--------------------------------------------------------------
+set tracenls   [java::call com.ibm.ejs.ras.TraceNLS getTraceNLS com.ibm.wsspi.sdo.config.CWSJOMessages];
+
+# Takes a message key and turns it into a localised message.
+# params:
+#   key		the message key
+#   inserts	a list of strings to insert into the message
+# returns a localised message.
+proc getNLSText { key inserts } {
+	global tracenls
+	set insertArray [java::new {Object[]} [llength $inserts]]
+	for {set x 0} {$x<[llength $inserts]} {incr x} {
+		$insertArray set $x [lindex $inserts $x]
+	}
+	return [$tracenls getFormattedMessage $key $insertArray  "Message not found for key: $key"]
+}
+
+proc printNLSText { key inserts } {
+	set localMessage [getNLSText $key $inserts]
+	puts $localMessage 
+}
+
+proc printUsage {} {
+	printNLSText INSTALL_USAGE_CWSJO0024 [list "wsadmin -f uninstallSdoRepository.jacl \[-removeDb\] \[targetNodeName serverName\]\nwsadmin -f uninstallSdoRepository.jacl -cluster clusterName"]
+	exit 1
+}
+
+
+proc getDataSource { datasource_name nodeNameArg serverName } {
+	global AdminConfig
+	# get all the data sources at server scope
+	set data_source_list [$AdminConfig list DataSource [$AdminConfig getid /Node:$nodeNameArg/Server:$serverName/]]
+	# now search for the SDO Repository data source
+	foreach datasource $data_source_list {
+		set found_datasource_name [$AdminConfig showAttribute $datasource name]
+		if {[string compare $found_datasource_name $datasource_name] == 0} {
+			# Found data source
+			return $datasource
+		}
+	}
+}
+
+proc getCurrentCellName {} {
+	global AdminConfig
+	return [$AdminConfig showAttribute [$AdminConfig getid /Cell:/] name]
+}
+
+
+#--------------------------------------------------------------
+# datasource uninstallation procedures
+#--------------------------------------------------------------
+
+proc uninstallConfig {serverName nodeNameArg} {
+
+	global AdminConfig
+
+	#------------------------------------------------
+	# 	some constants
+	#------------------------------------------------
+	set datasource_name "SDO Repository Data Source"
+	set rraName "WebSphere Relational Resource Adapter"
+	set connection_factory_name SdoRep_CF
+
+
+	#------------------------------------------------
+	#	remove the config settings
+	#------------------------------------------------
+	set DsId [getDataSource $datasource_name $nodeNameArg $serverName]
+	if {[llength $DsId] != 0} {
+		$AdminConfig remove $DsId
+		printNLSText UNINSTALL_DATA_SOURCE_REMOVED_CWSJO0025 [list $DsId]
+	} else {
+		printNLSText UNINSTALL_DATA_SOURCE_NOT_FOUND_CWSJO0026 [list $datasource_name]
+	}
+
+	set CfId [$AdminConfig getid /Node:$nodeNameArg/Server:$serverName/J2CResourceAdapter:$rraName/CMPConnectorFactory:$connection_factory_name/]
+	if {[llength $CfId] != 0} {
+		$AdminConfig remove $CfId
+		printNLSText UNINSTALL_CONNECTION_FACTORY_REMOVED_CWSJO0027 [list $CfId]
+	} else {
+		printNLSText UNINSTALL_CONNECTION_FACTORY_NOT_FOUND_CWSJO0028 [list $connection_factory_name]
+	}
+}
+
+
+#--------------------------------------------------------------
+# application uninstallation procedures
+#--------------------------------------------------------------
+
+proc isClusteredTarget { id } {
+	global AdminConfig
+	if { [lsearch [$AdminConfig list ClusteredTarget] ${id}]>=0 } {
+		return 1
+	} 
+	return 0
+}
+
+proc getDeploymentTargetList {} {
+	global AdminConfig
+	global APP_NAME	
+	set deployment [$AdminConfig getid /Deployment:${APP_NAME}/]
+	if { [llength $deployment]>0 } {
+		set deploymentTargetList [lindex [$AdminConfig showAttribute $deployment deploymentTargets] 0]
+		return $deploymentTargetList
+	}
+	return ""
+}
+
+
+proc getExistingModuleMappingTargets {} {
+	# returns a config list of deployment targets as where each element is either 
+	# a single element list containing a cluster name or a two-element list
+	# containing a nodename and server name in that order
+
+	global AdminConfig
+
+	set deploymentTargetList [getDeploymentTargetList]
+	set existingMappings [list]
+	foreach deploymentTarget $deploymentTargetList {
+		if { [isClusteredTarget $deploymentTarget] } {
+			set clusterName [$AdminConfig showAttribute $deploymentTarget name]
+			set mapping [getModuleMappingForCluster $clusterName]
+		} else {
+			# $deploymentTarget will be of type ServerTarget
+			set nodeNameLocal [$AdminConfig showAttribute $deploymentTarget nodeName]
+			set serverName [$AdminConfig showAttribute $deploymentTarget name]
+			set mapping [getModuleMappingForServer $nodeNameLocal $serverName]
+		}
+		lappend existingMappings $mapping
+	}
+	return $existingMappings
+}
+
+proc getModuleMappingForServer { nodeNameArg serverName } {
+	set mapping [list $nodeNameArg $serverName]
+	return $mapping
+}
+proc getModuleMappingForCluster { clusterName } {
+	set mapping [list $clusterName]
+	return $mapping
+}
+
+proc editInstall { removeTarget } {
+	global AdminApp
+	global APP_NAME
+
+	# check app is installed
+	if { [lsearch [$AdminApp list] "${APP_NAME}"]<0 } {
+		# app is not installed
+		return
+	}
+
+	set allTargets [getExistingModuleMappingTargets]
+	set removeTargetIndex [lsearch $allTargets $removeTarget]
+
+	if { $removeTargetIndex>=0 } {
+		set editedTargetList [list]
+		for {set i 0} {$i<$removeTargetIndex} {incr i} {
+			lappend editedTargetList [lindex $allTargets $i]
+		}
+		for {set i [expr $removeTargetIndex+1]} {$i<[llength $allTargets]} {incr i} {
+			lappend editedTargetList [lindex $allTargets $i]
+		}
+		set allTargets $editedTargetList
+	}
+
+	if { [llength $allTargets]==0 } {
+		# no targets, so completely uninstall the app.
+		printNLSText UNINSTALL_UNINSTALLING_EJB_APP_CWSJO0029 [list $APP_NAME]
+		$AdminApp uninstall $APP_NAME
+	} else {
+		# still some remaining targets, so edit the mapping
+		set targetString ""
+		set cellName [getCurrentCellName]
+		foreach target $allTargets {
+			if { [llength $targetString]>0 } {
+				set targetString "${targetString}+"
+			}
+			if { [llength $target]==1 } {
+				set clusterName [lindex $target 0]
+				set targetString "${targetString}+WebSphere:cell=${cellName},cluster=${clusterName}"
+			} elseif { [llength $target]==2 } {
+				set nodeNameLocal   [lindex $target 0]
+				set serverName [lindex $target 1]
+				set targetString "${targetString}WebSphere:cell=${cellName},node=${nodeNameLocal},server=${serverName}"
+			}
+		}	
+		set mappingString "-MapModulesToServers \{\{SDORep-db-jar sib.sdoConfigEjb.jar,META-INF/ejb-jar.xml $targetString\}\}"
+		$AdminApp edit $APP_NAME $mappingString
+	}
+}
+
+
+proc complete {} {
+	global AdminConfig
+
+	printNLSText INSTALL_SAVING_CWSJO0022 [list]
+	$AdminConfig save
+
+	printNLSText UNINSTALL_COMPLETE_CWSJO0030 [list]
+}
+
+
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+
+# Retrieve all parameters
+for {set i 0 } {$i < $argc} {incr i} {
+	if { [lindex $argv $i] == "-removeDb" } {
+		set removeDb 1
+	} elseif { [lindex $argv $i] == "-cluster" } {
+		incr i
+		set clusterName [lindex $argv $i]
+	} else {
+		set targetNodeName [lindex $argv $i]
+		incr i
+		if { $i<$argc } {
+			set serverName [lindex $argv $i]
+		} else {
+			printUsage
+			return 1
+		}
+	}
+}
+
+# check for invalid option combinations
+if { ( [info exists clusterName] && ([info exists targetNodeName] || [info exists removeDb]) ) } {
+	printUsage 
+	return 1
+}
+
+
+if { [info exists clusterName] } {
+	# validate the cluster name
+	if { [llength [$AdminConfig getid /ServerCluster:$clusterName/]]==0 } {
+		printNLSText INSTALL_BAD_CLUSTER_NAME_CWSJO0047 [list $clusterName]
+		return 1
+	}
+
+	printNLSText UNINSTALL_DISPLAY_CLUSTER_CWSJO0053 [list $clusterName]
+	set removeTarget [getModuleMappingForCluster $clusterName] 
+} else {
+	if { [info exists targetNodeName] } {
+		# validate the node and server names
+		if { [llength [$AdminConfig getid /Node:$targetNodeName/Server:$serverName/]]==0 } {
+			printNLSText INSTALL_BAD_SERVER_NAME_CWSJO0049 [list $serverName $targetNodeName]
+			return 1
+		} 
+	} else {
+		# guess the node name
+		set nodeCount [llength [$AdminConfig list Node]]
+		if { $nodeCount != 1 } {
+			printNLSText INSTALL_MULTIPLE_NODES_CWSJO0039 [list $nodeCount]
+			return 1
+		}
+		set targetNodeName [$AdminConfig showAttribute [$AdminConfig list Node] name]
+	
+		# guess the server name
+		set serverCount [llength [$AdminConfig list Server]]
+		if { $serverCount != 1 } {
+			printNLSText INSTALL_MULTIPLE_SERVERS_CWSJO0017 [list $serverCount $targetNodeName]
+			return 1
+		}
+		set serverName [$AdminConfig showAttribute [$AdminConfig list Server] name]
+	}
+
+	printNLSText UNINSTALL_DISPLAY_SERVER_AND_NODE_CWSJO0044 [list $targetNodeName $serverName]
+	set removeTarget [getModuleMappingForServer $targetNodeName $serverName] 
+}
+
+
+if { [info exists removeDb] } {
+	uninstallConfig $serverName $targetNodeName
+}
+
+if { [catch { editInstall $removeTarget } result] } {
+	puts $result
+}
+
+complete

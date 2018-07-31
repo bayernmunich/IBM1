@@ -1,0 +1,45 @@
+## sibdeployRA2Node.jacl
+##
+## Deploys the SIB JMS RA to Node scope from a system template
+##
+
+if {[llength $argv] < 1} {
+  puts ""
+  puts "ERROR: Incorrect usage."
+  puts ""
+  puts "Usage: wsadmin -f sibdeployra.jacl nodeName"
+  puts ""
+  return
+}
+set nodeName   [lindex $argv 0]
+
+##
+## Set up static variables
+##
+
+set sibratpl (templates/system|sibjmsresources-ra.xml#SIBJMSResourceAdapter_1)
+set sibraname "SIB JMS Resource Adapter"
+
+##
+puts "Adding SIB JMS RA to Node scope resources...."
+##
+
+set nodelist [$AdminConfig list Node]
+set thisnode [lindex $nodelist 0]
+
+if {[llength $thisnode] == 0} {
+  puts ""
+  puts "ERROR: Unable to locate a configured Node in the current profile."
+  puts ""
+  return
+}
+
+set sibcopyparms [list -scope $thisnode -name $sibraname]
+set sibra_server [$AdminTask copyResourceAdapter $sibratpl $sibcopyparms]
+
+##
+puts "Saving updated configuration...."
+##
+
+$AdminConfig save
+

@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>WebSphere Topology Provider</title>
+</head>
+
+<body>
+<h1>WebSphere Provider</h1>
+<p>Standard support for WebSphere v5.x, v6.x, and v7 is provided by
+ a specially developed Exporter utility. This
+utility is run on the target WebSphere installation and exports the
+WebSphere configuration files into a portable format suitable for
+processing by Visual Configuration Explorer. The main advantages of this
+approach are as follows:</p>
+
+<ul>
+	<li>Windows has a path length limitiation of 255 characters.
+	Because of this, copying over entire configuration repository file
+	structures from non-Windows systems to the machine where Visual
+	Configuration Explorer is installed can be very problematic. Using the
+	installed runtime to export the WebSphere configuration avoids the
+	pitfalls associated with collecting and using configurations stored on
+	different file systems.</li>
+
+	<li>Using the installed runtime to export the configuration means
+	that you pick up all WebSphere configuration artifacts in their proper
+	context. This means that you will be able to view configuration
+	artifacts from any installed WebSphere stack product such as Business
+	Integrator or Process Server.</li>
+
+</ul>
+
+<p>A standalone WebSphere Exporter utility has been provided within
+the installation package for Visual Configuration Explorer. Using the
+Visual Configuration Explorer <i>File-&gt;Preferences-&gt;Visual Configuration Explorer-&gt;Utilities</i> dialog, you must first deploy the <b><i>Visual
+Configuration Explorer Headless Automation Runtime</i></b> package to a location of your choice, where it
+may then be distributed to the target machines you wish to use.  Please refer to the <b><i>Automation</i></b> section under <b><i>Help-&gt;Visual Configuration Explorer-&gt;Tasks</i></b> for more information on deploying the Headless Automation Runtime.</p>
+<p>A second method of exporting WebSphere configurations is by using the <i><b>IBM
+Support Assistant v4 Collect Data</b></i> facility. Note that you must first download the <i><b>Visual
+Configuration Explorer Topology Collecto</b>r</i> product add-on. Please refer to  IBM Support Assistant help for more information on deploying and using this option.</p>
+
+<p><b>NOTE: The tools package should be updated on the target
+WebSphere servers with each release of VCE. Make sure that all previous
+versions of the tools package is first deleted prior to updating.
+Failure to "clean install" the tools package with each release of VCE
+will result in inconsistent behaviour.</b><span style="font-weight: bold;"></span></p>
+<p>The export utility will produce a binary file that represents the
+exported WebSphere configuration. This artifact can then be loaded
+directly into Visual Configuration Explorer, and all of the  tool
+functions will be available. The naming  for the
+exported configuration can be controlled via command options.  <b>You
+may rename exported files anything you wish as long at the
+&quot;.configuration&quot; extension is maintained.</b>
+</p><h2>Using the Headless Automation Runtime to produce the required configuration data</h2>
+<p>The Headless Automation Runtime provides the ability to export WebSphere configurations to a form suitable for use by VCE. A specific ANT script is provided in the &quot;wasexporter&quot; subdirectory of the Headless Automation Runtime environment. To execute the script as a standalone task, proceed as follows:</p>
+<ol>
+	<li>CD to the directory on the target server where the Headless Automation Runtime is installed.</li>
+	<li>Execute the wasexport.xml script as follows:<br>
+	<code>java -jar <i></i>startup.jar
+	-buildfile <i>wasexporter/wasexport.xml
+	[options]</i></code><br>where <i>[options] </i>are as follows:<br>
+	<b>-Dwas.root</b>=&quot;install root of WebSphere installation&quot; [REQUIRED]<br>
+	<b>-Dprofile.name</b>=&quot;profile name of desired configuration&quot; [OPTIONAL] Defaults to default profile of WebSphere install<br>
+	<b>-Dwas.temp</b>=&quot;path for temporary files&quot; [OPTIONAL] Defaults to wasexporter/temp<br>
+	<b>-Dwas.exp.dir</b>=&quot;directory to save exported configuration&quot; [OPTIONAL] Defaults to wasexporter/output<br>
+	<b>-Dwas.exp.basename</b>=&quot;base name for the exported configuration&quot; [OPTIONAL] Defaults to either &quot;websphere&quot; or profile.name if specified</li>
+	<li>The resulting exported configuration is then copied to a location accessible by VCE and can be added as a Provider to any active workspace. </li>
+</ol>
+<p>The WebSphere Configuration Exporter may also be called from another automation script as follows:</p>
+<blockquote><pre>... <i><font color="maroon">set exporter options before calling</font></i>
+&lt;target name=&quot;main&quot; depends=&quot;initProps&quot;&gt;
+	<font color="maroon">&lt;!--Call the WebSphere Exporter--&gt;</font>
+	&lt;ant antfile=&quot;wasexporter\wasexport.xml&quot; /&gt;
+...</pre></blockquote>
+<h2>Using the VCE Topology Collector IBM Support Assistant add-on
+to automate the data collection</h2>
+<p>The VCE Topology Collector for IBM Support Assistant v4 has built-in support for collecting the
+required WebSphere configuration files. Simply run Data Collector on the desired
+target system, and copy the resulting archive file into a directory
+where Visual Configuration Explorer has access. Exploding the archive is
+not required.</p>
+<h2>Working with multiple WebSphere configurations simultaneously</h2>
+<p>The WebSphere provider also supports opening multiple WebSphere
+repositories simultaneously. This capability is very useful for things
+like comparing 2 WebSphere cells, though it should be noted that the
+compare function is not intended to provide meaningful compare between
+cells of different versions.</p>
+
+
+</body>
+</html>

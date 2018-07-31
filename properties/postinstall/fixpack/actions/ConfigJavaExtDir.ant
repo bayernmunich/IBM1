@@ -1,0 +1,101 @@
+<project name="ConfigJavaExtDir" default="install" basedir=".">
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family (UNIX or Windows)">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="configUNIX" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="unix"/>
+            </and>            
+        </condition>
+        
+        <condition property="configWindows" value="true">
+	    <and>
+            	<equals arg1="${currentOSFamily}" arg2="windows"/>
+            </and>
+        </condition>
+    </target>
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="checkJavaExtDirUnix" if="configUNIX">
+        <loadfile property="fileScript" srcFile="${WAS_HOME}${separatorFile}bin${separatorFile}PropFilePasswordEncoder.sh"/>
+
+        <condition property="SetJavaExtDir" value="true">
+          <not>
+            <contains string="${fileScript}"   substring="echo set JAVA_EXT_DIRS" casesensitive="no"/>
+          </not>
+        </condition>
+    </target>
+
+    <target name="setJavaExtDirUnix"
+            description="Set JAVA_EXT_DIRS for unix script if not set"
+            if="SetJavaExtDir">
+         <replace file="${WAS_HOME}${separatorFile}bin${separatorFile}PropFilePasswordEncoder.sh">
+		<replacetoken><![CDATA[JAVA_EXE="${JAVA_HOME}/jre/bin/java"
+fi]]></replacetoken>
+		<replacevalue><![CDATA[JAVA_EXE="${JAVA_HOME}/jre/bin/java"
+fi
+
+if [ -n "${JAVA_EXT_DIRS}" ]; then
+    echo JAVA_EXT_DIRS=${JAVA_EXT_DIRS}
+else
+    JAVA_EXT_DIRS="${JAVA_HOME}/jre/lib/ext"
+    echo set JAVA_EXT_DIRS=${JAVA_EXT_DIRS}
+fi]]></replacevalue>
+	</replace>
+
+        <chmod file="${WAS_HOME}${separatorFile}bin${separatorFile}PropFilePasswordEncoder.sh" perm="755"/>
+
+    </target>
+
+    <target name="install"
+        description="Set firststeps batch and shell scripts to account for server installed"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+            defineOSSpecificConfigFlag,
+            checkJavaExtDirUnix,
+            setJavaExtDirUnix"/>
+            
+    <target name="uninstall">
+    </target>
+</project>
+

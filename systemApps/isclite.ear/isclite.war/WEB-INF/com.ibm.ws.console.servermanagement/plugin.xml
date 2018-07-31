@@ -1,0 +1,3592 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 1997,2010
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
+
+<plugin id="com.ibm.ws.console.servermanagement"
+        name="servermanagement"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="servermanagement">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+
+    <!-- 207945, carej
+         this really should not be commented out, but apparently iscdeploy can
+         not handle circular dependencies
+
+    <import plugin="com.ibm.ws.console.channelfw"/>
+    -->
+</requires>
+
+<!-- Begin WAS.webui.common.server -->
+
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="servermanagement" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" parent="root" label="nav.webSphere.servers" weight="10"/>
+        <!-- MOVED TO APPSERVERMANAGEMENT -->
+        <!--
+        <task id="appserver" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" label="nav.view.ApplicationServer" view="/navigatorCmd.do?forwardName=ApplicationServer.content.main" external="false" weight="10">
+            <category id="servermanagement"/>
+        </task>
+        -->
+    </tasks>
+</extension>
+<extension point="com.ibm.ws.console.core.navigatorTask">
+	<tasks>
+		<categoryDefinition id="servertypes" icon="/com.ibm.ws.console.servermanagement/images/onepix.gif" parent="servermanagement" label="nav.servertypes" weight="2"/>
+	</tasks>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.SecurityServer1" contextType="SecurityServer">
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Component.components.displayName"
+              description="Component.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServiceContext.services.displayName"
+              description="ServiceContext.services.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Service.content.main&amp;sfname=services">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.JMXConnector1" contextType="JMXConnector">
+        <link
+              categoryId="additional.properties"
+              label="JMXConnector.properties.displayName"
+              description="JMXConnector.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer.related1" contextType="ApplicationServer">
+        <link
+              categoryId="related.items"
+              label="ApplicationServer.installedApps.displayName"
+              description="ApplicationServer.installedApps.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationDeployment.server.content.main">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProductInfo.runtime1" contextType="ProductInfo">
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.components.dislayName"
+              description="ProductInfo.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Components.content.main&amp;lastPage=ProductInfo.content.main"
+              perspective="runtime">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.extensions.dislayName"
+              description="ProductInfo.extensions.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Extensions.content.main&amp;lastPage=ProductInfo.content.main"
+              perspective="runtime">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.eFixes.dislayName"
+              description="ProductInfo.eFixes.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Efixes.content.main&amp;lastPage=ProductInfo.content.main"
+              perspective="runtime">
+            <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.ptfs.dislayName"
+              description="ProductInfo.ptfs.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Ptfs.content.main&amp;lastPage=ProductInfo.content.main"
+              perspective="runtime">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.productReport.dislayName"
+              description="ProductInfo.productReport.description"
+              actionURI="productInfoDetail.do?productReport=yes:target=ProductReport"
+              perspective="runtime">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProductInfo.historyReport.dislayName"
+              description="ProductInfo.historyReport.description"
+              actionURI="productInfoDetail.do?historyReport=yes:target=HistoryReport"
+              perspective="runtime">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer1" contextType="ApplicationServer">
+        <categoryDefinition weight="10" id="containers.properties" parent="root" label="addprops.category.label.containers"/>
+        <categoryDefinition weight="20" id="webcontainer.properties" parent="containers.properties" label="addprops.category.label.webcontainers"/>
+        <categoryDefinition weight="10" id="application.properties" parent="root" label="category.application.management"/>
+        <categoryDefinition weight="30" id="portletcontainer.properties" parent="containers.properties" label="addprops.category.label.portletcontainers"/>
+        <categoryDefinition weight="40" id="ejbcontainer.properties" parent="containers.properties" label="addprops.category.label.ejbcontainers"/>
+        <categoryDefinition weight="50" id="containerservices.properties" parent="containers.properties" label="addprops.category.label.containerservices"/>
+        <categoryDefinition weight="60" id="businessprocessservices.properties" parent="containers.properties" label="addprops.category.label.businessprocessservices"/>
+        <categoryDefinition weight="20" id="serverinfrastructure.properties" parent="root" label="addprops.category.label.serverinfrastructure"/>
+        <link
+          categoryId="serverinfrastructure.properties"
+          label="InstalledSDKs.label"
+          description="InstalledSDKs.server.link.description"
+          actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.server.content.main">
+            <compatibility>
+                <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+            </compatibility>
+        </link>
+        <categoryDefinition weight="10" id="javaprocessmanagement.properties" parent="serverinfrastructure.properties" label="addprops.category.label.javaprocessmanagement"/>
+        <categoryDefinition weight="20" id="administration.properties" parent="serverinfrastructure.properties" label="addprops.category.label.administration"/>
+        <categoryDefinition weight="30" id="communications.properties" parent="root" label="addprops.category.label.communications"/>
+        <categoryDefinition weight="20" id="messaging.properties" parent="communications.properties" label="addprops.category.label.messaging"/>
+        <categoryDefinition weight="40" id="performance.properties" parent="root" label="addprops.category.label.performance"/>
+        <categoryDefinition weight="50" id="security.properties" parent="root" label="addprops.category.label.security"/>
+        <categoryDefinition weight="60" id="troubleshooting.properties" parent="root" label="addprops.category.label.troubleshooting"/>
+
+        <!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+          </compatibility>
+        </link>
+        <link
+          categoryId="containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </link>
+        <link
+          categoryId="containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5zos.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+         </compatibility>
+        </link>
+        <!-- END LIDB1673 Vela changes -->
+        <link
+              categoryId="webcontainer.properties"
+              label="ApplicationServer.components.WebContainer.displayName"
+              description="ApplicationServer.components.WebContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.AppserverWebContainer.do?sfname=components&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <link
+              categoryId="webcontainer.properties"
+              label="webcontainer.threadpool.displayName"
+              description="webcontainer.threadpool.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <!-- 212804 Begin - missed in 212804, added using 222373 -->
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              <!-- 212804 End -->
+            </compatibility>
+        </link>
+        <!-- link
+              categoryId="webcontainer.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+        </link -->
+        <link
+              categoryId="containers.properties" weight="10"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="webcontainer.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="webcontainer.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=ApplicationServer.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.ApplicationServerDetailForm.HAS_HTTP_TRANSPORTS" value="true"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+
+        <!-- (carej) begin LIDB1891-8.7 -->
+        <link
+              categoryId="webcontainer.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ApplicationServer.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null&amp;chainDisplayKey=webcontainer.channelfw.transports.displayName">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390|os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <!-- (carej) end LIDB1891-8.7 -->
+
+        <link
+              categoryId="ejbcontainer.properties"
+              weight="10"
+              label="ApplicationServer.components.EJBContainer.displayName"
+              description="ApplicationServer.components.EJBContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBContainer.config.view&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <link
+              categoryId="ejbcontainer.properties"
+              weight="20"
+              label="EJBCache.displayName"
+              description="EJBCache.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBCache.config.view&amp;sfname=cacheSettings&amp;lastPage=ApplicationServer.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+            <compatibility>
+          <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="ejbcontainer.properties"
+              weight="30"
+              label="EJBTimer.displayName"
+              description="EJBTimer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBTimer.config.view&amp;#38;sfname=timerSettings&amp;lastPage=ApplicationServer.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+			  <compatibility>
+			      <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="ejbcontainer.properties"
+              weight="40"
+              label="EJBAsync.displayName"
+              description="EJBAsync.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBAsync.config.view&amp;#38;sfname=asyncSettings&amp;lastPage=ApplicationServer.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+			  <compatibility>
+			      <match key="com.ibm.websphere.baseProductMajorVersion" value="([8-9])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="containerservices.properties"
+              label="JavaPersistenceAPIService.displayName"
+              description="JavaPersistenceAPIService.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaPersistenceAPIService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([7-9])"/>
+              <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="troubleshooting.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ApplicationServer.config.view">
+           <compatibility>
+                    <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+           </compatibility>
+        </link>
+        <link
+              categoryId="troubleshooting.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+                 <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+          </compatibility>
+        </link>
+        
+        <link
+              categoryId="messaging.properties"
+              label="MessageListenerService.displayName"
+              description="MessageListenerService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MessageListenerService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+           <!-- BEGIN LIDB4138-39 -->
+           <compatibility>
+                  <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+           </compatibility>
+           <!-- END LIDB4138-39 -->
+        </link>
+        <link
+              categoryId="containerservices.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <link
+              categoryId="administration.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <link
+              categoryId="administration.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <!-- CMVC 240173 hglover@us.ibm.com -->
+        <link
+              categoryId="troubleshooting.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view_5&amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="troubleshooting.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion"      value="[6-9]"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.DebugService.displayName"
+              description="Server.services.DebugService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=DebugService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <!-- CMVC defect 232156 -->
+        <!--link
+              categoryId="troubleshooting.properties"
+              label="ServerManagement.RASLoggingService.displayName"
+              description="ServerManagement.RASLoggingService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=RASLoggingservice.config.view&amp;lastPage=ApplicationServer.config.view">
+        </link-->
+        <link
+              categoryId="troubleshooting.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=ApplicationServer.config.view">
+          <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+                 <!-- BEGIN LIDB4138-39 -->
+                 <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+                 <!-- END LIDB4138-39 -->
+          </compatibility>
+        </link>
+        <!-- end CMVC defect 232156 -->
+        <link
+              categoryId="administration.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <link
+              categoryId="administration.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+        </link>
+        <!-- Begin defect 206863 -->
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+              </compatibility>
+        </link>
+        <!-- End defect 206863 -->
+        <link
+              categoryId="performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <!-- BEGIN LIDB1891-8.6 -->
+        <link
+              categoryId="communications.properties"
+              weight="10"
+              label="NamedEndPoint.displayName"
+              description="NamedEndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=ApplicationServer.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+           <!-- BEGIN LIDB4138-39 -->
+           <compatibility>
+                  <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+           </compatibility>
+           <!-- END LIDB4138-39 -->
+              <!-- END LIDB1891-8.6 -->
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="Classloader.displayName"
+              description="Classloader.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Classloader.content.main&amp;sfname=classloaders">
+        </link>
+
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+              <!-- 212804 Begin -->
+              <compatibility>
+                 <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+              <!-- 212804 End -->
+        </link>
+         <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+            <!-- CMVC 253092 -->
+            <compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="distributedcell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+            <!-- CMVC 267194 -->
+            <compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="zoscell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+            <!-- CMVC 267194 -->
+            <compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="mixedcell"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+            <!-- CMVC 585297 -->
+            <compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="distributedbase"/>
+				 <match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+            <!-- CMVC 585297 -->
+            <compatibility>
+                 <match key="com.ibm.websphere.cellType"  value="zosbase"/>
+				 <match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+              </compatibility>
+        </link>
+
+            <!-- CMVC 246817 -->
+          <!--link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=environment&amp;lastPage=ApplicationServer.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+        </link -->
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+
+        <!-- LIDB3477 portletcontainer -->
+        <link categoryId="portletcontainer.properties"
+              label="ApplicationServer.components.PortletContainer.displayName"
+              description="ApplicationServer.components.PortletContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.portletcontainer.forwardCmd.do?forwardName=PortletContainer.config.view&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="serverInstance.related1" contextType="ServerInstance">
+        <link
+            categoryId="related.items"
+            label="ORBAdvancedSettings.servantWorkprofile.displayName"
+            description="ORBAdvancedSettings.servantWorkprofile.description"
+            actionURI="com.ibm.ws.console.zos.forwardCmd.do?forwardName=ORBAdvancedSettings.config.view&amp;sfname=properties&amp;lastPage=ObjectRequestBroker.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<!-- LIDB3477 portletcontainer -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.portletcontainer1" contextType="portletcontainer">
+        <!-- <link categoryId="additional.properties"
+              label="portletcontainer.ppr.displayName"
+              description="portletcontainer.ppr.description"
+              actionURI="com.ibm.ws.console.servermanagement.portletcontainer.forwardCmd.do?forwardName=PPR.config.view&amp;sfname=pprmanager&amp;lastPage=PortletContainer.config.view"/> -->
+       <link categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties"/>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProcessDef.config.nodeagent1" contextType="ProcessDef.config.nodeagent.view">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=ProcessDef.config.nodeagent.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ProcessDef.config.nodeagent.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ProcessDef.config.nodeagent.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EnvEntry.content.main&amp;sfname=environment&amp;lastPage=ProcessDef.config.nodeagent.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProcessDef.config.nodeagent.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ObjectRequestBroker1" contextType="ObjectRequestBroker">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="ObjectRequestBroker.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer.runtime1" contextType="ApplicationServer">
+        <!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionService.V5zos.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+         </compatibility>
+        </link>
+        <!-- END LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=ApplicationServer.config.view&amp;origin=ApplicationServer.config.view"
+              perspective="runtime">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ServerComponent1" contextType="ServerComponent">
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ServerComponent.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Component.components.displayName"
+              description="Component.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=ServerComponent.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServiceContext.services.displayName"
+              description="ServiceContext.services.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Service.content.main&amp;sfname=services&amp;lastPage=ServerComponent.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.CustomService1" contextType="CustomService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.Service1" contextType="Service">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=Service.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProcessDef1" contextType="ProcessDef">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=ProcessDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ProcessDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ProcessDef.config.view">
+        </link>
+        <!-- CMVC 267195 -->
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EnvEntry.content.main&amp;sfname=environment&amp;lastPage=ProcessDef.config.view">
+        </link>
+        <!-- CMVC PQ95665
+              categoryId="additional.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ProcessDef.config.view">
+        -->
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProcessDef.config.view">
+        </link>
+    </linkSet>
+    </extension>
+
+    <!-- introduced to have different last Page for zOS -->
+    <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProcessDef2" contextType="ProcessDefzOS">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=ProcessDefzOS.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ProcessDefzOS.config.view">
+        </link>
+        <!-- CMVC 267196 -->
+        <!--
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ProcessDefzOS.config.view">
+        </link>
+        -->
+        <!-- CMVC 267195 -->
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EnvEntry.content.main&amp;sfname=environment&amp;lastPage=ProcessDefzOS.config.view">
+        </link>
+        <!-- CMVC PQ95665
+              categoryId="additional.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ProcessDefzOS.config.view">
+        -->
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProcessDefzOS.config.view">
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.threadpools.services" contextType="ApplicationServer">
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+            <!-- <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility> -->
+        </link>
+        <!-- <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="com.ibm.websphere.baseProductVersion" value="([0-5]|6\.0.*)"/>
+            </compatibility>
+        </link> -->
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.threadpools.services.properties" contextType="ThreadPools">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=customProperties">
+        </link>
+    </linkSet>
+</extension>
+<!-- LIDB4187-25 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="JavaPersistenceAPIService.additional.properties" contextType="JavaPersistenceAPIService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+            <compatibility>
+              <match key="com.ibm.ws.console.servermanagement.ejbcontainer.JavaPersistenceAPIServiceDetailForm.JPAServiceExists" value="true"/>
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="JavaPersistenceAPIService.related" contextType="JavaPersistenceAPIService">
+        <link
+              categoryId="related.items"
+              label="nav.view.data.sources"
+              description="DataSource.description"
+              actionURI="com.ibm.ws.console.resources.database.forwardCmd.do?forwardName=DataSource.content.main">
+        </link>
+    </linkSet>
+</extension>
+<!-- LIDB4187-25 -->
+
+<!-- Begin ActionItems -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.NamedEndPoint.action1" contextType="NamedEndPoint">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="namedEndPointCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="namedEndPointCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Service.action1" contextType="Service">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="serviceCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="serviceCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.JMXConnector.action1" contextType="JMXConnector">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="jMXConnectorCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="jMXConnectorCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="Enable.displayName"
+              actionURI="jMXConnectorCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="Disable.displayName"
+              actionURI="jMXConnectorCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Property.action1" contextType="Property">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="propertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="propertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ApplicationServer.action1" contextType="ApplicationServer">
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Extension.action1" contextType="Extension">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="extensionCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="extensionCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.CustomService.action1" contextType="CustomService">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="customServiceCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="customServiceCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ThreadPools.collection" contextType="ThreadPools">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="threadPoolsCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="threadPoolsCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<!-- LI1855 changes -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ServerTemplate.action1" contextType="ServerTemplate">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="templateCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="templateCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<!-- LI1855 changes -->
+<!-- End ActionItems -->
+
+<!-- Begin CollectionItems -->
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ProcessDef.collectionItem1" contextType="ProcessDef">
+        <item
+              attributeName="processType"
+              sortable="sort"
+              itemURI="processDefCollection.do?EditAction=true"
+              label="ProcessDef.processType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ApplicationServer.collectionItem1" contextType="ApplicationServer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="applicationServerCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName"
+              weight="100">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName"
+              weight="110">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName"
+              weight="120">
+        </item>
+        <item
+              attributeName="expandedVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName"
+              weight="130">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.CustomService.collectionItem1" contextType="CustomService">
+        <!-- CMVC defect 250669 -->
+        <item
+              attributeName="externalConfigURL"
+              sortable="sort"
+              itemURI=""
+              label="CustomService.externalConfigURL.displayName">
+        </item>
+        <item
+              attributeName="classname"
+              sortable="sort"
+              itemURI=""
+              label="CustomService.classname.displayName">
+        </item>
+        <!-- CMVC defect 250669 -->
+        <item
+              attributeName="displayName"
+              sortable="sort"
+              itemURI="customServiceCollection.do?EditAction=true"
+              label="CustomService.displayName.displayName">
+        </item>
+        <item
+              attributeName="enable"
+              sortable="sort"
+              itemURI=""
+              label="Service.enable.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.NamedEndPoint.collectionItem1" contextType="NamedEndPoint">
+        <item
+              attributeName="endPointName"
+              sortable="sort"
+              itemURI="namedEndPointCollection.do?EditAction=true"
+              label="NamedEndPoint.endPointName.displayName">
+        </item>
+        <!-- BEGIN LIDB1891-8.6 -->
+        <item
+              attributeName="host"
+              sortable="sort"
+              itemURI=""
+              label="EndPoint.host.displayName">
+        </item>
+        <item
+              attributeName="port"
+              sortable="sort"
+              itemURI=""
+              label="EndPoint.port.displayName">
+        </item>
+        <item
+              attributeName="chainDetails"
+              sortable="sort"
+              itemURI=""
+              label="EndPoint.chainDetails.displayName">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+              </compatibility>
+        </item>
+        <!-- END LIDB1891-8.6 -->
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.Extension.collectionItem1" contextType="Extension">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="extensionCollection.do?EditAction=true"
+              label="Extension.name.displayName">
+        </item>
+        <item
+              attributeName="configURI"
+              sortable="sort"
+              itemURI=""
+              label="Extension.configURI.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.Service.collectionItem1" contextType="Service">
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI="serviceCollection.do?EditAction=true"
+              label="Service.type.displayName">
+        </item>
+        <item
+              attributeName="enable"
+              sortable="sort"
+              itemURI=""
+              label="Service.enable.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.JMXConnector.collectionItem1" contextType="JMXConnector">
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI="jMXConnectorCollection.do?EditAction=true"
+              label="JMXConnector.type.displayName">
+        </item>
+        <item
+              attributeName="enabled"
+              sortable="sort"
+              itemURI=""
+              label="Enabled.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.Property.collectionItem1" contextType="Property">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="propertyCollection.do?EditAction=true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="Property.value.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="Property.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ThreadPools.collectionItem1" contextType="ThreadPools">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="threadPoolsCollection.do?EditAction=true"
+              label="ThreadPool.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.description.displayName">
+        </item>
+        <item
+              attributeName="minimumSize"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.minimumSize.displayName">
+        </item>
+        <item
+              attributeName="maximumSize"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.maximumSize.displayName">
+        </item>
+        <!-- item
+              attributeName="inactivityTimeout"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.inactivityTimeout.displayName">
+        </item -->
+        <!-- item
+              attributeName="isGrowable"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.isGrowable.displayName">
+        </item-->
+    </collectionItem>
+</extension>
+<!-- LI1855 changes -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ServerTemplate.collectionItem1" contextType="ServerTemplate">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="serverTemplateCollection.do?EditAction=true"
+              label="template.name">
+        </item>
+        <item
+              attributeName="platform"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.platform.displayName">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="ServerTemplate.version.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="template.description">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ServerTemplate.collectionItem2" contextType="servermanagement.selectserver.main">
+         <item attributeName="server" sortable="sort" label="label.server"/>
+         <item attributeName="node" sortable="sort" label="label.node"/>
+         <item
+              attributeName="expandedVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- LI1855 changes -->
+
+<!-- End CollectionItems -->
+
+<!-- Begin DetailTabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Efixes.detailTab1" contextType="Efixes">
+        <tab
+              label="tab.runtime"
+              contentURI="EfixInfo.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProductInfo.detailTab1" contextType="ProductInfo">
+        <tab
+              label="tab.runtime"
+              contentURI="ProductInfo.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessExecution.detailTab1" contextType="ProcessExecution">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessExecution.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ProcessExecution.config.general.properties" contextType="ProcessExecution">
+     <field attributeName="runAsUser" perspective="config">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+     </field>
+     <field attributeName="runAsGroup" perspective="config">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+     </field>
+     <field attributeName="runInProcessGroup" perspective="config">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+     </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.SecurityServer.detailTab1" contextType="SecurityServer">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="SecurityServer.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="SecurityServer.config.tab.view">
+        </tab>
+        <tab
+              label="tab.topology"
+              contentURI="SecurityServer.topology.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ThreadPool.detailTab1" contextType="ThreadPool">
+        <tab
+              label="tab.configuration"
+              contentURI="ThreadPool.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.config.nodeagent.view.detailTab1" contextType="ProcessDef.config.nodeagent.view">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.nodeagent.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.JMXConnector.detailTab1" contextType="JMXConnector">
+        <tab
+              label="tab.configuration"
+              contentURI="JMXConnector.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Service.detailTab1" contextType="Service">
+        <tab
+              label="tab.configuration"
+              contentURI="Service.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.detailTab1" contextType="ProcessDef">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ProcessDef.detailTab2" contextType="ProcessDefzOS">
+        <tab
+              label="tab.configuration"
+              contentURI="ProcessDef.config.tab.view.zOS">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ApplicationServer.detailTab1" contextType="ApplicationServer">
+        <!-- CMVC 258592 -->
+        <tab
+              label="tab.runtime"
+              contentURI="ApplicationServer.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MonitoringPolicy.detailTab1" contextType="MonitoringPolicy">
+        <tab
+              label="tab.configuration"
+              contentURI="MonitoringPolicy.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Extensions.detailTab1" contextType="Extensions">
+        <tab
+              label="tab.runtime"
+              contentURI="ExtensionInfo.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.CustomService.detailTab1" contextType="CustomService">
+        <tab
+              label="tab.configuration"
+              contentURI="CustomService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ServerComponent.detailTab1" contextType="ServerComponent">
+        <tab
+              label="tab.configuration"
+              contentURI="ServerComponent.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.NamedEndPoint.detailTab1" contextType="NamedEndPoint">
+        <tab
+              label="tab.configuration"
+              contentURI="NamedEndPoint.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Components.detailTab1" contextType="Components">
+        <tab
+              label="tab.runtime"
+              contentURI="ComponentInfo.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Property.detailTab1" contextType="SSLConfigProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="SSLProperty.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Ptfs.detailTab1" contextType="Ptfs">
+        <tab
+              label="tab.runtime"
+              contentURI="PtfInfo.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ObjectRequestBroker.detailTab1" contextType="ObjectRequestBroker">
+        <tab
+              label="tab.configuration"
+              contentURI="ObjectRequestBroker.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Extension.detailTab1" contextType="Extension">
+        <tab
+              label="tab.configuration"
+              contentURI="Extension.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.EndPoint.detailTab1" contextType="EndPoint">
+        <tab
+              label="tab.configuration"
+              contentURI="EndPoint.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Property.detailTab1" contextType="Property">
+        <tab
+              label="tab.configuration"
+              contentURI="Property.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ThreadPools.detailTab1" contextType="ThreadPools">
+        <tab
+              label="tab.configuration"
+              contentURI="ThreadPools.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ApplicationServerComponent.config.view" contextType="ApplicationServerComponent">
+         <field
+	       attributeName="shortName"
+	       perspective="config">
+	             <compatibility>
+	                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+	                <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+	             </compatibility>
+         </field >
+    </form>
+</extension>
+<!-- START LIDB1966 - new grouping in the application server general properties -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ApplicationServer.config.general.properties" contextType="ApplicationServer">
+         <!-- BEGIN LIDB4138-39 -->
+         <field attributeName="node" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+              </compatibility>
+         </field>
+         <!-- END LIDB4138-39 -->
+         <field attributeName="developmentMode" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="(\d\d)|([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="parallelStartEnabled" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="(\d\d)|([6-9])"/>
+              </compatibility>
+         </field>
+         <field attributeName="internalClassesAccessMode" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+         </field>
+         <!-- Begin  212143 - z/OS adaptive fields -->
+         <field
+              attributeName="shortName"
+              perspective="config">
+             <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <!-- BEGIN LIDB4138-39 -->
+                <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+                <!-- END LIDB4138-39 -->
+             </compatibility>
+         </field >
+         <field
+              attributeName="uniqueId"
+              perspective="config">
+             <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <!-- BEGIN LIDB4138-39 -->
+                <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+                <!-- END LIDB4138-39 -->
+             </compatibility>
+         </field >
+         <!-- End  212143 - z/OS adaptive fields -->
+         <!-- LIDB2727 Begin -->
+         <field
+              attributeName="runIn64bitJVMMode"
+              perspective="config">
+             <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+
+             </compatibility>
+         </field >
+         <!-- LIDB2727 End-->
+         <field attributeName="applicationClassLoaderPolicy"
+                perspective="config"
+                >
+         </field>
+   <!--      <field attributeName="applicationClassLoadingMode"
+                perspective="config"
+                categoryId="Server.group.serverSpecificApplicationSetting">
+         </field>   -->
+         <field
+              attributeName="heapSize"
+              perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+         </field >
+         <field
+              attributeName="maxMemory"
+              perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+         </field >
+     </form>
+</extension>
+<!-- END LID1966 -->
+<!-- End DetailTabs -->
+<!-- End WAS.webui.common.server -->
+
+<!-- Begin WAS.webui.admin -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.AdminService1" contextType="AdminService">
+        <link
+              categoryId="additional.properties"
+              label="AdminService.connectors.displayName"
+              description="AdminService.connectors.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JMXConnector.content.main&amp;sfname=connectors&amp;lastPage=AdminService.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="AdminService.extensionMBeanProviders.displayName"
+              description="AdminService.extensionMBeanProviders.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ExtensionMBeanProvider.content.main&amp;sfname=extensionMBeanProviders&amp;lastPage=AdminService.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="AdminService.configRepository.displayName"
+              description="AdminService.configRepository.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=RepositoryService.config.view&amp;sfname=configRepository&amp;lastPage=AdminService.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ExtensionMBeanProvider1" contextType="ExtensionMBeanProvider">
+        <link
+              categoryId="additional.properties"
+              label="ExtensionMBeanProvider.extensionMBeans.displayName"
+              description="ExtensionMBeanProvider.extensionMBeans.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ExtensionMBean.content.main&amp;sfname=extensionMBeans&amp;lastPage=ExtensionMBeanProvider.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.RepositoryService1" contextType="RepositoryService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ExtensionMBeanProvider.action1" contextType="ExtensionMBeanProvider">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="extensionMBeanProviderCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="extensionMBeanProviderCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ExtensionMBean.action1" contextType="ExtensionMBean">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="extensionMBeanCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="extensionMBeanCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ExtensionMBeanProvider.collectionItem1" contextType="ExtensionMBeanProvider">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="extensionMBeanProviderCollection.do?EditAction=true"
+              label="ExtensionMBeanProvider.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="ExtensionMBeanProvider.description.displayName">
+        </item>
+        <item
+              attributeName="classpath"
+              type="filepath"
+              sortable="sort"
+              itemURI=""
+              label="ExtensionMBeanProvider.classpath.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ExtensionMBean.collectionItem1" contextType="ExtensionMBean">
+        <item
+              attributeName="descriptorURI"
+              type="url"
+              sortable="sort"
+              itemURI="extensionMBeanCollection.do?EditAction=true"
+              label="ExtensionMBean.descriptorURI.displayName">
+        </item>
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI=""
+              label="ExtensionMBean.type.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.RepositoryService.detailTab1" contextType="RepositoryService">
+        <tab
+              label="tab.configuration"
+              contentURI="RepositoryService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.AdminService.detailTab1" contextType="AdminService">
+        <tab
+              label="tab.configuration"
+              contentURI="AdminService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ExtensionMBeanProvider.detailTab1" contextType="ExtensionMBeanProvider">
+        <tab
+              label="tab.configuration"
+              contentURI="ExtensionMBeanProvider.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ExtensionMBean.detailTab1" contextType="ExtensionMBean">
+        <tab
+              label="tab.configuration"
+              contentURI="ExtensionMBean.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.admin -->
+
+<!-- Begin WAS.webui.j2ee.applicationserver -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.TransactionService1" contextType="TransactionService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.MessageListenerService1" contextType="MessageListenerService">
+        <link
+              categoryId="additional.properties"
+              label="MessageListenerService.listenerPorts.displayName"
+              description="MessageListenerService.listenerPorts.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ListenerPort.content.main&amp;sfname=listenerPorts">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="MessageListenerService.threadPool.displayName"
+              description="MessageListenerService.threadPool.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=MessageListenerService.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=MessageListenerService.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.HTTPTransport1" contextType="HTTPTransport">
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+        <!-- START LIDB1673 Vela changes Provide V5-only TransactionService button -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.TransactionService.detail.action1" contextType="TransactionService">
+        <action
+              enablesFor="Detail"
+              perspective="Runtime"
+              label="button.transactionlist"
+              actionURI="transactionServiceDetail.do"
+              role="administrator,operator">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="5"/>
+         </compatibility>
+        </action>
+    </actionSet>
+</extension>
+        <!-- END LIDB1673 Vela changes Provide V5-only TransactionService button -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ListenerPort.action1" contextType="ListenerPort">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="listenerPortCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="listenerPortCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.start"
+              actionURI="listenerPortCollection.do"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.stop"
+              actionURI="listenerPortCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.HTTPTransport.action1" contextType="HTTPTransport">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="hTTPTransportCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="hTTPTransportCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Transaction.action1" contextType="Transaction">
+        <action
+              enablesFor="Collection"
+              label="button.finish"
+              actionURI="transactionCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+        <!-- START LIDB1673 Vela changes Add V6 Transaction buttons -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ManualTransaction.action1" contextType="ManualTransaction">
+        <action
+              enablesFor="Collection"
+              label="button.commit"
+              actionURI="manualTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.rollback"
+              actionURI="manualTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Transaction.action1" contextType="RetryTransaction">
+        <action
+              enablesFor="Collection"
+              label="button.finish"
+              actionURI="retryTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Transaction.action1" contextType="HeuristicTransaction">
+        <action
+              enablesFor="Collection"
+              label="button.transaction.clear"
+              actionURI="heuristicTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.Transaction.action1" contextType="PreparedTransaction">
+        <action
+              enablesFor="Collection"
+              label="button.commit"
+              actionURI="preparedTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.rollback"
+              actionURI="preparedTransactionCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+        <!-- END LIDB1673 Vela changes Add V6 Transaction buttons -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ServerComponent.collectionItem1" contextType="ServerComponent">
+        <item
+              attributeName="type"
+              sortable="sort"
+              itemURI="serverComponentCollection.do?EditAction=true"
+              label="Server.type.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ListenerPort.collectionItem1" contextType="ListenerPort">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="listenerPortCollection.do?EditAction=true"
+              label="Server.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="ListenerPort.description.displayName">
+        </item>
+        <item
+              attributeName="connectionFactoryJNDIName"
+              sortable="sort"
+              itemURI=""
+              label="ListenerPort.connectionFactoryJNDIName.displayName">
+        </item>
+        <item
+              attributeName="destinationJNDIName"
+              sortable="sort"
+              itemURI=""
+              label="ListenerPort.destinationJNDIName.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.HTTPTransport.collectionItem1" contextType="HTTPTransport">
+        <item
+              attributeName="host"
+              sortable="sort"
+              itemURI="hTTPTransportCollection.do?EditAction=true"
+              label="Transport.host.displayName">
+        </item>
+        <item
+              attributeName="port"
+              sortable="nosort"
+              itemURI=""
+              label="Transport.port.displayName">
+        </item>
+        <item
+              attributeName="sslEnabled"
+              sortable="nosort"
+              itemURI=""
+              label="Transport.sslEnabled.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.Transaction.collectionItem1" contextType="Transaction">
+        <item
+              attributeName="localId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.localId.displayName">
+        </item>
+        <item
+              attributeName="txstatus"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.status.displayName">
+        </item>
+        <item
+              attributeName="globalId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.globalId.displayName">
+        </item>
+    </collectionItem>
+</extension>
+        <!-- START LIDB1673 Vela changes Add V6 Transaction collections -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ManualTransaction.collectionItem1" contextType="ManualTransaction">
+        <item
+              attributeName="localId"
+              sortable="sort"
+              itemURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionResource.content.main&amp;txtype=resource"
+              label="Transaction.localId.displayName">
+        </item>
+        <item
+              attributeName="globalId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.globalId.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.RetryTransaction.collectionItem1" contextType="RetryTransaction">
+        <item
+              attributeName="localId"
+              sortable="sort"
+              itemURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionResource.content.main&amp;txtype=resource"
+              label="Transaction.localId.displayName">
+        </item>
+        <item
+              attributeName="txstatus"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.status.displayName">
+        </item>
+        <item
+              attributeName="globalId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.globalId.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.HeuristicTransaction.collectionItem1" contextType="HeuristicTransaction">
+        <item
+              attributeName="localId"
+              sortable="sort"
+              itemURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionResource.content.main&amp;txtype=resource"
+              label="Transaction.localId.displayName">
+        </item>
+        <item
+              attributeName="heuristicOutcome"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.heuristicOutcome.displayName">
+        </item>
+        <item
+              attributeName="globalId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.globalId.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.PreparedTransaction.collectionItem1" contextType="PreparedTransaction">
+        <item
+              attributeName="localId"
+              sortable="sort"
+              itemURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TransactionResource.content.main&amp;txtype=resource"
+              label="Transaction.localId.displayName">
+        </item>
+        <item
+              attributeName="globalId"
+              sortable="sort"
+              itemURI=""
+              label="Transaction.globalId.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.TransactionResource.collectionItem1" contextType="TransactionResource">
+        <item
+              attributeName="localId"
+              sortable="nosort"
+              itemURI=""
+              label="Transaction.resource.displayName">
+        </item>
+    </collectionItem>
+</extension>
+        <!-- END LIDB1673 Vela changes Add V6 Transaction collections -->
+        <!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.TransactionService.detailTab1" contextType="TransactionService">
+        <tab
+              label="tab.runtime"
+              contentURI="TransactionService.runtime.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+         </compatibility>
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="TransactionService.config.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+         </compatibility>
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.TransactionService.V5.detailTab1" contextType="TransactionService">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="TransactionService.V5.runtime.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="TransactionService.V5.config.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+         </compatibility>
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.TransactionService.V5zos.detailTab1" contextType="TransactionService">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="TransactionService.V5zos.runtime.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+         </compatibility>
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="TransactionService.V5zos.config.tab.view">
+         <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="5"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+         </compatibility>
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="transactionService.config.general.properties" contextType="TransactionService">
+        <field attributeName="asyncResponseTimeout" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </field>
+    </form>
+    <form id="TransactionService.runtime.generic.properties" contextType="TransactionService">
+        <field attributeName="mbeanAsyncResponseTimeout" perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="mbeanEnableFileLocking" perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="mbeanEnableProtocolSecurity" perspective="runtime">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </field>
+    </form>
+    <form id="AdminService.config.general.properties" contextType="AdminService">
+        <field attributeName="preferredConnector" perspective="config">
+            <compatibility>
+              <!-- 6 and lower, should display -->
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([0-6])"/>
+             </compatibility>
+        </field>
+        <field attributeName="remoteConnector" perspective="config">
+            <compatibility>
+              <!-- 7 and higher, should display -->
+			<match key="com.ibm.websphere.baseProductVersion" value="(([7-9]|[1-9][0-9]).*)"/>
+             </compatibility>
+        </field>
+        <field attributeName="localConnector" perspective="config">
+            <compatibility>
+              <!-- 7 and higher, should display -->
+			<match key="com.ibm.websphere.baseProductVersion" value="(([7-9]|[1-9][0-9]).*)"/>
+             </compatibility>
+        </field>
+    </form>
+</extension>
+
+
+        <!-- END LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MessageListenerService.detailTab1" contextType="MessageListenerService">
+        <tab
+              label="tab.configuration"
+              contentURI="MessageListenerService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ListenerPort.detailTab1" contextType="ListenerPort">
+        <!-- CMVC 258592 -->
+        <tab
+              label="tab.configuration"
+              contentURI="ListenerPort.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              contentURI="ListenerPort.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ApplicationServerComponent.detailTab1" contextType="ApplicationServerComponent">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="ApplicationServer.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="ApplicationServerComponent.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.HTTPTransport.detailTab1" contextType="HTTPTransport">
+        <tab
+              label="tab.configuration"
+              contentURI="HTTPTransport.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.j2ee.applicationserver -->
+
+<!-- Begin WAS.webui.j2ee.sessionmgmt -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.SessionManager1" contextType="SessionManager">
+        <link
+             categoryId="additional.properties"
+             label="Service.properties.displayName"
+             description="Service.properties.description"
+             actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="SessionManager.persistence.displayName"
+              description="SessionManager.persistence.description"
+              actionURI="sessionManagerDetail.do?action=persistenceView">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.SessionManager10" contextType="SessionManagerEnable">
+        <link
+             categoryId="additional.properties"
+             label="Service.properties.displayName"
+             description="Service.properties.description"
+             actionURI="sessionManagerDetail.do?action=customProps">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="SessionManager.persistence.displayName"
+              description="SessionManager.persistence.description"
+              actionURI="sessionManagerDetail.do?action=persistenceView">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.Persistence1" contextType="Persistence">
+        <link
+              categoryId="additional.properties"
+              label="SessionManager.tuningParams.displayName"
+              description="SessionManager.sessionDatabasePersistence.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Tuning.config.view&amp;sfname=tuningParams&amp;lastPage=Persistence.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Cookie.detailTab1" contextType="Cookie">
+        <tab
+              label="tab.configuration"
+              contentURI="Cookie.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Persistence.detailTab1" contextType="Persistence">
+        <tab
+              label="tab.configuration"
+              contentURI="Persistence.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.SessionManagerEnable.detailTab1" contextType="SessionManagerEnable">
+        <tab
+              label="tab.configuration"
+              contentURI="SessionManagerEnable.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.SessionManager.detailTab1" contextType="SessionManager">
+        <tab
+              label="tab.configuration"
+              contentURI="SessionManager.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.TuningParams.detailTab1" contextType="TuningParams">
+        <tab
+              label="tab.configuration"
+              contentURI="TuningParams.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.Tuning.detailTab1" contextType="Tuning">
+        <tab
+              label="tab.configuration"
+              contentURI="Tuning.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.SessionDatabasePersistence.detailTab1" contextType="SessionDatabasePersistence">
+        <tab
+              label="tab.configuration"
+              contentURI="SessionDatabasePersistence.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Begin  212804 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SessionDatabasePersistence.config.general.properties" contextType="SessionDatabasePersistence">
+        <field
+              attributeName="userId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="displayPassword"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="db2RowSize"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="tableSpaceName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  212804 - z/OS adaptive fields -->
+<!-- End WAS.webui.j2ee.sessionmgmt -->
+
+<!-- Begin WAS.webui.ras -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.DebugService1" contextType="DebugService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.DebugService.detailTab1" contextType="DebugService">
+        <tab
+              label="tab.configuration"
+              contentURI="DebugService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.OutputRedirect.detailTab1" contextType="OutputRedirect">
+        <tab
+              label="tab.configuration"
+              contentURI="OutputRedirect.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="DebugService.config.general.properties" contextType="DebugService">
+         <field attributeName="BSFDebugPort" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([5])"/>
+              </compatibility>
+         </field>
+         <field attributeName="BSFLoggingLevel" perspective="config">
+              <compatibility>
+                   <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([5])"/>
+              </compatibility>
+         </field>
+
+     </form>
+</extension>
+<!-- End WAS.webui.ras -->
+
+<!-- Begin WAS.webui.j2ee.webcontainer -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.webcontainer1" contextType="webcontainer">
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.threadpool.displayName"
+              description="webcontainer.threadpool.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=webcontainer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=webcontainer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=webcontainer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=webcontainer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="6"/>
+              <match key="com.ibm.websphere.baseProductMinorVersion" value="0"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+
+        <!-- (carej) begin LIDB1891-8.7 -->
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=webcontainer.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null&amp;chainDisplayKey=webcontainer.channelfw.transports.displayName">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+            </compatibility>
+        </link>
+        <!-- (carej) end LIDB1891-8.7 -->
+
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+
+        <!-- Begin LIDB3518-16 -->
+
+        <link categoryId="additional.properties" label="ARD.displayName"
+              description="ARD.description" weight="90"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ARD.config.view&amp;sfname=components">
+          <compatibility>
+            <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+          </compatibility>
+        </link>
+
+        <!-- End LIDB3518-16 -->
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.webcontainer.detailTab1" contextType="webcontainer">
+        <tab
+              label="tab.configuration"
+              contentURI="webcontainer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.webcontainer1" contextType="webcontainer_alt">
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.threadpool.displayName"
+              description="webcontainer.threadpool.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPool.config.view&amp;sfname=threadPool&amp;lastPage=webcontainer.config.view.alt">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=webcontainer.config.view.alt">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.httptransports.displayName"
+              description="webcontainer.httptransports.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=HTTPTransport.content.main&amp;sfname=transports&amp;lastPage=webcontainer.config.view.alt">
+        </link>
+        <!-- (carej) begin LIDB1891-8.7 -->
+        <link
+              categoryId="additional.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=webcontainer.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null&amp;chainDisplayKey=webcontainer.channelfw.transports.displayName">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([6-9])"/>
+            </compatibility>
+        </link>
+        <!-- (carej) end LIDB1891-8.7 -->
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=webcontainer.config.view.alt">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.webcontainer.detailTab1" contextType="webcontainer_alt">
+        <tab
+              label="tab.configuration"
+              contentURI="webcontainer.config.tab.view.alt">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="webcontainer.config.general.properties" contextType="webcontainer">
+        <field attributeName="disablePooling" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="asyncHeading" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|[8-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="numTimeoutThreads" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|[8-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="asyncServletTimeout" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|[8-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="workManagerOrThreadPool" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|[8-9]).*"/>
+             </compatibility>
+        </field>
+        <field attributeName="asyncRunnableWorkManager" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|[8-9]).*"/>
+             </compatibility>
+        </field>
+    </form>
+</extension>
+
+
+<!-- End WAS.webui.j2ee.webcontainer -->
+
+<!-- Begin WAS.webui.j2ee.ejbcontainer -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.EJBContainer1" contextType="EJBContainer">
+        <link
+              categoryId="additional.properties"
+              weight="10"
+              label="EJBCache.displayName"
+              description="EJBCache.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBCache.config.view&amp;sfname=cacheSettings">
+			  <compatibility>
+			      <match key="com.ibm.websphere.baseProductMajorVersion" value="([6-9])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="EJBTimer.displayName"
+              description="EJBTimer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBTimer.config.view&amp;#38;sfname=timerSettings">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([^5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="30"
+              label="EJBAsync.displayName"
+              description="EJBAsync.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBAsync.config.view&amp;#38;sfname=asyncSettings">
+              <compatibility>
+			      <match key="com.ibm.websphere.baseProductMajorVersion" value="([8-9])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<!-- End WAS.webui.j2ee.ejbcontainer -->
+
+<!-- Begin WAS.webui.namingdirectory -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.NameServer1" contextType="NameServer">
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=NameServer.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.NameServer.detailTab1" contextType="NameServer">
+        <tab
+              label="tab.configuration"
+              contentURI="NameServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.namingdirectory -->
+
+<!-- Begin WAS.webui.messaging -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.JMSServer1" contextType="JMSServer">
+        <link
+              categoryId="additional.properties"
+              label="JMSServer.securityPort.displayName"
+              description="JMSServer.securityPort.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EndPoint.config.view&amp;sfname=securityPort&amp;lastPage=JMSServer.config.view">
+              <!-- 212804 Begin -->
+              <compatibility>
+                 <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+              <!-- 212804 End -->
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=JMSServer.config.view">
+        </link>
+        <!--<link
+              categoryId="additional.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=JMSServer.config.view">
+        </link> -->
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=JMSServer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=JMSServer.config.view">
+          <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion"      value="[6-9]"/>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.RASLoggingService.displayName"
+              description="ServerManagement.RASLoggingService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=RASLoggingservice.config.view&amp;lastPage=JMSServer.config.view">
+        </link>
+        <!-- Begin defect 206863 -->
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=JMSServer.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=JMSServer.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+              </compatibility>
+        </link>
+        <!-- End defect 206863 -->
+        <!-- BEGIN LIDB1891-8.6 -->
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=JMSServer.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+              <!-- END LIDB1891-8.6 -->
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.JMSServer.action1" contextType="JMSServer">
+        <action
+              enablesFor="Collection"
+              label="button.start"
+              actionURI="jMSServerCollection.do"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.stop"
+              actionURI="jMSServerCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.JMSServer.collectionItem1" contextType="JMSServer">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="jMSServerCollection.do?EditAction=true"
+              label="ManagedObject.name.displayName">
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="Server.node.displayName">
+        </item>
+        <item
+              attributeName="hostName"
+              sortable="sort"
+              itemURI=""
+              label="Host.name.displayName">
+        </item>
+        <item
+                  attributeName="expandedVersion"
+                  sortable="sort"
+                  itemURI=""
+                  label="node.version.displayName">
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.JMSServerComponent.detailTab1" contextType="JMSServerComponent">
+<!-- CMVC 258592 -->
+        <tab
+              label="tab.runtime"
+              contentURI="JMSServer.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="JMSServerComponent.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.JMSServer.detailTab1" contextType="JMSServer">
+<!-- CMVC 258592 -->
+        <tab
+              label="tab.runtime"
+              contentURI="JMSServer.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="JMSServer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Begin  212143 - z/OS adaptive fields -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="JMSServer.config.general.properties" contextType="JMSServer">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- End  212143 - z/OS adaptive fields -->
+<!-- End WAS.webui.messaging -->
+
+<!-- Begin WAS.webui.j2ee.ejbcontainer -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.EJBCache.detailTab1" contextType="EJBCache">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBCache.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.EJBContainer.detailTab1" contextType="EJBContainer">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBContainer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.JavaPersistenceAPIService.detailTab1" contextType="JavaPersistenceAPIService">
+        <tab
+              label="tab.configuration"
+              contentURI="JavaPersistenceAPIService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.j2ee.ejbcontainer -->
+
+<!-- Begin WAS.webui.perf.pmi -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.PMIService1" contextType="PMIService">
+        <link
+              categoryId="additional.properties"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.PMIService.detailTab1" contextType="PMIService">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="PMIService.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="PMIService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End WAS.webui.perf.pmi -->
+
+<!-- Begin Unknown -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.JavaVirtualMachine1" contextType="JavaVirtualMachine">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.systemProperties.displayName"
+              description="JavaVirtualMachine.systemProperties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=systemProperties&amp;lastPage=JavaVirtualMachine.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.EJBTimer.related1" contextType="EJBTimer">
+        <link
+              categoryId="related.items"
+              label="Security.authDataEntries.displayName"
+              description="JAASAuthData.description"
+              actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=JAASAuthData.content.main">
+        </link>
+        <link
+              categoryId="related.items"
+              label="SchedulerConfiguration.displayName"
+              description="SchedulerConfiguration.description"
+              actionURI="com.ibm.ws.console.resources.pme.scheduler.forwardCmd.do?forwardName=SchedulerConfiguration.content.main">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.EJBAsync.related1" contextType="EJBAsync">
+        <link
+              categoryId="related.items"
+              label="WorkManagerInfo.displayName"
+              description="WorkManagerInfo.description"
+              actionURI="com.ibm.ws.console.resources.pme.workmanager.forwardCmd.do?forwardName=WorkManagerInfo.content.main">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ServantProcessDef1" contextType="ServantProcessDef">
+        <link
+              categoryId="additional.properties"
+              label="JavaVirtualMachine.displayName"
+              description="JavaVirtualMachine.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaVirtualMachine.config.view&amp;sfname=jvmEntries&amp;lastPage=ServantProcessDef.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ServantProcessDef.config.view">
+        </link>
+         <!-- CMVC 267195 -->
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.environment.displayName"
+              description="ProcessDef.environment.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EnvEntry.content.main&amp;sfname=environment&amp;lastPage=ServantProcessDef.config.view">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.JavaVirtualMachine.action1" contextType="JavaVirtualMachine">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="javaVirtualMachineCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="javaVirtualMachineCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.JavaVirtualMachine.collectionItem1" contextType="JavaVirtualMachine">
+        <item
+              attributeName="classpath"
+              sortable="sort"
+              itemURI="javaVirtualMachineCollection.do?EditAction=true"
+              label="JavaVirtualMachine.classpath.displayName">
+        </item>
+        <item
+              attributeName="bootClasspath"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.bootClasspath.displayName">
+        </item>
+        <item
+              attributeName="verboseModeClass"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.verboseModeClass.displayName">
+        </item>
+        <item
+              attributeName="verboseModeGarbageCollection"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.verboseModeGarbageCollection.displayName">
+        </item>
+        <item
+              attributeName="verboseModeJNI"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.verboseModeJNI.displayName">
+        </item>
+        <item
+              attributeName="initialHeapSize"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.initialHeapSize.displayName">
+        </item>
+        <item
+              attributeName="maximumHeapSize"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.maximumHeapSize.displayName">
+        </item>
+        <item
+              attributeName="runHProf"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.runHProf.displayName">
+        </item>
+        <item
+              attributeName="hprofArguments"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.hprofArguments.displayName">
+        </item>
+        <item
+              attributeName="debugMode"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.debugMode.displayName">
+        </item>
+        <item
+              attributeName="debugArgs"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.debugArgs.displayName">
+        </item>
+        <item
+              attributeName="genericJvmArguments"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.genericJvmArguments.displayName">
+        </item>
+        <item
+              attributeName="executableJarFileName"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.executableJarFileName.displayName">
+        </item>
+        <item
+              attributeName="disableJIT"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.disableJIT.displayName">
+        </item>
+        <item
+              attributeName="osName"
+              sortable="sort"
+              itemURI=""
+              label="JavaVirtualMachine.osName.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.EJBTimer.detailTab1" contextType="EJBTimer">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBTimer.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.EJBAsync.detailTab1" contextType="EJBAsync">
+        <tab
+              label="tab.configuration"
+              contentURI="EJBAsync.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ServantProcessDef.detailTab1" contextType="ServantProcessDef">
+        <tab
+              label="tab.configuration"
+              contentURI="ServantProcessDef.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.JavaVirtualMachine.detailTab1" contextType="JavaVirtualMachine">
+        <tab
+              label="tab.configuration"
+              contentURI="JavaVirtualMachine.config.tab.view">
+        </tab>
+        <tab
+              label="tab.runtime"
+              contentURI="JavaVirtualMachine.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="servermanagement.JavaVirtualMachine.config.general.properties" contextType="JavaVirtualMachine">
+      <field attributeName="currentHeapSize" perspective="runtime">
+         <compatibility>
+            <match key="com.ibm.ws.console.server.JVM.processTypeVisible" value="(distributed|Control|Adjunct)"/>
+         </compatibility>
+      </field>
+      <field attributeName="servantHeapSizes" perspective="runtime">
+         <compatibility>
+            <match key="com.ibm.ws.console.server.JVM.processTypeVisible" value="Servant"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.servantHeapSizes" contextType="servantHeapSizes">
+        <item
+              attributeName="name"
+              editable="false"
+              label="Server.mbean.servant.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="false"
+              label="Server.mbean.heapSizeMB.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.ServerInstance.detailTab1" contextType="ServerInstance">
+        <tab
+              label="tab.configuration"
+              contentURI="ServerInstance.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- End Unknown -->
+
+<!-- Begin WAS.webui.j2ee.ejbcontainer -->
+<!-- Only show this field on 6+ -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="EJBContainer.config.general.properties" contextType="EJBContainer">
+      <field attributeName="enableSFSBFailover" perspective="config">
+         <compatibility>
+            <match key="com.ibm.websphere.baseProductMajorVersion"
+                   value="([^5])"/>
+         </compatibility>
+      </field>
+    </form>
+</extension>
+<!-- End WAS.webui.j2ee.ejbcontainer -->
+
+<!-- Begin ejbtimer -->
+<!-- Group the fields on the panel -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="EJBTimer.config.general.properties" contextType="EJBTimer">
+         <field attributeName="ejbTimerManagementType"
+                perspective="config"
+                categoryId="EJBTimer.ejbTimerManagementType.displayName">
+         </field>
+         <field attributeName="nonpersistentTimerType"
+                perspective="config"
+                categoryId="EJBTimer.nonpersistent.fieldset.displayName">
+             <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([8-9])"/>
+             </compatibility>
+         </field>
+     </form>
+</extension>
+<!-- End ejbtimer -->
+<!-- Begin ejbAsync F743-430 -->
+<!-- Group the fields on the panel -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="EJBAsync.config.general.properties" contextType="EJBAsync">
+         <field attributeName="useCustomDefinedWMRadioButtonValue"
+                perspective="config"
+                categoryId="EJBAsync.managementType.displayName"
+                weight="50">
+         </field>
+     </form> 
+</extension> 
+<!-- End ejbAsync -->
+
+<extension point="com.ibm.ws.console.core.help">
+  <toc file="toc.xml" primary="true" />
+</extension>
+<!-- CMVC 250647-->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="ObjectRequestBroker.config.general.properties" contextType="ObjectRequestBroker">
+        <field
+              attributeName="requestRetriesCount"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="requestRetriesDelay"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+                <field
+              attributeName="connectionCacheMaximum"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+                <field
+              attributeName="connectionCacheMinimum"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="locateRequestTimeout"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="forceTunnel"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="tunnelAgentURL"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="useServerThreadPool"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+        </field >
+
+    </form>
+</extension>
+
+<!-- 452513 version must be 7.0.0 or higher -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="com.ibm.ws.console.servermanagement.ApplicationServerDetailForm" contextType="ApplicationServer">
+        <field
+              attributeName="provisionComponents"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+    </form>
+    <form id="com.ibm.ws.console.servermanagement.TransactionServiceDetailForm" contextType="TransactionService">
+        <field
+              attributeName="acceptHeuristicHazard"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="enableFileLocking"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(6\.1.*)|(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="enableProtocolSecurity"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(6\.1.*)|(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="defaultWSTXSpecLevel"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="secureWSTXTransportChain"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="httpProxyPrefix"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="6\.1.*"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="httpsProxyPrefix"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="6\.1.*"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- Note, these are only used for admin agent.  The normal buttons are found in distmanagement.
+ When an admin agent is managing a base server, we need to be able to display the app server collection buttons.
+ However, since these buttons are part of distmanagement, we can't display them unless we add distmanagment
+ to the base app server feature.xml, which isn't really an option.
+ -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.ApplicationServer.collection1" contextType="ApplicationServer">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="applicationServerCollection.do"
+              scope="Node"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="applicationServerCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.templates"
+              actionURI="applicationServerCollection.do"
+              role="administrator,configurator,operator,monitor">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.start"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.stop"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.restart"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.immediateStop"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,operator"
+              label="button.terminate"
+              actionURI="applicationServerCollection.do">
+        </action>
+        <compatibility>
+            <match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+        </compatibility>
+    </actionSet>
+</extension>
+<!-- This  is only used for admin agent.  The normal status column is found in distmanagement.
+ When an admin agent is managing a base server, we need to be able to display the app server status.
+ However, since this column is part of distmanagement, we can't display it unless we add distmanagment
+ to the base app server feature.xml, which isn't really an option. So, the column is added here
+ with the compatibility match for AdminAgent only.
+ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.ApplicationServer.collectionItem1" contextType="ApplicationServer">
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName"
+              weight="140">
+              <compatibility>
+                      <match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+              </compatibility>
+        </item>
+
+    </collectionItem>
+</extension>
+<!-- This  is only used for admin agent.  These are also found in distmanagement.
+ Since distmanagement isn't used with the admin agent, we need to add them here, with
+ compatibility match for AdminAgent only.
+  -->
+<extension point="com.ibm.websphere.wsc.preferences">
+    <preferenceSet id="servermanagement.ApplicationServer.preferenceSet1" contextType="ApplicationServer">
+       <preference
+          label="collection.preferences.showStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showStopConf"
+          size="32">
+		   <compatibility>
+				<match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+		   </compatibility>
+       </preference>
+       <preference
+          label="collection.preferences.showImmStopConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showImmStopConf"
+          size="32">
+		   <compatibility>
+				<match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+		   </compatibility>
+       </preference>
+       <preference
+          label="collection.preferences.showTerminateConfLabel"
+          units=" "
+          description="collection.preferences.showStopConfDesc"
+          prefType="checkbox"
+          defaultValue="true"
+          prefEntry="UI/Collections/ApplicationServer/Preferences#showTerminateConf"
+          size="32">
+		   <compatibility>
+				<match key="customMatcher" value="com.ibm.ws.console.core.selector.AdminAgentEnvironmentMatcher"/>
+		   </compatibility>
+       </preference>
+    </preferenceSet>
+</extension>
+<!-- Begin LIDB3518-16 -->
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+  <detailTab id="servermanagement.ARD.detailTab1" contextType="ARD">
+    <tab label="tab.configuration" contentURI="ARD.config.tab.view">
+    </tab>
+  </detailTab>
+</extension>
+
+<!-- Begin LIDB3518-16 -->
+
+<!-- Begin 627605 -->
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="com.ibm.ws.console.servermanagement.webcontainer.CookieDetailForm" contextType="Cookie">
+        <field attributeName="httpOnly" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="[8-9].*"/>
+             </compatibility>
+        </field>
+    </form>
+    <form id="com.ibm.ws.console.servermanagement.webcontainer.CookieDetailForm" contextType="Cookie">
+        <field attributeName="path" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="[5-7].*"/>
+             </compatibility>
+        </field>
+    </form>
+    <form id="com.ibm.ws.console.servermanagement.webcontainer.CookieDetailForm" contextType="Cookie">
+        <field attributeName="useContextRootAsPath" perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductVersion" value="[8-9].*"/>
+             </compatibility>
+        </field>
+    </form>
+</extension>
+
+<!-- End 627605 -->
+
+<!-- Begin CEA Feature Settings F623.1-32203 -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer" contextType="ApplicationServer">
+        <link
+              categoryId="communications.properties"
+              label="CEA.feature.config.main.link"
+              description="CEA.feature.config.main.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.cea.forwardCmd.do?forwardName=CEA.features.config.view&amp;sfname=components&amp;lastPage=ApplicationServer.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+              <match class="com.ibm.ws.console.servermanagement.cea.CEAFeaturesForm" key="com.ibm.ws.console.cea.showCEASettingsLink" value="true"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer2" contextType="ServerCluster">
+        <link
+              categoryId="communications.properties"
+              label="CEA.feature.config.main.link"
+              description="CEA.feature.config.main.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.cea.forwardCmd.do?forwardName=CEA.features.config.view&amp;sfname=components&amp;lastPage=ServerCluster.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+              <match class="com.ibm.ws.console.servermanagement.cea.CEAFeaturesForm" key="com.ibm.ws.console.cea.showCEASettingsLink" value="true"/>
+              <!-- match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/ -->
+            </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+	<form id="ceaSettingsForm" contextType="CEAFeatures">
+		<field attributeName="jsr289Enabled" perspective="config" categoryId="CEA.feature.config.ceaService.section" weight="10"></field>
+		<field attributeName="restContextRoot" perspective="config" categoryId="CEA.feature.config.restInterface.section" weight="10"></field>
+		<field attributeName="virtualHost" perspective="config" categoryId="CEA.feature.config.restInterface.section" weight="10"></field>
+		<field attributeName="maxRequestHoldTime" perspective="config" categoryId="CEA.feature.config.restInterface.section" weight="10"></field>		
+		<field attributeName="telephonyAccessMethod" perspective="config" categoryId="CEA.feature.config.telephonyAccessMethod.section" weight="10"></field>
+	</form>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="ceaSettingsCustomProp" contextType="CEAFeatures">
+        <link
+              categoryId="additional.properties"
+              label="customProperty.displayName"
+              description="customProperty.displayName"
+              actionURI="ceaFeaturesDetail.do?action=customProperties">
+        </link>
+    </linkSet>
+</extension>
+<!-- End CEA Feature Settings F623.1-32203 -->
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="servermanagement.InstalledSDKs.collection" contextType="InstalledSDKs">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="button.makedefault"
+              actionURI="installedSDKsCollection.do?">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="servermanagement.InstalledSDKs.collectionItem" contextType="InstalledSDKs">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI=""
+              label="javasdk.label.name">
+        </item>
+        <item
+              attributeName="version"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName">
+        </item>
+        <item
+              attributeName="location"
+              sortable="sort"
+              itemURI=""
+              label="InstalledSDKs.location.displayName">
+        </item>
+        <item
+              attributeName="bits"
+              sortable="sort"
+              itemURI=""
+              label="InstalledSDKs.bits.displayName">
+        </item>
+        <item
+              attributeName="defaultSDK"
+              sortable="sort"
+              itemURI=""
+              label="InstalledSDKs.default.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+</plugin>
+

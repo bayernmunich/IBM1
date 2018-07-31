@@ -1,0 +1,320 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS HTTP Plugin Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS HTTP Plugin Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml"  />
+
+	<property name="autopdProblem" value="WAS_Http_Plugin_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="ihs.local" value="true" /> 
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="load_sharedelements_tasks,
+				 set_problem_type_with_nls_bundle,
+				 setup_autopd_v2,
+				 validate_os,
+				 query_pmrfilename, 	 
+				 ihs_conf_path,
+				 logic_loglevel, 
+				 logic_ssl,
+				 logic_plugin, 	set_http_plugin_trace,
+				 stop_web_server1, start_web_server1,
+				 start_time,	pause_for_user_input, end_time,
+				 
+				 zip_http_logs, copy_orgi_files, 
+				 zip_autopd_log, ftp_message_shared, ftp_collected_information_shared, 	
+				 script_completed_v2">
+		
+	</target>
+
+	<target name="ihs_conf_path">
+	
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_IHS_Conf_Root"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Provide the location of your httpd.conf file"
+		           replace="${autopdts};;${step.count}"
+		           id="1119"
+		           level="info" />
+
+		<property name="default.ihs.path"
+			value="[path to ihs conf]/httpd.conf" />
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Input_Required"
+				type="prompt" bundle="autopdtoolstrings" />
+			<fieldtask name="ihs.conf.path" label="IHS_Conf_Path"
+				type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"
+				defaultValue="${default.ihs.path}" initialValueSource="persisted" />
+		</inputdialogtask>
+
+		<ihsconfreader confPath="${ihs.conf.path}" serverRoot="ihs.root"
+			docRoot="ihs.doc.root" logLevel="ihs.log.level"
+			accessLog="ihs.access.log" errorLog="ihs.error.log"
+			customLog="ihs.custom.log" ihsPid="ihs.pid"
+			wasPluginPath="ihs.was.plugin.path" success="ihs.conf.read.succeeded"
+			message="ihs.message" />
+
+		<if isNotTrue="${ihs.conf.read.succeeded}">
+			<fail message="${ihs.message}" />
+		</if>
+
+
+
+		<delete file="${autopdtmp}/ihs-httpd-conf.properties" />
+<!--		
+		<concat destfile="${autopdtmp}/ihs-httpd-conf.properties"
+			append="false">
+			# IHS
+			Properties${line.separator}ServerRoot=${ihs.root}${line.separator}LogLevel=${ihs.log.level}${line.separator}IhsPid=${ihs.pid}${line.separator}PluginPath=${ihs.was.plugin.path}${line.separator}CustomLogs=${ihs.custom.log}${line.separator}AccessLogs=${ihs.access.log}}${line.separator}ErrorLogs=${ihs.error.log}
+		</concat>
+-->
+		<persistproperty property="ihs.conf.path" />
+		<copy file="${ihs.conf.path}" todir="${autopdtmp}"/> 
+		<property name="ihs.conf.file.backup" value="${autopdtmp}/IHS/Conf/httpd.conf" /> 
+		<copy file="${ihs.conf.path}" tofile="${ihs.conf.file.backup}" />
+		
+	</target>
+
+	<target name="logic_loglevel">
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Parse_httpd_conf_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Read httpd.conf file and retrieve various variables"
+		           replace="${autopdts};;${step.count}"
+		           id="1119"
+		           level="info" />
+
+		<echo message="Log level is set to ${ihs.log.level}"/> 
+		
+		<condition property="log.level.debug">
+			<equals arg1="debug" arg2="${ihs.log.level}" casesensitive="false"/> 
+		</condition>
+<!--
+		<if isTrue="${log.level.debug}">
+		</if>
+--> 		
+		<if isNotTrue="${log.level.debug}">
+			<property name="log.level.not.debug" value="true"/> 
+			<changeconf confPath="${ihs.conf.path}" property="LogLevel" value="debug" newFile="${autopdtmp}/httpd.conf"/>
+			
+			<copy file="${autopdtmp}/httpd.conf" tofile="${ihs.conf.path}"/> 
+			
+	
+			<copy file="${ihs.conf.path}" tofile="${autopdtmp}/httpd.conf" overwrite="true" > 
+				<filterchain>
+					<tokenfilter>
+						<replacestring from="CustomLog" to="#CustomLog"/>
+						<replacestring from="LogFormat" to="#LogFormat"/>
+					</tokenfilter>
+				</filterchain>
+			</copy>
+				
+			<copy file="${autopdtmp}/httpd.conf" tofile="${ihs.conf.path}" overwrite="true"/>
+			
+			<concat destfile="${ihs.conf.path}" append="true">
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %{HTTPS_CIPHER}e %T LocalAddr=%A LocalPort=%p Host=%{Host}i %{Location}o %{JSESSIONID}C %{WAS}e" debug${line.separator}
+CustomLog logs/access.log debug${line.separator}
+			</concat>
+		</if>
+		
+	</target>		
+	
+	<target name="logic_ssl">
+		<ihs_conf_properties filename="${ihs.conf.path}">
+			<confProperty name="ihs.ssl.loadmodule" confKey="LoadModule" matchType="patternPresent" pattern="ibm_ssl_module.*modules/mod_ibm_ssl" />
+			<confProperty name="ihs.error.log" confKey="ErrorLog" matchType="multipleLine" tokenNumber="2" delimiter="|"/>
+			<confProperty name="ihs.access.log" confKey="CustomLog" matchType="multipleLine" tokenNumber="2" delimiter=","/>
+		</ihs_conf_properties>
+<!-- 		
+		<changeconf confPath="${ihs.conf.path}" property="LoadModule ibm_ssl_module modules/mod_ibm_ssl.so" currVal="ihs.ssl.loadmodule" />
+ -->
+		<echo message="ihs.error.log: ${ihs.error.log}" />
+		<echo message="ihs.access.log: ${ihs.access.log}" />
+		<echo message="ihs.root is ${ihs.root}"/> 
+		<filter_http_rotate_logs name="ihs.access.log.22" list="${ihs.access.log}" delimiter="," prefix="|" />
+		<echo message="ihs.access.log.22: ${ihs.access.log.22}" />
+		<property name="ihs.error.log.list" value="${ihs.root}/${ihs.error.log}"/>
+		<property name="ihs.access.log.list" value="${ihs.root}/${ihs.access.log.22}"/> 
+<!--		
+		<filepath_complete key="ihs.error.log.list" files="${ihs.error.log}" delimiter="|" defaultPrefix="${ihs.root}/" />
+		<filepath_complete key="ihs.access.log.list" files="${ihs.access.log.list}" delimiter="," defaultPrefix="${ihs.root}/" />
+-->		
+		<echo message="ihs.error.log.list: ${ihs.error.log.list}" />
+		<echo message="ihs.access.log.list: ${ihs.access.log.list}" />
+			
+		<echo message="Load module SSL is set to ${ihs.ssl.loadmodule}"/> 
+		<if isTrue="${ihs.ssl.loadmodule}" > 
+		<!--  Add SSLTrace at the end of the file. -->
+			<concat destfile="${autopdtmp}/httpd.conf" append="true">
+SSLTrace${line.separator}			
+			</concat>
+		</if>
+		
+		<!-- Now that we have modified the httpd.conf - let us copy over the file --> 
+		<condition property="copy.httpd.conf.over" >
+			<or>
+				<equals arg1="${log.level.not.debug}" arg2="true"/> 
+				<equals arg1="${ihs.ssl.loadmodule}" arg2="true"/> 
+			</or>
+		</condition>
+		<if isTrue="${copy.httpd.conf.over}">
+			<copy file="${autopdtmp}/httpd.conf" tofile="${ihs.conf.path}" /> 
+			<echo message="Your httpd.conf file has been replaced"/> 
+		</if>
+	</target>		
+	
+	<target name="logic_plugin">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Parse_plugin_cfg_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Read plugin-cfg.xml and retrieve variables"
+		           replace="${autopdts};;${step.count}"
+		           id="1119"
+		           level="info" /> 
+
+		<available file="${ihs.was.plugin.path}" type="file" property="plugin-exists" />
+		<if isTrue="${plugin-exists}">
+			<property name="ihs.plugin.file.backup" value="${autopdtmp}/IHS/Plugin/plugin-cfg.xml" /> 
+			<copy file="${ihs.was.plugin.path}" tofile="${ihs.plugin.file.backup}" />
+			<property name="http_plugin_cfg.location" value="${ihs.was.plugin.path}"/> 
+			
+			<xmlproperty file="${ihs.was.plugin.path}" />
+			<property name="http_plugin_cfg_log" value="${Config.Log(Name)}" />	
+			<echo message="http plugin log is at ${http_plugin_cfg_log}"/> 
+		</if>
+
+		<ihs_conf_properties filename="${ihs.conf.path}">
+			<confProperty name="ihs.plugin.loadmodule" confKey="LoadModule" matchType="patternPresent" pattern="was_ap20_module" />
+		</ihs_conf_properties>
+		<echo message="Load module Plugin is set to ${ihs.plugin.loadmodule}"/> 
+		<echo message="Plugin exists : ${plugin-exists}"/> 
+		<condition property="plugin.file.and.module.exists" >
+			<equals arg1="${plugin-exists}" arg2="${ihs.plugin.loadmodule}" casesensitive="false"/>
+		</condition>
+		<echo message="plugin file and module both exists : ${plugin.file.and.module.exists}"/>
+		<if isTrue="${plugin.file.and.module.exists}">
+			<inputdialogtask  > 
+				<fieldtask name="prompt" label="Input_Required_WAS" type="prompt"  bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label" label="Set_Plugin_Trace" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label" label="Empty_Line" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label" label="Set_Plugin_Trace1" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="ihs_plugin_trace" label="select_one" type="selectlist" list="Yes:No" listDetails="Yes:No" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			
+			<condition property="ihs.plugin.trace.set"> 
+				<equals arg1="${ihs_plugin_trace}" arg2="Yes" casesensitive="yes" /> 
+			</condition> 
+			<if isTrue="${ihs.plugin.trace.set}"> 
+				<property name="plugin-cfg.available" value="true" /> 
+				<echo message="Your plugin-cfg.xml file will be replaced"/> 
+			</if> 
+				
+		</if> 
+	</target>	
+
+	<target name="zip_http_logs"> 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Zip_HTTP_Files"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collect HTTP and Plugin logs"
+		           replace="${autopdts};;${step.count}"
+		           id="1119"
+		           level="info" /> 
+
+		<!-- First zip the original httpd.conf and plugin-cfg.xml files --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/IHS/Conf" prefix="${autopdProblem}/Original/Conf">
+				<include name="*.conf" />
+			</zipfileset>
+			<zipfileset dir="${autopdtmp}/IHS/Plugin" prefix="${autopdProblem}/Original/Plugin">
+				<include name="*.xml" />
+			</zipfileset>
+			
+		</zip>
+		
+		<!-- Now include the recent and updated httpd.conf --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${ihs.conf.path}" prefix="${autopdProblem}/Modified/Conf"/>
+			<zipfileset file="${ihs.was.plugin.path}" prefix="${autopdProblem}/Modified/Plugin"/>
+		</zip>
+		
+		<!-- Access Logs and Error logs from httpd.conf --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${ihs.error.log.list}" prefix="${autopdProblem}/ErrorLogs"/>
+			<zipfileset file="${ihs.access.log.list}" prefix="${autopdProblem}/AccessLogs"/>
+		</zip>
+		
+		
+		<!-- Plugin logs from plugin-cfg.xml --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset file="${http_plugin_cfg_log}" prefix="${autopdProblem}/PluginLogs"/>
+		</zip>
+		
+		
+	</target> 
+		
+	<target name="copy_orgi_files" > 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Restore_Original_HTTP_Files"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Restoring original httpd.conf and plugin-cfg.xml files"
+		           replace="${autopdts};;${step.count}"
+		           id="1119"
+		           level="info" />
+
+		<copy file="${ihs.conf.file.backup}" tofile="${ihs.conf.path}" overwrite="true"/>
+		<copy file="${ihs.plugin.file.backup}" tofile="${ihs.was.plugin.path}" overwrite="true"/>
+		<inputdialogtask  noCancel="true"> 
+			<fieldtask name="prompt" label="Information_Message" type="prompt"  bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0" label="Restore_http_Message" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label1" label="Empty_Line"	type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label2" label="Restore_http_Message1" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+	</target> 
+
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+		           	
+
+</project>

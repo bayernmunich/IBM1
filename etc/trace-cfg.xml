@@ -1,0 +1,36 @@
+<trace>
+
+   <scope name="http" enabled="serverType IN ('ONDEMAND_ROUTER')">
+      <condition>true</condition>
+      <traceSpec>http.default</traceSpec>
+   </scope>
+
+   <scope name="sip" enabled="serverType IN ('ONDEMAND_ROUTER')">
+      <condition>true</condition>
+      <traceSpec>sip.default</traceSpec>
+   </scope>
+
+   <scope name="arfm" enabled="NOT serverType IN ('MIDDLEWARE_AGENT')">
+      <condition>true</condition>
+      <traceSpec>arfm.default</traceSpec>
+   </scope>
+
+   <scope name="ODCEvent" enabled="true">
+      <condition>
+	  (nodeType in ('application','rule','server','cluster')) OR
+	  (propertyType in ('server:state','server:weight','server:server.maintenancemode','server:reachable','serverApplication:state','cluster:appEditionRolloutState','rule:expression','rule:action')) OR
+	  (edgeType in ('server:webModule','proxyContainer:serverApplication'))
+      </condition>
+      <traceSpec>ODC.event</traceSpec>
+   </scope>
+   
+   <scope name="APCAgent" enabled="NOT serverType IN ('MIDDLEWARE_AGENT')">
+      <condition>true</condition>
+      <traceSpec>cellagent.sender</traceSpec>
+   </scope>
+
+   <destination name="default">
+	   <disk filePrefix="" maxFiles="8" maxFileSize="524288"/>
+   </destination>
+
+</trace>

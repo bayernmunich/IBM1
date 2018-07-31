@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="com.ibm.ws.console.xdoperations"
+        name="xdoperations"
+        version="6.1.0"
+        provider-name="IBM Corp. - WebSphere XD"
+        embedded="true"
+        context-root="xdoperations">  
+        
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+        <import plugin="com.ibm.ws.console.policyconfiguration"/>
+        <import plugin="com.ibm.ws.console.appmanagement"/>
+        <import plugin="com.ibm.ws.console.middlewareapps"/>
+        <import plugin="com.ibm.ws.console.dynamiccluster"/>
+        <import plugin="com.ibm.ws.console.distmanagement"/>
+        <import plugin="com.ibm.ws.console.middlewareserver"/>
+        <import plugin="com.ibm.ws.console.servermanagement"/>
+    </requires>
+      
+    <!-- 
+	 ! Extension point location: Runtime operations
+     ! Date added: 11-01-2006
+     ! Description: Extended deployment dashboard and summary navigation items.
+	 -->
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition id="xdruntimeOps" parent="root" icon="images/onepix.gif" label="xdruntime.operations" weight="31" /> 
+        <task id="dashboardSummary" 
+                icon="images/onepix.gif" 
+                label="nav.dashboard" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dashboard.xdoperations.main.extends"
+                weight="10"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+        <task id="appSummary" 
+                icon="images/onepix.gif" 
+                label="nav.app.summary" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=app.xdoperations.main.extends&#38;scopeChanged=true"
+                weight="20"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+        <task id="dtSummary" 
+                icon="images/onepix.gif" 
+                label="nav.dt.summary" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dt.xdoperations.main.extends&#38;scopeChanged=true"
+                weight="30"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+        <!-- Rainmaker: MJS remove
+        <task id="spSummary" 
+                icon="images/onepix.gif" 
+                label="nav.sp.summary" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=sp.xdoperations.main.extends&#38;scopeChanged=true"
+                weight="40"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+        -->
+        <task id="xdSummary" 
+                icon="images/onepix.gif" 
+                label="nav.xd.summmary" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends"
+                weight="50"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+        <task id="xdReports" 
+                icon="images/onepix.gif" 
+                label="nav.reporting" 
+                view="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=xdoperations.main"
+                weight="60"
+                external="false">
+            <category id="xdruntimeOps"/>
+        </task>
+      </tasks>
+	</extension>
+
+	<extension point="com.ibm.ws.console.core.help">
+    	<toc file="toc.xml" primary="true"/>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="ServicePolicy">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="ApplicationDeployment">
+		 <tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 	</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="MiddlewareApps">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="ServerCluster">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="DynamicCluster">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="MiddlewareServer">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="tab.reports" contextType="ApplicationServer">
+	 		<tab label="reports.tab.label" contentURI="xdoperations.chart.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: Core group settings detail tab layout.
+     ! Date added: 01-17-2007
+     ! Description: Core group operations tab visualization runtime data.
+	 -->
+	 <!-- 
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="coregroup.detail.operations.tab" contextType="CoreGroup">
+	 		<tab label="tab.operations" contentURI="operations.coregroup.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	 -->
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    	<detailTab id="coregroup.detail.operations.tab" contextType="CoreGroupReadOnly">
+	 		<tab label="tab.operations" contentURI="operations.coregroup.main">
+	 		</tab>
+   		</detailTab>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: Core group settings detail operations tab layout.
+     ! Date added: 01-17-2007
+     ! Description: Core group operations tab membership collection panel.
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="CoreGroup.collection" contextType="CoreGroupOperations">
+			<item
+            	attributeName="name"
+              	sortable="sort"
+              	itemURI=""
+             	label="ClusterMember.memberName.displayName">
+        	</item>
+        	<item
+            	attributeName="nodeName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.node.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="currentView"
+              	sortable="sort"
+              	itemURI=""
+             	label="ops.coregroup.detail.currentview.column">
+        	</item>
+    	</collectionItem>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: Application detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Application Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="ApplicationDeployment">
+			<tab label="tab.operations" contentURI="operations.application.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.apps.placement.collection" contextType="ApplicationDeploymentOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.label">
+        	</item>
+        	<item
+            	attributeName="nodeName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.node.name">
+        	</item>
+        	<item
+            	attributeName="clusterName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.clstr.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<item
+            	attributeName="activeEdition"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.edition.label">
+        	</item>
+        	<item
+            	attributeName="activeModules"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.app.mods.label">
+        	</item>
+    	</collectionItem>
+	</extension>
+
+	<!-- 
+	 ! Extension point location: Middleware Application detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Application Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="MiddlewareApps">
+			<tab label="tab.operations" contentURI="operations.middlewareapplication.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.mwapps.placement.collection" contextType="MiddlewareAppsOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.label">
+        	</item>
+        	<item
+            	attributeName="nodeName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.node.name">
+        	</item>
+        	<item
+            	attributeName="clusterName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.clstr.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<item
+            	attributeName="activeEdition"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.edition.label">
+        	</item>
+        	<item
+            	attributeName="activeModules"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.app.mods.label">
+        	</item>
+    	</collectionItem>
+	</extension>
+	
+	
+	<!-- 
+	 ! Extension point location: Server detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Server Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="ApplicationServer">
+			<tab label="tab.operations" contentURI="operations.server.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.server.colocation.collection" contextType="ApplicationServerOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.label">
+        	</item>
+        	<item
+            	attributeName="clusterName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.clstr.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<item
+            	attributeName="cpu"
+              	sortable="sort"
+              	itemURI=""
+             	label="metric.cpu.name">
+        	</item>
+    	</collectionItem>
+	</extension>
+
+	<!-- 
+	 ! Extension point location: Middleware server detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Middleware server Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="MiddlewareServer">
+			<tab label="tab.operations" contentURI="operations.middlewareserver.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.mws.colocation.collection" contextType="MiddlewareServerOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.srv.name">
+        	</item>
+        	<item
+            	attributeName="clusterName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.clstr.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<item
+            	attributeName="cpu"
+              	sortable="sort"
+              	itemURI=""
+             	label="metric.cpu.name">
+        	</item>
+    	</collectionItem>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: On demand router detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: On demand router Operations tab for visualization runtime data.
+	 -->
+	 
+	<!-- Pushed out of XD6.1.
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="ODR">
+			<tab label="tab.operations" contentURI="operations.odr.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	 -->
+	
+	<!-- 
+	 ! Extension point location: Static cluster detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Static cluster Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="ServerCluster">
+			<tab label="tab.operations" contentURI="operations.cluster.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.cluster.placement.collection" contextType="ServerClusterOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.label">
+        	</item>
+        	<item
+            	attributeName="nodeName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.node.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<!-- Rainmaker: MJS remove
+        	<item
+            	attributeName="activeServicePolicies"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.sp.assocs">
+        	</item>
+        	-->
+        	<item
+            	attributeName="topApplications"
+              	sortable="sort"
+              	itemURI=""
+             	label="top.apps">
+        	</item>
+    	</collectionItem>
+	</extension>
+	
+	<!--
+	 ! Extension point location: Application Summary
+	 ! Date added: 06-14-2006
+	 ! Description: Runtime operations application summary collection table
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.application.summary.collection" contextType="ApplicationSummaryOperations">
+			<item
+            	attributeName="name"
+              	sortable="sort"
+              	itemURI="DetailLink.do?perspective=tab.operations"
+             	label="ops.summary.name">
+        	</item>
+			<item
+            	attributeName="cellName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.cell.name">
+        	</item>
+			<item
+            	attributeName="edition"
+              	sortable="sort"
+              	itemURI=""
+             	label="appEdition.edition.label">
+        	</item>
+        	<item
+            	attributeName="type"
+              	sortable="sort"
+              	itemURI=""
+             	label="app.type.label">
+        	</item>        	
+        	<item
+            	attributeName="state"
+              	sortable="sort"
+              	itemURI=""
+             	label="Node.status.displayName">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<!-- Rainmaker: MJS remove
+        	<item
+            	attributeName="servicePolicyAssociations"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.sp.assocs">
+        	</item>
+        	-->
+    	</collectionItem>
+	</extension>
+	
+	<!--
+	 ! Extension point location: Deployment Target Summary
+	 ! Date added: 06-14-2006
+	 ! Description: Runtime operations deployment target summary collection table
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.deployment.target.summary.collection" contextType="DeploymentTargetSummaryOperations">
+			<item
+            	attributeName="name"
+              	sortable="sort"
+              	itemURI="DetailLink.do?perspective=tab.operations"
+             	label="ops.summary.name">
+        	</item>
+			<item
+            	attributeName="cellName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.cell.name">
+        	</item>
+        	<item
+            	attributeName="type"
+              	sortable="sort"
+              	itemURI=""
+             	label="app.type.label">
+        	</item>        	
+        	<item
+            	attributeName="state"
+              	sortable="sort"
+              	itemURI=""
+             	label="Node.status.displayName">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="liveSessions"
+              	sortable="sort"
+              	itemURI=""
+             	label="xdoperations.metric.liveSessions.name">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+            </item>
+        	<item
+            	attributeName="servicePolicyAssociations"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.sp.assocs">
+        	</item>
+        	<item
+            	attributeName="topApplications"
+              	sortable="sort"
+              	itemURI=""
+             	label="top.apps">
+        	</item>
+    	</collectionItem>
+	</extension>
+
+    <!--
+     ! Extension point location: Service Policy Summary
+     ! Date added: 06-14-2006
+     ! Description: Runtime operations service policy summary collection table
+     -->
+    <extension point="com.ibm.websphere.wsc.collectionItem">
+        <collectionItem id="ops.service.policy.summary.collection" contextType="ServicePolicySummaryOperations">
+            <item
+                attributeName="name"
+                sortable="sort"
+                itemURI="DetailLink.do?"
+                label="ops.summary.name">
+            </item>
+			<item
+            	attributeName="cellName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.cell.name">
+        	</item>
+            <item
+                attributeName="importance"
+                sortable="sort"
+                itemURI=""
+                label="sp.importance.label">
+            </item>         
+            <item
+                attributeName="goal"
+                sortable="sort"
+                itemURI=""
+                label="sp.goal.label">
+            </item>
+            <item
+                attributeName="stability"
+                sortable="sort"
+                itemURI=""
+                label="resource.stability.label">
+            </item>
+        </collectionItem>
+    </extension>
+	
+	<!-- 
+	 ! Extension point location: Dynamic cluster detail tab layout.
+     ! Date added: 12-06-2006
+     ! Description: Dynamic cluster Operations tab for visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.detailTab">
+		<detailTab id="xdcharting.operations.detailTab" contextType="DynamicCluster">
+			<tab label="tab.operations" contentURI="operations.dynamic.cluster.main">
+		 	</tab>
+		</detailTab>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: ODR Summary sub-tab
+     ! Date added: 01-07-2006
+     ! Description: Extended Deployment summary, ODR sub tab visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+	    <collectionItem id="ODRSummary.collection" contextType="ODRSummary">
+	        <item
+	              attributeName="name"
+	              sortable="sort"
+	              itemURI="/ibm/console/proxyCollection.do?EditAction=true&amp;SERVER_TYPE=ONDEMAND_ROUTER"
+	              label="ops.summary.name" >
+	        </item>
+			<item
+            	attributeName="cellName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.cell.name">
+        	</item>
+        	<item
+  	          	  attributeName="nodeName"
+              	  sortable="sort"
+              	  itemURI=""
+             	  label="scope.node.name" >
+	        </item>
+	        <item
+	              attributeName="type"
+	              sortable="sort"
+	              itemURI=""
+	              label="app.type.label" >
+	        </item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+	        <item
+	              attributeName="statColumn0"
+	              sortable="sort"
+	              itemURI=""
+	              label="metric.tp.name" >
+	        </item>
+	    </collectionItem>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: Core Group Summary sub-tab
+     ! Date added: 01-07-2006
+     ! Description: Extended Deployment summary, Core Group sub tab visualization runtime data.
+     ! itemURI="coreGroupCollection.do?EditAction=true"
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+	    <collectionItem id="CoreGroupSummary.collection" contextType="CoreGroupSummary">
+	        <item
+	              attributeName="name"
+	              sortable="sort"
+	              itemURI="coreGroupCollection.do?EditAction=true&amp;perspective=tab.operations"
+	              label="ops.summary.name" >
+	        </item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+	    </collectionItem>
+	</extension>
+	
+	<!-- 
+	 ! Extension point location: Core Component Summary sub-tab
+     ! Date added: 01-07-2006
+     ! Description: Extended Deployment summary, Core Component sub tab visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+	    <collectionItem id="CoreComponentSummary.collection" contextType="CoreComponentSummary">
+	        <item
+	              attributeName="name"
+	              sortable="sort"
+	              itemURI="/ibm/console/CoreComponentSummaryCollection.do?EditAction=true"
+	              label="ops.summary.name" >
+	        </item>
+	        <item
+	              attributeName="scope"
+	              sortable="sort"
+	              itemURI=""
+	              label="ops.corecomponent.scope" >
+	        </item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+	        <item
+	              attributeName="currentLocation"
+	              sortable="sort"
+	              itemURI=""
+	              label="ops.corecomponent.current.location" >
+	        </item>
+	    </collectionItem>
+	</extension>	
+	
+	<!-- 
+	 ! Extension point location: Node Summary sub-tab
+     ! Date added: 01-07-2006
+     ! Description: Extended Deployment summary, Node sub tab visualization runtime data.
+	 -->
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+	    <collectionItem id="NodeSummary.collection" contextType="NodeSummary">
+	        <item
+	              attributeName="name"
+	              sortable="sort"
+	              itemURI=""
+	              label="ops.summary.name" >
+	        </item>
+			<item
+            	attributeName="cellName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.cell.name">
+        	</item>
+	        <item
+	              attributeName="agent"
+	              sortable="sort"
+	              itemURI=""
+	              label="ops.node.agent" >
+	        </item>
+	        <item
+	              attributeName="version"
+	              sortable="sort"
+	              itemURI=""
+	              label="node.version.displayName" >
+	        </item>
+	        <item
+	              attributeName="cpuUtil"
+	              sortable="sort"
+	              itemURI=""
+	              label="metric.cpu.name" >
+	        </item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<!-- Maintenance mode -->
+	        <item
+	              attributeName="status"
+	              sortable="sort"
+	              itemURI=""
+	              label="Node.maintMode.displayName" 
+				  statusServlet="/ibm/console/maintstatus">
+	        </item>
+	    </collectionItem>
+	</extension>	
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    	<collectionItem id="ops.dynamiccluster.placement.collection" contextType="DynamicClusterOperations">
+			<item
+            	attributeName="serverName"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.label">
+        	</item>
+        	<item
+            	attributeName="nodeName"
+              	sortable="sort"
+              	itemURI=""
+             	label="scope.node.name">
+        	</item>
+        	<item
+            	attributeName="stability"
+              	sortable="sort"
+              	itemURI=""
+             	label="resource.stability.label">
+        	</item>
+        	<item
+            	attributeName="weight"
+              	sortable="sort"
+              	itemURI=""
+             	label="server.weight.label">
+        	</item>
+        	<!-- Rainmaker: MJS remove
+        	<item
+            	attributeName="activeServicePolicies"
+              	sortable="sort"
+              	itemURI=""
+             	label="active.sp.assocs">
+        	</item>
+        	-->
+        	<item
+            	attributeName="topApplications"
+              	sortable="sort"
+              	itemURI=""
+             	label="top.apps">
+        	</item>
+    	</collectionItem>
+	</extension>
+</plugin>

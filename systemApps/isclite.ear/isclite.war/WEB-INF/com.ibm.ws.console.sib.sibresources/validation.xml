@@ -1,0 +1,1781 @@
+<!--
+ * @start_restricted_prolog@
+ * Version: @(#) 1.85 SIB/ws/code/sib.admin.webui/src/sibresources/WEB-INF/validation.xml, SIB.admin.webui, WAS855.SIB, cf131750.05 08/12/02 08:53:38 [12/17/17 19:59:02]
+ * 
+ * Licensed Materials - Property of IBM
+ * 
+ * "Restricted Materials of IBM"
+ * 
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70
+ * 
+ * Copyright IBM Corp. 2003, 2008 All Rights Reserved.
+ * 
+ * US Government Users Restricted Rights - Use, duplication or
+ * disclosure restricted by GSA ADP Schedule Contract with
+ * IBM Corp.
+ * @end_restricted_prolog@
+-->
+
+<form-validation>
+
+   <global>
+     <constant>
+       <constant-name>mqname</constant-name>
+       <constant-value>^[a-zA-Z0-9_/%.]*$</constant-value>
+     </constant>
+   </global>
+   
+   <global>
+      <constant>
+        <constant-name>bootstrapEndpointsMask</constant-name>
+        <constant-value>^( *)((([0-9\-A-Za-z_\.]*)|(\[([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+)\]))?(( *):( *)([0-9]*)?(( *):( *)([0-9A-Za-z_]*)?)?)?)( *)(,( *)((([0-9\-A-Za-z_\.]*)|(\[([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+):([0-9A-Fa-f]+)\]))?(( *):( *)([0-9]*)?(( *):( *)([0-9A-Za-z_]*)?)?)?)?( *))*$</constant-value>
+      </constant>
+    </global>
+
+   <formset> 
+       
+       <!-- Foreign Bus Connection (Direct to SIB) Wizard -->
+       
+       <form name="com.ibm.ws.console.sib.sibresources.wizard.FBCDirectToSIBTaskForm">
+            <field property="foreignBusRemoteCell" depends="mask">
+                <arg0 key="FBCDirectToSIB.step2.foreignBus"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${was_name}</var-value>
+                </var>
+            </field>
+            <field property="sibLink" depends="mask">
+                <arg0 key="FBCDirectToSIB.step2.sibLink"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${was_name}</var-value>
+                </var>
+            </field>
+           <field property="bootstrapEndpoints" depends="mask">
+                <arg0 key="FBCDirectToSIB.step2.boostrapEndpoints"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${bootstrapEndpointsMask}</var-value>
+                </var>
+           </field>                          
+       </form>         
+         
+         
+       <!-- Foreign Bus Connection (Direct to WMQ) Wizard -->
+       
+       <form name="com.ibm.ws.console.sib.sibresources.wizard.FBCDirectToWMQTaskForm">
+            <field property="virtualQueueManager" depends="mask">
+                <arg0 key="FBCDirectToWMQ.step1.VirtualQueueManager"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${mqname}</var-value>
+                </var>
+            </field>         
+            <field property="foreignBus" depends="mask">
+                <arg0 key="FBCDirectToWMQ.step2.foreignBusName"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${was_name}</var-value>
+                </var>
+            </field>
+            <field property="mqLink" depends="mask">
+                <arg0 key="FBCDirectToWMQ.step2.mqLink"/>
+                <var>
+                    <var-name>mask</var-name>
+                    <var-value>${was_name}</var-value>
+                </var>
+            </field>
+           <field property="wmqReceiverChannel" depends="maxlength,mask">
+               <arg0 key="FBCDirectToWMQ.step2.wmqReceiverChannel"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>20</var-value>
+               </var>  
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>             
+           </field>
+           <field property="wmqSenderChannel" depends="maxlength,mask">
+               <arg0 key="FBCDirectToWMQ.step2.wmqSenderChannel"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>20</var-value>
+               </var>  
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>                             
+           </field>       
+           <field property="wmqPort" depends="integer,range">
+               <arg0 key="FBCDirectToWMQ.step2.wmqPort"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>65535</var-value>
+               </var>
+           </field>                                        
+       </form>         
+                  
+    
+       <!-- Messaging Bus -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBusDetailForm">
+           <field property="destinationHighMsgs" depends="long,longRange">
+               <arg0 key="SIBus.destinationHighMsgs.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Bus security -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.security.SIBusSecurityDetailForm">
+           <field property="securityGroupCacheTimeout" depends="required,long,longRange">
+               <arg0 key="SIBus.securityGroupCacheTimeout.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>99999</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Bus Member -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBusMemberDetailForm">
+       </form>
+
+       <!-- Messaging Engine -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMessagingEngineDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBMessagingEngine.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBMessagingEngine.uuid.displayName"/>
+           </field>
+           <field property="destinationHighMsgs" depends="long,longRange">
+               <arg0 key="SIBMessagingEngine.destinationHighMsgs.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="blockedRetryTimeout" depends="long,longRange">
+               <arg0 key="SIBMessagingEngine.blockedRetryTimeout.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>           
+           <field property="busName" depends="required">
+               <arg0 key="SIBMessagingEngine.busName.displayName"/>
+           </field>
+           <field property="busUuid" depends="required">
+               <arg0 key="SIBMessagingEngine.busUuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- Datastore -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBDatastoreDetailForm">
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDatastore.uuid.displayName"/>
+           </field>
+           <field property="dataSourceName" depends="required">
+               <arg0 key="SIBDatastore.dataSourceName.displayName"/>
+           </field>
+           <field property="permanentTables" depends="integer,range">
+               <arg0 key="SIBDatastore.permanentTables.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="temporaryTables" depends="integer,range">
+               <arg0 key="SIBDatastore.temporaryTables.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+       <form name="com.ibm.ws.console.sib.sibresources.newClusterME.SIBDatastoreDetailForm">
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDatastore.uuid.displayName"/>
+           </field>
+           <field property="dataSourceName" depends="required">
+               <arg0 key="SIBDatastore.dataSourceName.displayName"/>
+           </field>
+           <field property="permanentTables" depends="integer,range">
+               <arg0 key="SIBDatastore.permanentTables.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="temporaryTables" depends="integer,range">
+               <arg0 key="SIBDatastore.temporaryTables.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Mediation thread pool -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMediationThreadPoolDetailForm">
+           <field property="minimumSize" depends="integer,range">
+               <arg0 key="SIBMediationThreadPool.minimumSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="maximumSize" depends="integer,range">
+               <arg0 key="SIBMediationThreadPool.maximumSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="inactivityTimeout" depends="integer,range">
+               <arg0 key="SIBMediationThreadPool.inactivityTimeout.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Properties -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBusPropertyDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="Property.name.displayName"/>
+           </field>
+           <field property="value" depends="required">
+               <arg0 key="Property.value.displayName"/>
+           </field>
+       </form>
+
+
+       <!-- Queue Destinations -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBQueueDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBDestination.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDestination.uuid.displayName"/>
+           </field>
+           <field property="defaultPriority" depends="integer,range">
+               <arg0 key="SIBDestination.defaultPriority.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9</var-value>
+               </var>
+           </field>
+           <field property="blockedRetryTimeout" depends="long,longRange">
+               <arg0 key="SIBQueue.overrideMEBlockedRetryTimeout.text.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>-1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>           
+           <field property="maxFailedDeliveries" depends="integer,range">
+               <arg0 key="SIBDestination.maxFailedDeliveries.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- TopicSpace Destinations -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBTopicSpaceDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBDestination.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDestination.uuid.displayName"/>
+           </field>
+           <field property="defaultPriority" depends="integer,range">
+               <arg0 key="SIBDestination.defaultPriority.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9</var-value>
+               </var>
+           </field>
+           <field property="blockedRetryTimeout" depends="long,longRange">
+               <arg0 key="SIBQueue.overrideMEBlockedRetryTimeout.text.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>-1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>             
+           <field property="maxFailedDeliveries" depends="integer,range">
+               <arg0 key="SIBDestination.maxFailedDeliveries.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Alias Destinations -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBDestinationAliasDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBDestination.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDestination.uuid.displayName"/>
+           </field>
+           <field property="defaultPriority" depends="integer,range">
+               <arg0 key="SIBDestination.defaultPriority.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>-1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Foreign Destinations -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBDestinationForeignDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBDestination.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBDestination.uuid.displayName"/>
+           </field>
+           <field property="defaultPriority" depends="integer,range">
+               <arg0 key="SIBDestination.defaultPriority.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Queue Localization Points -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBQueueLocalizationPointDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBLocalizationPoint.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.uuid.displayName"/>
+           </field>
+           <field property="destinationHighMsgs" depends="long,longRange">
+               <arg0 key="SIBLocalizationPoint.destinationHighMsgs.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="targetUuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.targetUuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- TopicSpace Localization Points -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBTopicSpaceLocalizationPointDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBLocalizationPoint.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.uuid.displayName"/>
+           </field>
+           <field property="destinationHighMsgs" depends="long,longRange">
+               <arg0 key="SIBLocalizationPoint.destinationHighMsgs.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="targetUuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.targetUuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- Mediation Localization Points -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMediationLocalizationPointDetailForm">
+           <field property="identifier" depends="required">
+               <arg0 key="SIBLocalizationPoint.identifier.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.uuid.displayName"/>
+           </field>
+           <field property="destinationHighMsgs" depends="long,longRange">
+               <arg0 key="SIBLocalizationPoint.destinationHighMsgs.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="targetUuid" depends="required">
+               <arg0 key="SIBLocalizationPoint.targetUuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- MQ Link Receiver Channel -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQLinkReceiverChannelDetailForm">
+           <field property="receiverChannelName" depends="maxlength">
+               <arg0 key="SIBMQLinkReceiverChannel.receiverChannelName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>20</var-value>
+               </var>               
+           </field>
+       </form>
+
+       <!-- MQ Link Sender Channel -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQLinkSenderChannelDetailForm">
+           <field property="senderChannelName" depends="maxlength">
+               <arg0 key="SIBMQLinkSenderChannel.senderChannelName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>20</var-value>
+               </var>               
+           </field>
+           <field property="port" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.port.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="discInterval" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.discInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999</var-value>
+               </var>
+           </field>
+           <field property="shortRetryCount" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.shortRetryCount.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="shortRetryInterval" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.shortRetryInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="longRetryCount" depends="long,range">
+               <arg0 key="SIBMQLinkSenderChannel.longRetryCount.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="longRetryInterval" depends="long,range">
+               <arg0 key="SIBMQLinkSenderChannel.longRetryInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- MQ Link -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQLinkDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBMQLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBMQLink.uuid.displayName"/>
+           </field>
+           <field property="foreignBusName" depends="required">
+               <arg0 key="SIBMQLink.foreignBusName.displayName"/>
+           </field>
+           <field property="qmName" depends="required,maxlength,mask">
+               <arg0 key="SIBMQLink.qmName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>48</var-value>
+               </var>  
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="batchSize" depends="integer,range">
+               <arg0 key="SIBMQLink.batchSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9999</var-value>
+               </var>
+           </field>
+           <field property="maxMsgSize" depends="integer,range">
+               <arg0 key="SIBMQLink.maxMsgSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>104857600</var-value>
+               </var>
+           </field>
+           <field property="heartBeat" depends="integer,range">
+               <arg0 key="SIBMQLink.heartBeat.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999</var-value>
+               </var>
+           </field>
+           <field property="sequenceWrap" depends="long,range">
+               <arg0 key="SIBMQLink.sequenceWrap.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>100</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- MQLink create wizard -->
+
+       <form name="MQLinkCreateReceiverPropertiesForm">
+           <field property="receiverChannelName" depends="maxlength">
+               <arg0 key="SIBMQLinkReceiverChannel.receiverChannelName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>20</var-value>
+                 </var>               
+           </field>
+       </form>
+       <form name="MQLinkCreateSenderPropertiesForm">
+           <field property="senderChannelName" depends="maxlength">
+               <arg0 key="SIBMQLinkSenderChannel.senderChannelName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                 <var-value>20</var-value>
+               </var>               
+           </field>
+           <field property="port" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.port.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="discInterval" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.discInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999</var-value>
+               </var>
+           </field>
+           <field property="shortRetryCount" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.shortRetryCount.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="shortRetryInterval" depends="integer,range">
+               <arg0 key="SIBMQLinkSenderChannel.shortRetryInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="longRetryCount" depends="long,range">
+               <arg0 key="SIBMQLinkSenderChannel.longRetryCount.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+           <field property="longRetryInterval" depends="long,range">
+               <arg0 key="SIBMQLinkSenderChannel.longRetryInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+       </form>
+       <form name="MQLinkCreateGeneralPropertiesForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBMQLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBMQLink.uuid.displayName"/>
+           </field>
+           <field property="foreignBusName" depends="required">
+               <arg0 key="SIBMQLink.foreignBusName.displayName"/>
+           </field>
+           <field property="qmName" depends="required">
+               <arg0 key="SIBMQLink.qmName.displayName"/>
+           </field>
+           <field property="batchSize" depends="integer,range">
+               <arg0 key="SIBMQLink.batchSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9999</var-value>
+               </var>
+           </field>
+           <field property="maxMsgSize" depends="integer,range">
+               <arg0 key="SIBMQLink.maxMsgSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>104857600</var-value>
+               </var>
+           </field>
+           <field property="heartBeat" depends="integer,range">
+               <arg0 key="SIBMQLink.heartBeat.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999</var-value>
+               </var>
+           </field>
+           <field property="sequenceWrap" depends="long,range">
+               <arg0 key="SIBMQLink.sequenceWrap.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>100</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999999</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- MQ Client Link -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQClientLinkDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBMQClientLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBMQClientLink.uuid.displayName"/>
+           </field>
+           <field property="channelName" depends="required">
+               <arg0 key="SIBMQClientLink.channelName.displayName"/>
+           </field>
+           <field property="qmName" depends="required">
+               <arg0 key="SIBMQClientLink.qmName.displayName"/>
+           </field>
+           <field property="maxMsgSize" depends="long,range">
+               <arg0 key="SIBMQClientLink.maxMsgSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>104857600</var-value>
+               </var>
+           </field>
+           <field property="heartBeat" depends="integer,range">
+               <arg0 key="SIBMQClientLink.heartBeat.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>999999</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- MQ Client Link Advanced Properties -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQClientLinkAdvancedPropertiesDetailForm">
+       </form>
+
+       <!-- Pub/Sub Broker Profile -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.new.SIBPSBBrokerProfileDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBPSBBrokerProfile.name.displayName"/>
+           </field>
+           <field property="brokerQueueManager" depends="required">
+               <arg0 key="SIBPSBBrokerProfile.brokerQueueManager.displayName"/>
+           </field>
+       </form>
+       <form name="com.ibm.ws.console.sib.sibresources.SIBPSBBrokerProfileDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBPSBBrokerProfile.name.displayName"/>
+           </field>
+           <field property="brokerQueueManager" depends="required">
+               <arg0 key="SIBPSBBrokerProfile.brokerQueueManager.displayName"/>
+           </field>
+       </form>
+
+       <!-- Pub/Sub Topic Mapping -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBPSBTopicMappingDetailForm">
+           <field property="topicName" depends="required">
+               <arg0 key="SIBPSBTopicMapping.topicName.displayName"/>
+           </field>
+       </form>
+
+       <!-- Pub/Sub Broker transactionality -->
+       <form name="com.ibm.ws.console.sib.sibresources.SIBPSBBrokerTransactionalityDetailForm">
+           <field property="batchSize" depends="integer,range">
+               <arg0 key="SIBPSBBrokerTransactionality.batchSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Pub/Sub Topic Transactionality -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBPSBTopicTransactionalityDetailForm">
+           <field property="batchSize" depends="integer,range">
+               <arg0 key="SIBPSBTopicTransactionality.batchSize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Destination Mediations -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBDestinationMediationDetailForm">
+           <field property="handlerListName" depends="required">
+               <arg0 key="SIBMediation.handlerListName.displayName"/>
+           </field>
+       </form>
+
+       <form name="com.ibm.ws.console.sib.sibresources.new.SIBDestinationMediationDetailForm">
+           <field property="uuid" depends="required">
+               <arg0 key="SIBMediation.uuid.displayName"/>
+           </field>
+           <field property="mediationName" depends="required">
+               <arg0 key="SIBMediation.mediationName.displayName"/>
+           </field>
+           <field property="handlerListName" depends="required">
+               <arg0 key="SIBMediation.handlerListName.displayName"/>
+           </field>
+       </form>
+
+       <!-- Foreign Bus -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBForeignBusDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBForeignBus.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBForeignBus.uuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- Foreign Bus create wizard -->
+
+       <form name="SIBForeignBusNewDetailsForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBForeignBus.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBForeignBus.uuid.displayName"/>
+           </field>
+       </form>
+       <form name="SIBForeignBusRoutingTypeForm">
+       </form>
+       <form name="SIBForeignBusRoutingGatewayLinkDetailForm">
+       </form>
+       <form name="SIBForeignBusRoutingMQLinkDetailForm">
+       </form>
+       <form name="SIBForeignBusRoutingNextHopDetailForm">
+       </form>
+       <form name="SIBForeignBusRoutingSummaryForm">
+       </form>
+
+       <!-- Destination Default -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBDestinationDefaultDetailForm">
+           <field property="defaultPriority" depends="required,integer,range">
+               <arg0 key="SIBDestinationDefault.defaultPriority.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>9</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- Topic Space Mapping -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBTopicSpaceMappingDetailForm">
+           <field property="description" depends="required">
+               <arg0 key="SIBTopicSpaceMapping.description.displayName"/>
+           </field>
+       </form>
+
+       <!-- Foreign Bus Routing Wizard -->
+
+       <form name="SIBForeignBusRoutingGatewayLinkDetailForm">
+       </form>
+       <form name="SIBForeignBusRoutingMQLinkDetailForm">
+       </form>
+       <form name="SIBForeignBusRoutingNextHopDetailForm">
+           <field property="nextHopBus" depends="required">
+               <arg0 key="SIBForeignBusRouting.nextHopBus.displayName"/>
+           </field>
+       </form>
+
+       <!-- Virtual Gateway Link -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBVirtualGatewayLinkDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBVirtualGatewayLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBVirtualGatewayLink.uuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- Virtual MQ Link -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBVirtualMQLinkDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBVirtualMQLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBVirtualMQLink.uuid.displayName"/>
+           </field>
+       </form>
+
+       <!-- Next Hop Bus -->
+      
+       <form name="com.ibm.ws.console.sib.sibresources.SIBNextHopBusDetailForm">
+           <field property="nextHopBus" depends="required">
+               <arg0 key="SIBNextHopsBus.nextHopBus.displayName"/>
+           </field>
+       </form>
+
+       <!-- Topic Space Mapping -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBTopicSpaceMappingDetailForm">
+       </form>
+
+       <!-- Topic Space Map Entry -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBTopicSpaceMapEntryDetailForm">
+           <field property="remoteTopicSpace" depends="required">
+               <arg0 key="SIBTopicSpaceMapEntry.remoteTopicSpace.displayName"/>
+           </field>
+       </form>
+
+       <!-- Gateway Link -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBGatewayLinkDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBGatewayLink.name.displayName"/>
+           </field>
+           <field property="uuid" depends="required">
+               <arg0 key="SIBGatewayLink.uuid.displayName"/>
+           </field>
+           <field property="foreignBusName" depends="required">
+               <arg0 key="SIBGatewayLink.foreignBusName.displayName"/>
+           </field>
+           <field property="remoteMessagingEngineName" depends="required">
+               <arg0 key="SIBGatewayLink.remoteMessagingEngineName.displayName"/>
+           </field>
+       </form>
+
+       <!-- Context Info -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBContextInfoDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBContextInfo.name.displayName"/>
+           </field>
+           <field property="value" depends="required">
+               <arg0 key="SIBContextInfo.value.displayName"/>
+           </field>
+       </form>
+       
+       <!-- Message Body -->
+       
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMessageBodyDetailForm">
+           <field property="displaySize" depends="required,integer,range">
+               <arg0 key="SIBMessageBody.displaySize.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>1</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+    
+       <!-- JFAPInboundChannel -->
+
+       <form name="com.ibm.ws.console.channelfw.channels.jfap.JFAPInboundChannelDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="TransportChannel.name.displayName"/>
+           </field>
+           <field property="discriminationWeight" depends="integer,range">
+               <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="heartbeatInterval" depends="integer,range">
+               <arg0 key="JFAPInboundChannel.heartbeatInterval.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+           <field property="heartbeatTimeout" depends="integer,range">
+               <arg0 key="JFAPInboundChannel.heartbeatTimeout.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- MQFAPInboundChannel -->
+
+       <form name="com.ibm.ws.console.channelfw.channels.mqfap.MQFAPInboundChannelDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="TransportChannel.name.displayName"/>
+           </field>
+           <field property="discriminationWeight" depends="integer,range">
+               <arg0 key="InboundTransportChannel.discriminationWeight.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                   <var-name>min</var-name>
+                   <var-value>0</var-value>
+               </var>
+               <var>
+                   <var-name>max</var-name>
+                   <var-value>2147483647</var-value>
+               </var>
+           </field>
+       </form>
+       
+       <!-- MQServer -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQServerNewDetailForm">
+           <field property="name" depends="required,mask">
+               <arg0 key="SIBMQServer.name.displayName"/>
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${was_name}</var-value>
+               </var>
+           </field>           
+           <field property="qmName" depends="required,maxlength,mask">
+               <arg0 key="SIBMQServer.mqname.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="host" depends="required">
+               <arg0 key="SIBMQServer.adminHost.displayName"/>
+           </field>
+           <field property="port" depends="required,integer,range">
+               <arg0 key="SIBMQServer.adminPort.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>65535</var-value>
+               </var>
+           </field>
+           <field property="channel" depends="required,maxlength,mask">
+               <arg0 key="SIBMQServer.adminChannel.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>20</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="replyToQueue" depends="maxlength,mask">
+               <arg0 key="SIBMQServer.replyQueue.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+       </form>
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQServerDetailForm">
+           <field property="name" depends="required">
+               <arg0 key="SIBMQServer.name.displayName"/>
+           </field>
+           <field property="qmName" depends="required,maxlength,mask">
+               <arg0 key="SIBMQServer.mqname.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="host" depends="required">
+               <arg0 key="SIBMQServer.adminHost.displayName"/>
+           </field>
+           <field property="port" depends="required,integer,range">
+               <arg0 key="SIBMQServer.adminPort.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>65535</var-value>
+               </var>
+           </field>
+           <field property="channel" depends="required,maxlength,mask">
+               <arg0 key="SIBMQServer.adminChannel.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>20</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="replyToQueue" depends="maxlength,mask">
+               <arg0 key="SIBMQServer.replyQueue.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+       </form>
+       
+       <!-- MQServer Bus Member -->
+              
+       <form name="com.ibm.ws.console.sib.sibresources.SIBMQServerBusMemberDetailForm">
+           <field property="virtualQueueManagerName" depends="maxlength,mask">
+               <arg0 key="SIBMQServerBusMember.virtualQueueManagerName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="channel" depends="maxlength,mask">
+               <arg0 key="SIBMQServerBusMember.defaultChannel.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>20</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="port" depends="integer,range">
+               <arg0 key="SIBMQServerBusMember.defaultPort.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>65535</var-value>
+               </var>
+           </field>
+       </form>
+       
+       <!-- Bus Member Wizard -->
+       
+       <form name="OverrideWMQPropertiesForm">
+           <field property="channel" depends="maxlength,mask">
+               <arg0 key="SIBMQServerBusMember.defaultChannel.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>20</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+           <field property="port" depends="integer,range">
+               <arg0 key="SIBMQServerBusMember.defaultPort.displayName"/>
+               <arg1 name="range" key="${var:min}" resource="false"/>
+               <arg2 name="range" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>65535</var-value>
+               </var>
+           </field>
+       </form>
+
+       <form name="com.ibm.ws.console.sib.sibresources.busmember.ConfigureMQBusMemberTaskForm">
+           <field property="virtualQueueManagerName" depends="maxlength,mask">
+               <arg0 key="SIBMQServerBusMember.virtualQueueManagerName.displayName"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+       </form>
+    
+       <!-- SIBMQQueueLocalizationPoint detail -->
+      
+       <form name="com.ibm.ws.console.sib.sibresources.mqlocalizations.SIBMQQueueLocalizationPointDetailForm">
+           <field property="mqQueueName" depends="maxlength,mask,required">
+               <arg0 key="SIBDestination.new.queue.step3.name"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+       </form>
+
+       <!-- SIBMQMediationLocalizationPoint detail -->
+
+       <form name="com.ibm.ws.console.sib.sibresources.mqlocalizations.SIBMQMediationLocalizationPointDetailForm">
+           <field property="mqQueueName" depends="maxlength,mask,required">
+               <arg0 key="SIBDestination.new.queue.step3.name"/>
+               <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                 <var-name>maxlength</var-name>
+                 <var-value>48</var-value>
+               </var>               
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+           </field>
+       </form>
+              
+       <!-- SIBFilestore detail -->
+              
+        <form name="com.ibm.ws.console.sib.sibresources.SIBFilestoreDetailForm">
+           <field property="logSize" depends="required,long,longRange">
+               <arg0 key="SIBFilestore.logSize.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>10</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="logDirectory" depends="required">
+               <arg0 key="SIBFilestore.logDirectoryPath.displayName"/>
+           </field>
+           <field property="minPermanentStoreSize" depends="required,long,longRange">
+               <arg0 key="SIBFilestore.minStoreSize.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="maxPermanentStoreSize" depends="long">
+               <arg0 key="SIBFilestore.maxStoreSize.displayName"/>
+           </field>
+           <field property="permanentStoreDirectory" depends="required">
+               <arg0 key="SIBFilestore.storeDirectoryPath.displayName"/>
+           </field>
+           <field property="minTemporaryStoreSize" depends="required,long,longRange">
+               <arg0 key="SIBFilestore.minTempStoreSize.displayName"/>
+               <arg1 name="longRange" key="${var:min}" resource="false"/>
+               <arg2 name="longRange" key="${var:max}" resource="false"/>
+               <var>
+                 <var-name>min</var-name>
+                 <var-value>0</var-value>
+               </var>
+               <var>
+                 <var-name>max</var-name>
+                 <var-value>9223372036854775807</var-value>
+               </var>
+           </field>
+           <field property="maxTemporaryStoreSize" depends="long">
+               <arg0 key="SIBFilestore.maxTempStoreSize.displayName"/>
+           </field>
+           <field property="temporaryStoreDirectory" depends="required">
+               <arg0 key="SIBFilestore.storeTempDirectoryPath.displayName"/>
+           </field>
+       </form>
+
+        <form name="com.ibm.ws.console.sib.sibresources.SIBWMQServerSvrconnChannelDetailForm">
+            <field property="name" depends="required">
+                <arg0 key="SIBWMQServerSvrconnChannel.name.displayName"/>
+            </field>
+        </form>
+
+       <form name="com.ibm.ws.console.sib.sibresources.SIBWMQServerEndpointDetailForm">
+            <field property="host" depends="required">
+                <arg0 key="SIBWMQServerEndpoint.host.displayName"/>
+            </field>
+           <field property="port" depends="required">
+                <arg0 key="SIBWMQServerEndpoint.port.displayName"/>
+            </field>
+        </form>
+
+        <!-- New Gateway Link -->
+
+        <form name="SelectSIBLinkTargetForm">
+            <field property="foreignBus" depends="required">
+                <arg0 key="SIBLink.foreignBus.displayName"/>
+            </field>
+            <field property="localMessagingEngine" depends="required">
+                <arg0 key="SIBLink.localMessagingEngine.displayName"/>
+            </field>
+            <field property="name" depends="required">
+                <arg0 key="SIBLink.name.displayName"/>
+            </field>
+            <field property="remoteMessagingEngine" depends="required">
+                <arg0 key="SIBLink.remoteMessagingEngine.displayName"/>
+            </field>
+        </form>
+
+        <!-- New MQ Link -->
+
+        <form name="SelectSIBMQLinkTargetForm">
+            <field property="foreignBus" depends="required">
+                <arg0 key="SIBMQLinkNew.foreignBus.displayName"/>
+            </field>
+            <field property="localMessagingEngine" depends="required">
+                <arg0 key="SIBMQLinkNew.localMessagingEngine.displayName"/>
+            </field>
+            <field property="name" depends="required">
+                <arg0 key="SIBMQLinkNew.name.displayName"/>
+            </field>
+            <field property="virtualQueueManagerName" depends="required,maxlength,mask">
+                <arg0 key="SIBMQLinkNew.virtualQueueManagerName.displayName"/>
+                <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+               <var>
+                   <var-name>maxlength</var-name>
+                   <var-value>48</var-value>
+               </var>  
+               <var>
+                 <var-name>mask</var-name>
+                 <var-value>${mqname}</var-value>
+               </var>
+            </field>
+            <field property="mqReceiverChannelName" depends="when,required,maxlength,mask">
+                <arg0 key="SIBMQLinkNew.mqReceiverChannelName.displayName"/>
+                <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>hasSenderChannel</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+                <var>
+                    <var-name>maxlength</var-name>
+                    <var-value>20</var-value>
+                </var>  
+                <var>
+                  <var-name>mask</var-name>
+                  <var-value>${mqname}</var-value>
+                </var>             
+            </field>
+            <field property="mqHost" depends="when,required">
+                <arg0 key="SIBMQLinkNew.mqHost.displayName"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>hasSenderChannel</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+            </field>                                        
+            <field property="mqPort" depends="when,required,integer,range">
+                <arg0 key="SIBMQLinkNew.mqPort.displayName"/>
+                <arg1 name="range" key="${var:min}" resource="false"/>
+                <arg2 name="range" key="${var:max}" resource="false"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>hasSenderChannel</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+                <var>
+                    <var-name>min</var-name>
+                    <var-value>0</var-value>
+                </var>
+                <var>
+                    <var-name>max</var-name>
+                    <var-value>65535</var-value>
+                </var>
+            </field>                                        
+            <field property="mqSenderChannelName" depends="when,required,maxlength,mask">
+                <arg0 key="SIBMQLinkNew.mqSenderChannelName.displayName"/>
+                <arg1 name="maxlength" key="${var:maxlength}" resource="false"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>hasReceiverChannel</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+                <var>
+                    <var-name>maxlength</var-name>
+                    <var-value>20</var-value>
+                </var>  
+                <var>
+                  <var-name>mask</var-name>
+                  <var-value>${mqname}</var-value>
+                </var>             
+            </field>
+        </form>
+
+
+        <!-- JVM settings form -->
+
+        <form name="com.ibm.ws.console.sib.sibresources.busmember.JVMSettingsTaskForm">
+            <field property="proposedInitialHeapSize" depends="when,required,integer,range">
+                <arg0 key="JVMSettings.proposedInitialHeapSize.displayName"/>
+                <arg1 name="range" key="${var:min}" resource="false"/>
+                <arg2 name="range" key="${var:max}" resource="false"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>changeHeapSize</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+                <var>
+                    <var-name>min</var-name>
+                    <var-value>0</var-value>
+                </var>
+                <var>
+                    <var-name>max</var-name>
+                    <var-value>2147483647</var-value>
+                </var>
+            </field>                                        
+            <field property="proposedMaxHeapSize" depends="when,required,integer,range">
+                <arg0 key="JVMSettings.proposedMaxHeapSize.displayName"/>
+                <arg1 name="range" key="${var:min}" resource="false"/>
+                <arg2 name="range" key="${var:max}" resource="false"/>
+                <var>
+                    <var-name>field[0]</var-name> 
+                    <var-value>changeHeapSize</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldTest[0]</var-name> 
+                    <var-value>EQUAL</var-value> 
+                </var>
+                <var>
+                    <var-name>fieldValue[0]</var-name> 
+                    <var-value>true</var-value> 
+                </var>
+                <var>
+                    <var-name>min</var-name>
+                    <var-value>0</var-value>
+                </var>
+                <var>
+                    <var-name>max</var-name>
+                    <var-value>2147483647</var-value>
+                </var>
+            </field>
+        </form>
+
+    </formset>
+    
+</form-validation>
+

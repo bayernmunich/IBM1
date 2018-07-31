@@ -1,0 +1,635 @@
+# (C) Copyright IBM Corp. 2004,2005,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you 
+# in the  use of  the product. The code is provided 'AS IS', without warranty or 
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+set enableSyntax "enable"
+set disableSyntax "disable"
+set isEnabledSyntax "isEnabled"
+set enableServerSyntax "enableServer <nodeName> <serverName>"
+set disableServerSyntax "disableServer <nodeName> <serverName>"
+set isServerEnabledSyntax "isServerEnabled <nodeName> <serverName>"
+set isNodeMaintenanceSyntax "isNodeMaintenance <nodeName>"
+set getMaxConsecutiveRestartsSyntax "getMaxConsecutiveRestarts"
+set setMaxConsecutiveRestartsSyntax "setMaxConsecutiveRestarts <number>"
+set getControlCycleLengthSyntax "getControlCycleLength"
+set setControlCycleLengthSyntax "setControlCycleLength <minutes>"
+set getMinRestartIntervalSyntax "getMinRestartInterval"
+set setMinRestartIntervalSyntax "setMinRestartInterval <minutes>"
+set getRestartTimeoutSyntax "getRestartTimeout"
+set setRestartTimeoutSyntax "setRestartTimeout <minutes>"
+
+proc help {args} {
+	global enableSyntax
+	global disableSyntax
+	global isEnabledSyntax
+	global enableServerSyntax
+    global disableServerSyntax
+    global isServerEnabledSyntax
+    global isNodeMaintenanceSyntax
+	global getMaxConsecutiveRestartsSyntax
+	global setMaxConsecutiveRestartsSyntax
+	global getControlCycleLengthSyntax
+	global setControlCycleLengthSyntax
+	global getMinRestartIntervalSyntax
+	global setMinRestartIntervalSyntax
+	global getRestartTimeoutSyntax
+	global setRestartTimeoutSyntax 
+ 
+	puts "---- This profile includes the following procedures:"
+	puts $enableSyntax
+	puts $disableSyntax
+	puts $isEnabledSyntax
+	puts $enableServerSyntax
+    puts $disableServerSyntax
+    puts $isServerEnabledSyntax
+    puts $isNodeMaintenanceSyntax
+	puts $getMaxConsecutiveRestartsSyntax
+	puts $setMaxConsecutiveRestartsSyntax
+	puts $getControlCycleLengthSyntax
+	puts $setControlCycleLengthSyntax
+	puts $getMinRestartIntervalSyntax
+	puts $setMinRestartIntervalSyntax
+	puts $getRestartTimeoutSyntax
+	puts $setRestartTimeoutSyntax 
+}
+
+proc findMBean {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+
+  set hmmMBean [ $AdminControl queryNames "WebSphere:*,type=HmmControllerMBean"]
+  if { [llength $hmmMBean ] == 0 } {
+	puts "MBean WebSphere:type=HmmControllerMBean not found"
+	return {}
+  } else {
+        set groupName HAMItemGroup:com.ibm.ws.xd.hmm.controller.HmmControllerImpl_com.ibm.ws.xd.hmm.controller.HmmController_Default
+        set hamitemsMbean [$AdminControl queryNames WebSphere:*,type=HAManagedItems,process=dmgr]
+        set activeServer [$AdminControl invoke $hamitemsMbean getActiveServerName $groupName]
+        # check if there is an active HMM Controller 
+        if { [llength $activeServer] > 0 } {   
+          foreach value $activeServer {
+             set temp [string first NODE_NAME $value]
+             if {$temp > -1} {
+                set nodeName [lindex [lindex $activeServer 1] 1]
+                break
+             }
+          }
+          foreach value $hmmMBean {
+             set temp [string first $nodeName $value]
+             if { $temp > 0 } {
+               set hmmMBean $value
+               break 
+             } 
+          }
+         } 
+         set subs [ regsub -all {\\} $hmmMBean {/} hmmMBean ] 
+  	 set theBean [ lindex $hmmMBean 0 ]
+         if { $subs > 0 } {
+ 	   regsub -all {/} $theBean {\\} theBean
+  	 }
+
+           
+  } 
+ return $theBean
+}
+
+
+#---------------------------------------------
+# enable HmmController for the cell
+#---------------------------------------------
+
+proc enable {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global enableSyntax
+
+  set Syntax "Syntax: $enableSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Enables HMM Controller for the cell"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	$AdminControl invoke $hmmMBean enable
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+  
+#---------------------------------------------
+# disable HmmController for the cell
+#---------------------------------------------
+
+proc disable {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global disableSyntax
+
+  set Syntax "Syntax: $disableSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Disables HMM Controller for the cell"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	$AdminControl invoke $hmmMBean disable
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+#---------------------------------------------
+# determine if HmmController is enabled 
+#---------------------------------------------
+
+proc isEnabled {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isEnabledSyntax
+
+  set Syntax "Syntax: $isEnabledSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Enables HmmController for the cell"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	set rsp [$AdminControl invoke $hmmMBean isEnabled]
+	if { [string compare $rsp "true"] == 0} {
+		puts "HMM Controller is enabled"
+        } elseif { [string compare $rsp "false"] == 0} {
+		puts "HMM Controller is disabled"
+        } else {
+		puts "Unknown response $rsp"
+        }
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+#---------------------------------------------
+# Enable server for restarts
+#---------------------------------------------
+
+proc enableServer {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global enableServerSyntax
+
+  set Syntax "Syntax: $enableServerSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Enables server for restarts"
+     return {}
+  }
+  if {[llength $args] < 2} {
+     puts $Syntax
+     return {}
+  }
+
+  set node [lindex $args 0]
+  set server [lindex $args 1]
+  
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	if {[catch { $AdminControl invoke $hmmMBean enableServer [list $node $server] } result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		puts "enabling $server on node $node"
+	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+}
+
+
+#---------------------------------------------
+# Disable server for restarts
+#---------------------------------------------
+
+proc disableServer {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global disableServerSyntax
+
+  set Syntax "Syntax: $disableServerSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Disables server for restarts"
+     return {}
+  }
+  if {[llength $args] < 2} {
+     puts $Syntax
+     return {}
+  }
+
+  set node [lindex $args 0]
+  set server [lindex $args 1]
+  
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	if {[catch {$AdminControl invoke $hmmMBean disableServer [list $node $server] } result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		puts "disabling $server on node $node"
+	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Check if server is enabled for restarts
+#---------------------------------------------
+
+proc isServerEnabled {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isServerEnabledSyntax
+
+  set Syntax "Syntax: $isServerEnabledSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Checks if server is enabled for restarts"
+     return {}
+  }
+  if {[llength $args] < 2} {
+     puts $Syntax
+     return {}
+  }
+
+  set node [lindex $args 0]
+  set server [lindex $args 1]
+  
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	set rsp [$AdminControl invoke $hmmMBean isServerEnabled [list $node $server] ]
+	if { [string compare $rsp "true"] == 0} {
+		puts "Server is enabled for restarts"
+        } elseif { [string compare $rsp "false"] == 0} {
+		puts "Server is disabled for restarts"
+        } else {
+		puts "Unknown response $rsp"
+        }
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+#---------------------------------------------
+# Check if HMM sees node in maintenance mode
+#---------------------------------------------
+
+proc isNodeMaintenance {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global isNodeMaintenanceSyntax
+
+  set Syntax "Syntax: $isNodeMaintenanceSyntax"
+  if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Checks if HMM sees node in maintenance mode"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+  set node [lindex $args 0]
+  
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	set rsp [$AdminControl invoke $hmmMBean isNodeMaintenance $node]
+	if { [string compare $rsp "true"] == 0} {
+		puts "Node is in maintenance mode"
+        } elseif { [string compare $rsp "false"] == 0} {
+		puts "Node is not in maintenance mode"
+        } else {
+		puts "Unknown response $rsp"
+        }
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setControlCycleLength {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setControlCycleLengthSyntax
+
+ set Syntax "Syntax: $setControlCycleLengthSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures controlCycleLength"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+  set time [lindex $args 0]
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	if {[catch {$AdminControl invoke $hmmMBean setControlCycleLength $time} result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		if { $time == 1 } {
+			puts "controlCycleLength set to $time minute" 
+		} else {
+			puts "controlCycleLength set to $time minutes" 
+		}
+	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setMaxConsecutiveRestarts {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setMaxConsecutiveRestartsSyntax
+
+ set Syntax "Syntax: $setMaxConsecutiveRestartsSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures maxConsecutiveRestarts"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+  set num [lindex $args 0]
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	if {[catch {$AdminControl invoke $hmmMBean setMaxConsecutiveRestarts $num} result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		puts "maxConsecutiveRestarts set to $num"
+	}
+	
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setMinRestartInterval {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setMinRestartIntervalSyntax
+
+ set Syntax "Syntax: $setMinRestartIntervalSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures minRestartInterval"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+  set time [lindex $args 0]
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	if {[catch {$AdminControl invoke $hmmMBean setMinRestartInterval [list $time 2] } result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		if { $time == 1 } {
+			puts "minRestartInterval set to $time minute"
+		} else {
+			puts "minRestartInterval set to $time minutes"
+		}
+	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Configuration change
+#---------------------------------------------
+proc setRestartTimeout {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global setRestartTimeoutSyntax
+
+ set Syntax "Syntax: $setRestartTimeoutSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "Configures restartTimeout"
+     return {}
+  }
+  if {[llength $args] < 1} {
+     puts $Syntax
+     return {}
+  }
+
+  set time [lindex $args 0]
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+ 
+	if {[catch {$AdminControl invoke $hmmMBean setRestartTimeout $time} result]} {
+		puts "WSADMIN EXCEPTION: ${result}"
+	} else {
+		if { $time == 1 } {
+			puts "restartTimeout set to $time minute"
+		} else {
+			puts "restartTimeout set to $time minutes"
+		}		
+	}
+	
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getRestartTimeout {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getRestartTimeoutSyntax
+
+ set Syntax "Syntax: $getRestartTimeoutSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "gets restartTimeout"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+  	set rto [$AdminControl invoke $hmmMBean getRestartTimeout]
+  	if { $rto == 1 } {
+  		puts "$rto minute"
+  	} else {
+   		puts "$rto minutes"
+   	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getMaxConsecutiveRestarts {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getMaxConsecutiveRestartsSyntax
+
+ set Syntax "Syntax: $getMaxConsecutiveRestartsSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "gets maxConsecutiveRestarts"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+	$AdminControl invoke $hmmMBean getMaxConsecutiveRestarts
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getControlCycleLength {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getControlCycleLengthSyntax
+
+ set Syntax "Syntax: $getControlCycleLengthSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "gets controlCycleLength"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+  	set cl [$AdminControl invoke $hmmMBean getControlCycleLength]
+  	if { $cl == 1 } {
+  		puts "$cl minute"
+  	} else {
+  		puts "$cl minutes"
+  	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+
+#---------------------------------------------
+# Read configuration
+#---------------------------------------------
+proc getMinRestartInterval {args} {
+  global AdminConfig
+  global AdminControl
+  global env
+  global getMinRestartIntervalSyntax
+
+ set Syntax "Syntax: $getMinRestartIntervalSyntax"
+ if {[regexp help [lindex $args 0]]} {
+     puts $Syntax
+     puts ""
+     puts "gets minRestartInterval"
+     return {}
+  }
+
+  set hmmMBean [ findMBean ]
+  if { [llength $hmmMBean ] != 0 } {
+  	set rt [$AdminControl invoke $hmmMBean getMinRestartInterval]
+  	set rtu [$AdminControl invoke $hmmMBean getMinRestartIntervalUnits]   	
+  	set units { milliseconds seconds minutes hours days }
+  	set unit { millisecond second minute hours day }
+
+  	if { $rt == 1 } {
+  		puts "$rt [lindex $unit $rtu]"
+  	} else {	
+  		puts "$rt [lindex $units $rtu]"
+	}
+  } else {
+  	puts "ERROR: cannot locate HMM Mbean"
+  }
+  
+}
+

@@ -1,0 +1,71 @@
+<project name="removeProxyServerTemplate" default="removeProxyServerTemplate" basedir=".">
+
+    <property environment="env"/>
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="replaceStringRegExp"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceStringRegExpAntTask"/>        
+
+
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+        
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    
+    <target name="setOSFileSeparator"
+            description="Sets the current file separator for this platform (file.separator is unreliable on ANT 1.5.4)">
+            
+        <condition property="separatorFile" value="/">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="separatorFile" value="\">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+    <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+            description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+            
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+        
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="WSADMIN_EXECUTABLE" value="${WAS_HOME}/bin/wsadmin.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+        
+        <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+    </target>
+
+    <target name="removeConfigArtifacts" description="remove any config objects created using template">
+	
+    </target>
+
+    <target name="removetemplates" description="remove proxy config and template files from the profile directory">
+        <delete file="${profilePath}/config/.repository/proxy-metadata.xml"/>
+        <delete file="${profilePath}/config/templates/chains/proxy-chains.xml"/>
+        <delete dir="${profilePath}/config/templates/servertypes/PROXY_SERVER"/>
+    </target>
+
+    <target name="removeProxyServerTemplate"
+        description="Bootstrap WCCM Files"
+        depends="detectCurrentOSFamily,
+            setOSFileSeparator,
+	    removetemplates"/>
+</project>

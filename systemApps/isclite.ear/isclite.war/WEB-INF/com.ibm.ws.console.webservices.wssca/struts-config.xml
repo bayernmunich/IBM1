@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+// THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+// 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N01, 5722-WE2 (C) COPYRIGHT International Business Machines Corp. 1997, 2008
+// All Rights Reserved * Licensed Materials - Property of IBM
+// US Government Users Restricted Rights - Use, duplication or disclosure
+// restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
+
+<!DOCTYPE struts-config PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+          "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+
+<struts-config>
+   <form-beans>
+       <form-bean name="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetCollectionForm" type="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetCollectionForm"/>
+       <form-bean name="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetDetailForm" type="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetDetailForm"/>
+   </form-beans> 
+
+    <global-forwards>
+        <forward name="SCAClientPolicySetAttachment.content.main" path="SCAClientPolicySetAttachment.content.main"/>
+        <forward name="SCAProviderPolicySetAttachment.content.main" path="SCAProviderPolicySetAttachment.content.main"/>
+        <forward name="AttachedDeployedAsset.content.main" path="AttachedDeployedAsset.content.main"/>
+    </global-forwards>
+
+   <action-mappings>
+
+     <action path="/com.ibm.ws.console.webservices.wssca.forwardCmd"
+              type="com.ibm.ws.console.core.action.ForwardAction">
+          <forward name="AttachedDeployedAsset.content.main" path="AttachedDeployedAsset.content.main"/>
+     </action>
+
+     <action name="SCAClientWSAdminDetailAction"
+             path="/scaclientWSAdminDetailPath" type="com.ibm.ws.console.webservices.wsadmin.action.WebservicesPolicySetsCollectionAction" input="SCAClientWSAdmin.config.view">
+             <forward name="error" path="SCAClientWSAdmin.config.view"/>
+             <forward name="success" path="navigatorCmd.do?forwardName=SCAClientWSAdmin.config.view"/>
+     </action>
+
+     <action name="SCAProviderWSAdminDetailAction"
+             path="/scaproviderWSAdminDetailPath" type="com.ibm.ws.console.webservices.wssca.SCAWebservicesPolicySetsCollectionAction" input="SCAProviderWSAdmin.config.view">
+             <forward name="error" path="SCAProviderWSAdmin.config.view"/>
+             <forward name="success" path="navigatorCmd.do?forwardName=SCAProviderWSAdmin.config.view"/>
+            <forward name="ViewWSDLForward" path="/viewWSDLCmd.do"/> 
+            <forward name="gotoWsnDetailView" path="WSNService.config.view"/>
+     </action>
+
+     <!-- SCA Services Provider Policy Set and Bindings panel -->
+
+        <action
+            name="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentCollectionForm"
+            path="/scaProviderPolicySetAttachmentCollection" type="com.ibm.ws.console.webservices.wsadmin.action.WebservicesPolicySetsCollectionAction"
+            input="SCAPolicySetAttachment.content.main">
+            <forward name="error" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAProviderolicySetAttachment.content.main"/>
+            <forward name="policySetAttachmentCollection" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAProviderolicySetAttachment.content.main"/>
+            <forward name="success" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAProviderolicySetAttachment.content.main"/>
+        </action>
+
+     <!-- SCA Services Client Policy Set and Bindings panel -->
+
+        <action
+            name="com.ibm.ws.console.webservices.policyset.attachment.PolicySetAttachmentCollectionForm"
+            path="/scaClientPolicySetAttachmentCollection" type="com.ibm.ws.console.webservices.wsadmin.action.WebservicesPolicySetsCollectionAction"
+            input="SCAClientPolicySetAttachment.content.main">
+            <forward name="error" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAClientPolicySetAttachment.content.main"/>
+            <forward name="policySetAttachmentCollection" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAClientPolicySetAttachment.content.main"/>
+            <forward name="success" 
+             path="com.ibm.ws.console.webservices.wsadmin.forwardCmd.do?forwardName=SCAClientPolicySetAttachment.content.main"/>
+        </action>
+
+      <!-- AttachedDeployedAsset collection view  LIDB3796-41.2-->
+
+        <action
+            name="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetCollectionForm"
+            path="/attachedDeployedAssetCollection" type="com.ibm.ws.console.webservices.wssca.AttachedDeployedAssetCollectionAction">
+            <forward name="failure" path="/error1.jsp"/>
+            <forward name="success" path="com.ibm.ws.console.webservices.wssca.forwardCmd.do?forwardName=AttachedDeployedAsset.config.view"/>
+            <forward name="attachedDeployedAssetCollection" path="AttachedDeployedAsset.content.main"/>
+        </action>
+
+   </action-mappings>
+</struts-config>

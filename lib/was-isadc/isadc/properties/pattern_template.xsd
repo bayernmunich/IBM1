@@ -1,0 +1,327 @@
+<?xml version="1.0" ?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004, 2007. All Rights Reserved * Licensed Materials - Property of IBM -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	targetNamespace="http://www.ibm.com/autopd/pattern" 
+	xmlns="http://www.ibm.com/autopd/pattern"
+	elementFormDefault="qualified">
+    <xsd:element name="delimiter">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="1" minOccurs="0" ref="timestamp"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="pattern"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <xsd:attribute name="value" type="xsd:string" use="required"/>
+            <xsd:attribute name="timeRangeApplies" type="xsd:boolean" use="optional" default="false"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="delimiterid">
+        <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <xsd:attribute name="type" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="timestamp">
+        <xsd:complexType>
+            <xsd:attribute name="group" type="xsd:string" use="required"/>
+            <xsd:attribute name="pattern" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    
+    
+<!-- Begin schema elements for XML document processing -->
+    <xsd:element name="xmlDelimiter">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="1" minOccurs="1" ref="xmlLogRecord"/>
+                <xsd:element maxOccurs="1" minOccurs="1" ref="xmlMatch"/>
+                <xsd:element maxOccurs="1" minOccurs="1" ref="xmlGroups"/>
+            </xsd:sequence>
+            <xsd:attribute name="id" type="xsd:string" use="required"/>
+            <xsd:attribute name="documentXsd" type="xsd:string" use="required"/>
+         </xsd:complexType>
+    </xsd:element>
+
+<!-- The <xmlLogRecord> element identifies the XML elements representing
+     the log records that are candidates for extraction.
+--> 
+    <xsd:element name="xmlLogRecord">
+        <xsd:complexType>
+           <xsd:attribute name="elementType" type="xsd:string" use="required"/>
+           <xsd:attribute name="level" type="XmlLevelType" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+
+ 
+<!-- The <xmlMatch> element specifies the criteria for selecting an
+	 XML element for inclusion in the analysis report.  It plays the
+	 role of the SQL "WHERE" clause.
+--> 
+    <xsd:element name="xmlMatch">
+        <xsd:complexType>
+            <xsd:sequence>
+            	<!-- Multiple <choice> elements are ANDed together -->
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
+					<xsd:element ref="xmlStringAtom"/>
+					<xsd:element ref="xmlNumericAtom"/>
+					<xsd:element ref="xmlOr"/>
+				</xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute name="matchAll" type="xsd:boolean" default="false"/>
+        </xsd:complexType>
+    </xsd:element>
+
+<!-- The <xmlOr> element expresses a disjunction (OR) of a set of
+     <xmlAtom> elements.
+--> 
+    <xsd:element name="xmlOr">
+        <xsd:complexType>
+            <xsd:sequence>
+				<xsd:choice minOccurs="2" maxOccurs="unbounded">
+					<xsd:element ref="xmlStringAtom"/>
+					<xsd:element ref="xmlNumericAtom"/>
+				</xsd:choice>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+ 
+<!-- The <xmlStringAtom> element identifies one field of a XML record to 
+	 match against.  The value is a regular expression, against which the 
+	 corresponding field of the XML record is tested.  The attribute 
+	 "negated" determines whether the match should be negated, so that XML
+	 records that do not satisfy the indicated  match are selected.  
+--> 
+    <xsd:element name="xmlStringAtom">
+		<xsd:complexType>
+			<xsd:simpleContent>	
+				<xsd:extension base="xsd:string">
+					<xsd:attribute name="xmlTarget" type="XmlTargetType" use="required"/>
+           			<xsd:attribute name="negated" type="xsd:boolean" use="optional" default="false"/>
+				</xsd:extension>
+			</xsd:simpleContent>
+        </xsd:complexType>
+    </xsd:element>
+
+<!-- The <xmlNumericAtom> element identifies one field of a XML record 
+	 to match against.  The value is an integer, against which the 
+	 corresponding field of the XML record is tested.  The attribute 
+	 "comparisonOperator" indicates the test to be performed - for example,
+	 the comparisonOperator value "greaterThan" tests whether the value
+	 of the field in the XML record is greater than the value of this 
+	 element.  The attribute "negated" determines whether the match should
+	 be negated, so that XML records that do not satisfy the indicated match
+	 are selected.  
+--> 
+    <xsd:element name="xmlNumericAtom">
+		<xsd:complexType>
+			<xsd:simpleContent>	
+				<xsd:extension base="xsd:integer">
+					<xsd:attribute name="xmlTarget" type="XmlTargetType" use="required"/>
+					<xsd:attribute name="comparisonOperator" type="ComparisonOperatorType" use="required"/>
+           			<xsd:attribute name="negated" type="xsd:boolean" use="optional" default="false"/>
+				</xsd:extension>
+			</xsd:simpleContent>
+        </xsd:complexType>
+    </xsd:element>
+
+<!-- The XmlTargetType contains groups of enumeration values for
+	 each XML schema covered by the analysis function.  These values
+	 represent easy-to-understand designations for items to be
+	 extracted from the corresponding documents.  Each group
+	 requires its own Java class to perform the extractions.
+-->
+<xsd:simpleType name="XmlTargetType">
+	<xsd:restriction base="xsd:string">
+
+		<!-- Enumeration values for CBE documents. -->
+		<xsd:enumeration value="entireCBE"/>
+		<xsd:enumeration value="cbeSituationCategory"/>
+		<xsd:enumeration value="cbeSeverity"/>
+		<xsd:enumeration value="cbeTimestamp"/>
+		<xsd:enumeration value="cbeMsgId"/>
+
+		<!-- Enumeration values for event.history documents. -->
+		<xsd:enumeration value="entireUpdateEvent"/>
+		<xsd:enumeration value="updateEventId"/>
+		<xsd:enumeration value="updateAction"/>
+		<xsd:enumeration value="updateType"/>
+		<xsd:enumeration value="updateEventStartTimestamp"/>
+		<xsd:enumeration value="updateEventEndTimestamp"/>
+		<xsd:enumeration value="updateEventResult"/>
+
+	</xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="XmlLevelType">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="top"/>
+		<xsd:enumeration value="all"/>
+	</xsd:restriction>
+</xsd:simpleType>
+
+<xsd:simpleType name="ComparisonOperatorType">
+	<xsd:restriction base="xsd:string">
+		<xsd:enumeration value="equalTo"/>
+		<xsd:enumeration value="lessThan"/>
+		<xsd:enumeration value="lessThanOrEqualTo"/>
+		<xsd:enumeration value="greaterThan"/>
+		<xsd:enumeration value="greaterThanOrEqualTo"/>
+	</xsd:restriction>
+</xsd:simpleType>
+      
+<!-- The <xmlGroups> element specifies which parts of a selected record
+	 are to be extracted for inclusion in the analysis report.  It plays
+	 the role of the SQL "SELECT" clause.
+-->
+     <xsd:element name="xmlGroups">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="xmlGroup"/>
+                <xsd:element ref="formatref"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element> 
+  
+<!-- The <xmlGroup> element specifies one part of a selected record 
+     to be extracted for inclusion in the analysis report.  
+-->
+     <xsd:element name="xmlGroup">
+        <xsd:complexType>
+            <xsd:attribute name="xmlTarget" type="XmlTargetType" use="required"/>
+            <xsd:attribute name="displayName" type="xsd:string" use="required"/>
+            <xsd:attribute name="beginIndex" type="xsd:integer" use="optional"/>
+            <xsd:attribute name="beginPattern" type="xsd:string" use="optional"/>
+            <xsd:attribute name="endIndex" type="xsd:integer" use="optional"/>
+            <xsd:attribute name="endPattern" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>     
+<!-- End schema elements for xml processing -->
+ 
+     <xsd:element name="extractors">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="problem"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="delimiter"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="xmlDelimiter"/>
+                <xsd:element ref="output"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="productinfo"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="fileset">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="delimiterid"/>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="additionalProcessing"/>
+             </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="value" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="format">
+        <xsd:complexType>
+             <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="msgCatalogLookup"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="order" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="msgCatalogLookup">
+        <xsd:complexType>
+            <xsd:attribute name="group" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="formatref">
+        <xsd:complexType>
+            <xsd:attribute name="outputName" type="xsd:string" use="required"/>
+            <xsd:attribute name="formatName" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="group">
+        <xsd:complexType>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="number" type="xsd:string" use="required"/>
+            <xsd:attribute name="beginIndex" type="xsd:integer" use="optional"/>
+            <xsd:attribute name="beginPattern" type="xsd:string" use="optional"/>
+            <xsd:attribute name="endIndex" type="xsd:integer" use="optional"/>
+            <xsd:attribute name="endPattern" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="output">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="format"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+            <xsd:attribute name="format" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="pattern">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="group"/>
+                <xsd:element ref="formatref"/>
+            </xsd:sequence>
+            <xsd:attribute name="value" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="problem">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="0" ref="analysisProfile"/>
+            </xsd:sequence>
+            <xsd:attribute name="description" type="xsd:string" use="optional"/>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="analysisProfile">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" ref="fileset"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="productinfo">
+        <xsd:complexType>
+           <xsd:sequence>
+                 <xsd:element maxOccurs="unbounded" minOccurs="0" ref="propertyForReport"/>
+               	 <xsd:element maxOccurs="1" minOccurs="0" ref="msgPrefixMappingInfo"/>
+           </xsd:sequence>
+           <xsd:attribute name="analysisProfileRef" type="xsd:string" use="required"/>
+           <xsd:attribute name="name" type="xsd:string" use="required"/>
+           <xsd:attribute name="version" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="msgPrefixMappingInfo">
+        <xsd:complexType>
+            <xsd:attribute name="fileName" type="xsd:string" use="required"/>
+            <xsd:attribute name="urlPrefix" type="xsd:string" use="required"/>
+            <xsd:attribute name="keyPattern" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="propertyForReport">
+        <xsd:complexType>
+            <xsd:attribute name="label" type="xsd:string" use="required"/>
+            <xsd:attribute name="AntProperty" type="xsd:string" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="additionalProcessing">
+        <xsd:complexType>
+            <xsd:attribute name="timeStampPattern" type="xsd:string" use="optional"/>
+            <xsd:attribute name="type" type="AdditionalProcessingType" use="required"/>
+            <xsd:attribute name="indicatorPattern" type="xsd:string" use="optional"/>
+            <xsd:attribute name="searchStringPattern" type="xsd:string" use="optional"/>
+            <xsd:attribute name="file" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+	<xsd:simpleType name="AdditionalProcessingType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ltaSymptoms"/>
+			<xsd:enumeration value="adHocSymptoms"/>
+			<xsd:enumeration value="search"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+    
+</xsd:schema>

@@ -1,0 +1,1285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<plugin id="com.ibm.ws.console.dynamiccluster"
+        name="dynamiccluster"
+        version="6.0.0"
+        provider-name="IBM Corp. - WebSphere XD"
+        embedded="true"
+        context-root="dynamiccluster">
+    <requires>
+        <import plugin="com.ibm.ws.console.core"/>
+        <import plugin="com.ibm.ws.console.servermanagement"/>
+        <import plugin="com.ibm.ws.console.perftuningadmin"/>
+        <import plugin="com.ibm.ws.console.probdetermination"/>
+        <!-- hee: add sib -->
+        <import plugin="com.ibm.ws.console.sib.sibservice"/>
+        <!-- hee: add pme -->
+        <import plugin="com.ibm.ws.console.servermanagement.pme" />
+    </requires>
+
+    <extension point="com.ibm.ws.console.core.navigatorTask">
+      <tasks>
+        <task id="showDynamicCluster"
+                icon="images/onepix.gif"
+                label="nav.showDynamicCluster"
+                view="/navigatorCmd.do?forwardName=dynamiccluster.content.main"
+                weight="45"
+                external="false">
+            <category id="clusters"/>
+        </task>
+      </tasks>
+   </extension>
+
+   <extension point="com.ibm.ws.console.core.help">
+     <toc file="toc.xml" primary="true" />
+   </extension>
+
+
+   <extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="dynamiccluster.collection" contextType="DynamicCluster">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="DisplayDynamicClusterDetails.do?EditAction=true&#38;"
+              label="dynamiccluster.detail.displayname" >
+        </item>
+        <item
+              attributeName="serverTypeDisplayName"
+              sortable="sort"
+              itemURI=""
+              label="dynamiccluster.detail.servertype" >
+        </item><item
+              attributeName="opMode"
+              sortable="sort"
+              itemURI=""
+              label="dynamiccluster.detail.opmode" >
+        </item>
+    </collectionItem>
+	</extension>
+	
+	<!-- dynamic cluster collection buttons -->
+		
+	<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="dynamiccluster.collection.action" contextType="DynamicCluster">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="DynamicClusterCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="DynamicClusterCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.setmode"
+              actionURI="DynamicClusterCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+	</extension>
+
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="dynamiccluster.detailTab" contextType="DynamicCluster">
+        <tab
+              label="tab.configuration"
+              contentURI="dynamiccluster.detail.config">
+        </tab>
+    </detailTab>
+	</extension>
+	
+   <!-- Begin z/OS adaptive fields -->
+   <extension point="com.ibm.websphere.wsc.form">
+      <form id="dynamiccluster.general.properties" contextType="DynamicCluster">
+         <field
+            attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isZosDynamicCluster"  value="true"/>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isWASDynamicCluster"  value="true"/>
+            </compatibility>
+         </field >
+         <field
+            attributeName="enableHA"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isWASDynamicCluster"  value="true"/>
+            </compatibility>
+         </field >
+         <field
+            attributeName="membershipPolicy"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isManagedDynamicCluster"  value="true"/>
+            </compatibility>
+         </field >
+         <field
+            attributeName="numVerticalInstances"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isManagedDynamicCluster"  value="true"/>
+            </compatibility>
+         </field >
+      </form>
+   </extension>
+
+	<!-- dynamic cluster additional properties -->
+
+	<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="dynamiccluster.additional.properties" contextType="DynamicCluster">
+    	<link weight="10"
+              categoryId="additional.properties"
+              label="dynamiccluster.members.displayName"
+              description="dynamiccluster.members.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dynamiccluster.members.content.main">
+        </link>
+        <link weight="30"
+              categoryId="additional.properties"
+              label="dynamiccluster.template.details"
+              description="dynamiccluster.template.details.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=ServerTemplate.config.view&#38;lastPage=dynamiccluster.detail.main&#38;EditAction=true">
+              <compatibility>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isManagedDynamicCluster"  value="true"/>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isWASDynamicCluster"  value="true"/>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isODR"  value="false"/>
+              </compatibility>
+        </link>
+        <link weight="30"
+              categoryId="additional.properties"
+              label="dynamiccluster.template.details"
+              description="dynamiccluster.template.details.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=ServerODRTemplate.config.view&#38;lastPage=dynamiccluster.detail.main&#38;EditAction=true">
+              <compatibility>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isODR"  value="true"/>
+              </compatibility>
+        </link>
+        <link weight="30"
+              categoryId="additional.properties"
+              label="dynamiccluster.template.details"
+              description="dynamiccluster.template.details.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=DCMiddlewareServer.config.view&#38;lastPage=dynamiccluster.detail.main&#38;EditAction=true">
+              <compatibility>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isManagedDynamicCluster"  value="true"/>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isWASDynamicCluster"  value="false"/>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterDetailForm.isODR"  value="false"/>
+              </compatibility>
+        </link>
+        <!-- hee: no variables in XD6.1?? link weight="20"
+              categoryId="additional.properties"
+              label="dynamiccluster.variables"
+              description="dynamiccluster.variables"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcVariableSubstitutionEntry.content.main">
+        </link -->
+       	<link weight="35"
+              categoryId="additional.properties"
+              label="dynamiccluster.property.details"
+              description="dynamiccluster.property.details.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcproperty.content.main">
+        </link>		
+    </linkSet>
+	</extension>
+	
+	<!-- dynamic cluster member collection -->
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="dynamiccluster.collection" contextType="DynamicClusterMember">
+        <item
+              attributeName="memberName"
+              sortable="sort"
+              itemURI="DynamicClusterMemberCollection.do?EditAction=true&amp;lastPage=dynamiccluster.members.content.main&amp;"
+              label="ClusterMember.memberName.displayName" >
+        </item>
+        <item
+              attributeName="node"
+              sortable="sort"
+              itemURI=""
+              label="nodes.displayName" >
+        </item>
+        <item
+              attributeName="nodeVersion"
+              sortable="sort"
+              itemURI=""
+              label="node.version.displayName" >
+        </item>
+        <item
+              attributeName="weight"
+              sortable="sort"
+              itemURI=""
+              label="ClusterMember.configweight.displayName"
+   			  editable="true"
+              role="administrator,configurator" >
+        </item>
+        <item
+              attributeName="runtimeWeight"
+              sortable="sort"
+              itemURI=""
+              label="ClusterMember.runtimeweight.displayName"
+   			  editable="true"
+              role="administrator,operator" >
+        </item>
+        <item
+              attributeName="status"
+              sortable="sort"
+              itemURI=""
+              label="Server.status.displayName" >
+        </item>
+    </collectionItem>
+	</extension>
+
+	<!-- dynamic cluster member buttons -->
+	
+	<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="dynamiccluster.members.collection.action" contextType="DynamicClusterMember">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,configurator">
+             <compatibility>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isManagedDynamicCluster"  value="false"/>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isWASDynamicCluster"  value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,configurator">
+             <compatibility>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isManagedDynamicCluster"  value="false"/>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isWASDynamicCluster"  value="true"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.add"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,configurator">
+             <compatibility>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isManagedDynamicCluster"  value="false"/>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isWASDynamicCluster"  value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.remove"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,configurator">
+             <compatibility>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isManagedDynamicCluster"  value="false"/>
+               <match key="com.ibm.ws.console.dynamiccluster.form.DynamicClusterMemberCollectionForm.isWASDynamicCluster"  value="false"/>
+             </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.start"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,operator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.stop"
+              actionURI="DynamicClusterMemberCollection.do"
+              role="administrator,operator">
+        </action>
+    </actionSet>
+	</extension>
+	
+	<!-- dynamic cluster member tabs -->
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="dynamiccluster.member.detailTab" contextType="DynamicClusterMember">
+        <tab
+              label="tab.runtime"
+              contentURI="dynamiccluster.member.runtime.tab.view">
+        </tab>
+  		<tab
+              label="tab.configuration"
+              contentURI="dynamiccluster.member.config.tab.view">
+        </tab>
+    </detailTab>
+	</extension>
+	
+	<!-- dynamic cluster custom property collection -->
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="dynamiccluster.property.collection" contextType="DynamicClusterProperty">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="DynamicClusterPropertyCollection.do?EditAction=true&#38;"
+              label="dcproperty.name.displayName" >
+        </item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="dcproperty.value.displayName" >
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="dcproperty.description.displayName" >
+        </item>
+    </collectionItem>
+	</extension>
+	
+	<!-- dynamic cluster custom property buttons -->
+	
+	<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="dynamiccluster.property.collection.action" contextType="DynamicClusterProperty">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="DynamicClusterPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="DynamicClusterPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+	</extension>
+	
+	<!-- dynamic cluster custom property config tab -->
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="dynamiccluster.property.detailTab" contextType="DynamicClusterProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="dcproperty.config.tab.view">
+        </tab>
+    </detailTab>
+	</extension>	
+	
+		
+	<!-- Variables -->
+	
+	<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="dynamiccluster.variables.collection" contextType="DCVariableSubstitutionEntry">
+  		<item
+			  attributeName="symbolicName"
+			  sortable="sort"
+			  itemURI="dcVariableSubstitutionEntryCollection.do?EditAction=true"
+			  label="environment.label.name">
+		</item>
+        <item
+              attributeName="value"
+              sortable="sort"
+              itemURI=""
+              label="VariableSubstitutionEntry.value.displayName" >
+        </item>
+       	<item
+              attributeName="contextId"
+              sortable="sort"
+              itemURI=""
+              label="environment.label.scope" >
+        </item>
+    </collectionItem>
+	</extension>
+	<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="dynamiccluster.variables.action" contextType="DCVariableSubstitutionEntry">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="dcVariableSubstitutionEntryCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="dcVariableSubstitutionEntryCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+	</extension>
+	<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="dynamiccluster.variables.detailTab" contextType="DCVariableSubstitutionEntry">
+        <tab
+              label="tab.configuration"
+              contentURI="dcVariableSubstitutionEntry.config.tab.view">
+        </tab>
+    </detailTab>
+	</extension>
+	
+	<!-- end Variables -->
+
+<!-- ServerODRTemplate -->
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+         <detailTab id="dynamiccluster.server.odr.template.detailTab" contextType="ServerODRTemplate">
+           <tab
+              label="tab.configuration"
+              contentURI="ServerODRTemplate.config.tab.view">
+           </tab>
+         </detailTab>
+	</extension>
+
+       <extension point="com.ibm.websphere.wsc.form">
+           <form id="ServerODRTemplate.config.general.properties" contextType="ServerODRTemplate"/>
+       </extension>
+
+	<extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="dynamiccluster.server.odr.template.links" contextType="ServerODRTemplate">
+			<categoryDefinition weight="10" id="odr.settings.properties" parent="root" label="addprops.category.label.odrmainlabel"/>
+			<categoryDefinition weight="20" id="odrserver.properties" parent="odr.settings.properties" label="addprops.category.label.proxyserveralt"/>				
+
+			<link categoryId="odrserver.properties" weight="10"
+				label="ProxySettingsAlt.displayName"
+				description="ProxySettingsAlt.description"
+				actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=DCODRSettings.config.view&amp;lastPage=ServerODRTemplate.config.view">
+			</link>
+			<link categoryId="odrserver.properties" weight="20"
+				label="RewritingRules.displayName"
+				description="RewritingRules.description"
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=RewritingRule.content.main&amp;lastPage=ServerODRTemplate.config.view">
+			</link>
+			<link categoryId="odrserver.properties" weight="30"
+				label="StaticCachePolicy.staticCacheRules.displayName"
+				description="StaticCachePolicy.staticCacheRules.description"
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=StaticCacheRule.content.main&amp;lastPage=ServerODRTemplate.config.view">
+			</link>
+			<link categoryId="odrserver.properties" weight="50"
+				label="ProxyAlt.cacheInstance.displayName"
+				description="ProxyAlt.cacheInstance.description"
+				actionURI="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=ProxyCacheInstance.content.main&amp;lastPage=ServerODRTemplate.config.view">
+			</link>
+		</linkSet>
+	</extension>	
+
+	<extension point="com.ibm.websphere.wsc.link">
+                <linkSet id="dynamiccluster.server.odr2.template.links" contextType="ServerODRTemplate">
+        	        <categoryDefinition weight="100" id="odr.sip.properties" parent="odr.settings.properties" label="addprops.category.label.odrSIPlabel">
+ 	                        <compatibility>
+			               <match key="com.ibm.websphere.baseProductVersion" value="(6\.[1-9].*.*)|(([7-9]|[1-9][0-9]).*.*.*)"/>
+            	                </compatibility>
+	                </categoryDefinition>
+
+        	       <link categoryId="odr.sip.properties" weight="30" label="ODR.sip.odr.transports.displayName" description="SipProxy.channelfw.transports.description"
+        	               actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ServerODRTemplate.config.view&amp;chainAcceptorFilter=SIPProxyInboundChannel&amp;chainEndPointFilter=null">
+            	           <compatibility>
+				<match key="com.ibm.websphere.baseProductVersion" value="(6\.[1-9].*.*)|(([7-9]|[1-9][0-9]).*.*.*)"/>
+        	           </compatibility>
+	               </link>
+
+	               <link categoryId="odr.sip.properties" weight="40" label="SipExternalDomains.link.displayName" description="SipExternalDomains.link.description"
+            	               actionURI="com.ibm.ws.console.sipproxy.forwardCmd.do?forwardName=SipExternalDomain.content.main&amp;lastPage=ServerODRTemplate.config.view">
+	                   <compatibility>
+				<match key="com.ibm.websphere.baseProductVersion" value="(6\.[1-9].*.*)|(([7-9]|[1-9][0-9]).*.*.*)"/>
+	                   </compatibility>
+    	               </link>
+    	               <link categoryId="odr.sip.properties" weight="50" label="siprules.service.policy" description="siprules.service.policy"
+				actionURI="com.ibm.ws.console.siprules.forwardCmd.do?forwardName=sip.service.ruleset.content.main&amp;lastPage=sip.service.ruleset.content.main">
+		       </link>
+			
+		       <link categoryId="odr.sip.properties" weight="50" label="siprules.routing.policy" description="siprules.routing.policy"
+			       actionURI="com.ibm.ws.console.siprules.forwardCmd.do?forwardName=sip.routing.ruleset.content.main&amp;lastPage=sip.routing.ruleset.content.main">
+		       </link>
+	    </linkSet>
+	</extension>
+
+	<extension point="com.ibm.websphere.wsc.link">
+		<linkSet id="ProxySettings.properties.links" contextType="ODRSettings">
+			<link categoryId ="additional.properties"
+				label="Component.properties.displayName"
+				description="Component.properties.description"
+				actionURI ="com.ibm.ws.console.proxy.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties">
+			</link>
+		</linkSet>
+	</extension>
+
+    <!-- Added for clustering work to selectively remove JSPs -->                     
+ <extension point="com.ibm.websphere.wsc.form">
+     <form id="DCODRSettings.config.general.properties" contextType="ODRSettings">
+       <field 
+           attributeName="outboundSSLAliasJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <!-- ContentServer.jsp has fields controlled within the jsp itself -->
+      <field 
+           attributeName="contentServerJsp"
+           perspective="config">
+      </field >
+      <field 
+           attributeName="cachingJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="webservicesJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="exclusionJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="loggingJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="securityJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="pluginConfigPolicyJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="errorPagePolicyJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="workloadManagementJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="staticFileServingJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>
+           </compatibility>
+      </field >
+      <field 
+           attributeName="contentMappings"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+              <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>
+           </compatibility>
+      </field>
+
+      <field 
+           attributeName="generalPropertiesJsp"
+           perspective="config">
+           <compatibility>
+              <match key="com.ibm.ws.console.proxy.proxysettings.ProxySettingsDetailForm.proxyClusterSettings"  value="displayAll|displayClusterScope"/>
+           </compatibility>
+      </field >        
+    </form>
+ </extension>              
+
+	<!-- Server Template -->
+	
+	<extension point="com.ibm.websphere.wsc.detailTab">
+         <detailTab id="dynamiccluster.server.template.detailTab" contextType="ServerTemplate">
+           <tab
+              label="tab.configuration"
+              contentURI="ServerTemplate.config.tab.view">
+           </tab>
+         </detailTab>
+	</extension>
+
+       <extension point="com.ibm.websphere.wsc.form">
+           <form id="ServerTemplate.config.general.properties" contextType="ServerTemplate">
+                <field attributeName="parallelStartEnabled" perspective="config">
+                     <compatibility>
+                          <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isZosDynamicCluster" value="false"/>
+                     </compatibility>
+                </field>
+                <!-- 452513 version must be 7.0.0 or higher -->
+                <field attributeName="provisionComponents" perspective="config">
+                     <compatibility>
+                          <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="(7.*)|(([8-9]|[1-9][0-9]).*)"/>
+                     </compatibility>
+                </field>
+                <field attributeName="internalClassesAccessMode" perspective="config">
+                     <compatibility>
+                          <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+                     </compatibility>
+                </field>
+           </form>
+       </extension>
+
+	<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="dynamiccluster.server.template.links" contextType="ServerTemplate">
+        <categoryDefinition weight="10" id="servertemplate.containers.properties" parent="root" label="addprops.category.label.containers"/>
+        <categoryDefinition weight="20" id="servertemplate.SIPContainer.properties" parent="servertemplate.containers.properties" label="addprops.category.label.SIPContainers">
+            <compatibility>
+              <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+            </compatibility>
+        </categoryDefinition>
+        <categoryDefinition weight="20" id="servertemplate.webcontainer.properties" parent="servertemplate.containers.properties" label="addprops.category.label.webcontainers"/>
+        <categoryDefinition weight="30" id="servertemplate.portletcontainer.properties" parent="servertemplate.containers.properties" label="addprops.category.label.portletcontainers">
+            <compatibility>
+              <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+            </compatibility>
+        </categoryDefinition>
+        <categoryDefinition weight="40" id="servertemplate.ejbcontainer.properties" parent="servertemplate.containers.properties" label="addprops.category.label.ejbcontainers"/>
+        <categoryDefinition weight="50" id="servertemplate.containerservices.properties" parent="servertemplate.containers.properties" label="addprops.category.label.containerservices"/>
+        <categoryDefinition weight="60" id="servertemplate.businessprocessservices.properties" parent="servertemplate.containers.properties" label="addprops.category.label.businessprocessservices"/>
+        <!-- hee: add SIB -->
+        <categoryDefinition weight="15" id="servertemplate.serverSIBMessaging.properties" parent="root" label="addprops.category.label.serverSIBMessaging"/>
+        <categoryDefinition weight="20" id="servertemplate.serverinfrastructure.properties" parent="root" label="addprops.category.label.serverinfrastructure"/>
+        <categoryDefinition weight="10" id="servertemplate.javaprocessmanagement.properties" parent="servertemplate.serverinfrastructure.properties" label="addprops.category.label.javaprocessmanagement"/>
+        <categoryDefinition weight="20" id="servertemplate.administration.properties" parent="servertemplate.serverinfrastructure.properties" label="addprops.category.label.administration"/>
+        <categoryDefinition weight="30" id="servertemplate.communications.properties" parent="root" label="addprops.category.label.communications"/>
+        <categoryDefinition weight="20" id="servertemplate.messaging.properties" parent="servertemplate.communications.properties" label="addprops.category.label.messaging"/>
+        <categoryDefinition weight="40" id="servertemplate.performance.properties" parent="root" label="addprops.category.label.performance"/>
+        <!-- categoryDefinition weight="50" id="servertemplate.security.properties" parent="root" label="addprops.category.label.security"/ -->
+        <categoryDefinition weight="60" id="servertemplate.troubleshooting.properties" parent="root" label="addprops.category.label.troubleshooting"/>
+
+
+        <!-- web container settings -->
+        <link
+              categoryId="servertemplate.webcontainer.properties"
+              label="ApplicationServer.components.WebContainer.displayName"
+              description="ApplicationServer.components.WebContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.AppserverWebContainer.do?sfname=components&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.webcontainer.properties"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion" value="(6)"/>
+              </compatibility>
+        </link>
+
+
+        <!-- (carej) begin LIDB1891-8.7 -->
+        <link
+              categoryId="servertemplate.webcontainer.properties"
+              label="webcontainer.channelfw.transports.displayName"
+              description="webcontainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ServerTemplate.config.view&amp;chainAcceptorFilter=WebContainerInboundChannel&amp;chainEndPointFilter=null">
+        </link>
+        <!-- (carej) end LIDB1891-8.7 -->
+
+		<!-- EJB container settings -->
+        <link
+              categoryId="servertemplate.ejbcontainer.properties"
+              label="ApplicationServer.components.EJBContainer.displayName"
+              description="ApplicationServer.components.EJBContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBContainer.config.view&amp;sfname=components&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.ejbcontainer.properties"
+              label="EJBCache.displayName"
+              description="EJBCache.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBCache.config.view&amp;sfname=cacheSettings&amp;lastPage=ServerTemplate.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="servertemplate.ejbcontainer.properties"
+              label="EJBTimer.displayName"
+              description="EJBTimer.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=EJBTimer.config.view&amp;#38;sfname=timerSettings&amp;lastPage=ServerTemplate.config.view&amp;parentType=EJBContainer&amp;resourceUri=server.xml">
+        </link>
+
+         <!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=DCTransactionService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <!-- END LIDB1673 Vela changes -->
+
+        <!-- Troubleshooting -->
+        <link
+              categoryId="servertemplate.troubleshooting.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcLogsandtrace.content.list&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.messaging.properties"
+              label="MessageListenerService.displayName"
+              description="MessageListenerService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MessageListenerService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="ApplicationServer.components.DynamicCache.displayName"
+              description="ApplicationServer.components.DynamicCache.description"
+              actionURI="com.ibm.ws.console.dynacache.forwardCmd.do?forwardName=DynamicCache.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="JavaPersistenceAPIService.displayName"
+              description="JavaPersistenceAPIService.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=JavaPersistenceAPIService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.administration.properties"
+              label="Component.properties.displayName"
+              description="Component.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.administration.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link categoryId="servertemplate.troubleshooting.properties"
+              label="HTTPAccessLoggingService.displayName"
+              description="HTTPAccessLoggingService.description"
+              actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;lastPage=ServerTemplate.config.view&amp;sfname=services&amp;parentType=Server">
+        </link>
+        <!-- CMVC 240173 hglover@us.ibm.com -->
+        <link
+              categoryId="servertemplate.troubleshooting.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcTraceService.config.view&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.DebugService.displayName"
+              description="Server.services.DebugService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=DebugService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <!-- CMVC defect 232156 -->
+        <!--link
+              categoryId="servertemplate.troubleshooting.properties"
+              label="ServerManagement.RASLoggingService.displayName"
+              description="ServerManagement.RASLoggingService.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcRASLoggingservice.config.view&amp;lastPage=ServerTemplate.config.view">
+        </link-->
+        <link
+              categoryId="servertemplate.troubleshooting.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcLogHandlers.configspec.view&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <!-- end CMVC defect 232156 -->
+        <link
+              categoryId="servertemplate.administration.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="servertemplate.administration.properties"
+              label="Server.components.displayName"
+              description="Server.components.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerComponent.content.main&amp;sfname=components&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <!-- Begin defect 206863 -->
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isZosDynamicCluster" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="ProcessDef.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isZosDynamicCluster" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="Classloader.displayName"
+              description="Classloader.description"
+              actionURI="com.ibm.ws.console.environment.forwardCmd.do?forwardName=Classloader.content.main&amp;sfname=classloaders">
+        </link>
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="ProcessDef.execution.displayName"
+              description="ProcessDef.execution.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessExecution.config.view&amp;sfname=execution&amp;lastPage=ServerTemplate.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+              <compatibility>
+                  <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isZosDynamicCluster" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="ProcessDef.monitoringPolicy.displayName"
+              description="ProcessDef.monitoringPolicy.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=MonitoringPolicy.config.view&amp;sfname=monitoringPolicy&amp;lastPage=ServerTemplate.config.view&amp;parentType=JavaProcessDef&amp;resourceUri=server.xml">
+        </link>
+        <link
+              categoryId="servertemplate.javaprocessmanagement.properties"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isZosDynamicCluster" value="true"/>
+              </compatibility>
+        </link>
+       <!-- End defect 206863 -->
+
+        <!-- hide ports for server template
+        <link
+              categoryId="servertemplate.communications.properties"
+              weight="10"
+              label="NamedEndPoint.displayName"
+              description="NamedEndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=ServerTemplate.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+        </link> -->
+
+        <!-- LIDB3477 portletcontainer -->
+        <link categoryId="servertemplate.portletcontainer.properties"
+              label="ApplicationServer.components.PortletContainer.displayName"
+              description="ApplicationServer.components.PortletContainer.description"
+              actionURI="com.ibm.ws.console.servermanagement.portletcontainer.forwardCmd.do?forwardName=PortletContainer.config.view&amp;sfname=components&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="servertemplate.SIPContainer.properties"
+              label="SIPContainer.link.displayName"
+              description="SIPContainer.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.sipcontainer.forwardCmd.do?forwardName=SIPContainer.config.view&amp;sfname=components&amp;lastPage=ServerTemplate.config.view">
+            <compatibility>
+              <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+            </compatibility>
+        </link>
+
+        <link
+              categoryId="servertemplate.SIPContainer.properties"
+              label="SIPContainer.channelfw.transports.displayName"
+              description="SIPContainer.channelfw.transports.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ServerTemplate.config.view&amp;chainAcceptorFilter=SIPContainerInboundChannel&amp;chainEndPointFilter=null&amp;resourceUri=server.xml">
+            <compatibility>
+              <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="servertemplate.containers.properties" weight="10"
+              label="webcontainer.sessionmanager.displayName"
+              description="webcontainer.sessionmanager.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=SessionManager.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;parentType=WebContainer&amp;resourceUri=server.xml">
+              <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.dmgrMajorVersion"  value="((\d\d)|([7-9])|6\.[1-9]).*"/>
+              </compatibility>
+        </link>
+
+        <link
+              categoryId="servertemplate.performance.properties"
+              label="PMIService.displayName60"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.perf.pmi.forwardCmd.do?forwardName=PMIService.config.view60&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              </compatibility>
+        </link>
+        <!-- hee: add SIB -->
+        <link
+              categoryId="servertemplate.serverSIBMessaging.properties"
+              weight="30"
+              label="SIBService.displayName"
+              description="SIBService.description"
+              actionURI="com.ibm.ws.console.sib.sibservice.forwardCmd.do?forwardName=SIBService.config.view&amp;sfname=services&amp;resourceUri=sib-service.xml&amp;lastPage=ServerTemplate.config.view">
+            <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion"
+                       value="([6-9])"/>
+            </compatibility>
+        </link>
+        <!-- hee: add PME -->
+        <!-- activitysession service -->
+        <link
+              categoryId="servertemplate.businessprocessservices.properties"
+              label="ActivitySessionService.displayName"
+              description="ActivitySessionService.description"
+              actionURI="com.ibm.ws.console.servermanagement.pme.activitysessionservice.forwardCmd.do?forwardName=ActivitySessionService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+
+        <!-- appprofile service -->
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="ApplicationProfileService.displayName"
+              description="ApplicationProfileService.description"
+              actionURI="com.ibm.ws.console.servermanagement.pme.appprofileservice.forwardCmd.do?forwardName=ApplicationProfileService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+
+        <!-- i18n service -->
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="I18NService.displayName"
+              description="I18NService.displayName"
+              actionURI="com.ibm.ws.console.servermanagement.pme.i18nservice.forwardCmd.do?forwardName=I18NService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+
+        <!-- objectpool service -->
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="ObjectPoolService.displayName"
+              description="ObjectPoolService.description"
+              actionURI="com.ibm.ws.console.servermanagement.pme.objectpoolservices.forwardCmd.do?forwardName=ObjectPoolService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+
+        <!-- startupbeans service -->
+        <link
+              categoryId="servertemplate.containerservices.properties"
+              label="StartupBeansService.displayName"
+              description="StartupBeansService.description"
+              actionURI="com.ibm.ws.console.servermanagement.pme.startupbeansservice.forwardCmd.do?forwardName=StartupBeansService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+
+        <!-- workarea service -->
+        <link
+              categoryId="servertemplate.businessprocessservices.properties"
+              label="WorkAreaService.displayName"
+              description="WorkAreaService.description"
+              actionURI="com.ibm.ws.console.servermanagement.pme.workareaservice.forwardCmd.do?forwardName=WorkAreaService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server-pme.xml">
+        </link>
+        <!-- hee: add PMI -->
+        <link
+              categoryId="servertemplate.performance.properties"
+              label="PMIService.displayName60"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.perf.pmi.forwardCmd.do?forwardName=PMIService.config.view60&amp;sfname=services&amp;lastPage=ServerTemplate.config.view">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="[6-9]"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProcessDef1" contextType="ProcessDef">
+        <!-- hee: added this to override the existing actionURI -->
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcOutputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="true"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcLogsandtrace.content.list&amp;lastPage=ProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+    <!-- introduced to have different last Page for zOS -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ProcessDef2" contextType="ProcessDefzOS">
+        <!-- hee: added this to override the existing actionURI -->
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Logsandtrace.content.list&amp;lastPage=ProcessDefzOS.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.logsAndTrace.displayName"
+              description="ServerManagement.logsAndTrace.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcLogsandtrace.content.list&amp;lastPage=ProcessDefzOS.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ServantProcessDef1" contextType="ServantProcessDef">
+        <!-- hee: added this to override the existing actionURI -->
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=Outputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ServantProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="false"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ProcessDef.ioRedirect.displayName"
+              description="ProcessDef.ioRedirect.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcOutputredirect.config.view&amp;sfname=ioRedirect&amp;lastPage=ServantProcessDef.config.view">
+              <compatibility>
+                <match class="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm" key="com.ibm.ws.console.dynamiccluster.form.DCServerTemplateDetailForm.isDynamicClusterServerTemplate" value="true"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="dcLogsandtrace.content.list" contextType="DCLogsandtrace">
+      <categoryDefinition weight="10" id="general.properties" parent="root" label="config.general.properties"/>
+        <link
+              weight="10"
+              categoryId="general.properties"
+              label="diag.trace.label"
+              description="diag.trace.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcTraceService.config.view&amp;lastPage=dcLogsandtrace.content.list">
+          <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCLogsAndTraceLinkSetDetailForm.isZosDynamicCluster" value="false"/>
+ 	     </compatibility>
+        </link>
+        <link
+              weight="11"
+              categoryId="general.properties"
+              label="jvm.logs.label"
+              description="jvm.logs.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcJVMLog.config.view&amp;lastPage=dcLogsandtrace.content.list">
+          <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCLogsAndTraceLinkSetDetailForm.isZosDynamicCluster" value="false"/>
+ 	     </compatibility>
+        </link>
+        <link
+              weight="12"
+              categoryId="general.properties"
+              label="process.logs.label"
+              description="process.logs.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcOutputredirect.config.view&amp;lastPage=dcLogsandtrace.content.list">
+          <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCLogsAndTraceLinkSetDetailForm.isZosDynamicCluster" value="false"/>
+ 	     </compatibility>
+        </link>
+        <link
+              weight="13"
+              categoryId="general.properties"
+              label="service.logs.label"
+              description="service.logs.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcRASLoggingservice.config.view&amp;lastPage=dcLogsandtrace.content.list">
+          <compatibility>
+                <match key="com.ibm.ws.console.dynamiccluster.form.DCLogsAndTraceLinkSetDetailForm.isZosDynamicCluster" value="false"/>
+ 	     </compatibility>
+        </link>
+        <link
+              weight="14"
+              categoryId="general.properties"
+              label="handlers.configspec.label"
+              description="handlers.configspec.label"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dcLogHandlers.configspec.view&amp;lastPage=dcLogsandtrace.content.list">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.threadpools.services" contextType="ServerTemplate">
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="WebServer.serverPluginProps.displayName"
+              description="WebServer.serverPluginProps.description"
+              actionURI="com.ibm.ws.console.web.forwardCmd.do?forwardName=ServerPluginProps.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=server.xml">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer.related1" contextType="ServerTemplate">
+        <link
+              categoryId="related.items"
+              label="ApplicationServer.installedApps.displayName"
+              description="ApplicationServer.installedApps.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationDeployment.content.main">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer.runtime1" contextType="ServerTemplate">
+        <!-- START LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="additional.properties"
+              label="ApplicationServer.applicationServerServices.TransactionService.displayName"
+              description="ApplicationServer.applicationServerServices.TransactionService.description"
+              actionURI="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=DCTransactionService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+        </link>
+        <!-- END LIDB1673 Vela changes Provide V5 & later versions of TransactionService -->
+        <link
+              categoryId="performance.properties"
+              label="Server.services.PMIService.displayName"
+              description="Server.services.PMIService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=PMIService.config.view&amp;sfname=services&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+              <compatibility>
+                <match key="com.ibm.websphere.baseProductMajorVersion" value="([5])"/>
+              </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=ApplicationServer.config.view"
+              perspective="runtime">
+        </link>
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer.related1" contextType="ServerTemplate">
+        <link
+              categoryId="related.items"
+              label="ApplicationServer.installedApps.displayName"
+              description="ApplicationServer.installedApps.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationDeployment.content.main">
+        </link>
+    </linkSet>
+</extension>
+
+<!-- hee: add Core group service -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="hamanager.services.clustermember" contextType="ServerTemplate">
+        <link
+              categoryId="additional.properties"
+              label="CLVService.displayName"
+              description="CLVService.displayName"
+              actionURI="com.ibm.ws.console.classloader.clvservice.forwardCmd.do?forwardName=CLVService.config.view&amp;sfname=processDefinitions&amp;lastPage=ServerTemplate.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="HAManagerService.displayName"
+              description="HAManagerService.description"
+              actionURI="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=HAManagerService.config.view&amp;sfname=services&amp;lastPage=ServerTemplate.config.view&amp;resourceUri=hamanagerservice.xml">
+              <compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion"
+                        value="([6-9])"/>
+              </compatibility>
+        </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="dynamiccluster.ConfigSpec1" contextType="dcConfigSpec">
+        <tab label="tab.configuration" contentURI="dcConfigSpec.config.tab.view">
+        </tab>
+        <tab label="tab.runtime" role="administrator,operator" contentURI="dcConfigSpec.runtime.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.TransactionService.detailTab1" contextType="DCTransactionService">
+        <tab
+              label="tab.runtime"
+              role="administrator,operator"
+              contentURI="TransactionService.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="TransactionService.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- begin DCMiddlewareServer.config.view link -->
+<!-- begin detailTabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="servermanagement.MiddlewareServer.detailTab1" contextType="DCMiddlewareServer">
+        <tab
+              label="tab.configuration"
+              contentURI="DCMiddlewareServer.config.tab.view">
+        </tab>
+        <tab
+              label="tab.configview"
+              contentURI="DCMiddlewareServer.file.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- end detailTabs -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.MiddlewareServer1" contextType="DCMiddlewareServer">
+        <link
+              categoryId="additional.properties"
+              weight="10"
+              label="middlewareserver.serverops.displayName"
+              description="middlewareserver.serverops.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerOps.content.main&amp;sfname=processDefinitions&amp;lastPage=DCMiddlewareServer.config.view">
+        </link>
+        <link
+              categoryId="additional.properties"
+              weight="20"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=DCMiddlewareServer.config.view">
+        </link>
+
+    </linkSet>
+</extension>
+<!-- end DCMiddlewareServer.config.view link -->
+
+ <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.TransactionService" contextType="DCTransactionService">
+             <link
+              categoryId="additional.properties"
+              weight="20"
+              label="Service.properties.displayName"
+              description="Service.properties.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ServerTemplate.config.view">
+        </link>
+
+    </linkSet>
+</extension>
+
+</plugin>

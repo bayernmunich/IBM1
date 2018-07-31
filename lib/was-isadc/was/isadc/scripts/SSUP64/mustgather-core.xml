@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2011. All Rights Reserved * Licensed Materials - Property of IBM -->
+<!--
+	Invoking script must set:
+		taxonomy
+		baseTaxonomy
+		autopdProblem_nlsbundle
+
+	Optional:
+		wve_mustgather_operation: If set, causes this script to skip the target which collects the type of mustgather operation.
+-->
+<project name="WebSphere Intelligent Management Pack Must-Gather">
+  <!--
+      Display debug-level information when running, but only if WVEDBUG is set to true.
+    -->
+  <!-- <property name="WVEDEBUG" value="true"/> -->
+
+  <macrodef name="wvedebug">
+    <attribute name="message"/>
+    <sequential>
+      <if isTrue="${WVEDEBUG}">
+	<echo message="DEBUG: @{message}"/>
+      </if>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="mustgather">
+    <attribute name="key"/>
+    <attribute name="message"/>
+    <attribute name="action"/>
+    <attribute name="zipfile"/>
+    <sequential>
+    <wvedebug message="zipfile=@{zipfile}"/>
+    <wsnlsecho key="@{key}" message="@{message}"
+               bundle="${bundle}"
+               replace="${wve_mustgather_operation}"
+               level="info" />
+
+    <exec executable="${was.root}${file.separator}bin${file.separator}wsadmin.bat"
+	  dir="${was.root}${file.separator}bin"
+	  output="${output}"
+	  append="true"
+	  failonerror="true"
+	  os="${os.windows}">
+      <arg line=' -lang jython -f "${was.root}${file.separator}bin${file.separator}mustgather.py" @{action} ${wve_mustgather_operation} @{zipfile} ${was.admin.info} ${wsadmin.args}' />
+    </exec> 
+    <exec executable="${was.root}${file.separator}bin${file.separator}wsadmin.sh"
+	  dir="${was.root}${file.separator}bin"
+	  output="${output}"
+	  append="true"
+	  failonerror="true"
+	  os="${os.unixkind.exclude.iseries}">
+      <arg line=' -lang jython -f ${was.root}${file.separator}bin${file.separator}mustgather.py @{action} ${wve_mustgather_operation} @{zipfile} ${was.admin.info} ${wsadmin.args}' />
+    </exec> 
+    <exec executable="${was.root}${file.separator}bin${file.separator}wsadmin"
+  	  dir="${was.root}${file.separator}bin"
+   	  output="${output}"
+   	  append="true"
+   	  failonerror="true"
+   	  os="OS/400">
+       <arg line=' -lang jython -f ${was.root}${file.separator}bin${file.separator}mustgather.py @{action} ${wve_mustgather_operation} @{zipfile} ${was.admin.info} ${wsadmin.args}' />
+    </exec> 
+    </sequential>
+  </macrodef>
+
+
+  <tstamp>
+    <format property="timestamp" pattern="dd-MMM-yy-hh-mm"/>
+  </tstamp>
+  <taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" />
+
+  <dirname property="script.basedir" file="${ant.file.WebSphere Intelligent Management Pack Must-Gather}" />
+  <dirname property="script.parentdir" file="${script.basedir}" />
+  <dirname property="bundle.basedir" file="${script.parentdir}" />
+
+  <property name="autopdProblem" value="WVE_mustgather" />
+
+  <property name="bundle" value="properties/${taxonomy}/autopd"/>
+  <property file="${autopdrootdir}/properties/SSUP64/autopd.properties"/>
+
+<!--
+	Initialize WVE scripts
+-->
+  <target name="wve_init">
+    <wvedebug message="wve_init"/>
+    <property name="mustgather_destination_dir" location="${autopdtmp}${file.separator}wvetmp"/>
+    <mkdir dir="${mustgather_destination_dir}"/>
+    <property name="mustgather_destination_file" value="mustgather_${timestamp}.zip"/>
+    <property name="mustgather_destination" location="${mustgather_destination_dir}${file.separator}${mustgather_destination_file}"/>
+    <property name="output_file" value="mustgather_${timestamp}.log"/>
+    <property name="output" location="${mustgather_destination_dir}${file.separator}${output_file}"/>
+    <wvedebug message="mustgather_destination=${mustgather_destination}"/>
+  </target>
+
+<!--
+	Target for cleaning up temporary files.
+-->
+  <target name="wve_clean">
+	<wvedebug  message="Removing temporary directory ${mustgather_destination_dir}"/>
+	<delete dir="${mustgather_destination_dir}" quiet="true"/>
+  </target>
+
+  <target name="wve_clean_post_run" unless="WVEDEBUG">
+	<wvedebug  message="Cleaning up temporary directory ${mustgather_destination_dir}"/>
+	<delete dir="${mustgather_destination_dir}" quiet="true"/>
+  </target>
+
+
+<!-- 
+	Collect must-gather information for WebSphere Intelligent Management Pack.
+-->
+  <target name="wve_mustgather"
+    description="Must-gather for WebSphere Intelligent Management Pack"
+    depends="wve_get_mustgather_operation,
+             wve_query_want_to_reproduce_problem,
+             wve_get_sleep_value,
+	     wve_enable_trace,
+             wve_wait_for_reproduce,
+             wve_disable_trace,
+             wve_collect_trace">
+    <wvedebug message="wve_mustgather"/>
+
+  </target>
+
+
+  <!-- Get the type of mustgather operation, if it has not already been supplied.
+       Returns property wve_mustgather_operation
+    -->
+  <target name="wve_get_mustgather_operation"
+	  unless="wve_mustgather_operation">
+    <wvedebug message="wve_get_mustgather_operation"/>
+      <!--
+	  404 - 404 http response code
+	  503 - 503 http response code
+	  504 - 504 http response code
+	  agent - middleware agent
+	  apc - Application Placement Controller
+	  appedition - Application Edition Manager
+	  arfm - arfm
+	  dc - dynamic clusters
+	  hadmgr - High Availability Deployment Manager
+	  hmm - health monitoring
+	  odr - general issues on the odr
+	  operations - visualization issues with Component Stability and Operations tabs
+	  reports - visualization issues with Report tab
+	  reportsPerf - visualization issues with performance data shown on Report tab
+	  repository - Extended Repository Service
+	  request - per-request
+	  sip - SIP request routing
+	-->
+    <inputdialogtask_v2>
+      <fieldtask name="prompt" label="input_mustgather_operation" defaultValue="odr" type="prompt" bundle="${bundle}"/>
+      <fieldtask name="wve_mustgather_operation_2" 
+		 label="input_mustgather_operation_2" 
+		 defaultValue="" 
+		 list="odr:404:503:504:agent:apc:appedition:arfm:dc:hadmgr:hmm:operations:reports:reportsPerf:repository:request:sip" 
+		 listDetails="(odr) On Demand Router (general):(404) HTTP 404 status code:(503) HTTP 503 status code:(504) HTTP 504 status code:(agent) Node Agent:(apc) Autonomic Placement Controller:(appedition) Application Editioning:(arfm) Adaptive Request Flow Manager:(dc) Dynamic Clusters:(hadmgr) High Availability Deployment Manager:(hmm) Health Monitoring Management:(operations) Visualization issues with IMP and Operations Tabs:(reports) Visualization issues with Report Tab:(reportsPerf) Visualization issues with performance data shown on report tab:(repository) Extended repository service:(request) Per-request routing:(sip) SIP request routing"
+		 type="selectlist" 
+		 bundle="${bundle}"
+		 height="25"/>
+      <fieldtask name="wve_mustgather_operation_1" 
+	label="input_mustgather_operation_1" 
+	defaultValue="" 
+	type="plaintext" 
+	accessibilityName="input_mustgather_operation_1" 
+	accessibilityDesc="input_mustgather_operation_1" 
+	bundle="${bundle}" />
+    </inputdialogtask_v2>
+    <property name="wve_mustgather_operation" value="${wve_mustgather_operation_1} ${wve_mustgather_operation_2}"/> 
+  </target>
+
+<!--
+	Query how user wants the script to wait while the problem is reproduced.  Options are:
+	1). Don't wait:  In this case, the script does not set or reset the trace strings, but goes right to the collection part.
+	    This is useful if the user already has the right trace set and merely wants to snapshot the logs.
+	2). Sleep: Enable trace, wait for some minutes, and then disable trace and go to collection.
+	3). Wait indefinitely: Enable trace, then wait for the user to press a "continue" button before disabling trace and going to collection.
+-->
+  <target name="wve_query_want_to_reproduce_problem">
+    <wvedebug message="wve_query_want_to_reproduce_problem"/>
+    <inputdialogtask_v2>
+      <fieldtask name="prompt" label="input_mustgather_operation" 
+      	type="prompt" bundle="${bundle}"/>
+      <fieldtask name="do.want_repro" 
+		 label="wve_want_to_reproduce_problem" 
+		 defaultValue="nowait" 
+		 list="nowait:sleep:indefinitewait" 
+		 listDetails="nowait:sleep:indefinitewait"
+		 type="selectlist" 
+		 bundle="${bundle}"
+		 height="25"/>
+    </inputdialogtask_v2>
+    <condition property="wve_want_to_reproduce_problem">
+      <not>
+	<equals arg1="nowait" arg2="${do.want_repro}" />
+      </not>
+    </condition>
+    
+    <condition property="wve_wants_to_sleep_to_reproduce">
+      <equals arg1="sleep" arg2="${do.want_repro}" />
+    </condition>
+    
+    <condition property="wve_wants_to_wait_indefinitely_to_reproduce">
+      <equals arg1="indefinitewait" arg2="${do.want_repro}" />
+    </condition>
+    
+  </target>
+
+<!--
+	If user wants to sleep while problem is reproduced, ask how long.
+-->
+  <target name="wve_get_sleep_value"
+	  if="wve_wants_to_sleep_to_reproduce">
+    <wvedebug message="wve_get_sleep_value"/>
+    <inputdialogtask_v2>
+      <fieldtask name="prompt" label="input_mustgather_operation" 
+       	type="prompt" bundle="${bundle}"/>
+      <fieldtask name="wve_sleep_value" 
+		 label="input_sleep_value" 
+		 defaultValue="2" 
+		 type="plaintext" 
+		 bundle="${bundle}"/>
+	<fieldtask name="sleep_value_note"
+		label="input_sleep_value_note"
+		type="prompt"
+		bundle="${bundle}"/>
+    </inputdialogtask_v2>
+    <wvedebug message="sleep value set to ${wve_sleep_value}"/>
+  </target>
+  
+<!--
+	Wait for reproduction of the problem.  This invokes the sleep and kbd-based
+	wait targets, only one of which will actually run.
+-->
+  <target name="wve_wait_for_reproduce" 
+	  depends="wve_sleep_to_reproduce, wve_wait_kbd_to_reproduce">
+    <wvedebug message="wve_wait_for_reproduce"/>
+  </target>
+  
+<!--
+	Wait ${wve_sleep_value} minutes before proceeding.
+-->
+  <target name="wve_sleep_to_reproduce" if="wve_wants_to_sleep_to_reproduce">
+    <wsnlsecho key="wve_sleeping" message="Waiting {0} minutes for problem to be reproduced"
+               bundle="${bundle}"
+               replace="${wve_sleep_value}"
+               level="info" />
+     <sleep minutes="${wve_sleep_value}"/>
+  </target>
+  
+<!--
+	Wait indefinitely for user action.
+-->
+  <target name="wve_wait_kbd_to_reproduce" if="wve_wants_to_wait_indefinitely_to_reproduce">
+    <wvedebug message="wve_wait_kbd_to_reproduce"/>
+    <autopdinput message="wve_wait_for_reproduce_problem"
+		 validargs="wve_continue,wve_cancel" 
+		 addproperty="do.continue"
+		 bundle="${bundle}" />
+    <condition property="wve_iscanceled">
+	 <equals arg1="wve_cancel" arg2="${do.continue}" />
+    </condition>
+    <fail if="wve_iscanceled">Data collection canceled by user</fail>
+  </target>
+  
+<!--
+	Include the mustgather zip file in the ISA archive.
+-->
+  <target name="wve_include_mustgather_archive">
+    <wvedebug message="include_mustgather_archive destdir=${mustgather_destination_dir} destfile=${mustgather_destination_file} outputfile=${output_file} pmrfilename=${pmrfilename}"/>
+    <zip encoding="UTF8" 
+	 destfile="${pmrfilename}"
+	 basedir="${mustgather_destination_dir}"
+	 includes="${mustgather_destination_file},${output_file}"
+         update="true">
+    </zip>
+  </target>
+  
+  
+<!--
+	Use the mustgather.py script to enable the necessary trace across the cell
+-->
+  <target name="wve_enable_trace"
+	  if="wve_want_to_reproduce_problem">
+    <mustgather key="wve_enabling_trace" message="Enabling mustgather trace for {0}"
+               action="enable"
+               zipfile="" />
+  </target>
+
+<!--
+	Use the mustgather.py script to disable trace across the cell
+-->
+  <target name="wve_disable_trace"
+	  if="wve_want_to_reproduce_problem">
+    <mustgather key="wve_disabling_trace" message="Disabling mustgather trace for {0}"
+               action="disable"
+               zipfile="" />
+  </target>
+
+<!--
+	Use the mustgather.py script to collect the necessary trace across the cell
+	Clear out any old logs that might be laying around, and then recreate the temp dir.
+-->
+  <target name="wve_collect_trace" depends="wve_clean">
+    <mkdir dir="${mustgather_destination_dir}"/>
+    <mustgather key="wve_collecting_trace" message="Collecting mustgather trace for {0}"
+               action="collect"
+               zipfile="${mustgather_destination}" />
+  </target>
+
+</project>

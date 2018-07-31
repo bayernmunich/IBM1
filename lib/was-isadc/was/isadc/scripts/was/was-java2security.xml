@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Java2 Security Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Java2 Security Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_Java2_Security_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-java2-security" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2,  
+					validate_os,
+
+					was_stack_custom_init,		
+					 
+					java2_collect_info,
+					generate_java2_trace_string,
+			        generate_java2_jvm_arguments,
+					 
+					trace_setup_custom, 
+		
+					execute_collector,
+					execute_vce_info_for_was,
+			         
+			        common_postamble_general_with_ftp">
+	</target>
+
+	<target name="java2_collect_info" description="Provide Java 2 Security collection info">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_information_for_the_java2_specific_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the Java 2 Security problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1123"
+		           level="info" />
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.java2.question1"
+			           label="Java2_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.java2.question2"
+			           label="Java2_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.java2.question3"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="Java2_Q3"
+			           type="textarea" />
+			<fieldtask name="ws.java2.question4"
+	    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="Java2_Q4"
+					   type="textarea" />
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Has your application been designed with Java 2 security in mind?${line.separator}
+					${ws.java2.question1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What operating system APIs or system files does your application need to access?${line.separator}
+					${ws.java2.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What permission's have you granted your application? (was.policy)${line.separator}
+					${ws.java2.question3}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Did you manually edit the property file or use the install_root/java/jre/bin/policytool?${line.separator}
+					${ws.java2.question4}${line.separator}
+		</concat>
+
+	</target>
+
+	<target name="generate_java2_trace_string" description="generate java2 Security trace string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+		
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" 
+				value="*=info:com.ibm.ws.security.policy.*=all:com.ibm.ws.security.core.SecurityManager=all" />
+		</if>
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" 
+				value="com.ibm.ws.security.policy.*=all=enabled:com.ibm.ws.security.core.SecurityManager=all=enabled" />
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_java2_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		
+		<inputdialogtask >
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="label1"
+			           label="java2_security_jvm_setup"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+					   label="Empty_Line"
+					   type="label"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label1"
+			           label="java2_security_jvm_setup1"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+					   label="Empty_Line"
+					   type="label"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label1"
+			           label="java2_security_jvm_setup2"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+					   label="Empty_Line"
+					   type="label"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="jvm.arguments.enabled"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="java2_security_jvm_arguments"
+		           list="No:Yes"
+		           listDetails="No:Yes"
+		           type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="jvm_arguments_needed" >
+			<equals arg1="Yes" arg2="${jvm.arguments.enabled}" />
+		</condition>
+		
+		<if isTrue="${jvm_arguments_needed}" >
+			<property name="jvm_arguments" value="true" />
+			<property name="generic.jvm.arguments"
+			          value='"-Dcom.ibm.websphere.java2secman.norethrow=true"' />
+			<autopdlog message="Generic JVM arguments: ${generic.jvm.arguments}"
+			           id="1184"
+			           level="info" />
+			<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+		</if>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Java 2 Security Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the Java 2 Security problem. The trace
+					is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+					configuration, and trace files are collected and made available for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1199333" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the Java 2 Security 
+problem. The trace is set, the JVM properties are set, and the problem can then be reproduced. The 
+logs, configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Java 2 Security Problem =>
+This problem category is run on the managed node experiencing the Java 2 Security problem. The trace
+is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+	
+</project>

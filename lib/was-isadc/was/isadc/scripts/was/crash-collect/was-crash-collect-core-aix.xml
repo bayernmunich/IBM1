@@ -1,0 +1,194 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS crash core problem 
+	 for AIX platform. It should be included in the WAS core Ant scripts. 
+-->
+
+<project name="was-crash-collect-core-aix" >
+
+	<dirname property="was.crash.collect.core.aix.basedir" file="${ant.file.was-crash-collect-core-aix}"/>
+	<dirname property="was.crash.collect.core.aix.parentdir" file="${was.crash.collect.core.aix.basedir}"/>
+	<dirname property="was.crash.collect.core.aix.grandparentdir" file="${was.crash.collect.core.aix.parentdir}"/>
+	<dirname property="was.crash.collect.core.aix.bundle.basedir" file="${was.crash.collect.core.aix.grandparentdir}"/>
+
+	<!-- This target is used ot create core file output -->
+	<target name="create_aix_core_output" description="Collect a full core output" if="isAIX">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1055387" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Aix_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating Crash Output for Aix..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<property name="errpt.out.path" value="${autopdtmp}/autopd/errpt.out" />
+		<property name="errpt.command.path" value="errpt" />
+		
+		<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/myerrpt-template.sh" tofile="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/myerrpt-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="errpt.command" value="${errpt.command.path}" />
+				<filter token="errpt.out" value="${errpt.out.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true" >
+			<arg line=" -f ${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/myerrpt-filled.sh" />
+		</exec>	
+
+
+		<property name="dbxtrace.out.path" value="${autopdtmp}/autopd/dbxtrace.out" />
+		
+		<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-template.sh" tofile="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="dbxtrace.path" value="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/dbxtrace_aix.sh" />			
+				<filter token="dbxtrace.out" value="${dbxtrace.out.path}" />
+				<filter token="java.path" value="${was.root}/java/jre/bin/java" />
+				<filter token="core.path" value="${core.file.path}" />				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mydbxtrace-filled.sh" />
+		</exec>	
+<!-- Remove KCA - Mustgather does not have it		
+		<property name="kca.out.path" value="${autopdtmp}/autopd/kca.out" />
+		
+		<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mykca-template.sh" tofile="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mykca-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="kca.path" value="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/kca" />			
+				<filter token="kca.out" value="${kca.out.path}" />
+				<filter token="num" value="5" />
+				<filter token="core.path" value="${core.file.path}" />				
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mykca-filled.sh" />
+		</exec>	
+--> 	
+		<property name="getlib.archive.path" value="${autopdtmp}/autopd/getlib_archive.tar.Z" />
+		
+		<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-template.sh" tofile="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-filled.sh" overwrite="true">
+			<filterset>
+				<filter token="getlib.sh" value="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/getlib.sh" />
+				<filter token="java.path" value="${was.root}/java/jre/bin/java" />
+				<filter token="core.path" value="${core.file.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${autopdtmp}/autopd" output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/aix/mygetlib-filled.sh" />
+		</exec>	
+
+		<if isTrue="${jextract_prev}"> 
+			<property name="core.sdff.path" value="-o ${autopdtmp}/autopd/crash/aix/core.sdff" />	
+			<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/jextract-template.sh" 
+				tofile="${autopdtmp}/autopd/crash/aix/jextract-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="jextract.path" value="${was.root}/java/jre/bin/jextract" />
+					<filter token="core.sdff" value="${core.sdff.path}" />
+					<filter token="core.path" value="${core.file.path}" />				
+				</filterset>
+			</copy>
+		</if> 
+		<if isTrue="${jextract_new}">
+			<copy file="${was.crash.collect.core.aix.bundle.basedir}/scripts/was/shell/jextract-template-new.sh" 
+				tofile="${autopdtmp}/autopd/crash/aix/jextract-filled.sh" overwrite="true">
+				<filterset>
+					<filter token="jextract.path" value="${was.root}/java/jre/bin/jextract" />
+					<filter token="core.path" value="${core.file.path}" />				
+				</filterset>
+			</copy>
+		</if> 
+		<available file="${core.file.path}" type="file" property="core.file.existing" />
+		<if isNotTrue="${core.file.existing}">				
+			<autopdinput message="The_core_file_input_by_user_doesnt_exist_and_continue_collection" validargs="OK,Cancel" addproperty="do.cancel" />
+			<wsnlsecho key="The_core_file_input_by_user_doesnt_exist" bundle="properties/SSEQTP/autopdtoolstrings_was" message="The core file input by user does not exist" 
+				id="2602"
+				level="error"
+				component="was-crahs-collect-core-aix"/>			
+		</if>
+		<if isNotTrue="${core.file.existing}">				
+			<condition property="do.abort.collect.aix.core">
+				<equals arg1="Cancel" arg2="${do.cancel}" />
+			</condition>		
+		</if>
+		<if isNotTrue="${core.file.existing}">
+			<fail if="do.abort.collect.aix.core">Automated Problem Determination Tool aborted by user.</fail>				
+		</if>
+
+		<if isTrue="${core.file.existing}">				
+			<exec executable="sh" dir="${autopdtmp}/autopd/crash/aix" 
+				output="${autopd.echolog.instance}" append="true" >
+				<arg line=" -f ${autopdtmp}/autopd/crash/aix/jextract-filled.sh" />
+			</exec>	
+		</if>	
+	</target>
+	
+	<!-- This target is used to collect core file and related output -->
+	
+	<target name="collect_aix_was_core" description="Collect was core problem" if="isAIX">
+	
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Aix_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Crash Output for Aix..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+<!--
+			<zipfileset file="${core.sdff.path}" prefix="autopdzip/autopd" />
+			<zipfileset file="${core.sdff.path}.hdr" prefix="autopdzip/autopd" />
+--> 
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}" > 
+				<include name="*.sdff" /> 
+				<include name="*.zip" /> 
+			</zipfileset>
+			<zipfileset file="${errpt.out.path}" prefix="${autopdProblem}" />
+			
+			<zipfileset file="${dbxtrace.out.path}" prefix="${autopdProblem}" />
+<!--
+			<zipfileset file="${kca.out.path}" prefix="autopdzip/autopd" />
+--> 
+			<zipfileset file="${getlib.archive.path}" prefix="${autopdProblem}" />
+
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root}/bin" >
+				<include name="javacore*.*" />
+			</zipfileset>			
+		</zip>
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="autopdzip/${jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>
+<!--		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${core.file.dir}" prefix="${autopdProblem}/Core" > 
+				<include name="${core.file.name}" /> 
+			</zipfileset> 
+		</zip> 
+-->		
+<!--		
+		<zipfileset file="${core.file.path}" prefix="autopdzip/${core.file.dir.trimmed}" />
+--> 
+	</target>
+</project>	

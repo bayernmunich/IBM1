@@ -1,0 +1,3027 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!--
+Licensed Materials - Property of IBM
+
+5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70
+
+Copyright IBM Corp. 2006, 2010 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
+
+<plugin id="com.ibm.ws.console.webservices.policyset"
+        name="policyset"
+        version="1.0.0"
+        vendor-name="IBM Corp. - WebSphere Server Group"
+        embedded="true"
+        context-root="policyset">
+
+<requires>
+    <import plugin="com.ibm.ws.console.core"/>
+</requires>
+
+<extension point="org.eclipse.help.toc">
+  <toc file="toc.xml" primary="true" />
+</extension>
+
+<!-- Begin WAS.webui.webservices.policyset -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <categoryDefinition
+            id="PolicySetCategoryId"
+            parent="wsadminCategoryId"
+            icon="/com.ibm.ws.console.webservices.policyset/images/onepix.gif"
+            label="Manage.PolicySets"
+            weight="42"
+        />
+        <task id="ApplicationPolicySetId" icon="/com.ibm.ws.console.webservices.policyset/images/onepix.gif" label="Manage.ApplicationPolicySets" view="/navigatorCmd.do?forwardName=PolicySet.content.main" external="false" weight="10">
+            <category id="PolicySetCategoryId"/>
+        </task>
+        <task id="CellDefaultBindingsId" icon="/com.ibm.ws.console.webservices.policyset/images/onepix.gif" label="policyset.cellDefaultBindings.descTitle" view="/navigatorCmd.do?forwardName=CellDefaultBindings.config.view" external="false" weight="60">
+            <category id="PolicySetCategoryId"/>
+        </task>
+    </tasks>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policySet.customProperty.collectionItem" contextType="policySet.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="policySet.customProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="policySet.customProperty.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- PolicySet collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.PolicySet.collection1" contextType="PolicySet">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.new"
+              actionURI="policySetCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="policySetCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.copy"
+              actionURI="policySetCollection.do">
+        </action>
+        <!-- LI3796-22 Begin -->
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="policyset.button.import"
+              actionURI="policySetCollection.do?type=application"
+              type="menu"
+              actionName="importPolicySet"
+              optionValueList="policyset.import.values"
+              optionLabelList="policyset.import.labels">
+        </action>
+         <!-- LI3796-22 End -->
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.export"
+              actionURI="policySetCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.PolicySet.collectionItem1" contextType="PolicySet">
+        <item
+              attributeName="psName"
+              sortable="sort"
+              itemURI="policySetCollection.do?EditAction=true&amp;lastPage=PolicySet.content.main"
+              label="policyset.config.name.displayName">
+        </item>
+        <item
+              attributeName="editableString"
+              sortable="sort"
+              itemURI=""
+              label="policyset.config.editable.displayName">
+        </item>
+        <item
+              attributeName="summary"
+              sortable="nosort"
+              itemURI=""
+              label="policyset.config.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- LI3796-22 Begin -->
+<!-- PolicySetImport collection view -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.PolicySetImport.collectionItem1" contextType="PolicySetImportCollection">
+        <item
+              attributeName="psName"
+              sortable="sort"
+              itemURI="policySetImportCollection.do?lastPage=PolicySetImport.config.view&amp;EditAction=false"
+              label="policyset.config.name.displayName">
+        </item>
+        <item
+              attributeName="summary"
+              sortable="nosort"
+              itemURI=""
+              label="policyset.config.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+ <!-- LI3796-22 End -->
+
+<!-- SystemPolicySet collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.SystemPolicySet.collection1" contextType="SystemPolicySet">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.new"
+              actionURI="systemPolicySetCollection.do?type=system">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="systemPolicySetCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.copy"
+              actionURI="systemPolicySetCollection.do?type=system">
+        </action>
+        <!-- LI3796-22 Begin -->
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="policyset.button.import"
+              actionURI="systemPolicySetCollection.do?type=system"
+              type="menu"
+              actionName="importPolicySet"
+              optionValueList="policyset.import.values"
+              optionLabelList="policyset.import.labels">
+        </action>
+         <!-- LI3796-22 End -->
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.policyset.export"
+              actionURI="systemPolicySetCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.SystemPolicySet.collectionItem1" contextType="SystemPolicySet">
+        <item
+              attributeName="psName"
+              sortable="sort"
+              itemURI="systemPolicySetCollection.do?EditAction=true&amp;type=system&amp;lastPage=SystemPolicySet.content.main"
+              label="policyset.config.name.displayName">
+        </item>
+        <item
+              attributeName="editableString"
+              sortable="sort"
+              itemURI=""
+              label="policyset.config.editable.displayName">
+        </item>
+        <item
+              attributeName="summary"
+              sortable="nosort"
+              itemURI=""
+              label="policyset.config.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- PolicySet detail view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.PolicySet1" contextType="PolicySet">
+        <tab
+              label="tab.configuration"
+              contentURI="PolicySet.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="policyset.PolicySet" contextType="PolicySet">
+       <link label="policyset.AttachedApplicationsCollection.displayName"
+            description="policyset.AttachedApplicationsLink.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=AttachedApplication.content.main">
+           <compatibility>
+               <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.showAttachedAppLink" value="true"/>
+           </compatibility>
+       </link>
+   </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="policyset.PolicySet.config.general.properties" contextType="PolicySet">
+        <field
+              attributeName="psName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.NewPolicySet" value="false"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="newName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.NewPolicySet" value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- DefaultPolicySet detail view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.DefaultPolicySet1" contextType="DefaultPolicySet">
+        <tab
+              label="tab.configuration"
+              contentURI="DefaultPolicySet.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="policyset.PolicySet" contextType="DefaultPolicySet">
+       <link label="policyset.AttachedApplicationsCollection.displayName"
+            description="policyset.AttachedApplicationsLink.description"
+            categoryId="additional.properties"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=AttachedApplication.content.main">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.showAttachedAppLink" value="true"/>
+            </compatibility>
+       </link>
+   </linkSet>
+</extension>
+<!-- SystemPolicySet detail view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.SystemPolicySet1" contextType="SystemPolicySet">
+        <tab
+              label="tab.configuration"
+              contentURI="SystemPolicySet.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="policyset.SystemPolicySet.config.general.properties" contextType="SystemPolicySet">
+        <field
+              attributeName="psName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.NewPolicySet" value="false"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="newName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetDetailForm.NewPolicySet" value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<!-- DefaultSystemPolicySet detail view -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.DefaultSystemPolicySet1" contextType="DefaultSystemPolicySet">
+        <tab
+              label="tab.configuration"
+              contentURI="DefaultSystemPolicySet.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- PolicyType collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.PolicyType.collection1" contextType="PolicyTypeCollection">
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="button.addPolicyType"
+               actionURI="policySetDetail.do"
+               type="menu"
+               actionName="addPolicyType"
+               optionValueList="policyset.policytypes.values"
+               optionLabelList="policyset.policytypes.labels">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="button.delete"
+               actionURI="policySetDetail.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="policyset.button.enable"
+               actionURI="policySetDetail.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="policyset.button.disable"
+               actionURI="policySetDetail.do">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.PolicyType.collectionItem1" contextType="PolicyTypeCollection">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.policyType.name.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="membership"
+              sortable="sort"
+              label="policyset.policyType.state.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="provides"
+              sortable="nosort"
+              label="policyset.policyType.provides.displayName"
+              editable="true"
+              itemURI="">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.PolicyTypeCollectionForm.soafepInstalled" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              label="policyset.config.description.displayName"
+              itemURI="">
+        </item>
+    </collectionItem>
+</extension>
+<!-- DefaultPolicyType collection view -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.DefaultPolicyType.collectionItem1" contextType="DefaultPolicyTypeCollection">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.policyType.name.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="membership"
+              sortable="sort"
+              label="policyset.policyType.state.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="provides"
+              sortable="nosort"
+              label="policyset.policyType.provides.displayName"
+              editable="false"
+              itemURI="">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.PolicyTypeCollectionForm.soafepInstalled" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              label="policyset.config.description.displayName"
+              itemURI="">
+        </item>
+    </collectionItem>
+</extension>
+<!-- SystemPolicyType collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.SystemPolicyType.collection1" contextType="SystemPolicyTypeCollection">
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="button.addPolicyType"
+               actionURI="systemPolicySetDetail.do"
+               type="menu"
+               actionName="addPolicyType"
+               optionValueList="policyset.policytypes.values"
+               optionLabelList="policyset.policytypes.labels">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="button.delete"
+               actionURI="systemPolicySetDetail.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="policyset.button.enable"
+               actionURI="systemPolicySetDetail.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator"
+               label="policyset.button.disable"
+               actionURI="systemPolicySetDetail.do">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.SystemPolicyType.collectionItem1" contextType="SystemPolicyTypeCollection">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.policyType.name.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="membership"
+              sortable="sort"
+              label="policyset.policyType.state.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="provides"
+              sortable="nosort"
+              label="policyset.policyType.provides.displayName"
+              editable="true"
+              itemURI="">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.PolicyTypeCollectionForm.soafepInstalled" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              label="policyset.config.description.displayName"
+              itemURI="">
+        </item>
+    </collectionItem>
+</extension>
+<!-- DefaultSystemPolicyType collection view -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.DefaultPolicySystemType.collectionItem1" contextType="DefaultSystemPolicyTypeCollection">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.policyType.name.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="membership"
+              sortable="sort"
+              label="policyset.policyType.state.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="provides"
+              sortable="nosort"
+              label="policyset.policyType.provides.displayName"
+              editable="false"
+              itemURI="">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.PolicyTypeCollectionForm.soafepInstalled" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              label="policyset.config.description.displayName"
+              itemURI="">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PolicysetCopy.config.general.properties" contextType="PolicySetCopy">
+         <field
+              attributeName="hasAttachments">
+             <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.HasAttachments"  value="true"/>
+             </compatibility>
+         </field >
+     </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="SystemPolicysetCopy.config.general.properties" contextType="SystemPolicySetCopy">
+         <field
+              attributeName="hasAttachments">
+             <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.HasAttachments"  value="true"/>
+             </compatibility>
+         </field >
+     </form>
+</extension>
+<!-- AttachedApplication collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.AttachedApplication.collection1" contextType="AttachedApplication">
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.detachPolicySet"
+              actionURI="attachedApplicationCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator,deployer"
+              label="button.replacePolicySet"
+              actionURI="attachedApplicationCollection.do"
+              type="menu"
+              actionName="replacePolicySet"
+              optionValueList="policyset.policysets.values"
+              optionLabelList="policyset.policysets.labels"
+              translatable="false">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.AttachedApplication.collectionItem1" contextType="AttachedApplication">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="custom"
+              label="policyset.AttachedApplications.name.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- PolicySetAttachment collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.PolicySetAttachment.collection1" contextType="PolicySetAttachment">
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.attach"
+               actionURI="policySetAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="policyset.policysets.values"
+               optionLabelList="policyset.policysets.labels"
+               optionTitleList="policyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.detach"
+               actionURI="policySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.assignBinding"
+               actionURI="policySetAttachmentCollection.do"
+               type="menu"
+               actionName="assignBinding"
+               optionValueList="policyset.bindings.values"
+               optionLabelList="policyset.bindings.labels"
+               optionTitleList="policyset.bindings.titles"
+               translatable="false">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.PolicySetAttachment.collectionItem1" contextType="PolicySetAttachment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.andbinding.resource.qname.displayName"
+              itemURI="">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.IsCompositionUnit" value="false"/>
+            </compatibility>
+        </item>
+        <item
+              attributeName="displayPolicySetName"
+              sortable="sort"
+              label="policyset.attachedpolicyset.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="displayBindingName"
+              sortable="sort"
+              label="policyset.bindings.displayName"
+              itemURI="custom2">
+        </item>
+        <item
+              attributeName="policySharedDisplayName"
+              sortable="sort"
+              label="policyset.policySharing.displayName"
+              itemURI="custom3">
+             <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.WSPolicyControl" value="true"/>
+             </compatibility>
+        </item>
+    </collectionItem>
+</extension>
+<!-- ClientPolicySetAttachment collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.ClientPolicySetAttachment.collection1" contextType="ClientPolicySetAttachment">
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.attach.clientPolicySet"
+               actionURI="policySetAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="policyset.policysets.values"
+               optionLabelList="policyset.policysets.labels"
+               optionTitleList="policyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.detach.clientPolicySet"
+               actionURI="policySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.assignBinding"
+               actionURI="policySetAttachmentCollection.do"
+               type="menu"
+               actionName="assignBinding"
+               optionValueList="policyset.bindings.values"
+               optionLabelList="policyset.bindings.labels"
+               optionTitleList="policyset.bindings.titles"
+               translatable="false">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.ClientPolicySetAttachment.collectionItem1" contextType="ClientPolicySetAttachment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.andbinding.resource.qname.displayName"
+              itemURI="">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.IsCompositionUnit" value="false"/>
+            </compatibility>
+        </item>
+        <item
+              attributeName="displayPolicySetName"
+              sortable="sort"
+              label="policyset.attachedclientpolicyset.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="policyAppliedDisplayName"
+              sortable="sort"
+              label="policyset.policyApplied.displayName"
+              itemURI="custom3">
+             <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.WSPolicyControl" value="true"/>
+             </compatibility>
+        </item>
+        <item
+              attributeName="displayBindingName"
+              sortable="sort"
+              label="policyset.bindings.displayName"
+              itemURI="custom2">
+        </item>
+    </collectionItem>
+</extension>
+<!-- ContainedPolicySetAttachment collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.ContainedPolicySetAttachment.collection1" contextType="ContainedPolicySetAttachment">
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.attach"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="policyset.policysets.values"
+               optionLabelList="policyset.policysets.labels"
+               optionTitleList="policyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.detach"
+               actionURI="containedPolicySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator,deployer"
+               label="button.assignBinding"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="assignBinding"
+               optionValueList="policyset.bindings.values"
+               optionLabelList="policyset.bindings.labels"
+               optionTitleList="policyset.bindings.titles"
+               translatable="false">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.ContainedPolicySetAttachment.collectionItem1" contextType="ContainedPolicySetAttachment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.resource.qname.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="displayPolicySetName"
+              sortable="sort"
+              label="policyset.attachedpolicyset.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="displayBindingName"
+              sortable="sort"
+              label="policyset.bindings.displayName"
+              itemURI="custom2">
+        </item>
+        <item
+              attributeName="policySharedDisplayName"
+              sortable="sort"
+              label="policyset.policySharing.displayName"
+              itemURI="custom3">
+             <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.WSPolicyControl" value="true"/>
+             </compatibility>
+        </item>
+    </collectionItem>
+</extension>
+<!-- ContainedClientPolicySetAttachment collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.ContainedClientPolicySetAttachment.collection1" contextType="ContainedClientPolicySetAttachment">
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.attach.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="policyset.policysets.values"
+               optionLabelList="policyset.policysets.labels"
+               optionTitleList="policyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.detach.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.assignBinding"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="assignBinding"
+               optionValueList="policyset.bindings.values"
+               optionLabelList="policyset.bindings.labels"
+               optionTitleList="policyset.bindings.titles"
+               translatable="false">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.ContainedClientPolicySetAttachment.collectionItem1" contextType="ContainedClientPolicySetAttachment">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.resource.qname.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="displayPolicySetName"
+              sortable="sort"
+              label="policyset.attachedclientpolicyset.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="policyAppliedDisplayName"
+              sortable="sort"
+              label="policyset.policyApplied.displayName"
+              itemURI="custom3">
+             <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.WSPolicyControl" value="true"/>
+             </compatibility>
+        </item>
+        <item
+              attributeName="displayBindingName"
+              sortable="sort"
+              label="policyset.bindings.displayName"
+              itemURI="custom2">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="policyset.PSWsadminPolicySet1" contextType="PSWebservicesAdmin">
+        <tab
+              label="tab.configuration"
+              contentURI="PSWebservicesAdmin.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- Service Reference ContainedClientPolicySetAttachment collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+      <actionSet id="policyset.SrvRefContainedClientPolicySetAttachment.collection1" contextType="SrvRefClientWSAdminDetail">
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.inherit.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.override.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.attach.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="attach"
+               optionValueList="policyset.policysets.values"
+               optionLabelList="policyset.policysets.labels"
+               optionTitleList="policyset.policysets.titles"
+               translatable="false">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.detach.clientPolicySet"
+               actionURI="containedPolicySetAttachmentCollection.do">
+          </action>
+          <action
+               enablesFor="Collection"
+               role="administrator,configurator"
+               label="button.assignBinding"
+               actionURI="containedPolicySetAttachmentCollection.do"
+               type="menu"
+               actionName="assignBinding"
+               optionValueList="policyset.bindings.values"
+               optionLabelList="policyset.bindings.labels"
+               optionTitleList="policyset.bindings.titles"
+               translatable="false">
+          </action>
+      </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.SrvRefContainedClientPolicySetAttachment.collectionItem1" contextType="SrvRefClientWSAdminDetail">
+        <item
+              attributeName="name"
+              sortable="sort"
+              label="policyset.resource.srvRef.displayName"
+              itemURI="">
+        </item>
+        <item
+              attributeName="displayPolicySetName"
+              sortable="sort"
+              label="policyset.attachedclientpolicyset.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="policyAppliedDisplayName"
+              sortable="sort"
+              label="policyset.policyApplied.displayName"
+              itemURI="custom3">
+             <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policyset.PolicySetAttachmentCollectionForm.WSPolicyControl" value="true"/>
+             </compatibility>
+        </item>
+        <item
+              attributeName="displayBindingName"
+              sortable="sort"
+              label="policyset.bindings.displayName"
+              itemURI="custom2">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Message Security -->
+<extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="policyset.PSMessageSecurity" contextType="PSMessageSecurity">
+        <categoryDefinition weight="10" id="policy.details" parent="root" label="PSMessageSecurity.policyDetails.displayName"/>
+        <link label="PSToken.inbound.displayName"
+            description="PSToken.short.description"
+            categoryId="policy.details"
+            weight="20"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSToken.content.main&#38;direction=inbound&#38;sfname=SupportingTokens">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </link>
+        <link label="PSToken.inbound2.displayName"
+            description="PSToken.short.description"
+            categoryId="policy.details"
+            weight="20"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSToken.content.main&#38;direction=inbound&#38;sfname=SupportingTokens&#38;EditAction=false">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="true"/>
+               </compatibility>
+        </link>
+        <link label="PSToken.outbound.displayName"
+            description="PSToken.short.description"
+            categoryId="policy.details"
+            weight="20"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSToken.content.main&#38;direction=outbound&#38;sfname=SupportingTokens">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </link>
+        <link label="PSToken.outbound2.displayName"
+            description="PSToken.short.description"
+            categoryId="policy.details"
+            weight="20"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSToken.content.main&#38;direction=outbound&#38;sfname=SupportingTokens&#38;EditAction=false">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="true"/>
+               </compatibility>
+        </link>
+        <link label="PSAlgorithmSuite.symmetric.displayName"
+            description="PSAlgorithmSuite.short.description"
+            categoryId="policy.details"
+            weight="30"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSAlgorithmSuite.config.view&#38;symmetry=symmetric">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.keySymmetry" value="symmetric"/>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </link>
+        <link label="PSAlgorithmSuite.symmetric2.displayName"
+            description="PSAlgorithmSuite.short.description"
+            categoryId="policy.details"
+            weight="30"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSAlgorithmSuite.config.view&#38;symmetry=symmetric&#38;EditAction=false">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.keySymmetry" value="symmetric"/>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="true"/>
+               </compatibility>
+        </link>
+        <link label="PSAlgorithmSuite.asymmetric.displayName"
+            description="PSAlgorithmSuite.short.description"
+            categoryId="policy.details"
+            weight="30"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSAlgorithmSuite.config.view&#38;symmetry=asymmetric">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.keySymmetry" value="asymmetric"/>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </link>
+        <link label="PSAlgorithmSuite.asymmetric2.displayName"
+            description="PSAlgorithmSuite.short.description"
+            categoryId="policy.details"
+            weight="30"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSAlgorithmSuite.config.view&#38;symmetry=asymmetric&#38;EditAction=false">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.keySymmetry" value="asymmetric"/>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="true"/>
+               </compatibility>
+        </link>
+     </linkSet>
+</extension>
+
+<!-- WS-Security_V2 Message Security - Token -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.TokenV2" contextType="PSTokenV2">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSTokenV2.addTokenType.button"
+              actionURI="psTokenV2Collection.do"
+              type="menu"
+              actionName="addPSToken"
+              optionValueList="ps.tokenTypes.values"
+              optionLabelList="ps.tokenTypes.labels">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.tokenReadOnly" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="psTokenV2Collection.do?DeleteToken=true">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.tokenReadOnly" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policyset.TokenV2" contextType="PSTokenV2">
+          <item
+                attributeName="tokenId"
+                sortable="sort"
+                itemURI="psTokenV2Collection.do?EditAction=true"
+                label="PSTokenV2.tokenID.displayName">
+          </item>
+          <item
+                attributeName="typeTranslated"
+                sortable="sort"
+                itemURI=""
+                label="PSToken.tokenType.displayName">
+          </item>
+          <item
+                attributeName="versionTranslated"
+                sortable="sort"
+                itemURI=""
+                label="PSToken.genericVersion.displayName">
+          </item>
+           <item
+                attributeName="propagationDirection"
+                sortable="sort"
+                itemURI=""
+                label="PSTokenV2.propgationDirection.displayName">
+          </item>
+      </collectionItem>
+</extension>
+
+<!-- Message Security - Token -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.Token" contextType="PSToken">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSToken.addTokenType.button"
+              actionURI="psTokenCollection.do"
+              type="menu"
+              actionName="addPSToken"
+              optionValueList="ps.tokenTypes.values"
+              optionLabelList="ps.tokenTypes.labels">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.tokenReadOnly" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="psTokenCollection.do?DeleteToken=true">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.tokenReadOnly" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policyset.Token" contextType="PSToken">
+          <item
+                attributeName="tokenId"
+                sortable="sort"
+                itemURI="psTokenCollection.do?EditAction=true"
+                label="PSToken.tokenID.displayName">
+          </item>
+          <item
+                attributeName="typeTranslated"
+                sortable="sort"
+                itemURI=""
+                label="PSToken.tokenType.displayName">
+          </item>
+          <item
+                attributeName="versionTranslated"
+                sortable="sort"
+                itemURI=""
+                label="PSToken.genericVersion.displayName">
+          </item>
+      </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSTokenGeneralProperties" contextType="PSToken">
+       <field attributeName="userTokenId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenTypeID" value="USERNAME"/>
+          </compatibility>
+       </field>
+       <field attributeName="x509TokenId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenTypeID" value="X509"/>
+          </compatibility>
+       </field>
+       <field attributeName="ltpaTokenId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenTypeID" value="LTPA"/>
+          </compatibility>
+       </field>
+       <field attributeName="conversationTokenId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenTypeID" value="CONVERSATION"/>
+          </compatibility>
+       </field>
+       <field attributeName="customTokenId" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenTypeID" value="CUSTOM"/>
+          </compatibility>
+       </field>
+       <field attributeName="version" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="(USERNAME|X509)"/>
+          </compatibility>
+       </field>
+       <field attributeName="conversationVersion" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CONVERSATION"/>
+          </compatibility>
+       </field>
+       <field attributeName="propagate" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="LTPA"/>
+          </compatibility>
+       </field>
+       <field attributeName="x509Type" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="X509"/>
+          </compatibility>
+       </field>
+       <field attributeName="localName" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CUSTOM"/>
+          </compatibility>
+       </field>
+       <field attributeName="uri" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CUSTOM"/>
+          </compatibility>
+       </field>
+       <field attributeName="keyDerivation" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CONVERSATION"/>
+          </compatibility>
+       </field>
+       <field attributeName="issuerRef" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CONVERSATION"/>
+          </compatibility>
+       </field>
+       <field attributeName="uriRef" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.policySet.tokenType" value="CONVERSATION"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+<!-- Message Security - SignedEncrypted parts -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.EncryptMsgParts" contextType="PSEncryptMsgPartElements">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSEncryptionsSignedParts.edit.ADD"
+              actionURI="psEncryptEditDetail.do"
+              type="menu"
+              actionName="addElement"
+              optionValueList="elements.values"
+              optionLabelList="elements.labels">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSEncryptionsSignedParts.edit.REMOVE"
+              actionURI="psEncryptEditDetail.do">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.SignMsgParts" contextType="PSSignMsgPartElements">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSEncryptionsSignedParts.edit.ADD"
+              actionURI="psSignEditDetail.do"
+              type="menu"
+              actionName="addElement"
+              optionValueList="elements.values"
+              optionLabelList="elements.labels">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSEncryptionsSignedParts.edit.REMOVE"
+              actionURI="psSignEditDetail.do">
+              <compatibility>
+                   <match key="com.ibm.websphere.console.webservices.policySet.readOnly" value="false"/>
+               </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.EncryptMsgPart.collectionItem" contextType="PSEncryptMsgPartElements">
+        <item
+              attributeName="type"
+              sortable="nosort"
+              itemURI=""
+              label="PSEncryptionsSignedParts.edit.type">
+        </item>
+        <item
+              attributeName="value"
+              sortable="nosort"
+              itemURI=""
+              editable="textarea"
+              label="PSEncryptionsSignedParts.edit.value">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.SignMsgPart.collectionItem" contextType="PSSignMsgPartElements">
+        <item
+              attributeName="type"
+              sortable="nosort"
+              itemURI=""
+              label="PSEncryptionsSignedParts.edit.type">
+        </item>
+        <item
+              attributeName="value"
+              sortable="nosort"
+              itemURI=""
+              editable="textarea"
+              label="PSEncryptionsSignedParts.edit.value">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Bindings - Message Security - Key Info -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.KeyInfo.collectionItem" contextType="PSBKeyInfo">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBKeyInfo.NEWINBOUND"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBKeyInfo.NEWOUTBOUND"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBKeyInfo.DELETE"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.KeyInfo.collectionItem" contextType="PSBKeyInfo">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="psbKeysCertsDetail.do?EditAction=true"
+              label="PSBKeyInfo.name.displayName">
+        </item>
+        <item
+              attributeName="displayType"
+              sortable="nosort"
+              itemURI=""
+              label="PSBKeyInfo.type.displayName">
+        </item>
+        <item
+              attributeName="direction"
+              sortable="nosort"
+              itemURI=""
+              label="PSBKeyInfo.direction.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBKeyInfoGeneralProperties" contextType="PSBKeyInfo">
+       <field attributeName="type" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="derivedKeyInfo" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.keyInfo.isVisible" value="true"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- Bindings - Message Security - Certificate Store -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.CertStore.collectionItem" contextType="PSBCertStore">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBCertStore.NEWINBOUND"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBCertStore.NEWOUTBOUND"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBCertStore.DELETE"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.CertStore.collectionItem" contextType="PSBCertStore">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="psbKeysCertsDetail.do?EditAction=true"
+              label="PSBCertStore.name.displayName">
+        </item>
+        <item
+              attributeName="direction"
+              sortable="nosort"
+              itemURI=""
+              label="PSBCertStore.direction.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBCertStoreGeneralProperties" contextType="PSBCertStore">
+       <field attributeName="x509Certificates" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="false"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.CertStore.collectionItem" contextType="PSBCertStore.revokedCertificates">
+        <item
+              attributeName="name"
+              editable="true"
+              label="PSBCertStore.fullPath.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.CertStore.collectionItem" contextType="PSBCertStore.x509Certificates">
+        <item
+              attributeName="name"
+              editable="true"
+              label="PSBCertStore.fullPath.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Bindings - Message Security - Trust Anchor -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.TrustAnchor.collectionItem" contextType="PSBTrustAnchor">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBTrustAnchor.NEW"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBTrustAnchor.DELETE"
+              actionURI="psbKeysCertsDetail.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.TrustAnchor.collectionItem" contextType="PSBTrustAnchor">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="psbKeysCertsDetail.do?EditAction=true"
+              label="PSBTrustAnchor.name.displayName">
+        </item>
+        <item
+              attributeName="keyStoreName"
+              sortable="nosort"
+              itemURI=""
+              label="PSBKeyStore.heading.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Bindings - Message Security - Signing Info -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBSigningInfoGeneralProperties" contextType="PSBSigningInfo">
+       <field attributeName="multiKeyInfo" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="keyInfo" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="reference" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="heading" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="signedPartRefURL" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- Bindings - Message Security - Encryption Info -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBEncryptionInfoGeneralProperties" contextType="PSBEncryptionInfo">
+       <field attributeName="multiKeyInfo" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="false"/>
+          </compatibility>
+       </field>
+       <field attributeName="keyInfo" perspective="config">
+          <compatibility>
+             <match key="com.ibm.websphere.console.webservices.bindings.isGenerator" value="true"/>
+          </compatibility>
+       </field>
+       <field attributeName="reference" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+
+<!-- Policy Set Bindings - Authentication and Protection -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBProtectionToken.collection1" contextType="ProtectionToken">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBProtectionToken.NEW"
+              actionURI="pSBAuthProtDetail.do"
+        type="menu"
+            actionName="addProtToken"
+              optionValueList="bindings.prottokens.values"
+              optionLabelList="bindings.prottokens.labels">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBProtectionToken.DELETE"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBProtectionToken.UNCONFIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBProtectionToken" contextType="ProtectionToken">
+          <item
+                attributeName="name"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=ProtectionTokenLink"
+                label="PSBProtectionToken.name.displayName">
+          </item>
+          <item
+                attributeName="tokenTypeTranslatable"
+                sortable="false"
+                label="PSBProtectionToken.tokenType.displayName">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+      <item
+                attributeName="usage"
+                sortable="false"
+                label="PSBProtectionToken.usage.displayName">
+          </item>
+      <item
+                attributeName="status"
+                sortable="false"
+                label="PSBProtectionToken.status.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBAuthenticationToken.collection1" contextType="AuthenticationToken">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBAuthenticationToken.NEW"
+              actionURI="pSBAuthProtDetail.do"
+              type="menu"
+            actionName="addAuthToken"
+              optionValueList="bindings.authtokens.values"
+              optionLabelList="bindings.authtokens.labels">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBAuthenticationToken.DELETE"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="PSBAuthenticationToken.UNCONFIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBAuthenticationToken" contextType="AuthenticationToken">
+          <item
+                attributeName="name"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=AuthenticationTokenLink"
+                label="PSBAuthenticationToken.name.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+          </item>
+      <item
+                attributeName="secTokRef"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=AuthenticationTokenLink"
+                label="PSBToken.secTokRef.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+          </item>
+          <item
+                attributeName="tokenTypeTranslatable"
+                sortable="false"
+                label="PSBAuthenticationToken.tokenType.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+          </item>
+      <item
+                attributeName="usage"
+                sortable="false"
+                label="PSBAuthenticationToken.usage.displayName">
+          </item>
+      <item
+                attributeName="status"
+                sortable="false"
+                label="PSBAuthenticationToken.status.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBRequestMessage.collection1" contextType="RequestMessage">
+    <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.NEWSIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.NEWENC"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.REMOVE"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.UNCONFIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.MOVEUP"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderRequest" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBRequestMessage.MOVEDOWN"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderRequest" value="true"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBRequestMessage" contextType="RequestMessage">
+          <item
+                attributeName="name"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=RequestMessageLink"
+                label="PSBSignEncryptInfo.name.displayName">
+                <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+                </compatibility>
+          </item>
+          <item
+                attributeName="reference"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=RequestMessageLink"
+                label="PSBRequestMessage.messagePart.displayName">
+                <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+      <item
+                attributeName="protection"
+                sortable="false"
+                label="PSBRequestMessage.protection.displayName">
+          </item>
+          <item
+                attributeName="order"
+                sortable="false"
+                label="PSBSignEncryptInfo.order.displayName">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderRequest" value="true"/>
+              </compatibility>
+          </item>
+          <item
+                attributeName="status"
+                sortable="false"
+                label="PSBRequestMessage.status.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBResponseMessage.collection1" contextType="ResponseMessage">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.NEWSIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.NEWENC"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.REMOVE"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.UNCONFIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.MOVEUP"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderResponse" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBResponseMessage.MOVEDOWN"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderResponse" value="true"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBResponseMessage" contextType="ResponseMessage">
+          <item
+                attributeName="name"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=ResponseMessageLink"
+                label="PSBSignEncryptInfo.name.displayName">
+                <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+                </compatibility>
+          </item>
+          <item
+                attributeName="reference"
+                sortable="false"
+                itemURI="pSBAuthProtDetail.do?action=ResponseMessageLink"
+                label="PSBResponseMessage.messagePart.displayName">
+                <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+      <item
+                attributeName="protection"
+                sortable="false"
+                label="PSBResponseMessage.protection.displayName">
+          </item>
+          <item
+                attributeName="order"
+                sortable="false"
+                label="PSBSignEncryptInfo.order.displayName">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.showOrderResponse" value="true"/>
+              </compatibility>
+          </item>
+          <item
+                attributeName="status"
+                sortable="false"
+                label="PSBAuthenticationToken.status.displayName">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+          </item>
+    </collectionItem>
+</extension>
+<!-- bindings - ProtectionToken -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBToken.config.general.properties" contextType="PSBToken">
+        <field
+              attributeName="secTokRef"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.showSecTokRef"  value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- bindings - Callback Handler -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBCallBackHandler.config.general.properties" contextType="CallBackHandler">
+        <field
+              attributeName="certsHeading"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackOutbound" value="(false|true)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="certificates"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackOutbound" value="false"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="certificatesOnly"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackOutbound" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="keystoreHeading"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackKeystore" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="keyStoreName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackKeystore" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="basicAuthHeading"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackBasicAuth" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="userName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackBasicAuth" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="displayPassword"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackBasicAuth" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="displayPasswordConfirm"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.callbackBasicAuth" value="true"/>
+            </compatibility>
+        </field>
+    </form>
+</extension>
+
+<!-- bindings - External keystore -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBExternalKeyStore.config.general.properties" contextType="PSBExternalKeyStore">
+        <field
+              attributeName="displayKeyPassword"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.bindings.hasKeyPassword" value="true"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="displayKeyConfirmPassword"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.bindings.hasKeyPassword" value="true"/>
+            </compatibility>
+        </field>
+    </form>
+</extension>
+
+<!-- Caller collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="PSBCaller.collection1" contextType="PSBCaller">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="PSBCallerCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="PSBCallerCollection.do">
+        </action>
+                <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBCaller.button.moveup"
+              actionURI="PSBCallerCollection.do">
+              <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.v7namespace" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBCaller.button.movedown"
+              actionURI="PSBCallerCollection.do">
+              <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.v7namespace" value="true"/>
+              </compatibility>
+        </action>        
+   </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="PSBCaller.collectionItem1" contextType="PSBCaller">
+        <!-- Needed to support v6.1 namespace -->
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="PSBCallerCollection.do?EditAction=true"
+              label="PSBCaller.name.displayName">
+                            <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.v7namespace" value="false"/>
+              </compatibility>
+        </item> 
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="PSBCallerCollection.do?EditAction=true"
+              label="PSBCaller.name.displayName">
+              <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.v7namespace" value="true"/>
+              </compatibility>
+        </item>   
+        <item
+              attributeName="order"
+              sortable="nosort"
+              itemURI=""
+              label="PSBCaller.order.displayName">
+              <compatibility>
+                <match key="com.ibm.websphere.console.webservices.policySet.v7namespace" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="localName"
+              sortable="nosort"
+              itemURI=""
+              label="PSBCaller.localname.title">
+        </item>
+        <item
+              attributeName="callerIdentityUri"
+              type="URL"
+              sortable="nosort"
+              itemURI=""
+              label="PSBCaller.identity.uri.title">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- bindings - ws-security links -->
+<extension point="com.ibm.websphere.wsc.link" >
+    <linkSet id="policyset.bindings.wssecurity" contextType="policyset.bindings.wssecurity" >
+    <categoryDefinition weight="10" id="application.message.security" parent="root" label="PSBapplicationMessageSecurity"/>
+    <categoryDefinition weight="20" id="bootstrap.message.security" parent="root" label="PSBbootstrapMessageSecurity"/>
+        <link categoryId="application.message.security"
+              label="PSBAuthProt.displayName"
+              description="PSBauthAndProtectionLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBAuthProt.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="10" >
+        </link>
+
+        <link categoryId="application.message.security"
+              label="PSBKeysCerts.displayName"
+              description="PSBkeysAndCertificatesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBKeysCerts.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="20" >
+        </link>
+
+        <link categoryId="application.message.security"
+              label="PSBCaller.displayName"
+              description="PSBCaller.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBCaller.content.main&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="30" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityCallerDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="application.message.security"
+              label="PSBmessageExpiration.link"
+              description="PSBmessageExpirationLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBmessage.expiration.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="40" >
+        </link>
+        <link categoryId="application.message.security"
+              label="PSBactorRoles.displayName"
+              description="PSBactorRolesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBActorRoles.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="50" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityActorRolesTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+        <link categoryId="application.message.security"
+              label="PSBProperties.main.title"
+              description="policySet.customProperty.description"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBProperties.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="60" >
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBAuthProt.displayName"
+              description="PSBauthAndProtectionLink.desc"
+        actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBAuthProt.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="10" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBKeysCerts.displayName"
+              description="PSBkeysAndCertificatesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBKeysCerts.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="20" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBmessageExpiration.link"
+              description="PSBmessageExpirationLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBmessage.expiration.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="40" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBactorRoles.displayName"
+              description="PSBactorRolesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBActorRoles.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="50" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityActorRolesTypeDefined" value="true"/>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBProperties.bootstrap.title"
+              description="policySet.customProperty.description"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBProperties.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="60" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+    </linkSet>
+</extension>
+<!-- bindings - ws-security_v2 links -->
+<extension point="com.ibm.websphere.wsc.link" >
+    <linkSet id="policyset.bindings.wssecurity" contextType="policyset.bindings.wssecurity_v2" >
+    <categoryDefinition weight="10" id="application.message.security" parent="root" label="PSBapplicationMessageSecurity"/>
+    <categoryDefinition weight="20" id="bootstrap.message.security" parent="root" label="PSBbootstrapMessageSecurity"/>
+        <link categoryId="application.message.security"
+              label="PSBAuthProt.displayName"
+              description="PSBauthAndProtectionLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBAuthProtV2.config.view&amp;sfname=application&amp;policyType=WSSecurity_V2"
+              weight="10" >
+        </link>
+<!-- ws-security_v2 links   Uncomment these as support for the sectios is added in WS-Security _V2
+        <link categoryId="application.message.security"
+              label="PSBKeysCerts.displayName"
+              description="PSBkeysAndCertificatesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBKeysCerts.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="20" >
+        </link>
+
+        <link categoryId="application.message.security"
+              label="PSBCaller.displayName"
+              description="PSBCaller.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBCaller.content.main&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="30" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityCallerDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="application.message.security"
+              label="PSBmessageExpiration.link"
+              description="PSBmessageExpirationLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBmessage.expiration.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="40" >
+        </link>
+        <link categoryId="application.message.security"
+              label="PSBactorRoles.displayName"
+              description="PSBactorRolesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBActorRoles.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="50" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityActorRolesTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+        <link categoryId="application.message.security"
+              label="PSBProperties.main.title"
+              description="policySet.customProperty.description"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBProperties.config.view&amp;sfname=application&amp;policyType=WSSecurity"
+              weight="60" >
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBAuthProt.displayName"
+              description="PSBauthAndProtectionLink.desc"
+        actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBAuthProt.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="10" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBKeysCerts.displayName"
+              description="PSBkeysAndCertificatesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBKeysCerts.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="20" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBmessageExpiration.link"
+              description="PSBmessageExpirationLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBmessage.expiration.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="40" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBactorRoles.displayName"
+              description="PSBactorRolesLink.desc"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBActorRoles.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="50" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.policytype.isMessageSecurityActorRolesTypeDefined" value="true"/>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>
+
+        <link categoryId="bootstrap.message.security"
+              label="PSBProperties.bootstrap.title"
+              description="policySet.customProperty.description"
+              actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBProperties.config.view&amp;sfname=bootstrap&amp;policyType=WSSecurity"
+              weight="60" >
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                 <match key="com.ibm.ws.console.webservices.policytype.isWSSecurityBootstrapPolicyTypeDefined" value="true"/>
+              </compatibility>
+        </link>                              -->
+
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBAuthenticationToken.collection2" contextType="AuthenticationTokenV2">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBindings.new.generator.button"
+              actionURI="pSBAuthProtDetailV2.do"
+              type="menu"
+              actionName="addAuthGenerator"
+              optionValueList="bindings.authtokens.values"
+              optionLabelList="bindings.authtokens.labels">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBindings.new.consumer.button"
+              actionURI="pSBAuthProtDetailV2.do"
+              type="menu"
+              actionName="addAuthConsumer"
+              optionValueList="bindings.authtokens.values"
+              optionLabelList="bindings.authtokens.labels">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBAuthenticationToken.DELETE"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator,configurator"
+              label="PSBAuthenticationToken.UNCONFIG"
+              actionURI="pSBAuthProtDetail.do">
+              <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBAuthenticationToken2" contextType="AuthenticationTokenV2">
+          <item
+                attributeName="tokenType"
+                sortable="false"
+                itemURI="pSBAuthProtDetailV2.do?action=AuthenticationTokenLink"
+                label="PSBAuthenticationToken.tokenType.HL.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="true"/>
+              </compatibility>
+          </item>
+      <item
+                attributeName="secTokRef"
+                sortable="false"
+                itemURI="pSBAuthProtDetailV2.do?action=AuthenticationTokenLink"
+                label="PSBToken.secTokRef.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+          </item>
+          <item
+                attributeName="tokenTypeTranslatable"
+                sortable="false"
+                label="PSBAuthenticationToken.tokenType.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+          </item>
+      <item
+                attributeName="usage"
+                sortable="false"
+                label="PSBAuthenticationToken.usage.displayName">
+          </item>
+      <item
+                attributeName="status"
+                sortable="false"
+                label="PSBAuthenticationToken.status.displayName">
+                <compatibility>
+                 <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+                </compatibility>
+          </item>
+    </collectionItem>
+</extension>
+
+<!-- WS-Security_v2 bindings - Token -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="PSBTokenV2.config.general.properties" contextType="PSBTokenV2">
+        <field
+              attributeName="cbhCategory"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="cbhClientCategory"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="authConClientUNT"/>
+            </compatibility>
+        </field >        
+        <field
+              attributeName="classNameInfo"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="className"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="callbackCustomProperty"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="basicAuthHeading"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="authGenUNT"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="userName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="authGenUNT"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="displayPassword"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="authGenUNT"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="displayPasswordConfirm"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="authGenUNT"/>
+            </compatibility>
+        </field>       
+        <field
+              attributeName="jaasCategory"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="jaasInfo"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="jaasLabel"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="jaasLogin"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+        <field
+              attributeName="jaasCustomProperty"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindingTokenType"  value="(authGenUNT|authConUNT|authConClientUNT)"/>
+            </compatibility>
+        </field>
+      </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="policyset.bindings.config.general.properties" contextType="policyset.bindings">
+        <field
+              attributeName="bindingName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.BindingDetailForm.isV7Binding" value="true"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="v61BindingName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.BindingDetailForm.isV7Binding" value="false"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.BindingType.collectionItem" contextType="PSBBindingType">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.add"
+              actionURI="bindingsDetail.do"
+              type="menu"
+              actionName="addBindingType"
+              optionValueList="bindingType.values"
+              optionLabelList="bindingType.labels"
+              translatable="false">
+              <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="bindingsDetail.do?DeleteBindingType=true">
+              <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.BindingType.collectionItem" contextType="PSBBindingType">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="bindingsDetail.do?EditAction=true"
+              label="policyset.policyType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- bindings - caller -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="caller.PSBCaller.config.general.properties" contextType="PSBCaller">
+        <field
+              attributeName="signingPartReference"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.ws.console.webservices.policyset.bindings.custom.binding" value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.PSBTransformAlgorithmID" contextType="PSBTransformAlgorithm">
+          <item
+                attributeName="url"
+                type="URL"
+                sortable="false"
+                itemURI="psbSignedPartReferenceDetail.do?action=editTA"
+                label="PSBTransformAlgorithm.columnUrl.displayName">
+          </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+  <actionSet id="policyset.PSBTransformAlgorithm1" contextType="PSBTransformAlgorithm">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBTransformAlgorithm.NEW"
+              actionURI="psbSignedPartReferenceDetail.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="PSBTransformAlgorithm.DELETE"
+              actionURI="psbSignedPartReferenceDetail.do">
+        </action>
+    </actionSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+      <collectionItem id="policySet.PSBSignedPartReferences" contextType="PSBSignedPartReferences">
+          <item
+                attributeName="reference"
+                sortable="sort"
+                itemURI="psbSignedPartReferenceCollection.do?EditAction=true"
+                label="PSBSignedPartReference.reference.displayName">
+          </item>
+    <item
+                attributeName="timestampIncluded"
+                sortable="false"
+                label="PSBSignedPartReference.timestamp.displayName">
+          </item>
+          <item
+                attributeName="nonceIncluded"
+                sortable="false"
+                label="PSBSignedPartReference.nonce.displayName">
+          </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.PSBSignedPartReferences" contextType="PSBSignedPartReferences">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.new"
+              actionURI="psbSignedPartReferenceCollection.do?lastPage=PSBSignedPartReference.config.view">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="psbSignedPartReferenceCollection.do">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="policySet.PSBSignedPartReference" contextType="PSBSignedPartReference">
+       <field attributeName="reference" perspective="config">
+          <compatibility>
+             <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+          </compatibility>
+       </field>
+    </form>
+</extension>
+<!-- Default policy set bindings link on app server detail panel, hiding link using IS_TEMPLATE -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="servermanagement.ApplicationServer1" contextType="ApplicationServer">
+      <link categoryId="security.properties"
+            label="PSBbindings.displayName"
+            description="PSBbindings.server.description"
+            weight="20"
+            actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=ServerDefaultBindings.config.view&amp;lastPage=ApplicationServer.config.view&amp;sfname=application">
+			<compatibility>
+				 <match key="com.ibm.websphere.baseProductMajorVersion" value="(\d\d)|([7-9])"/>
+				 <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+			</compatibility>
+      </link>
+      <link categoryId="security.properties"
+            label="PSBbindings.displayName"
+            description="PSBbindings.server.description"
+            weight="20"
+			actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBv61ServerBindings.config.view&amp;PSBattachmentType=application&amp;PSBbindingType=v61ServerDefault&amp;bindingVersion=6.1.0.0&amp;lastPage=ApplicationServer.config.view&amp;sfname=application">
+			<compatibility>
+				 <match key="com.ibm.websphere.baseProductMajorVersion" value="6"/>
+                 <match key="com.ibm.ws.console.wssecurity.applicationserver.ApplicationServerDetailForm.HAS_JAXWS" value="true"/>
+				 <match key="com.ibm.ws.console.servermanagement.applicationserver.IS_TEMPLATE" value="false"/>
+			</compatibility>
+      </link>
+    </linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.link">
+   <linkSet id="webservicesbindings.SecurityDomainConfig" contextType="SecDomain">
+    <link label="policyset.domainDefaultBindings.descTitle"
+          description="policyset.domainDefaultBindings.link.description"
+          categoryId="domainAdditional.properties"
+          actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=DomainDefaultBindings.config.view&amp;lastPage=SecDomain.config.view">
+    </link>
+   </linkSet>
+</extension>
+
+<!-- bindings - HTTP Bindings CustomProperty -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="httpBindingConfig.customProperty.collectionItem" contextType="HTTPPolicyConfig.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="policySet.customProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="policySet.customProperty.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- bindings - SSL Bindings CustomProperty -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="sslBindingConfig.customProperty.collectionItem" contextType="SSLPolicyConfig.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="policySet.customProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="policySet.customProperty.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- bindings - JMS Bindings CustomProperty -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="jmsBindingConfig.customProperty.collectionItem" contextType="JMSPolicyConfig.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="policySet.customProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="policySet.customProperty.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Client policy set bindings link -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <task id="clientBindingsId" icon="/com.ibm.ws.console.webservices.policyset/images/onepix.gif" label="ClientBinding.title" view="/navigatorCmd.do?forwardName=ClientBinding.content.main" external="false" weight="70">
+            <category id="PolicySetCategoryId"/>
+        </task>
+    </tasks>
+</extension>
+
+<!-- ClientBinding collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.clientBinding.collection1" contextType="ClientBinding">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.new"
+              actionURI="clientBindingCollection.do?type=ClientBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.delete"
+              actionURI="clientBindingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.copy"
+              actionURI="clientBindingCollection.do?type=ClientBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.import"
+              actionURI="clientBindingCollection.do?type=ClientBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.export"
+              actionURI="clientBindingCollection.do?type=ClientBinding">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.clientBinding.collectionItem1" contextType="ClientBinding">
+        <item
+              attributeName="bindingName"
+              sortable="sort"
+              itemURI="clientBindingCollection.do?EditAction=true&amp;type=ClientBinding"
+              label="policyset.config.name.displayName">
+        </item>
+        <item
+              attributeName="securityDomain"
+              sortable="sort"
+              itemURI="clientBindingCollection.do?EditAction=true&amp;type=ClientBinding"
+              label="binding.securityDomain.displayName">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              itemURI=""
+              label="policyset.config.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<!-- Client binding Copy -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="namedBinding.ClientCopyBindingDetail.config.general.properties" contextType="ClientBindingCopy">
+        <field
+              attributeName="securityDomain"
+              perspective="config">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- Client binding type -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="binding.ClientBindingDetail.config.general.properties" contextType="ClientBindingType">
+        <field
+              attributeName="securityDomain"
+              perspective="config">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </field >
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.ClientBindingType.collectionItem" contextType="ClientBindingType">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.add"
+              actionURI="clientBindingDetail.do"
+              type="menu"
+              actionName="addBindingType"
+              optionValueList="bindingType.values"
+              optionLabelList="bindingType.labels"
+              translatable="false">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="clientBindingDetail.do?DeleteBindingType=true">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.ClientBindingType.collectionItem" contextType="ClientBindingType">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="clientBindingDetail.do?EditAction=true"
+              label="policyset.policyType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Provider policy set bindings link -->
+<extension point="com.ibm.ws.console.core.navigatorTask">
+    <tasks>
+        <task id="providerBindingsId" icon="/com.ibm.ws.console.webservices.policyset/images/onepix.gif" label="ProviderBinding.title" view="/navigatorCmd.do?forwardName=ProviderBinding.content.main" external="false" weight="60">
+            <category id="PolicySetCategoryId"/>
+        </task>
+    </tasks>
+</extension>
+
+<!-- ProviderBinding collection view -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="policyset.ProviderBinding.collection1" contextType="ProviderBinding">
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.new"
+              actionURI="providerBindingCollection.do?type=ProviderBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.delete"
+              actionURI="providerBindingCollection.do">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.copy"
+              actionURI="providerBindingCollection.do?type=ProviderBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.import"
+              actionURI="providerBindingCollection.do?type=ProviderBinding">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.binding.export"
+              actionURI="providerBindingCollection.do?type=ProviderBinding">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.ProviderBinding.collectionItem1" contextType="ProviderBinding">
+        <item
+              attributeName="bindingName"
+              sortable="sort"
+              itemURI="providerBindingCollection.do?EditAction=true&amp;type=ProviderBinding"
+              label="policyset.config.name.displayName">
+        </item>
+        <item
+              attributeName="securityDomain"
+              sortable="sort"
+              itemURI="providerBindingCollection.do?EditAction=true&amp;type=ProviderBinding"
+              label="binding.securityDomain.displayName">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </item>
+        <item
+              attributeName="description"
+              sortable="nosort"
+              itemURI=""
+              label="policyset.config.description.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- Provider binding Copy -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="namedBinding.ProviderCopyBindingDetail.config.general.properties" contextType="ProviderBindingCopy">
+        <field
+              attributeName="securityDomain"
+              perspective="config">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- Provider binding type -->
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="binding.ProviderBindingDetail.config.general.properties" contextType="ProviderBindingType">
+        <field
+              attributeName="securityDomain"
+              perspective="config">
+              <compatibility>
+                  <match key="com.ibm.ws.console.webservices.policyset.bindings.isMSD" value="true"/>
+              </compatibility>
+        </field >
+    </form>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.ProviderBindingType.collectionItem" contextType="ProviderBindingType">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.add"
+              actionURI="providerBindingDetail.do"
+              type="menu"
+              actionName="addBindingType"
+              optionValueList="bindingType.values"
+              optionLabelList="bindingType.labels"
+              translatable="false">
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="providerBindingDetail.do?DeleteBindingType=true">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.ProviderBindingType.collectionItem" contextType="ProviderBindingType">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="providerBindingDetail.do?EditAction=true"
+              label="policyset.policyType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="policyset.CellDefaultBindings.collectionItem1" contextType="CellDefaultBindingsCollection">
+        <item
+              attributeName="securityDomain"
+              sortable="sort"
+              label="policyset.securityDomain.displayName"
+              itemURI="custom">
+        </item>
+        <item
+              attributeName="defaultProviderBinding"
+              sortable="sort"
+              label="policyset.defaultProviderBindingHead.displayName"
+              itemURI="custom2">            
+        </item>
+        <item
+              attributeName="defaultClientBinding"
+              sortable="sort"
+              label="policyset.defaultClientBindingHead.displayName"
+              itemURI="custom3">
+        </item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="policyset.PSBAuthProt.config.general.properties" contextType="PSBAuthProt">
+        <field
+              attributeName="disableImplicitProtection"
+              perspective="config">
+            <compatibility>
+                 <match key="com.ibm.websphere.console.webservices.policySet.showDisableImplicitProtection" value="true"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- v61 Default binding -->
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="policyset.bindings.CellDefaultBindings" contextType="CellDefaultBindings">
+		<categoryDefinition weight="20" id="policyset.bindings.v61CellDefaultBindings" parent="root" label="policyset.v61DefaultBindings.descTitle"/>
+    	<link label="policyset.v61DefaultBindings.name.displayName"
+		      description="policyset.v61DefaultBindings.name.displayName"
+		      categoryId="policyset.bindings.v61CellDefaultBindings"
+		      weight="30"
+		      actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBv61Bindings.config.view&amp;PSBattachmentType=application&amp;PSBbindingType=v61CellDefault&amp;bindingVersion=6.1.0.0&amp;lastPage=CellDefaultBindings.config.view&amp;sfname=application">
+		</link>
+	</linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+	<linkSet id="policyset.bindings.ServerDefaultBindings" contextType="ServerDefaultBindings">
+		<categoryDefinition weight="20" id="policyset.bindings.v61ServerDefaultBindings" parent="root" label="policyset.v61DefaultBindings.descTitle"/>
+    	<link label="policyset.v61DefaultBindings.name.displayName"
+		      description="policyset.v61DefaultBindings.name.displayName"
+		      categoryId="policyset.bindings.v61ServerDefaultBindings"
+		      weight="30"
+		      actionURI="com.ibm.ws.console.webservices.policyset.forwardCmd.do?forwardName=PSBv61ServerBindings.config.view&amp;PSBattachmentType=application&amp;PSBbindingType=v61ServerDefault&amp;bindingVersion=6.1.0.0&amp;lastPage=ServerDefaultBindings.config.view&amp;sfname=application">
+		</link>
+	</linkSet>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.v61BindingType.collectionItem" contextType="PSBv61BindingType">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="v61BindingsDetail.do?EditAction=true"
+              label="policyset.policyType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="binding.BindingType.collectionItem" contextType="PSBv61ServerBindingType">
+         <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.add"
+              actionURI="v61ServerBindingsDetail.do"
+              type="menu"
+              actionName="addBindingType"
+              optionValueList="bindingType.values"
+              optionLabelList="bindingType.labels"
+              translatable="false">
+              <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+        <action
+              enablesFor="Collection"
+              role="administrator"
+              label="button.delete"
+              actionURI="v61ServerBindingsDetail.do?DeleteBindingType=true">
+              <compatibility>
+                   <match key="com.ibm.ws.console.webservices.binding.isDefault" value="false"/>
+              </compatibility>
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="binding.BindingType.collectionItem" contextType="PSBv61ServerBindingType">
+        <item
+              attributeName="name"
+              sortable="nosort"
+              itemURI="v61ServerBindingsDetail.do?EditAction=true"
+              label="policyset.policyType.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+<!-- bindings - CustomProperties policytype Bindings -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="CustomPropertiesBindingConfig.customProperty.collectionItem" contextType="CustomPropertiesBindings.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="policySet.customProperty.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="policySet.customProperty.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+</plugin>
+

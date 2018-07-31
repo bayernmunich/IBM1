@@ -1,0 +1,2399 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. 
+	All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Common Multiple Server">
+
+	<!-- need to set the classpath to include the latest plugin -->
+	<dirname property="common.setup.targets.basedir"
+		file="${ant.file.Common Multiple Server}" />
+	<dirname property="common.setup.targets.parentdir"
+		file="${common.setup.targets.basedir}" />
+	<dirname property="common.setup.targets.bundle.basedir"
+		file="${common.setup.targets.parentdir}" />
+
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/common-setup.xml" />
+
+	<taskdef file="${common.setup.targets.bundle.basedir}/properties/SSEQTP/aimpdtaskdef.properties" />
+
+
+	<target name="was_stack_mulitple_servers_init" 
+		depends="query_create_mult_jars,
+			query_pmrfilename, usage, 
+			ask_for_middleware_root,initialize_middleware_static_environment,
+			version_level_setup, ask_for_problem_type_for_trace, 
+			was_init_multiple_server, set_managed_server_options,
+			was_multiple_trace_set,set_start_app_servers,
+			start_time, pause_for_user_input,end_time, 
+			was_multiple_trace_restore, restore_start_app_servers,
+			zip_multiple_enhanced_dirs"> 
+	</target> 
+	
+	<target name="was_init_multiple_server">
+
+			<if isTrue="${isWASVersion5}">
+				<property name="was.profile.root" value="${was.root}" />
+				<property name="was.enhanced.root" value="${was.root}" />
+			</if>
+
+		<if isTrue="${isWASVersion6}">
+			<wasmultcomponents componentList="was.profiles"
+				appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+				component="profiles" attribute="name" delimiter="|" filterList=""
+				success="query.succeeded" />
+
+			<if isNotTrue="${query.succeeded}">
+				<fail>
+					The search for the profile names based on the root
+					${was.root} failed. Verify that your input is
+					correct and run the collection again.
+				</fail>
+			</if>
+
+			<if isNotTrue="${has.mult.profiles}">
+				<property name="profileName" value="${was.profiles}" />
+				<property name="isSingleProfile" value="true"/> 
+				<wascomponent value="was.enhanced.root"
+					appInstallRoot="${was.root}" component="profiles" attribute="path"
+					filterList="name=${profileName}" delimiter="|"
+					success="enhanced.succeeded" />
+		
+				<wascomponent value="CellName" appInstallRoot="${was.root}"
+					component="servers" attribute="cellName"
+					filterList="profileId=${was.enhanced.root}" delimiter="|"
+					success="cell.succeeded" />
+		<!-- 
+				<wascomponent value="NodeName" appInstallRoot="${was.root}"
+					component="servers" attribute="nodeName"
+					filterList="profileId=${was.enhanced.root}" delimiter="|"
+					success="node.succeeded" />
+		 -->
+				<wasmultcomponents componentList="was.nodes"
+					appInstallRoot="${was.root}" hasMultComponents="has.mult.nodes"
+					component="nodes" attribute="name" delimiter="|" filterList="profileId=${was.enhanced.root}"
+					success="node.query.succeeded" />
+				
+				<if isNotTrue="${node.query.succeeded}">
+					<fail>
+						The search for the node name based on the profile
+						${was.enhanced.root} failed. Verify that your input is
+						correct and run the collection again.
+					</fail>
+				</if>
+
+				<if isTrue="${has.mult.nodes}">
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_Node_Name_of_Your_Application_Server" type="prompt"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="NodeName" label="was_nodename"
+							list="${was.nodes}" listDetails="${was.nodes}"
+							type="selectlist" accessibilityName="was_nodename"
+							accessibilityDesc="was_nodename"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+					</inputdialogtask>
+				</if>
+				<if isNotTrue="${has.mult.nodes}">
+					<property name="NodeName" value="${was.nodes}" />
+				</if>
+				
+<!--		
+				<wasservers servers="was.servers"
+					appInstallRoot="${was.root}" hasMultServers="has.mult.servers"
+					wasEnhancedRoot="${was.enhanced.root}" />
+-->				
+				<wasmultcomponents componentList="was.servers"
+					appInstallRoot="${was.root}" hasMultComponents="has.mult.servers"
+					component="servers" attribute="name" delimiter="|"
+					filterList="profileId=${was.enhanced.root}|nodeName=${NodeName}"
+					success="query.succeeded" />
+
+				
+				<if isNotTrue="${query.succeeded}">
+					<fail>
+						The search for the server names based on the profile
+						${was.enhanced.root} failed. Verify that your input is
+						correct and run the collection again.
+					</fail>
+				</if>
+		
+				<if isNotTrue="${has.mult.servers}">
+					<property name="ServerName" value="${was.servers}" />
+					<property name="isSingleServer" value="true"/> 
+				</if>
+			 
+			 	<condition property="single.profile.single.node">
+			 		<and> 
+			 			<equals arg1="${isSingleProfile}" arg2="true"/> 
+		 				<equals arg1="${isSingleServer}" arg2="true"/>
+			 			<not> 
+			 				<equals arg1="${has.mult.nodes}" arg2="true" /> 
+			 			</not> 
+		 			</and>
+			 	</condition>
+			 	<echo message="single.profile.single.node value is ${single.profile.single.node}"/> 
+		
+			</if>
+		
+		</if>
+
+		<if isTrue="${single.profile.single.node}"> 
+		
+			
+			<wascomponent value="CellName" appInstallRoot="${was.root}"
+				component="servers" attribute="cellName"
+				filterList="profileId=${was.enhanced.root}" delimiter="|"
+				success="cell.succeeded" />
+		
+			<wascomponent value="NodeName" appInstallRoot="${was.root}"
+				component="servers" attribute="nodeName"
+				filterList="profileId=${was.enhanced.root}" delimiter="|"
+				success="node.succeeded" />
+
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+was.enhanced.root=${was.enhanced.root}${line.separator}
+profileName=${profileName}${line.separator}
+ServerName=${ServerName}${line.separator}
+CellName=${CellName}${line.separator}
+NodeName=${NodeName}${line.separator}		
+			</concat>
+
+			<condition property="is.Not.App.Server" > 
+				<or> 
+					<equals arg1="${ServerName}" arg2="${nodeagent.ServerName}" /> 
+					<equals arg1="${ServerName}" arg2="${dmgr.ServerName}" /> 
+				</or> 
+			</condition> 
+			
+			<if isTrue="${is.Not.App.Server}">
+				<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+				
+			</if>
+			<if isNotTrue="${is.Not.App.Server}"> 
+<!-- This is for App Server - so we need to check whether the server is "managed" --> 
+				<wascomponent value="isManagedServer" appInstallRoot="${was.root}" 
+					component="servers" attribute="managedServer" filterList="id=${profileName}:${CellName}/${NodeName}/${ServerName}" 
+					delimiter="|" success="enhanced.succeeded" />
+
+				<if isTrue="${isManagedServer}" > 
+					<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ManagedServer=true
+					</concat>
+					<available file="${was.enhanced.root}/properties/wsadmin.properties" type="file" 
+						property="wsadmin.properties.exist" />
+					<if isTrue="${wsadmin.properties.exist}">
+						<autopd_property_reader key="scripting.port" name="com.ibm.ws.scripting.port" 
+							filename="${was.enhanced.root}/properties/wsadmin.properties" />
+						<autopd_property_reader key="scripting.host" name="com.ibm.ws.scripting.host" 
+							filename="${was.enhanced.root}/properties/wsadmin.properties" />
+						
+						<property name="wsadmin.args" value="-port ${scripting.port} -host ${scripting.host}" /> 
+
+					</if>
+				</if> 
+				<if isNotTrue="${isManagedServer}" > 
+					<if isNotTrue="${isManagedServer}">
+						<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+					</if> 
+
+					<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ManagedServer=false
+					</concat>
+				</if> 
+			</if> 
+				
+<!--  Security Configuration  -->			
+			<wascomponent value="is.cell.secure"
+				appInstallRoot="${was.root}" component="cells"
+				attribute="securityEnabled" filterList="name=${CellName}"
+				delimiter="|" success="secure.check.succeeded" />
+	
+			<condition property="isSecure">
+				<equals arg1="true" arg2="${is.cell.secure}" />
+			</condition>
+	
+			<if isNotTrue="${isSecure}">
+				<autopdproperty name="was.admin.info" value=" " />
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}				
+security=disabled${line.separator}${line.separator}				
+				</concat>
+			</if>
+	
+			<if isTrue="${isSecure}">
+				<autopd_unset_property name="exitloop"/> 
+		 		<autopdproperty name="exitloop" value="true" /> 
+				<autopdwhile property="exitloop"> 
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_WAS_admin_information" defaultValue="default"
+							type="prompt" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="was.admin.user" label="admin_username"
+							defaultValue="" type="plaintext" initialValueSource="persisted" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="was.admin.password"
+							label="admin_password" defaultValue="" type="password" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					</inputdialogtask>
+	
+					<property name="was.security.file" value="${autopdtmp}/was-security.txt" />
+					
+					<available file="${was.security.file}" property="was.security.file.available" />
+					<if isTrue="${was.security.file.available}">
+						<delete file="${was.security.file}" quiet="true" failonerror="false" />
+					</if>
+					
+					<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="${os.windows}">
+						<arg
+							line='${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+		
+					<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="${os.unixkind.exclude.iseries}">
+						<arg
+							line='${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+	
+					<exec executable="${was.enhanced.root}/bin/wsadmin"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="OS/400">
+						<arg
+							line='${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+					<available file="${was.security.file}" property="was.security.file.exists" />
+				
+					<if isTrue="${was.security.file.exists}">
+						<securitystatus securityFile="${was.security.file}" 
+							regexp="ADMN0022E"
+							secStatus="secStatus" /> 
+					</if>
+	
+					<if isNotTrue="${secStatus}">
+						<autopdproperty name="was.admin.info"
+							value=" -user ${was.admin.user} -password ${was.admin.password}" />
+						<persistproperty property="was.admin.user" />
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}						
+security=enabled${line.separator}
+username=${was.admin.user}${line.separator}
+password=${was.admin.password}${line.separator}					
+						</concat>
+						<autopdproperty name="exitloop" value="false"/> 
+	 
+					</if>
+					<if isTrue="${secStatus}">
+						<!-- Credentials not correct --> 
+						<autopdproperty name="exitloop" value="true" /> 
+						<wsnlsecho key="WAS_Credentials_Not_Correct" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							message="The WebSphere Administrative User Id and Password are not correct. Please enter the correct values." />
+					</if> 
+				</autopdwhile>				
+			
+			</if>
+<!--  End Security -->	
+
+<!--  Determine was trace settings -->
+<!--  Probably look for implementation in Jython -->
+<!--  Enter the existing was tracestring  -->
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}			
+was.trace.string=${was.trace.string}${line.separator}
+			</concat>
+			<if isTrue="${jvm_arguments}">
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+generic.jvm.arguments=${generic.jvm.arguments}${line.separator}
+				</concat>
+			</if>
+			<if isTrue="${jvm_verboseClass_enable}">
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+verboseModeClass=true${line.separator}
+				</concat>
+			</if>
+<!--  End was trace settings  -->
+
+<!--  Server status/Restart needed -->	
+				<property name="was.status.file"
+					value="${autopdtmp}/was-status.txt" />
+	 		
+				<available file="${was.status.file}" property="was.status.file.available" />
+				<if isTrue="${was.status.file.available}">
+					<delete file="${was.status.file}" quiet="true" failonerror="false" />
+				</if>
+	 		
+	
+				<copy
+					file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-server-status-template.jacl"
+					tofile="${autopdtmp}/was-server-status-filled.jacl"
+					overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+					</filterset>
+				</copy>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="${os.windows}">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="${os.unixkind.exclude.iseries}">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="OS/400">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<detectserverstatus statusFile="${was.status.file}"
+					regexp="${ServerName} is STARTED"
+					serverRunningStatus="was.server.running.status" />
+		
+				<condition property="was.server.isRunning">
+					<equals arg1="STARTED" arg2="${was.server.running.status}" />
+				</condition>
+				
+				<if isTrue="${was.server.isRunning}" >
+					<inputdialogtask>
+						<fieldtask name="prompt1"
+			        		label="Information_Message"
+					        type="prompt"
+					        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt2"
+							label="wsas_reset_trace_info_1"
+			        		type="label"
+					        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt3"
+		        		   label="wsas_reset_trace_info_2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt4"
+				           label="wsas_reset_trace_info_3"
+			       		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt5"
+			       		   label="wsas_reset_trace_info_4"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="wsas.script.path"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			        	   label="select_one"
+					       list="Restarting_a_server:Without_restarting_a_running_server"
+					       listDetails="Restarting_a_server:Without_restarting_a_running_server"
+			        	   type="selectlist" />
+					</inputdialogtask>
+					<condition property="restart.server">
+						<equals arg1="Restarting_a_server" arg2="${wsas.script.path}" />
+					</condition>
+					<if isTrue="${restart.server}">
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ServerRunning=true${line.separator}
+ReStartRequired=true${line.separator}
+						</concat>
+					</if>
+					<if isNotTrue="${restart.server}">
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ServerRunning=true${line.separator}
+ReStartRequired=false${line.separator}
+						</concat>
+					</if>
+				</if>
+				<if isNotTrue="${was.server.isRunning}" >
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ServerRunning=false${line.separator}${line.separator}
+						</concat>
+				
+				</if>
+					 
+<!--  Server status  -->
+
+<!--  Log Rollover -->
+
+				<inputdialogtask>
+					<fieldtask name="prompt"
+					     label="Trace_File_Prompt"
+					     type="prompt"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="set_trace_files"
+					     label="Set_Trace_Files"
+					     type="label"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="trace_file_set"
+						 label="select_one"
+						 type="selectlist" 
+						 list="no:yes" listDetails="no:yes"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+				<autopd_unset_property name="set.trace.log"/> 
+				<condition property="set.trace.log">
+					<equals arg1="yes" arg2="${trace_file_set}" />
+				</condition>
+				<if isTrue="${set.trace.log}"> 
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+SetLogRollover=true${line.separator}
+SetLogNumber=20${line.separator}
+SetLogSize=50${line.separator}
+						</concat>
+				</if> 
+				<if isNotTrue="${set.trace.log}" > 
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+SetLogRollover=false${line.separator}
+						</concat>
+				</if> 
+<!--  Log Rollover -End -->
+			<if isTrue="${isWindows}">
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf">
+	os=win
+				</concat>
+			</if> 
+
+	 	</if>
+	 	
+<!--  More than one profile/server in the configuration -->	 	
+	 	<if isNotTrue="${single.profile.single.node}"> 
+
+			<autopd_unset_property name="exit.loop"/> 
+	 		<autopdproperty name="exit.loop" value="true" /> 
+			<autopdwhile property="exit.loop"> 
+			
+				<if isNotTrue="${has.mult.profiles}">
+					<property name="profileName" value="${was.profiles}" />
+				</if>
+			
+				<if isTrue="${has.mult.profiles}">
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_Profile_Name_of_Your_Application_Server"
+							type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="profileName"
+							label="was_profilename" list="${was.profiles}"
+							listDetails="${was.profiles}" type="selectlist"
+							accessibilityName="was_profilename"
+							accessibilityDesc="was_profilename"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+					</inputdialogtask>
+				</if>
+				<wascomponent value="was.enhanced.root"
+					appInstallRoot="${was.root}" component="profiles" attribute="path"
+					filterList="name=${profileName}" delimiter="|"
+					success="enhanced.succeeded" />
+
+				<echo message="was enhanced root is ${was.enhanced.root}"/> 
+				<autopd_unset_property name="CellName"/> 
+				<autopd_unset_property name="NodeName"/> 
+
+				<wascomponent value="CellName" appInstallRoot="${was.root}"
+					component="servers" attribute="cellName"
+					filterList="profileId=${was.enhanced.root}" delimiter="|"
+					success="cell.succeeded" />
+<!--		
+				<wascomponent value="NodeName" appInstallRoot="${was.root}"
+					component="servers" attribute="nodeName"
+					filterList="profileId=${was.enhanced.root}" delimiter="|"
+					success="node.succeeded" />
+-->
+				<autopd_unset_property name="has.mult.nodes" /> 
+				
+				<wasmultcomponents componentList="was.nodes"
+					appInstallRoot="${was.root}" hasMultComponents="has.mult.nodes"
+					component="nodes" attribute="name" delimiter="|" filterList="profileId=${was.enhanced.root}"
+					success="node.query.succeeded" />
+				
+				<if isNotTrue="${node.query.succeeded}">
+					<fail>
+						The search for the node name based on the profile
+						${was.enhanced.root} failed. Verify that your input is
+						correct and run the collection again.
+					</fail>
+				</if>
+
+				<if isTrue="${has.mult.nodes}">
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_Node_Name_of_Your_Application_Server" type="prompt"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="NodeName" label="was_nodename"
+							list="${was.nodes}" listDetails="${was.nodes}"
+							type="selectlist" accessibilityName="was_nodename"
+							accessibilityDesc="was_nodename"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+					</inputdialogtask>
+				</if>
+				<if isNotTrue="${has.mult.nodes}">
+					<property name="NodeName" value="${was.nodes}" />
+				</if>
+
+				<autopd_unset_property name="has.mult.servers" /> 
+<!--				
+				<wasservers servers="was.servers"
+					appInstallRoot="${was.root}" hasMultServers="has.mult.servers"
+					wasEnhancedRoot="${was.enhanced.root}" />
+--> 				
+				<wasmultcomponents componentList="was.servers"
+					appInstallRoot="${was.root}" hasMultComponents="has.mult.servers"
+					component="servers" attribute="name" delimiter="|"
+					filterList="profileId=${was.enhanced.root}|nodeName=${NodeName}"
+					success="query.succeeded" />
+
+				
+				<if isNotTrue="${query.succeeded}">
+					<fail>
+						The search for the server names based on the profile
+						${was.enhanced.root} failed. Verify that your input is
+						correct and run the collection again.
+					</fail>
+				</if>
+				
+
+				<if isNotTrue="${has.mult.servers}">
+					<property name="ServerName" value="${was.servers}" />
+				</if>
+				
+				<if isTrue="${has.mult.servers}">
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_Server_Name_of_Your_Application_Server" type="prompt"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="ServerName" label="was_servername"
+							list="${was.servers}" listDetails="${was.servers}"
+							type="selectlist" accessibilityName="was_servername"
+							accessibilityDesc="was_servername"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+					</inputdialogtask>
+				</if>
+				<delete file="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" /> 
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+was.enhanced.root=${was.enhanced.root}${line.separator}
+profileName=${profileName}${line.separator}
+ServerName=${ServerName}${line.separator}
+CellName=${CellName}${line.separator}
+NodeName=${NodeName}${line.separator}		
+			</concat>
+<!--  End profile/server find -->		
+				
+			<condition property="is.Not.App.Server" > 
+				<or> 
+					<equals arg1="${ServerName}" arg2="${nodeagent.ServerName}" /> 
+					<equals arg1="${ServerName}" arg2="${dmgr.ServerName}" /> 
+				</or> 
+			</condition> 
+				
+			<if isTrue="${is.Not.App.Server}">
+<!-- It is dmgr or Nodeagent - 
+The wsadmin arguments should be localhost and soap port 
+--> 
+				<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+					
+			</if>
+
+			<if isNotTrue="${is.Not.App.Server}"> 
+				<available file="${was.enhanced.root}/properties/wsadmin.properties" type="file" 
+					property="wsadmin.properties.exist" />
+				<if isTrue="${wsadmin.properties.exist}">
+					<autopd_property_reader key="scripting.port" name="com.ibm.ws.scripting.port" 
+						filename="${was.enhanced.root}/properties/wsadmin.properties" />
+					<autopd_property_reader key="scripting.host" name="com.ibm.ws.scripting.host" 
+						filename="${was.enhanced.root}/properties/wsadmin.properties" />
+					
+					<property name="wsadmin.args" value="-port ${scripting.port} -host ${scripting.host}" /> 
+
+				</if>
+<!-- This is for App Server - so we need to check whether the server is "managed" -->  
+				<wascomponent value="isManagedServer" appInstallRoot="${was.root}" 
+					component="servers" attribute="managedServer" filterList="id=${profileName}:${CellName}/${NodeName}/${ServerName}" 
+					delimiter="|" success="enhanced.succeeded" />
+
+				<if isTrue="${isManagedServer}" > 
+					<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ManagedServer=true
+					</concat>
+				</if> 
+				<if isNotTrue="${isManagedServer}" > 
+					<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+					<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ManagedServer=false
+					</concat>
+				</if> 
+			</if> 
+			
+<!--  Security Configuration  -->			
+			<wascomponent value="is.cell.secure"
+				appInstallRoot="${was.root}" component="cells"
+				attribute="securityEnabled" filterList="name=${CellName}"
+				delimiter="|" success="secure.check.succeeded" />
+	
+			<condition property="isSecure">
+				<equals arg1="true" arg2="${is.cell.secure}" />
+			</condition>
+	
+			<if isNotTrue="${isSecure}">
+				<autopdproperty name="was.admin.info" value=" " />
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+security=disabled${line.separator}				
+				</concat>
+			</if>
+	
+			<if isTrue="${isSecure}">
+				<autopd_unset_property name="exitloop"/> 
+		 		<autopdproperty name="exitloop" value="true" /> 
+				
+				<autopdwhile property="exitloop"> 
+					<inputdialogtask>
+						<fieldtask name="prompt"
+							label="Input_WAS_admin_information" defaultValue="default"
+							type="prompt" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="was.admin.user" label="admin_username"
+							defaultValue="" type="plaintext" initialValueSource="persisted" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="was.admin.password"
+							label="admin_password" defaultValue="" type="password" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					</inputdialogtask>
+	
+					<property name="was.security.file" value="${autopdtmp}/was-security.txt" />
+					
+					<available file="${was.security.file}" property="was.security.file.available" />
+					<if isTrue="${was.security.file.available}">
+						<delete file="${was.security.file}" quiet="true" failonerror="false" />
+					</if>
+					
+	
+					<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="${os.windows}">
+						<arg
+							line='${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+		
+					<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="${os.unixkind.exclude.iseries}">
+						<arg
+							line=' ${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+	
+					<exec executable="${was.enhanced.root}/bin/wsadmin"
+						dir="${was.enhanced.root}/bin" output="${was.security.file}"
+						append="true" os="OS/400">
+						<arg
+							line=' ${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+					</exec>
+					<available file="${was.security.file}" property="was.security.file.exists" />
+				
+					<if isTrue="${was.security.file.exists}">
+						<securitystatus securityFile="${was.security.file}" 
+							regexp="ADMN0022E"
+							secStatus="secStatus" /> 
+					</if>
+	
+					<if isNotTrue="${secStatus}">
+						<autopdproperty name="was.admin.info"
+							value=" -user ${was.admin.user} -password ${was.admin.password}" />
+						<persistproperty property="was.admin.user" />
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+security=enabled${line.separator}
+username=${was.admin.user}${line.separator}
+password=${was.admin.password}${line.separator}					
+						</concat>
+						<autopdproperty name="exitloop" value="false"/> 
+	 
+					</if>
+					<if isTrue="${secStatus}">
+						<!-- Credentials not correct --> 
+						<autopdproperty name="exitloop" value="true" /> 
+						<wsnlsecho key="WAS_Credentials_Not_Correct" 
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							message="The WebSphere Administrative User Id and Password are not correct. Please enter the correct values." />
+					</if> 
+				</autopdwhile>				
+			
+			</if>
+<!--  End Security -->	
+
+<!--  Determine was trace settings -->
+<!--  Probably look for implementation in Jython -->
+<!--  Enter the existing was tracestring  -->
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+was.trace.string=${was.trace.string}${line.separator}
+			</concat>
+			<if isTrue="${jvm_arguments}">
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+generic.jvm.arguments=${generic.jvm.arguments}${line.separator}
+				</concat>
+			</if>
+			<if isTrue="${jvm_verboseClass_enable}">
+				<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+verboseModeClass=true${line.separator}
+				</concat>
+			</if>
+<!--  End was trace settings  -->
+
+<!--  Server status/Restart needed -->	
+				<property name="was.status.file"
+					value="${autopdtmp}/was-status.txt" />
+				
+				<available file="${was.status.file}" property="was.status.file.available" />
+				<if isTrue="${was.status.file.available}">
+					<delete file="${was.status.file}" quiet="true" failonerror="false" />
+				</if>
+				
+				<copy
+					file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-server-status-template.jacl"
+					tofile="${autopdtmp}/was-server-status-filled.jacl"
+					overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+					</filterset>
+				</copy>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="${os.windows}">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="${os.unixkind.exclude.iseries}">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<exec executable="${was.enhanced.root}/bin/wsadmin"
+					dir="${was.enhanced.root}/bin" output="${was.status.file}"
+					append="true" os="OS/400">
+					<arg
+						line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+				</exec>
+		
+				<autopd_unset_property name="was.server.isRunning"/>
+				<autopd_unset_property name="was.server.running.status"/>
+				
+				<detectserverstatus statusFile="${was.status.file}"
+					regexp="${ServerName} is STARTED"
+					serverRunningStatus="was.server.running.status" />
+		
+				<autopd_unset_property name="was.server.isRunning"/> 
+				<condition property="was.server.isRunning">
+					<equals arg1="STARTED" arg2="${was.server.running.status}" />
+				</condition>
+				
+				<if isTrue="${was.server.isRunning}" >
+					<inputdialogtask>
+						<fieldtask name="prompt1"
+			        		label="Information_Message"
+					        type="prompt"
+					        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt2"
+							label="wsas_reset_trace_info_1"
+			        		type="label"
+					        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt3"
+		        		   label="wsas_reset_trace_info_2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt4"
+				           label="wsas_reset_trace_info_3"
+			       		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label0"
+							label="Empty_Line"
+							type="label"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="prompt5"
+			       		   label="wsas_reset_trace_info_4"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="wsas.script.path"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			        	   label="select_one"
+					       list="Restarting_a_server:Without_restarting_a_running_server"
+					       listDetails="Restarting_a_server:Without_restarting_a_running_server"
+			        	   type="selectlist" />
+					</inputdialogtask>
+					<condition property="restart.server">
+						<equals arg1="Restarting_a_server" arg2="${wsas.script.path}" />
+					</condition>
+					<if isTrue="${restart.server}">
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf">
+${line.separator}
+ServerRunning=true${line.separator}						 
+ReStartRequired=true${line.separator}
+						</concat>
+					</if>
+					<if isNotTrue="${restart.server}">
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf">
+${line.separator}
+ServerRunning=true${line.separator}						 
+ReStartRequired=false${line.separator}
+						</concat>
+					</if>
+				</if>
+				<if isNotTrue="${was.server.isRunning}" >
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+ServerRunning=false${line.separator}
+						</concat>
+				
+				</if>
+					 
+<!--  Server status  -->
+
+<!--  Log Rollover -->
+
+				<inputdialogtask>
+					<fieldtask name="prompt"
+					     label="Trace_File_Prompt"
+					     type="prompt"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="set_trace_files"
+					     label="Set_Trace_Files"
+					     type="label"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="trace_file_set"
+						 label="select_one"
+						 type="selectlist" 
+						 list="no:yes" listDetails="no:yes"
+					     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+				<autopd_unset_property name="set.trace.log" />
+				<condition property="set.trace.log">
+					<equals arg1="yes" arg2="${trace_file_set}" />
+				</condition>
+				<if isTrue="${set.trace.log}"> 
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+SetLogRollover=true${line.separator}
+SetLogNumber=20${line.separator}
+SetLogSize=50${line.separator}
+						</concat>
+				</if> 
+				<if isNotTrue="${set.trace.log}" > 
+						<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}
+SetLogRollover=false${line.separator}
+						</concat>
+				</if> 
+<!--  Log Rollover -End -->
+				<if isTrue="${isWindows}">
+					<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf">
+os=win
+					</concat>
+				</if> 
+
+	
+<!--  Prompt to loop through for more servers -->		
+				<inputdialogtask > 
+				
+					<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+					<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label"
+					   label="mult_server_loop"
+					   type="label"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="select_loop_again"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was"
+					   label="mult_server_loop2"
+					   list="no:yes"
+					   listDetails="no:yes"
+					   type="selectlist" />
+					
+				</inputdialogtask>
+				
+				<condition property="loop.again">
+					<equals arg1="${select_loop_again}" arg2="yes" />
+				</condition>
+				<condition property="do.not.loop.again">
+					<equals arg1="${select_loop_again}" arg2="no" />
+				</condition>
+				
+				<if isTrue="${do.not.loop.again}"> 
+					<autopdproperty name="exit.loop" value="false" /> 
+				</if>
+
+<!--  End loop -->		
+	 		</autopdwhile>
+	 	</if>
+	</target>
+
+	<target name="set_managed_server_options" >
+	
+<!-- Determine the Managed Server Options - Make sure Dmgr and nodeagent are running for the ManagedServer --> 
+		
+		
+		<autopd_property_reader key="ManagedServerStatus" name="ManagedServer" 
+			filename="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" />
+		<if isTrue="${ManagedServerStatus}"> 
+
+<!-- Make sure the we confirm that the Dmgr and all Nodeagent's are active -->
+<!-- User responsibility to keep them active (but not appserver) at the time the wsadmin is invoked --> 
+			<inputdialogtask_v2 noCancel="true"> 
+				<fieldtask name="prompt" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					label="Information_Message"/>
+			<fieldtask name="label0" type="label"
+					label="Empty_Line"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label1" type="label"
+					label="Keep_Dmgr_Nodeagent_Active0"	
+					bundle="properties/SSEQTP/autopdtoolstrings_was"/> 	
+			<fieldtask name="label1" type="label"
+					label="Keep_Dmgr_Nodeagent_Active1"	
+					bundle="properties/SSEQTP/autopdtoolstrings_was"/> 	
+			</inputdialogtask_v2>
+	
+			<property name="ND.profileName" value="${autopdtmp}/autopd/multiple-server/ND.profileName.txt"/> 
+			
+			<exec executable="${was.root}/bin/manageProfiles.bat"
+				dir="${was.root}/bin" output="${ND.profileName}"
+				append="true" os="${os.windows}">
+				<arg
+					line='  -getDefaultName' />
+			</exec>
+
+			<exec executable="${was.root}/bin/manageprofiles.sh"
+				dir="${was.root}/bin" output="${ND.profileName}"
+				append="true" os="${os.unixkind.exclude.iseries}">
+				<arg
+					line=' -getDefaultName' />
+			</exec>
+
+			<exec executable="${was.root}/bin/manageprofiles"
+				dir="${was.root}/bin" output="${ND.profileName}"
+				append="true" os="OS/400">
+				<arg
+					line='  -getDefaultName' />
+			</exec>
+			
+			<loadfile property="my.Default.Profile" srcFile="${ND.profileName}">
+				<filterchain> 
+					<striplinebreaks/>
+				</filterchain>
+			</loadfile> 
+
+			<echo message="Default Profile is ${my.Default.Profile}"/> 
+<!--
+			<wascomponent value="was.Dmgr.root"
+				appInstallRoot="${was.root}" component="profiles" attribute="path"
+				filterList="name=${ND.profileName}" delimiter="|"
+				success="enhanced.succeeded" />
+-->
+			<wascomponent value="isThisDmgr" 
+				appInstallRoot="${was.root}" component="profiles" attribute="isDmgr" 
+				filterList="name=${my.Default.Profile}" delimiter="|" success="enhanced.succeeded" />
+			
+			<wascomponent value="dmgr.en.root" 
+				appInstallRoot="${was.root}" component="profiles" attribute="path" 
+				filterList="name=${my.Default.Profile}" delimiter="|" success="enhanced.succeeded" />
+
+			
+			<if isTrue="${isThisDmgr}"> 
+				<property name="profileArgs" value=" -profileName ${my.Default.Profile}" />
+			</if>
+		</if> 
+		<if isNotTrue="${ManagedServerStatus}"> 
+			<property name="profileArgs" value=" -profileName ${profileName}" /> 
+		</if> 
+		<echo message="Profile Argument is ${profileArgs}"/> 
+	</target> 
+
+	<target name="ask_for_problem_type_for_trace">
+	
+		<loadfile  property="was.trace" srcfile="${common.setup.targets.bundle.basedir}/properties/SSEQTP/was-trace.properties"/>
+		<loadfile  property="was.trace.values" srcfile="${common.setup.targets.bundle.basedir}/properties/SSEQTP/was-trace-values.properties"/>
+	
+		<inputdialogtask_v2 noCancel="true"> 
+			<fieldtask name="prompt" type="prompt"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				label="Input_Required_WAS"/>
+		<fieldtask name="label0" type="label"
+				label="Empty_Line"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+		<fieldtask name="label1" type="label"
+				label="select_problem_type"	
+				bundle="properties/SSEQTP/autopdtoolstrings_was"/> 	
+		<fieldtask name="was.problem.type"
+		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+	       	   label="select_one" delimiter="^"
+	       	   list="${was.trace}"
+		       listDetails="${was.trace}"
+	       	   type="selectlist" />
+		</inputdialogtask_v2>
+	
+		<echo message="was.problem.type is ${was.problem.type}"/> 
+		
+		<condition property="problem_type_admin" >
+			<equals arg1="Admin Console Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_dmgr_discovery" >
+			<equals arg1="DMGR Discovery Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_na_discovery" >
+			<equals arg1="NodeAgent Discovery Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_start" >
+			<equals arg1="Start Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_stop" >
+			<equals arg1="Stop Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_sa" >
+			<equals arg1="System Administration Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_deployment" >
+			<equals arg1="Deployment Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_wsadmin" >
+			<equals arg1="WSAdmin Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_jmx" >
+			<equals arg1="JMX Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_cluster" >
+			<equals arg1="Cluster Service" arg2="${was.problem.type}" />
+		</condition> 
+		
+		<condition property="problem_type_global_security" >
+			<equals arg1="Global Security Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_jsse_ssl" >
+			<equals arg1="JSSE/SSL Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_java2" >
+			<equals arg1="Java 2 Security Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_federated" >
+			<equals arg1="Federated Repository Problem" arg2="${was.problem.type}" />
+		</condition> 
+
+		<condition property="problem_type_db_connection" >
+			<equals arg1="Database Connection Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_jms" >
+			<equals arg1="JMS Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_ejb_container" >
+			<equals arg1="EJB Container Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_ws_engine" >
+			<equals arg1="Web Services Engine and Tooling Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_ws_security" >
+			<equals arg1="Web Services Security Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_servlet_webcontainer" >
+			<equals arg1="Servlet Engine and Web Container Problem" arg2="${was.problem.type}" />
+		</condition> 
+
+
+		<condition property="problem_type_jndi" >
+			<equals arg1="JNDI Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_jts" >
+			<equals arg1="JTS Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_orb" >
+			<equals arg1="ORB Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_scheduler" >
+			<equals arg1="Scheduler Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_wlm" >
+			<equals arg1="Workload Management Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_cache" >
+			<equals arg1="Dynamic Cache Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_classloader" >
+			<equals arg1="Classloader Problem" arg2="${was.problem.type}" />
+		</condition> 
+		<condition property="problem_type_sm" >
+			<equals arg1="Session Management Problem" arg2="${was.problem.type}" />
+		</condition> 
+		
+		<if isTrue="${problem_type_admin}">
+			<autopdinput message="ask_if_able_to_login_to_admin_console"
+			             validargs="yes,no"
+			             addproperty="do.login.possible"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	
+			<condition property="can.login">
+				<equals arg1="yes" arg2="${do.login.possible}" />
+			</condition>
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<!-- can not log in -->
+				<if isNotTrue="${can.login}">
+					<if isNotTrue="${isSecure}">
+						<property name="was.trace.string"
+						          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webcontainer=all:Webui=all" />
+					</if>
+	
+					<if isTrue="${isSecure}">
+						<property name="was.trace.string"
+						          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webcontainer=all:StartupService=all:SASRas=all:com.ibm.ws.security.*=all:SSL=all:Webui=all" />
+					</if>
+				</if>
+	
+				<!--  can log in -->
+				<if isTrue="${can.login}">
+					<if isNotTrue="${isSecure}">
+						<property name="was.trace.string"
+						          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webui=all" />
+					</if>
+	
+					<if isTrue="${isSecure}">
+						<property name="was.trace.string"
+						          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:com.ibm.ws.security.*=all:Webui=all" />
+					</if>
+				</if>
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="Webui=all=enabled:Admin=all=enabled:com.ibm.ws.webcontainer.*=all=enabled" />
+	
+			</if>
+		</if>
+		<if isTrue="${problem_type_dmgr_discovery}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="com.ibm.ws.management.*=all=enabled" />
+			</if>
+	
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="com.ibm.ws.management.*=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_na_discovery}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="com.ibm.ws.management.*=all=enabled" />
+			</if>
+	
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="com.ibm.ws.management.*=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_start}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="*=info:com.ibm.ws.*=all" />
+			</if>
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="*=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_stop}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="*=info:com.ibm.ws.*=all" />
+			</if>
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="*=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_sa}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="Admin=all=enabled" />
+			</if>
+	
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="*=info:Admin=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_deployment}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+					value="com.ibm.ws.console.app*=all=enabled:com.ibm.ws.management.*=all=enabled:com.ibm.websphere.management.*=all=enabled" />
+			</if>
+	
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="*=info:com.ibm.ws.console.app*=all:com.ibm.ws.management.application.*=all:com.ibm.websphere.management.application.*=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_wsadmin}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="Admin=all" />
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="Admin=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_jmx}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="Admin=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_cluster}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+				          value="Admin=all:WLM*=all" />
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="Admin=all=enabled:WLM*=all=enabled:Cluster*=all=enabled" />
+			</if>
+		</if>
+
+		<if isTrue="${problem_type_global_security}">
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="com.ibm.ws.security.*=all=enabled" />
+			</if>
+	
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="*=info:com.ibm.ws.security.*=all" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			
+			<property name="generic.jvm.arguments" value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+		</if>
+		<if isTrue="${problem_type_jsse_ssl}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="SSL=all" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			<property name="generic.jvm.arguments"
+			          value='"-Djavax.net.debug=true"' />
+		</if>
+		<if isTrue="${problem_type_java2}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="*=info:com.ibm.ws.security.policy.*=all:com.ibm.ws.security.core.SecurityManager=all" />
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" 
+					value="com.ibm.ws.security.policy.*=all=enabled:com.ibm.ws.security.core.SecurityManager=all=enabled" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			<property name="generic.jvm.arguments"
+			          value='"-Dcom.ibm.websphere.java2secman.norethrow=true"' />
+		</if>
+		<if isTrue="${problem_type_federated}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="com.ibm.ws.security.*=all:com.ibm.websphere.wim.*=all:com.ibm.wsspi.wim.*=all:com.ibm.ws.wim.*=all" />
+			</if>
+		</if>
+
+		<if isTrue="${problem_type_db_connection}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="*=info:WAS.j2c=all:RRA=all:WAS.database=all:Transaction=all" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_jms}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string"
+				          value="*=info:Messaging=all:JMSApi=all:WAS.j2c=all:EJBContainer=all" />
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="Messaging=all=enabled:JMSServer=all=enabled:JMSApi=all=enabled:WAS.j2c=all=enabled:EJBContainer=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_ejb_container}">
+			<if isTrue="${isWASVersion6}">
+				
+				<inputdialogtask> 
+					<fieldtask name="prompt1"
+		        		   label="Input_Required_WAS"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+				           label="WS_EJB_FP_Question"
+		        		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="ws.ejb.fp.installed"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        		   label="select_one"
+				           list="3x:2x"
+				           listDetails="3x:2x"
+		        		   type="selectlist" />
+				</inputdialogtask>
+			
+				<condition property="ws.ejb.3x">
+					<equals arg1="3x" arg2="${ws.ejb.fp.installed}" />
+				</condition>
+				
+				<condition property="ws.ejb.2x">
+					<equals arg1="2x" arg2="${ws.ejb.fp.installed}" />
+				</condition>
+	
+				<if isTrue="${ws.ejb.3x}" >
+					<property name="was.trace.string"
+					    value="*=info:EJBContainer=all:PMGR=all:JPA=all:openjpa=all" />
+				</if>
+				<if isTrue="${ws.ejb.2x}" >
+					<property name="was.trace.string"
+					    value="*=info:EJBContainer=all:PMGR=all" />
+				</if>				
+				
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+				          value="EJBContainer=all=enabled:PMGR=all=enabled" />
+	
+			</if>
+		</if>
+		<if isTrue="${problem_type_ws_engine}">
+			<if isTrue="${isWASVersion6}">
+				<inputdialogtask> 
+					<fieldtask name="prompt1"
+		        		   label="Input_Required_WAS"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+				           label="WS_Security_Trace_Question"
+		        		   type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="ws.feature.pack.installed"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        		   label="select_one"
+				           list="no:yes"
+				           listDetails="no:yes"
+		        		   type="selectlist" />
+				</inputdialogtask>
+			
+				<condition property="ws.fp.installed">
+					<equals arg1="yes" arg2="${ws.feature.pack.installed}" />
+				</condition>
+
+				<if isTrue="${ws.fp.installed}" >
+					<property name="was.trace.string"
+					    value="*=info:com.ibm.ws.webservices.*=all:org.apache.axis2.*=all:org.apache.axiom.*=all:com.ibm.ws.websvcs.*=all" />
+				</if>
+				<if isNotTrue="${ws.fp.installed}" >
+					<property name="was.trace.string"
+					    value="*=info:com.ibm.ws.webservices.*=all" />
+				</if>				
+			</if>
+
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+      				  value="com.ibm.ws.webservices.*=all=enabled:HTTP_Transport=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_ws_security}">
+			<if isTrue="${isWASVersion6}">
+				<inputdialogtask> 
+					<fieldtask name="prompt1"
+			        		   label="Input_Required_WAS"
+					           type="prompt"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+					           label="WS_Security_Trace_Question"
+			        		   type="label"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="ws.feature.pack.installed"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			        		   label="select_one"
+					           list="no:yes"
+					           listDetails="no:yes"
+			        		   type="selectlist" />
+				</inputdialogtask>
+				
+				<condition property="ws.fp.installed">
+					<equals arg1="yes" arg2="${ws.feature.pack.installed}" />
+				</condition>
+	
+				<if isTrue="${ws.fp.installed}" >
+					<property name="was.trace.string"
+					    value="*=info:com.ibm.ws.webservices.wssecurity.*=all:com.ibm.wsspi.wssecurity.*=all:com.ibm.ws.wssecurity.*=all:com.ibm.xml.soapsec.*=all:com.ibm.ws.webservices.trace.*=all:com.ibm.ws.websvcs.trace.*=all" />
+				</if>
+				<if isNotTrue="${ws.fp.installed}" >
+					<property name="was.trace.string"
+					    value="*=info:com.ibm.ws.webservices.wssecurity.*=all:com.ibm.wsspi.wssecurity.*=all:com.ibm.ws.wssecurity.*=all:com.ibm.xml.soapsec.*=all:com.ibm.ws.webservices.trace.*=all" />
+				</if>				
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string"
+						  value="com.ibm.ws.webservices.wssecurity.*=all=enabled:com.ibm.wsspi.wssecurity.*=all=enabled:com.ibm.ws.wssecurity.*=all=enabled:com.ibm.xml.soapsec.*=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_servlet_webcontainer}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="*=info:com.ibm.ws.webcontainer.*=all:com.ibm.wsspi.webcontainer.*=all:HTTPChannel=all:GenericBNF=all" />
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="Servlet_Engine=all=enabled:HTTP_Transport=all=enabled" />
+			</if>
+		</if>
+
+		<if isTrue="${problem_type_jndi}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="Naming=all" />
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="Naming=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_jts}">
+			<inputdialogtask> 
+				<fieldtask name="prompt1"
+		       		   label="Input_Required_WAS"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2"
+			           label="WS_JTS_Problem_Type"
+		       		   type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ws.jts.problem.type"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		       		   label="select_one"
+			           list="Transactions:ActivityService/Sessions:Compensations and Business Activity:Web Service Addressing"
+			           listDetails="Transactions:ActivityService/Sessions:Compensations and Business Activity:Web Service Addressing"
+		       		   type="selectlist" />
+				</inputdialogtask>
+				
+				
+			<echo message="Problem type selected for WAS JTS Problem : ${ws.jts.problem.type}"/>
+			
+			<condition property="jts.transactions">
+				<equals arg1="Transactions" arg2="${ws.jts.problem.type}" />
+			</condition>
+			
+			<condition property="jts.activity">
+				<equals arg1="ActivityService/Sessions" arg2="${ws.jts.problem.type}" />
+			</condition>
+	
+			<condition property="jts.compensations">
+				<equals arg1="Compensations and Business Activity" arg2="${ws.jts.problem.type}" />
+			</condition>
+				
+			<condition property="jts.webservices">
+				<equals arg1="Web Service Addressing" arg2="${ws.jts.problem.type}" />
+			</condition>
+						
+			<if isTrue="${jts.transactions}">
+				<!-- WAS v6 -->
+				<if isTrue="${isWASVersion6}">
+					
+					<inputdialogtask> 
+						<fieldtask name="prompt1"
+			        		   label="Input_Required_WAS"
+					           type="prompt"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="prompt2"
+					           label="WS_JTS_WS_AT"
+			        		   type="label"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="ws.jts.ws.at"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			        		   label="select_one"
+					           list="no:yes"
+					           listDetails="no:yes"
+			        		   type="selectlist" />
+					</inputdialogtask>
+				
+					<condition property="ws.jts.at">
+						<equals arg1="yes" arg2="${ws.jts.ws.at}" />
+					</condition>
+					
+					<if isTrue="${ws.jts.at}" >
+						<property name="was.trace.string" 
+							value="Transaction=all:EJBContainer=all:WAS.j2c=all:WAS.database=all:RRA=all:com.ibm.ws.webservices.trace.MessageTrace=all" />
+					</if>
+					<if isNotTrue="${ws.jts.at}" >
+						<property name="was.trace.string" 
+							value="Transaction=all:EJBContainer=all:WAS.j2c=all:WAS.database=all:RRA=all" />
+					</if>				
+				</if>
+				<!-- WAS v5 -->
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string" 
+						value="com.ibm.ejs.container.*=all=enabled:com.ibm.ejs.csi.*=all=enabled:com.ibm.ejs.persistence.*=all=enabled:com.ibm.ejs.cm.*=all=enabled:WAS.j2c=all=enabled:WAS.database=all=enabled:com.ibm.ejs.jts.*=all=enabled:com.ibm.ws.Transaction.*=all=enabled:com.ibm.ws.LocalTransaction.*=all=enabled" />
+				</if>
+			</if>
+			
+			<if isTrue="${jts.activity}">
+				<!-- WAS v6 -->
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string" 
+						value="Transaction=all:ActivityService=all:ActivitySession=all" />
+				</if>
+				<!-- WAS v5 -->
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string" 
+						value="com.ibm.websphere.ActivitySession.*=all=enabled:com.ibm.ws.ActivitySession.*=all=enabled:com.ibm.ws.javax.activity.*=all=enabled:com.ibm.ws.activity.*=all=enabled " />
+				</if>
+			</if>
+			
+			<if isTrue="${jts.compensations}">
+				<!-- WAS v6 -->
+				<if isTrue="${isWASVersion6}">
+					<inputdialogtask> 
+						<fieldtask name="prompt1"
+			        		   label="Input_Required_WAS"
+					           type="prompt"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="prompt2"
+					           label="WS_JTS_WS_BA"
+			        		   type="label"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="ws.jts.ws.ba"
+					           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			        		   label="select_one"
+					           list="no:yes"
+					           listDetails="no:yes"
+			        		   type="selectlist" />
+					</inputdialogtask>
+				
+					<condition property="ws.jts.ba">
+						<equals arg1="yes" arg2="${ws.jts.ws.ba}" />
+					</condition>
+					
+					<if isTrue="${ws.jts.ba}" >
+						<property name="was.trace.string" 
+							value="Transaction=all:ActivityService=all:ActivitySession=all:CScope=all:com.ibm.ws.webservices.trace.MessageTrace=all" />
+					</if>
+					<if isNotTrue="${ws.jts.at}" >
+						<property name="was.trace.string" 
+							value="Transaction=all:ActivityService=all:ActivitySession=all:CScope=all" />
+					</if>				
+					
+				</if>
+				<!-- WAS v5 -->
+				<if isTrue="${isWASVersion5}">
+				</if>
+			</if>
+			
+			<if isTrue="${jts.webservices}">
+				<!-- WAS v6 -->
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string" 
+						value="com.ibm.ws.wsaddressing.*=all:com.ibm.ws.webservices.trace.MessageTrace=all" />								
+				</if>
+				<!-- WAS v5 -->
+				<if isTrue="${isWASVersion5}">
+				</if>
+			</if>
+
+		</if>
+		<if isTrue="${problem_type_orb}">
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="ORBRas=all" />
+			</if>
+	
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="ORBRas=all=enabled" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			<property name="generic.jvm.arguments"
+			          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+		</if>
+		<if isTrue="${problem_type_scheduler}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" 
+					value="*=info:Scheduler=all:ExtHelper=all:LeaseManager=all:AsynchBeans=all:AsynchBeans_Alarms=all:WAS.j2c=all:RRA=all" />
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" 
+					value="Scheduler=all=enabled:ExtHelper=all=enabled:LeaseManager=all=enabled:AsynchBeans=all=enabled:AsynchBeans_Alarms=all=enabled:WAS.j2c=all=enabled:RRA=all=enabled" />
+			</if>
+		</if>
+		<if isTrue="${problem_type_wlm}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="WLM*=all:ORBRas=all" />
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="WLM*=all=enabled:Cluster*=all=enabled:ORBRas=all=enabled" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			<property name="generic.jvm.arguments"
+			          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+		</if>
+		<if isTrue="${problem_type_cache}">
+			<inputdialogtask > 
+				<fieldtask name="prompt"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+				<fieldtask name="replication.enabled"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="DynaCache_1"
+		           list="no:yes"
+		           listDetails="no:yes"
+		           type="selectlist" />
+			</inputdialogtask> 
+	
+			<condition property="is.replication.enabled">
+				<or>
+					<equals arg1="yes" arg2="${replication.enabled}" />
+				</or>
+			</condition>
+			
+			<if isTrue="${is.replication.enabled}" >
+				<inputdialogtask noCancel="true" > 
+					<fieldtask name="prompt"
+			           label="Information_Message"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label1"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="DynaCache_2"
+			           type="label" />
+				</inputdialogtask> 
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.cache.*=all=enabled:com.ibm.ws.drs.*=all=enabled" />
+				</if> 
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string"
+			          value="*=info:com.ibm.ws.cache.*=all:com.ibm.ws.drs.*=all" />
+				</if> 
+			</if> 
+			<if isNotTrue="${is.replication.enabled}">
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.cache.*=all=enabled" />
+				</if> 
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string"
+			          value="*=info:com.ibm.ws.cache.*=all" />
+				</if> 
+			</if> 
+		</if>
+		<if isTrue="${problem_type_classloader}">
+			<!-- WAS v6 -->
+			<if isTrue="${isWASVersion6}">
+				<property name="was.trace.string" value="com.ibm.ws.classloader.*=all" />
+			</if>
+	
+			<!-- WAS v5 -->
+			<if isTrue="${isWASVersion5}">
+				<property name="was.trace.string" value="com.ibm.ws.classloader.*=all=enabled" />
+			</if>
+			<property name="jvm_arguments" value="true" />
+			<property name="jvm_verboseClass_enable" value="true" />
+			<property name="generic.jvm.arguments" value=" -Dws.ext.debug=true" />
+		</if>
+		<if isTrue="${problem_type_sm}">
+			<inputdialogtask > 
+				<fieldtask name="prompt"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+				<fieldtask name="persistence.type"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="Session_1"
+		           list="No Persistence:Database Persistence:Memory-to-Memory Persistence"
+		           listDetails="No Persistence:Database Persistence:Memory-to-Memory Persistence"
+		           type="selectlist" />
+			</inputdialogtask> 
+	
+			<condition property="no_persistence">
+				<or>
+					<equals arg1="No Persistence" arg2="${persistence.type}" />
+				</or>
+			</condition>
+			<condition property="db_persistence">
+				<or>
+					<equals arg1="Database Persistence" arg2="${persistence.type}" />
+				</or>
+			</condition>
+			<condition property="mm_persistence">
+				<or>
+					<equals arg1="Memory-to-Memory Persistence" arg2="${persistence.type}" />
+				</or>
+			</condition>
+			<if isTrue="${db_persistence}||${mm_persistence}">
+				<inputdialogtask noCancel="true" > 
+					<fieldtask name="prompt"
+			           label="Information_Message"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label1"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="Persistence_Message_1"
+			           type="label" />
+				</inputdialogtask> 
+			</if>
+			<if isTrue="${no_persistence}" > 
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled" />
+				</if> 
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all" />
+				</if> 
+			</if>
+				
+			<if isTrue="${db_persistence}" >
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled" />
+				</if> 
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all:WAS.j2c=all:RRA=all:WAS.Database=all" />
+				</if> 
+			</if> 
+			
+			<if isTrue="${mm_persistence}" >
+				<if isTrue="${isWASVersion5}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all=enabled:com.ibm.ws.webcontainer.srt.*=all=enabled:com.ibm.ws.drs.*=all=enabled" />
+				</if> 
+				<if isTrue="${isWASVersion6}">
+					<property name="was.trace.string"
+			          value="com.ibm.ws.webcontainer.httpsession.*=all:com.ibm.ws.webcontainer.srt.*=all:com.ibm.ws.drs.*=all" />
+				</if> 
+			</if> 
+
+		</if>
+<!-- 		
+		<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt"  append="true" eol="lf"> 
+${line.separator}		
+was.trace.string=${was.trace.string}${line.separator}		
+		</concat>
+		<if isTrue="${jvm_arguments}">
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+generic.jvm.arguments=${generic.jvm.arguments}${line.separator}${line.separator}
+			</concat>
+		</if>
+		<if isTrue="${jvm_verboseClass_enable}">
+			<concat destfile="${autopdtmp}/autopd/multiple-server/servers/${profileName}_${ServerName}.txt" append="true" eol="lf">
+${line.separator}
+verboseModeClass=true${line.separator}${line.separator}
+			</concat>
+		</if>
+ -->		
+	</target>
+	
+	<target name="set_start_app_servers" > 
+		<get_latest_x_files_v2 key="list.of.related.files" 
+			path="${location_txt_files1}" 
+			selector="[A-Za-z0-9_].*" 
+			delimiter="|" /> 
+		<autopdloop param="my.file" paramList="${list.of.related.files}" delimiter="|">
+			<autopd_property_reader key="start_server" name="StartServer" filename="${my.file}" />
+			<autopd_property_reader key="server_running" name="ServerRunning" filename="${my.file}" />
+			<autopd_property_reader key="WasSecurity" name="security" filename="${my.file}" />
+			<autopd_property_reader key="was.profile.root" name="was.enhanced.root" filename="${my.file}" />
+			<autopd_property_reader key="server" name="ServerName" filename="${my.file}" />
+			<condition property="isSecurity" > 
+				<equals arg1="${WasSecurity}" arg2="enabled" /> 
+			</condition> 
+			<if isTrue="${isSecurity}">
+				<autopd_property_reader key="username" name="username" filename="${my.file}" />
+				<autopd_property_reader key="password" name="password" filename="${my.file}" />
+				<property name="wAdminArgs" value="-username ${username} -password ${password}"/> 
+			</if> 
+			<if isNotTrue="${isSecurity}" > 
+				<property name="wAdminArgs" value=" "/> 
+			</if>
+ 
+			<if isTrue="${server_running}">
+				<!-- Stop the server --> 
+				<exec executable="${was.profile.root}/bin/stopServer.bat"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/stopServer.sh"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind.exclude.iseries}">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/stopServer"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="OS/400">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				
+			
+			</if> 
+			<if isTrue="${start_server}" > 
+				<exec executable="${was.profile.root}/bin/startServer.bat"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="${os.windows}">
+					<arg line=" ${server}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/startServer.sh"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="${os.unixkind.exclude.iseries}">
+					<arg line=" ${server}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/startServer"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="OS/400">
+					<arg line=" ${server}" />
+				</exec>
+				
+			</if> 
+			
+			
+			<autopd_unset_property name="start_server"/>
+			<autopd_unset_property name="server_running"/>
+			<autopd_unset_property name="isSecurity"/>
+			<autopd_unset_property name="WasSecurity"/>
+			<autopd_unset_property name="was.profile.root"/>
+			<autopd_unset_property name="server"/>
+			<autopd_unset_property name="username"/>
+			<autopd_unset_property name="password"/>
+			<autopd_unset_property name="wAdminArgs"/>
+				
+		</autopdloop>
+			
+	</target>
+	
+	<target name="restore_start_app_servers" > 
+		<get_latest_x_files_v2 key="list.of.related.files" 
+			path="${location_txt_files1}" 
+			selector="[A-Za-z0-9_].*" 
+			delimiter="|" /> 
+		<autopdloop param="my.file" paramList="${list.of.related.files}" delimiter="|">
+			<autopd_property_reader key="start_server" name="RestoreStartServer" filename="${my.file}" />
+			<autopd_property_reader key="stop_server" name="RestoreStopServer" filename="${my.file}" />
+			<autopd_property_reader key="WasSecurity" name="security" filename="${my.file}" />
+			<autopd_property_reader key="was.profile.root" name="was.enhanced.root" filename="${my.file}" />
+			<autopd_property_reader key="server" name="ServerName" filename="${my.file}" />
+			<condition property="isSecurity" > 
+				<equals arg1="${WasSecurity}" arg2="enabled" /> 
+			</condition> 
+			<if isTrue="${isSecurity}">
+				<autopd_property_reader key="username" name="username" filename="${my.file}" />
+				<autopd_property_reader key="password" name="password" filename="${my.file}" />
+				<property name="wAdminArgs" value="-username ${username} -password ${password}"/> 
+			</if> 
+			<if isNotTrue="${isSecurity}" > 
+				<property name="wAdminArgs" value=" "/> 
+			</if>
+
+			<if isTrue="${stop_server}">
+				<!-- Stop the server --> 
+				<exec executable="${was.profile.root}/bin/stopServer.bat"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/stopServer.sh"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind.exclude.iseries}">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/stopServer"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="OS/400">
+					<arg line=" ${server} ${wAdminArgs}" />
+				</exec>
+				
+			
+			</if> 
+			<if isNotTrue="${start_server}" > 
+				<exec executable="${was.profile.root}/bin/startServer.bat"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="${os.windows}">
+					<arg line=" ${server}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/startServer.sh"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="${os.unixkind.exclude.iseries}">
+					<arg line=" ${server}" />
+				</exec>
+				<exec executable="${was.profile.root}/bin/startServer"
+				      dir="${was.profile.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      os="OS/400">
+					<arg line=" ${server}" />
+				</exec>
+				
+			</if> 
+			
+			
+			<autopd_unset_property name="start_server"/>
+			<autopd_unset_property name="stop_server"/>
+			<autopd_unset_property name="isSecurity"/>
+			<autopd_unset_property name="WasSecurity"/>
+			<autopd_unset_property name="was.profile.root"/>
+			<autopd_unset_property name="server"/>
+			<autopd_unset_property name="username"/>
+			<autopd_unset_property name="password"/>
+			<autopd_unset_property name="wAdminArgs"/>
+				
+		</autopdloop>
+			
+	</target> 
+	
+	
+	<target name="zip_multiple_enhanced_dirs">
+	
+				
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Begin_Trace_Zip"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Zip the contents of multiple directories..."
+		           replace="${autopdts};;${step.count}" />
+
+		<get_latest_x_files_v2 key="list.of.related.files" 
+			path="${location_txt_files1}" 
+			selector="[A-Za-z0-9_].*" 
+			delimiter="|" /> 
+ 		
+<!--		
+		<echo message="list of related files is ${list.of.related.files}"/>
+-->  		
+		<autopdloop param="my.file" paramList="${list.of.related.files}" delimiter="|">
+			<autopd_property_reader key="LogFolder" name="Old.LogRoot" filename="${my.file}" />
+			
+			<basename property="Profile.Server" file="${my.file}" suffix=".txt"/>
+<!-- 			
+			<echo message=" "/>
+			<echo message="Found LogFolder to be ${LogFolder}" /> 
+-->  
+			<dirname property="ServerLog.Folder" file="${LogFolder}" />
+
+			<available file="${ServerLog.Folder}" type="dir" property="log.folder.available"/>	
+			<if isTrue="${log.folder.available}">
+				<wsnlsecho key="Begin_Trace_Zip1"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    	       message="Zipping for {0}"
+		        	   replace="${Profile.Server}" />
+				<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+					<zipfileset dir="${ServerLog.Folder}" prefix="${autopdProblem}/${Profile.Server}/logs">
+						<include name="**/*"/>
+					</zipfileset> 
+				</zip>
+				<dirname property="log.folder.ffdc.base" file="${ServerLog.Folder}" />
+				<echo message="log.folder.ffdc.base is ${log.folder.ffdc.base}"/> 
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${log.folder.ffdc.base}" prefix="${autopdProblem}/${Profile.Server}">
+							<include name="wsadmin*"/>
+							<include name="*.log"/>
+						</zipfileset>
+					</zip>
+
+				<available file="${log.folder.ffdc.base}/ffdc" type="dir" property="ffdc.available" />
+				<if isTrue="${ffdc.available}">
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset dir="${log.folder.ffdc.base}/ffdc" prefix="${autopdProblem}/${Profile.Server}/ffdc">
+							<include name="*"/>
+						</zipfileset>
+					</zip>
+				</if>
+			</if>
+			
+			<autopd_unset_property name="LogFolder"/>
+			<autopd_unset_property name="ServerLog.Folder" /> 
+			<autopd_unset_property name="Profile.Server"/> 
+			<autopd_unset_property name="log.folder.ffdc.base"/> 
+			<autopd_unset_property name="ffdc.available"/> 
+		
+		</autopdloop>
+		
+		<!-- Pick up autopd Tmp folders as well for debug --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/multiple-server" prefix="${autopdProblem}/Debug">
+				<include name="**/**"/>
+			</zipfileset>
+		</zip>
+		
+		<!-- Pick up autopd-collection-info-v2.xml --> 
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/" prefix="autopdzip/autopd/">
+				<include name="autopd-collection-environment-v2.xml"/>
+			</zipfileset>
+		</zip>
+		
+	</target>
+	
+	<target name="determine_soap_port_for_server">
+		
+		<autopdxmlproperty filename="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/serverindex.xml"
+			path="ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint"
+		    property="port"
+		    output="was.server.soap.port.cell" />
+		<condition property="was.server.soap.port.cell.set">
+			<isset property="was.server.soap.port.cell" />
+		</condition>
+		<if isNotTrue="${was.server.soap.port.cell.set}">
+			<autopdxmlproperty filename="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/serverindex.xml"
+				path="XMI.ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint"
+			    property="port"
+			    output="was.server.soap.port.cell" />
+		</if>
+
+		<echo message="was.server.soap.port.cell: ${was.server.soap.port.cell}" />
+<!--		
+		<wascomponent value="soap.port.number" 
+			appInstallRoot="${was.root}" component="connections" 
+			attribute="SOAP_CONNECTOR_ADDRESS.port" filterList="id=${profileName}:${CellName}/${NodeName}/${ServerName}" 
+			delimiter="|" success="enhanced.succeeded" />
+		
+		<echo message="Success is ${enhanced.succeeded}"/> 
+		<echo message="The soap port is ${soap.port.number}"/> 
+--> 
+		<inputdialogtask >
+			<fieldtask name="prompt" 
+					   label="Information_Message"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+					   label="Multiple_Trace_Soap_Port_Message0"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="Empty_Line"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="Multiple_Trace_Soap_Port_Message1"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="${was.server.soap.port.cell}"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="Empty_Line"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="Multiple_Trace_Soap_Port_Message2"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="label0"
+					   label="Multiple_Trace_Soap_Port_Message3"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+		</inputdialogtask>
+	</target>
+
+	<target name="was_multiple_trace_set" > 
+
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Begin_Mulitple_Trace_Set"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Setting the trace specifications for Mutliple Servers..."
+		           replace="${autopdts};;${step.count}" />
+
+		
+		<copydir src="${was.shared.targets.bundle.basedir}/scripts/jython/multiple-trace" dest="${autopdtmp}/autopd/multiple-server/trace" /> 
+		
+		<property name="location_jython_files" value="${autopdtmp}/autopd/multiple-server/trace" />
+		<!-- Remember wsadmin does not like "\" followed by number created by ISADC tmp
+			 So, while invoking wsadmin we are going to change backslashes to front slashes.
+			 Remember to use the path for finding Old.LogRoot --> 
+		<property name="location_txt_files1" value="${autopdtmp}/autopd/multiple-server/servers" />
+		<property name="location_txt_files" value='"${autopdtmp}/autopd/multiple-server/servers"' />
+		<autopdreplace property="location_txt_files" token="\\" value="/" /> 
+<!--	<echo message="location of txt files is ${location_txt_files}"/> -->  
+		
+		<property name="multiple.set.output" value="${autopdtmp}/autopd/multiple-server/trace-pre.out" /> 
+		
+<!--				<arg
+					line=' -port ${was.server.soap.port.cell} -profile WAuJ.py  -f trace-pre.py ${location_txt_files} >${multiple.set.output}' />
+ 
+--> 		
+		<if isTrue="${ManagedServerStatus}"> 
+			<!-- For a managed server use the profileArgs irregardless of the server running status since we 
+					want to assume that Dmgr and NA are running --> 
+			<echo message="Multiple Server Trace Set : Managed Server." /> 
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				dir="${location_jython_files}" output="${multiple.set.output}"
+				append="true" os="${os.windows}">
+				<arg
+					line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				dir="${location_jython_files}" output="${multiple.set.output}"
+				append="true" os="${os.unixkind.exclude.iseries}">
+				<arg
+					line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin"
+				dir="${location_jython_files}" output="${multiple.set.output}"
+				append="true" os="OS/400">
+				<arg
+					line=' ${profileArgs}  ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+			</exec>
+		</if>
+			
+		<if isNotTrue="${ManagedServerStatus}">
+			<if isTrue="${was.server.isRunning}" >
+				<echo message="Multiple Server Trace Set : Server running." /> 
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="${os.windows}">
+					<arg
+						line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+				</exec>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="${os.unixkind.exclude.iseries}">
+					<arg
+						line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+				</exec>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="OS/400">
+					<arg
+						line=' ${profileArgs}  ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+				</exec>
+				
+			</if> 
+			<if isNotTrue="${was.server.isRunning}" >
+				<echo message="Multiple Server Trace Set : Server not running." /> 
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="${os.windows}">
+					<arg
+						line=' -conntype none  ${profileArgs} ${was.admin.info} -profile WAuJ.py -f trace-pre.py ${location_txt_files}' />
+				</exec>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="${os.unixkind.exclude.iseries}">
+					<arg
+						line=' -conntype none  ${profileArgs} ${was.admin.info} -profile WAuJ.py -f trace-pre.py ${location_txt_files}' />
+				</exec>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin"
+					dir="${location_jython_files}" output="${multiple.set.output}"
+					append="true" os="OS/400">
+					<arg
+						line=' -conntype none  ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-pre.py ${location_txt_files}' />
+				</exec>
+			</if> 
+				
+		</if> 
+			
+	</target>
+	
+	<target name="was_multiple_trace_restore" > 
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Restore_Mulitple_Trace_Set"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Restoring the trace specifications for Mutliple Servers..."
+		           replace="${autopdts};;${step.count}" />
+
+		<property name="multiple.restore.output" value="${autopdtmp}/autopd/multiple-server/trace-post.out" /> 
+			
+		 <exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			dir="${location_jython_files}" output="${multiple.restore.output}"
+			append="true" os="${os.windows}">
+			<arg
+				line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-post.py ${location_txt_files}' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			dir="${location_jython_files}" output="${multiple.restore.output}"
+			append="true" os="${os.unixkind.exclude.iseries}">
+			<arg
+				line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-post.py ${location_txt_files}' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin"
+			dir="${location_jython_files}" output="${multiple.restore.output}"
+			append="true" os="OS/400">
+			<arg
+				line=' ${profileArgs} ${was.admin.info} -profile WAuJ.py  -f trace-post.py ${location_txt_files}' />
+		</exec>
+	</target> 
+	
+	<target name="start_time" description="get the beginning time of reproducing problem">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Get_beginning_time"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Get beginning time"
+		           replace="${autopdts};;${step.count}"
+		           id="1108"
+		           level="info"
+		           component="\scripts\was\trace-setup.xml" />
+		<autopdtimestamp property="problem.starttime"
+		                 pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	</target>
+
+	<target name="pause_for_user_input" description="Perform a Pause until input received" >
+
+		<inputdialogtask> 
+			<fieldtask name="prompt" 
+					   label="Information_Message"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+					   label="Proceed_To_Reproduct_The_Problem"
+					   type="label"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+		</inputdialogtask> 
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Reproduce_The_Problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: I have Reproduced The Problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1108"
+		           level="info"
+		           component="\scripts\was\trace-setup.xml" />
+				
+	</target>
+
+	<target name="end_time" description="get ending time of reproducing problem">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Get_ending_time"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Get ending time"
+		           replace="${autopdts};;${step.count}"
+		           id="1109"
+		           level="info"
+		           component="\scripts\was\trace-setup.xml" />
+		<autopdtimestamp property="problem.endtime" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	</target>
+
+	<target name="usage">
+		
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This collector will allow you to set traces simultaneously 
+on multiple servers. The only limitation is you will have to select the servers that are
+within the same cell." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Multiple Trace Collector =>
+This collector will allow you to set traces simultaneously 
+on multiple servers. The only limitation is you will have to select the servers that are
+within the same cell." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+	
+	
+</project> 

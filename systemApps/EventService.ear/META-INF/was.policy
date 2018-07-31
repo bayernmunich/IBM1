@@ -1,0 +1,27 @@
+grant codeBase "file:${application}" {
+  // The following is required by CBE GUID generation
+  permission java.io.FilePermission "${java.io.tmpdir}${/}guid.lock", "read, write, delete";
+  
+  // The following is required by the embedded SQL Server JDBC driver
+  // This should be removed when the JDBC driver is fixed.
+  // Recursively allow access to all files in the directory and subdirectories.
+  permission java.io.FilePermission "${java.io.tmpdir}${/}-", "read, write, delete";
+  
+  // When expanded (using EARExpander tool) the topic connection factory cannot be looked-up
+  // because of access denied on the system properties.
+  // Expanding the EAR is needed because of some syncNode problems on iSeries.
+  permission java.util.PropertyPermission "*", "read";
+  permission com.ibm.websphere.security.WebSphereRuntimePermission "AdminPermission";
+};
+
+grant codeBase "file:${jars}" {
+};
+
+grant codeBase "file:${connectorComponent}" {
+};
+
+grant codeBase "file:${webComponent}" {
+};
+
+grant codeBase "file:${ejbComponent}" {
+};

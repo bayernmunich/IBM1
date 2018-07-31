@@ -1,0 +1,129 @@
+#--------------------------------------------------------------------
+# The jacl script creates two CoreGroupServer objects attached to
+# the default core group. The script also generates and attaches a
+# unique id to the default core group if necessary.
+#
+# Prerequisites:
+#   1.) only one coregroup.xml file should exist.
+#   2.) the existing coregroup.xml must be for the "DefaultCoreGroup".
+#   3.) the coregroup.xml must not contain any existing core group server elements.
+#   4.) the number of nodes in the configuration must be two (dmgr and nodeagent).
+#   5.) the number of servers in the configuration must be two (dmgr and nodeagent).
+#   
+# The WAS ND install should simply invoke this script as
+#         wsadmin -conntype NONE -f CoreGroupInstallCell.jacl
+#
+# WARNING: Do not use the JACL "exit" syntax in this script (see defect 457680.1)
+#--------------------------------------------------------------------
+proc getTheDefaultCoreGroupId {defaultCoreGroupName}  {
+   global AdminConfig
+
+   set coreGroups [$AdminConfig list CoreGroup]
+   set numOfCoreGroups [llength $coreGroups]
+
+   # if the number of coregroups is something other than 1 something is wrong
+   if {$numOfCoreGroups != 1}  {
+      error "The number of CoreGroups is not 1."
+   }
+
+   set coreGroupName [$AdminConfig showAttribute $coreGroups name]
+
+   # if the lone core group is not the default one, something is wrong
+   if {$coreGroupName != $defaultCoreGroupName}  {
+      error "The Default Core Group is missing."
+   }
+
+   return $coreGroups
+}
+
+# -------------------------------------------------------------------
+# The procedure returns the number of core group server elements
+# present in the coregroup.xml file. If there are no core group server
+# elements the procedure will return 0.
+#
+# Input parameter: The object id of the core group element.
+# -------------------------------------------------------------------
+proc getNumberOfCoreGroupServers {coreGroupId} {
+   global AdminConfig
+
+   set coreGroupServers [lindex [$AdminConfig showAttribute $coreGroupId coreGroupServers] 0]
+   puts stdout $coreGroupServers
+   set numberOfCoreGroupServers [llength $coreGroupServers]
+
+   return $numberOfCoreGroupServers
+}
+
+
+# -------------------------------------------------------------------
+# The procedure creates and returns an unique id which will be added
+# later in the coregroup.xml file. It uses java.rmi.server.UID object
+# to create the unique id.
+# -------------------------------------------------------------------
+proc createAUniqueId { } {
+    java::import java.rmi.server.UID
+    set UID [java::new UID]
+    set UUID [$UID toString]
+
+    return $UUID
+}
+
+
+# ------------------------------------------------------------------------
+# Main Program
+# ------------------------------------------------------------------------
+
+# set the default coregroup name for install
+set defaultCoreGroupName "DefaultCoreGroup"
+
+# get the default coregroup
+set defaultCoreGroupId [getTheDefaultCoreGroupId $defaultCoreGroupName]
+
+# see whether any coregroupserver is already present in the coregroup.xml file
+set numberOfCoreGroupServers [getNumberOfCoreGroupServers $defaultCoreGroupId]
+
+# if there are any coregroupservers something is wrong.
+if {$numberOfCoreGroupServers > 0}  {
+   error "A core group server element already exists."
+}
+
+# no core group server elements in the coregroup.xml file. Try to create them.
+
+# find all the WebSphere nodes -- should be two for Cell profile.
+set nodes [$AdminConfig list Node]
+set numOfNodes [llength $nodes]
+# if the number of nodes is not two, something is wrong.
+if {$numOfNodes != 2}  {
+   error "Number of Nodes is not 2."
+}
+
+# find all the WebSphere servers -- should be two for Cell profile.
+set servers [$AdminConfig list Server]
+set numOfServers [llength $servers]
+# if the number of servers is not two, something is wrong.
+if {$numOfServers != 2}  {
+   error "Number of Servers is not 2."
+}
+
+# for each node find the server and add it to the core group.
+for {set x 0} {$x<[llength $nodes]} {incr x} {
+   set node [lindex $nodes $x]
+   set nodeName [$AdminConfig showAttribute $node name]
+
+   set servers2 [$AdminConfig list Server $node]
+   for {set x1 0} {$x1<[llength $servers2]} {incr x1} {
+      set server [lindex $servers2 $x1]
+      set serverName [$AdminConfig showAttribute $server name]
+
+      $AdminConfig create CoreGroupServer $defaultCoreGroupId [list [list nodeName $nodeName] [list serverName $serverName] ] coreGroupServers
+   }
+ }
+
+# modify the coregroup object to attach a unique id if necessary
+set uniqueID [$AdminConfig showAttribute $defaultCoreGroupId coreGroupUID]
+if {$uniqueID == 0}  {
+   # modify the coregroup object to attach a unique id
+   $AdminConfig modify $defaultCoreGroupId [list [list coreGroupUID [createAUniqueId]] ]
+   }
+
+$AdminConfig save
+

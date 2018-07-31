@@ -1,0 +1,156 @@
+ <!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!-- THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM                        -->
+<!-- 5724-C0814 (C) COPYRIGHT International Business Machines Corp., 2004     -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM               -->
+<!-- US Government Users Restricted Rights - Use, duplication or disclosure   -->
+<!-- restricted by GSA ADP Schedule Contract with IBM Corp.                   -->
+
+<!-- Definitions for AppMgmt extensions
+  -->
+
+<tiles-definitions>
+
+    <!--  @@tam
+      Map Security Roles to Users 
+     -->
+    <definition name="appinstall.tam.securityroles.tousers" extends="websphere.appmanagement.appinstall">
+        <put name="actionHandler" value="tammapRolesToUsers"/>
+        <put name="actionForm" value="TAMMapRolesToUsersForm"/>
+        <put name="formType" value="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>
+    </definition>
+
+
+   <definition name="appmanagement.tam.securityroles.tousers" extends="detail.config.view">
+       <put name="contextType" value="appconfigure.tam.securityroles.tousers"/>
+       <putList name="list">
+           <add value="appmanagement.tam.securityroles.tousers.detail.title"/>
+           <add value="appmanagement.tam.securityroles.tousers.configStep"/>
+       </putList>
+   </definition>
+
+   <!--  @@tam
+     TAMMapRolesController is used to fill the content of the 'roles' table
+     Keep the form based on the AppInstallForm.  
+     path="/secure/layouts/configStepLayout.jsp"
+    -->
+   <definition name="appmanagement.tam.securityroles.tousers.configStep"   path="/com.ibm.ws.console.tam/configStepLayout.jsp"
+                controllerClass="com.ibm.ws.console.tam.appmanagement.controller.TAMMapRolesController">
+       <put name="configStep" value="/com.ibm.ws.console.tam/TAMMapRolesToUsers.jsp"/>
+       <put name="actionForm" value="TAMMapRolesToUsersForm"/>
+       <put name="actionHandler" value="/tammapRolesToUsers.do"/>
+       <put name="formType" value="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>
+   </definition>
+
+   <!--  @@tam
+     To do.. change titleKey, instanceDescription, displayName to TAM message references
+     To do.. make sure colletionLink points back to appmgmt collection
+     ApplicationDeployment.config.view need to be a global-forward
+    -->
+   <definition name="appmanagement.tam.securityroles.tousers.detail.title" extends="detail.title">
+       <put name="formName" value="TAMMapRolesToUsersForm"/>
+       <put name="titleKey" value="appmanagement.tam.securityroles.tousers"/>
+       <put name="collectionLink" value="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.config.view"/>
+       <put name="includeLink" value="no"/>
+       <put name="instanceDetails" value="title"/>
+       <put name="instanceDescription" value="appmanagement.tam.securityroles.tousers"/>
+       <put name="displayName" value="appmanagement.tam.securityroles.tousers"/>
+   </definition>
+
+
+   <!--  @@tam
+     Lookup panel for manipulating the role mapping
+     TAMMapRolesController used to get search parameters and add them to a collection form
+     Also uses the collection content to query which roles are checked to list in the listbox
+     To do.. change descTitle, descImage, descText, to TAM message references
+    -->
+   <definition name="appmanagement.tam.lookup.content" path="/secure/layouts/contentLayout.jsp"
+               controllerClass="com.ibm.ws.console.tam.appmanagement.controller.TAMMapRolesController">
+       <put name="contextType" value="appmanagement.tam.lookup.content"/>
+       <put name="descTitle" value="appmanagement.tam.lookup.displayName"/>
+       <put name="descImage" value="com.ibm.ws.console.appmanagement/images/lookup.gif:pluginId=com.ibm.ws.console.appmanagement"/>
+       <put name="descText" value="appmanagement.tam.lookup.description"/>
+       <putList name="contentList">
+           <add value="appmanagement.tam.lookup.panel"/>
+       </putList>
+   </definition>
+
+   <!--  @@tam -->
+   <definition name="appmanagement.tam.lookup.panel" path="/com.ibm.ws.console.tam/lookupPanel.jsp">
+       <put name="actionHandler" value="tammapRolesToUsers"/>
+       <put name="actionForm" value="TAMMapRolesToUsersForm"/>
+       <put name="formType" value="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>
+   </definition>
+
+
+<!-- Definitions for TAM config
+  -->
+
+   <definition name="tam.config.view" extends="detail.config.view" controllerClass="com.ibm.ws.console.tam.config.controller.TAMConfigController">
+       <put name="contextType" value="TAM"/>
+       <putList name="list">
+       <add value="tam.config.detail.title"/>
+       <add value="tam.config.detail.tabsLayout"/>
+       </putList>
+   </definition>
+
+   <definition name="tam.config.detail.title" extends="detail.title">
+       <put name="formName" value="com.ibm.ws.console.tam.config.form.TAMConfigDetailForm"/>
+       <put name="objectTypeImage" value="tam.config.smallIcon:pluginId=com.ibm.ws.console.tam"/>
+       <put name="titleKey" value="tam.config.displayName"/>
+       <put name="collectionLink" value=""/>
+       <put name="includeLink" value="no"/>
+       <put name="instanceDetails" value="wasAdminDN"/>
+       <put name="instanceDescription" value="tam.config.description"/>
+       <put name="displayName" value="tam.config.displayName"/>
+   </definition>
+
+   <definition name="tam.config.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+       <put name="selectUri" value="tamConfigDetail.do"/>
+       <put name="selectedPerspective" value="tab.configuration"/>
+       <put name="formName" value="com.ibm.ws.console.tam.config.form.TAMConfigDetailForm"/>
+       <putList name="tabList">
+         
+       </putList>
+   </definition>
+
+   <definition name="tam.config.tab.view" extends="detail.config.tab.view">
+       <putList name="list">
+       <add value="tam.config.detail.buttons.panel"/>
+       <add value="tam.config.general.properties"/>
+       </putList>
+   </definition>
+
+   <definition name="tam.config.detail.buttons.panel" extends="buttons.panel">
+       <put name="buttonCount" value="2"/>
+       <put name="definitionName" value="tam.config.detail.buttons.panel"/>
+       <put name="includeForm" value="yes"/>
+       <putList name="actionList">
+       </putList>
+   </definition>
+
+   <definition name="tam.config.general.properties" path="/com.ibm.ws.console.tam/TAMconfigGenPropLayout.jsp">
+       <put name="formAction" value="tamConfigDetail.do"/>
+       <put name="formName" value="com.ibm.ws.console.tam.config.form.TAMConfigDetailForm"/>
+       <put name="formType" value="com.ibm.ws.console.tam.config.form.TAMConfigDetailForm"/>
+       <put name="formFocus" value="name"/>
+       <put name="readOnlyView" value="no"/>
+       <putList name="attributeList">
+           <item  value="tam.config.enableTAMClients.displayName:enableTAMClients:no:Checkbox:tam.config.enableTAMClients.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.ignoreErrors.displayName:ignoreErrors:no:Checkbox:tam.config.ignoreErrors.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.clientPortSet.displayName:clientPortSet:yes:TextArea:tam.config.clientPortSet.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.wasAdminDN.displayName:wasAdminDN:yes:Text:tam.config.wasAdminDN.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.policyServers.displayName:policyServers:yes:Text:tam.config.policyServers.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.authorizationServers.displayName:authorizationServers:yes:TextArea:tam.config.authorizationServers.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.adminId.displayName:adminId:yes:Text:tam.config.adminId.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.adminPassword.displayName:adminPassword:yes:Password:tam.config.adminPassword.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.registryDNSuffix.displayName:registryDNSuffix:yes:Text:tam.config.registryDNSuffix.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+           <item  value="tam.config.securityDomain.displayName:securityDomain:yes:Text:tam.config.securityDomain.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+       </putList>
+   </definition>
+
+
+
+</tiles-definitions>

@@ -1,0 +1,101 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="zos-system-collector">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="was.shared.targets.basedir" file="${ant.file.was-sharedtargets}" />
+	<dirname property="was.shared.targets.parentdir" file="${was.shared.targets.basedir}" />
+	<dirname property="was.shared.targets.bundle.basedir" file="${was.shared.targets.parentdir}" />
+	<taskdef file="${bundle.basedir}/properties/SSEQTP/aimpdtaskdef.properties" />
+	
+	<property name="taxonomy" value="SSEQTP"/>
+
+	<!-- collect network info -->
+	<target name="zos_collect_network_info"
+		description="run the zos.network.sh script and collect the information">
+
+		<exec executable="sh" dir="/bin"
+			output="${autopdtmp}/autopd/output.txt">
+			<arg line="${shell.dir}/zos.network.sh" />
+		</exec>
+
+		<copy file="/tmp/network" todir="${autopdtmp}/autopd" />
+
+	</target>
+
+	<!--  collect the system information -->
+	<target name="zos_collect_system_info"
+		description="run the zos.system.sh script and collect the information">
+
+		<exec executable="sh" dir="/bin"
+			output="${autopdtmp}/autopd/output.txt">
+			<arg line="${shell.dir}/zos.system.sh" />
+			<arg line="${was.enhanced.root}" />
+		</exec>
+
+		<copy file="/tmp/system" todir="${autopdtmp}/autopd" />
+	</target>
+
+	<!-- gather the system logs after converting them -->
+	<target name="gather_sys_logs">
+
+		<exec executable="sh" dir="/bin"
+			output="${autopdtmp}/autopd/output.txt">
+			<arg line="${shell.dir}/zos.convertDir.sh" />
+			<arg line=" ${autopdtmp}/autopd" />
+		</exec>
+	</target>
+
+	<target name="zip_sys_log">
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd"
+				prefix="autopdzip/syslogs">
+				<include name="**/network.ascii" />
+				<include name="**/system.ascii" />
+				<include name="**/UserInfoFile.txt.ascii" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="convert_files_to_ascii"
+		description="convert the files from EBCDIC to ascii">
+		<!-- if ( fileName.endsWith(".sh")) 
+			return true;
+			if ( fileName.endsWith("was.env")) 
+			return true;
+			if ( fileName.endsWith("control.jvm.options")) 
+			return true;
+			if ( fileName.endsWith("servant.jvm.options")) 
+			return true;
+			if ( fileName.endsWith("trace.dat")) 
+			return true;
+			if ( fileName.endsWith("wsc2n.log")) 
+			return true;
+			if ( fileName.endsWith("/etc/hosts")) 
+			return true;
+		-->
+		<mkdir dir="${autopdtmp}/autopd/ebcdic" />
+		<move todir="${autopdtmp}/autopd/ebcdic">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="**/*was.env" />
+				<include name="**/*control.jvm.options" />
+				<include name="**/*servant.jvm.options" />
+				<include name="**/*trace.dat" />
+				<include name="**/*wsc2n.log" />
+			</fileset>
+		</move>
+
+		<exec executable="sh" dir="/bin"
+			output="${autopdtmp}/autopd/output.txt">
+			<arg line="${shell.dir}/zos.convertDir.sh" />
+			<arg line="${autopdtmp}/autopd/ebcdic" />
+		</exec>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true"
+			basedir="${autopdtmp}/autopd/ebcdic" />
+
+		<delete dir="${autopdtmp}/autopd/ebcdic"/>
+
+	</target>
+</project>

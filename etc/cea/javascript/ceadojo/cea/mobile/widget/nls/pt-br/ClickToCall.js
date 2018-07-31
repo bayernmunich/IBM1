@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"Janela de Colaboração","SHOW_COLLABORATION_WINDOW":"Mostrar Janela de Colaboração","CLICK_TO_CALL":"Clicar para chamar"})

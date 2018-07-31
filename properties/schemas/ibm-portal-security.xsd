@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Stober (IBM Corporation) -->
+<xs:schema targetNamespace="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-security.xsd" elementFormDefault="qualified" attributeFormDefault="unqualified" version="0.9.2.0" xml:lang="en" xmlns:portal="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-topology.xsd" xmlns:base="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-base.xsd" xmlns:security="http://www.ibm.com/websphere/appserver/schemas/6.0/ibm-portal-security.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<!--
+        Definition of Security Aspects of a Portal Application 
+        -->
+	<!--
+    root element access controls 
+    -->
+	<xs:element name="ibm-portal-security" type="security:IbmPortalSecurity">
+		<xs:annotation>
+			<xs:documentation>The ibm-portal-security element is the root element of a PAA Security Definitions descriptor.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="IbmPortalSecurity">
+		<xs:annotation>
+			<xs:documentation>
+This element lists all application roles used by this application. Application roles are defined for a particular Portal Application. 
+They need to be mapped to real users/groups of a Portal installation during the deployment of a Portal Application.
+In addition to the application-roles, it is possible to define role blocks
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="application-role" type="security:ApplicationRole" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+defines role definitions specific to this Portal Application
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="role-block" type="security:RoleBlock" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+role block to be applied to objects in the topology descriptions
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--
+    application role  
+    -->
+	<xs:complexType name="ApplicationRole">
+		<xs:annotation>
+			<xs:documentation>
+Defines a new application role instance that can agregate other application roles, portal roles or J2EE roles. Application roles are defined for a particular Portal Application. They need to be mapped to real users/groups of a Portal installation during the deployment of a Portal Application.
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="portal-role" type="security:PortalRole" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="j2ee-role" type="security:J2eeRole" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="uniqueName" type="xs:string" use="required"/>
+		<xs:attribute name="parent-application-role" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!--
+    portal role  
+    -->
+	<xs:complexType name="PortalRole">
+		<xs:annotation>
+			<xs:documentation>
+Defines a particular role, which is a tupel of the role type (aka action set) and an object in the topology to which the role type is applied
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="role-type" type="xs:string" use="required">
+			<xs:annotation>
+				<xs:documentation>
+roles types are specified in a string. Supported values are defined by Portal
+			</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="object-ref" type="xs:token" use="required">
+			<xs:annotation>
+				<xs:documentation>
+the object-ref specifies an object in the topology to which the role-type will be applied (using the unique ID of that object)
+			</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!--
+    J2EE  role  
+    -->
+	<xs:complexType name="J2eeRole">
+		<xs:annotation>
+			<xs:documentation>
+references a particular J2ee role 
+			</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="role-ref" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+name of the referenced J2EE role
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!--
+    Role Block  
+    -->
+	<xs:complexType name="RoleBlock">
+		<xs:annotation>
+			<xs:documentation>Specifies a role block on a resource</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="object-ref" type="xs:token">
+			<xs:annotation>
+				<xs:documentation>
+The object-ref specifies an object in the topology to which the role-block will be applied (using the unique ID of that object)
+			</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="block-type" type="security:BlockType" use="required">
+			<xs:annotation>
+				<xs:documentation>
+				The type of the role block.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="role-type" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+The role type (aka action set) that is blocked. This attribute is required if the block type is inheritance or propagation and it is not allowed if the type is none.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="BlockType">
+		<xs:annotation>
+			<xs:documentation>
+The different modes that can be used for blocking action sets at a resource
+			</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="inheritance">
+				<xs:annotation>
+					<xs:documentation>
+The resource does not inherit role mappings from its parent, i.e. the action set is blocked above the resource
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="propagation">
+				<xs:annotation>
+					<xs:documentation>
+The resource does not propagate role mappings to its children, i.e. the action set is blocked below the resource
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="none">
+				<xs:annotation>
+					<xs:documentation>
+Remove all role blocks on the specified resource. This overrides any other role blocks specified for the resource.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

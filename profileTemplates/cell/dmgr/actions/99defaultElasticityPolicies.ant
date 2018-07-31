@@ -1,0 +1,89 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="defaultElasticityPoliciesProject" default="checkDmgr" basedir=".">
+
+    <taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    <taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    &importExternalLogs;
+
+        <target name="init">
+            <!-- WASHV -->
+            <!-- If "${WAS_HOME}/properties/version/IMP.product" is found, assume is rainmaker product -->
+            <available file="${WAS_HOME}/properties/version/WASHV.product" type="file" property="isWASHV"/>
+            <wscmtlog message="WAS_HOME=${WAS_HOME}"/>
+            <wscmtlog message="profilePath=${profilePath}"/>
+            <wscmtlog message="isWASHV=${isWASHV}"/>
+
+            <condition property="notWASHV">
+                <isfalse value="${isWASHV}"/>
+            </condition>
+            <wscmtlog>notWASHV=${notWASHV}</wscmtlog>
+
+        <loadproperties srcFile="${profilePath}/properties/profileKey.metadata"/> 
+        <wscmtlog> serverType = ${com.ibm.ws.profile.type}</wscmtlog>
+        <condition property="isDmgr" value="true">
+             <equals arg1="${com.ibm.ws.profile.type}" arg2="DEPLOYMENT_MANAGER"/>
+        </condition>
+        <wscmtlog message="isDmgr=${isDmgr}"/> 
+    </target>
+
+    <target name="defaultElasticityPolicies" if="notWASHV">
+        <wsadmin conntype="none"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  lang="jython"
+                  script="${templatePath}/actions/scripts/defaultElasticityPolicies.py"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/defaultElasticityPolicies.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+        </wsadmin>
+	<antcall target="importLogsToMain" >
+		<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/defaultElasticityPolicies.log" />
+		<param name="description" value="Create WVE default elasticity policies" />
+		<param name="precondition" value="foetrue" />
+	</antcall>        
+
+    </target>
+	<target name="defaultElasticityPoliciesHV" if="isWASHV">
+        <wsadmin conntype="none"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  lang="jython"
+                  script="${templatePath}/actions/scripts/defaultElasticityPoliciesHV.py"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/defaultElasticityPoliciesHV.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${WS_CMT_CELL_NAME}"
+                  localNode="${WS_CMT_NODE_NAME}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+        </wsadmin>
+	<antcall target="importLogsToMain" >
+		<param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/defaultElasticityPoliciesHV.log" />
+		<param name="description" value="Create WVE default elasticity policies for Hypervisor version" />
+		<param name="precondition" value="foetrue" />
+	</antcall>        
+
+    </target>
+
+    <target name="checkDmgr" depends="init" if="isDmgr">
+       <antcall target="main"></antcall>
+    </target>
+
+    <target name="main">
+       <antcall target="defaultElasticityPolicies"></antcall>
+       <antcall target="defaultElasticityPoliciesHV"></antcall>
+	</target>
+
+</project>

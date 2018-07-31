@@ -1,0 +1,114 @@
+<project name="fileAndDirPermFixups" default="orchestrate" basedir=".">
+
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+
+    <target name="orchestrate" description="Orchestrate targets for setting perms"
+            depends="detectCurrentOSFamily, defineOSSpecificConfigFlag, fixupPermsOS400, fixupPermsZOS, fixupPermsOther"/>
+
+    <target name="detectCurrentOSFamily"
+            description="Detects the current OS family">
+        
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="z/os">
+            <os family="z/os"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="unix">            
+            <os family="unix"/>
+        </condition>
+        
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+    
+    <target name="defineOSSpecificConfigFlag"
+            description="Defines either configUNIX or configWindows depending on the current OS">
+            
+        <condition property="configOS400" value="true">
+            <equals arg1="${currentOSFamily}" arg2="os/400"/>
+        </condition>
+
+        <condition property="configZOS" value="true">
+            <equals arg1="${currentOSFamily}" arg2="z/os"/>
+        </condition>
+
+        <condition property="configUNIX" value="true">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+        
+        <condition property="configWindows" value="true">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <!-- We want to know if the OS is something other that os/400 or z/OS -->
+        <condition property="configOther" value="true">
+            <not>
+                <or>
+                    <isset property="configOS400"/>
+                    <isset property="configZOS"/>
+                </or>
+            </not>
+        </condition>
+
+    </target>
+
+    <target name="fixupPermsZOS" description="Sets ZOS profile and log file perms as required" if="configZOS">
+        
+        <!-- The profilePath related perm adjustments -->
+        <wscmtlog>Setting ${profilePath}/** perms to 775</wscmtlog>
+        <exec executable="chmod" failonerror="true">
+               <arg line="-Rh 775 ${profilePath}"/>
+        </exec>
+				
+		<wscmtlog>Setting permissions to 770 for ${profilePath}/config</wscmtlog>
+        <exec executable="chmod" failonerror="true">
+               <arg line="-Rh 770 ${profilePath}/config"/>
+        </exec>
+
+        <!-- The log related perm adjustments -->
+        <wscmtlog>Setting ${WS_CMT_LOG_HOME}/${profileName}/** perms to 775</wscmtlog>
+        <chmod dir="${WS_CMT_LOG_HOME}" perm="775" includes="${profileName}" type="dir" maxparallel="100"/>
+        <chmod dir="${WS_CMT_LOG_HOME}/${profileName}" perm="775" includes="**/*" type="both" maxparallel="100"/>
+
+    </target>
+
+    <target name="fixupPermsOS400" description="Sets OS400 profile and log file perms as required" if="configOS400">
+        
+        <!-- Only log related perm adjustments for os/400 -->
+        <wscmtlog>Setting ${WS_CMT_LOG_HOME}/${profileName}/** perms to 775</wscmtlog>
+        <chmod dir="${WS_CMT_LOG_HOME}" perm="775" includes="${profileName}" type="dir" maxparallel="100"/>
+        <chmod dir="${WS_CMT_LOG_HOME}/${profileName}" perm="775" includes="**/*" type="both" maxparallel="100"/>
+
+        <!-- profilePath/logs perm adjustments for os/400 -->
+        <wscmtlog>Setting ${profilePath}/logs/** perms to 775</wscmtlog>
+        <chmod dir="${profilePath}" perm="775" includes="logs" type="dir" maxparallel="100"/>
+        <chmod dir="${profilePath}/logs" perm="775" includes="**/*" type="both" maxparallel="100"/>
+
+    </target>
+    
+
+    <target name="fixupPermsOther" description="Sets non ZOS and OS400 profile and log file perms as required" if="configOther">
+        
+        <!-- Note that since the chmod ant task is a no-op on Windows, there is no need to check for Windows etc. -->
+
+        <!-- The profilePath related perm adjustments -->
+        <wscmtlog>Setting ${profilePath}/** perms to 755</wscmtlog>
+        <chmod dir="${profilePath}/.." perm="755" includes="${profileName}" type="dir" maxparallel="100"/>
+        <chmod dir="${profilePath}" perm="755" includes="**/*" type="both" maxparallel="100"/>
+
+        <!-- The log related perm adjustments -->
+        <wscmtlog>Setting ${WS_CMT_LOG_HOME}/${profileName}/** perms to 755</wscmtlog>
+        <chmod dir="${WS_CMT_LOG_HOME}" perm="755" includes="${profileName}" type="dir" maxparallel="100"/>
+        <chmod dir="${WS_CMT_LOG_HOME}/${profileName}" perm="755" includes="**/*" type="both" maxparallel="100"/>
+
+    </target>
+
+</project>

@@ -1,0 +1,112 @@
+<!-- ***************************************************************************
+Licensed Materials - Property of IBM
+
+5724-I63, 5724-H88, 5724-H89, 5655-N02, 5724-J08
+ 
+Copyright IBM Corp. 2007 All Rights Reserved.
+
+US Government Users Restricted Rights - Use, duplication or
+disclosure restricted by GSA ADP Schedule Contract with
+IBM Corp.
+***************************************************************************  -->
+<project name="addpostinstallModifyPermsParam" default="install" basedir=".">
+
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles" />
+
+	<property name="fullFilePath" value="${WAS_HOME}/properties/wasprofile.properties"/>
+	<property name="postinstallModifyPermsParam" value="WS_CMT_PI_MODPERMS"/>
+	
+	<!-- os/400 only, no file ext. -->
+	<property name="runConfigActionsPath" value="${WAS_HOME}/bin/runConfigActions"/>
+	<property name="runConfigActionsStr" value="-Dos400.file.create.auth=${WAS_OS400_FILE_CREATE_AUTH} \${line.separator}-Dos400.dir.create.auth=${WAS_OS400_DIR_CREATE_AUTH} \"/>
+	<property name="endorsedDirs85" value="-Djava.endorsed.dirs=${JAVA_ENDORSED_DIRS} \"/>
+	<property name="endorsedDirs80" value="-Djava.endorsed.dirs=&quot;$WAS_ENDORSED_DIRS&quot; \"/>
+	
+	<target name="detectOsFamily" description="Detects the current os family">
+		<condition property="osFamily" value="zos">            
+	      	<os family="z/os"/>
+	     	</condition>	
+	      <condition property="osFamily" value="os/400">
+	      	<equals arg1="${os.name}" arg2="OS/400"/>
+	      </condition>
+	      <condition property="osFamily" value="windows">
+	           <os family="windows"/>
+	      </condition>
+	      <condition property="osFamily" value="unix">
+	            <os family="unix"/>
+	      </condition>
+	      <wscmtlog>Detected os family to be ${osFamily}</wscmtlog>
+		
+		  <condition property="isOS400">
+		  	<equals arg1="${osFamily}" arg2="os/400"/>
+		  </condition>
+    </target>
+
+	
+	<target name="checkIfModificationIsNeeded" description="Determine whether WS_CMT_PI_MODPERMS statement should be added or not">
+		<loadfile property="fileContent" srcFile="${fullFilePath}" />
+		<condition property="postinstallModifyPerms" value="true">
+			<not>
+				<contains string="${fileContent}" substring="${postinstallModifyPermsParam}" />
+			</not>
+		</condition>
+	</target>
+
+	<target name="conditionModificationNotNeeded" unless="postinstallModifyPerms">
+		<wscmtlog>${postinstallModifyPermsParam} statement ALREADY EXISTS in ${fullFilePath}. No modification is required.</wscmtlog>
+	</target>
+
+	<target name="addpostinstallModifyPermsParam" description="Add WS_CMT_PI_MODPERMS statement to WAS_HOME/properties/wasprofile.properties" if="postinstallModifyPerms">
+		<wscmtlog>${postinstallModifyPermsParam} statement is NOT FOUND in ${fullFilePath}. Proceeding to add it.</wscmtlog>
+
+		<concat destfile="${fullFilePath}" append="true" encoding="ASCII">
+#-------------------------------------------------------------------------
+# Specify if the post installer should modify the permissions of any files it creates.
+# Valid values are 'true' or 'false'. Any other value will default to false. Removing
+# this property from the file will also have it default to false. When set to false,
+# any files created by post installer will have permission based on the umask setting
+# of the system.
+#-------------------------------------------------------------------------
+${postinstallModifyPermsParam}=true
+</concat>
+		
+		<wscmtlog>Successfully added ${postinstallModifyPermsParam} statement to ${fullFilePath}</wscmtlog>
+	</target>
+	
+	<target name="iSeriesModifications" if="isOS400">
+		<antcall target="modifyRunConfigActions"/>
+	</target>
+	
+	<target name="modifyRunConfigActions" depends="checkIfJVMArgsApplied,runConfigActionsModNotNeeded,addRunConfigActionsMod"/>
+	
+	<target name="checkIfJVMArgsApplied" description="Check if jvm arguments have already been added">
+		<loadfile property="runConfigActions" srcFile="${runConfigActionsPath}" />
+		<condition property="runConfigActionsMod" value="true">
+			<not>
+				<contains string="${runConfigActions}" substring="${runConfigActionsStr}" />
+			</not>
+		</condition>
+	</target>
+	
+	<target name="runConfigActionsModNotNeeded" unless="runConfigActionsMod">
+			<wscmtlog>New JVM arguments ALREADY EXISTS in ${runConfigActionsPath}. No modification is required.</wscmtlog>
+	</target>
+
+	<target name="addRunConfigActionsMod" description="Add new JVM arguments to runConfigActions" if="runConfigActionsMod">
+		<wscmtlog>New JVM arguments NOT FOUND in ${runConfigActionsPath}. Proceeding to add it.  </wscmtlog>
+		<replace file="${runConfigActionsPath}" token="${endorsedDirs85}" value="${endorsedDirs85}${line.separator}${runConfigActionsStr}" summary="true"/>
+		<replace file="${runConfigActionsPath}" token="${endorsedDirs80}" value="${endorsedDirs80}${line.separator}${runConfigActionsStr}" summary="true"/>
+	</target>
+	
+	<target name="removeRunConfigActionsMod" description="Remove new JVM arguments to runConfigActions" if="isOS400">
+		<wscmtlog>Removing JVM arguments in ${runConfigActionsPath}</wscmtlog>
+		<replace file="${runConfigActionsPath}" token="${line.separator}${runConfigActionsStr}" value="" summary="true"/>
+	</target>
+	
+	<target name="install" description="Calls postinst with various parameters" depends="detectOsFamily,checkIfModificationIsNeeded,conditionModificationNotNeeded,addpostinstallModifyPermsParam,iSeriesModifications" />
+
+	<target name="uninstall" description="Calls postinst with various parameters" depends="detectOsFamily,removeRunConfigActionsMod">
+		<wscmtlog>Custom property ${postinstallModifyPermsParam} is not removed from wasprofile.properties.</wscmtlog>
+	</target>
+</project>
+

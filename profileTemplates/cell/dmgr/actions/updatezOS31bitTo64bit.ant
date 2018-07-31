@@ -1,0 +1,144 @@
+<project name="Update z/OS XD Console on WAS 7.0" default="all">
+
+  <!-- This is for z/OS only.  For distributed, it is done in the 98SinstallConsoleExt.ant -->
+
+  <target name="all" depends="init, main"/>
+
+  <taskdef name="wscmtlog"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+  <taskdef name="foreach"
+           classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ForEachAntTask"/>
+  <taskdef name="convertencoding"
+	        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.FileEncodingAntTask"/>
+
+
+
+  <!-- Document startup -->
+  <target name="init">
+    <tstamp/>
+    <wscmtlog>Updating 31bit mode to 64bit mode</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>${TODAY} - ${TSTAMP}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+    <wscmtlog>WAS_HOME = ${WAS_HOME}</wscmtlog>
+    <wscmtlog>profilePath = ${profilePath}</wscmtlog>
+    <wscmtlog>profilePath = ${profilePath}</wscmtlog>
+  	<wscmtlog>WS_CMT_CELL_NAME = ${WS_CMT_CELL_NAME}</wscmtlog>
+
+    <!-- Determine OS family -->
+    <condition property="isZOS" value="true">
+    	<os family="z/os"/>
+    </condition>
+
+    <wscmtlog>Detected isZOS to be: ${isZOS}</wscmtlog>
+    <wscmtlog>Detected isZOS to be: ${isZOS}</wscmtlog>
+
+
+  </target>
+
+  <!-- Call iscdeploy on z/OS  -->
+  <target name="main" if="isZOS">
+
+  	<available file="${profilePath}/installedFilters/wlm/dmgr" type="dir" property="isDmgr"/>
+  	<wscmtlog>Detected isDmgr is = ${isDmgr}</wscmtlog>
+  	<antcall target="updateDefaultXDZOStemplate"></antcall>
+  	<antcall target="convertTo64Bitmode"></antcall>
+  	<antcall target="new64bitmode"></antcall>
+    <antcall target="runWSC2N"></antcall>
+  		
+    <wscmtlog> complete </wscmtlog>
+  </target>
+
+ <target name="new64bitmode" description="Add 64bit Parameters">
+    <wscmtlog message="Add private_Enable_zWAS_for_64bit and set it to true"/>
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells">
+  		<include name="**/nodes/**/servers/**/variables.xml"/>
+  		 <replacetoken><![CDATA[</variables:VariableMap>]]></replacetoken>
+  		 <replacevalue><![CDATA[<entries xmi:id="VariableSubstitutionEntry_1923795764627" symbolicName="JAVA_HOME" value="${WAS_HOME}/java64"/>
+ <entries xmi:id="VariableSubstitutionEntry_1923795764629" symbolicName="private_Enable_zWAS_for_64bit" value="true"/>
+ </variables:VariableMap>]]></replacevalue>
+  	</replace>
+	
+  
+   <wscmtlog message="Add AMODE=64 bit to startCommandArgs"/>
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+		 <replacetoken><![CDATA[</startCommandArgs>]]></replacetoken>
+  		 <replacevalue><![CDATA[,AMODE=64</startCommandArgs>]]></replacevalue>
+  	</replace>
+        <wscmtlog message="Add was.com.ibm.websphere.zos.jvmmode parameter of 64 to server.xml"/>
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+  		 <replacetoken><![CDATA[runAsGroup=""/>
+ <monitoringPolicy]]></replacetoken>
+  		 <replacevalue><![CDATA[ runAsGroup=""/>
+    <environment xmi:id="Property_1234795764642" name="was.com.ibm.websphere.zos.jvmmode" value="64bit"/>
+ <monitoringPolicy]]></replacevalue>
+  	</replace>
+	
+ </target>
+ 
+  <!-- Update default z/OS XD template for 64 bit mode -->
+  <target name="updateDefaultXDZOStemplate" if="isDmgr">
+
+  	<wscmtlog>${profilePath}</wscmtlog>
+  	<wscmtlog>update defaultXDZOS template</wscmtlog>
+  	    <replace encoding="ISO8859-1" dir="${profilePath}/config/templates/servertypes/APPLICATION_SERVER/servers/defaultXDZOS/">
+  	             <replacefilter token="/java/" value="/java64/"/>
+  	             <replacefilter token=",AMODE=31" value=",AMODE=64"/>
+  	    	     <replacefilter token="31bit" value="64bit"/>
+				 <replacefilter token="-agentlib:HeapDetect64" value=""/>
+				 <replacefilter token="-agentlib:HeapDetect" value=""/>
+  	    </replace>
+
+  </target>
+	
+  <target name="convertTo64Bitmode" description="Convert from 31 to 64 bit">
+  	<wscmtlog message="profile path=${profilePath}"/>
+  	<wscmtlog message="Convert from 31 to 64 bit"/>  	
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells" excludes="**/nodes/**/servers/nodeagent/server.xml">
+  		<include name="**/nodes/**/servers/**/server.xml"/>
+  		    <replacefilter token="${JAVA_HOME}/bin/java" value="${JAVA_HOME}/bin/java64"/>
+  	  	    <replacefilter token="AMODE=31" value="AMODE=64"/>
+			<replacefilter token="31bit" value="64bit"/>
+			<replacefilter token="-agentlib:HeapDetect64" value=""/>
+			<replacefilter token="-agentlib:HeapDetect" value=""/>
+  	</replace>
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells">
+  		<include name="**/nodes/**/servers/**/variables.xml"/>
+  			<replacefilter token="/java/" value="/java64/"/>
+  	</replace>
+	<!--
+	<wscmtlog message="Update control.jvm.options to java64"/>  
+  	<replace encoding="IBM-1047" dir="${profilePath}/config/cells" value="/java64">
+  	  	<include name="**/nodes/**/servers/**/control.jvm.options"/>
+  	  		<replacetoken>/java</replacetoken>
+  	</replace>
+	<wscmtlog message="Update adjunct.jvm.options to java64"/>  
+  	<replace encoding="IBM-1047" dir="${profilePath}/config/cells" value="/java64">
+  	  	<include name="**/nodes/**/servers/**/adjunct.jvm.options"/>
+  	  		<replacetoken>/java</replacetoken>
+  	</replace>
+	<wscmtlog message="Update servant.jvm.options to java64"/>  
+  	<replace encoding="IBM-1047" dir="${profilePath}/config/cells" value="/java64">
+  	  	<include name="**/nodes/**/servers/**/servant.jvm.options"/>
+  	  		<replacetoken>/java</replacetoken>
+  	</replace>
+	-->
+  	<replace encoding="ISO8859-1" dir="${profilePath}/config/cells">
+  	  <include name="**/nodes/**/servers/**/variables.xml"/>
+  		 <replacetoken><![CDATA[symbolicName="private_Enable_zWAS_for_64bit" value="false"]]></replacetoken>
+  		 <replacevalue><![CDATA[symbolicName="private_Enable_zWAS_for_64bit" value="true"]]></replacevalue>
+       </replace>
+	 <wscmtlog message="Use the IBM-1047 code page on the options file"/>  
+ </target>
+ <target name="runWSC2N" description="Execute the WSC2N script"> 	
+         	
+  	 <wscmtlog message = "WSC2N execute" />
+  	 <exec executable="${profilePath}/bin/wsc2n.sh" output="${profilePath}/logs/wsc2n.log">
+  	       <arg value="-X"/>  		 		  		 		        		 		  		 		   		 		  		 		
+  	 </exec>
+  </target>
+
+</project>
+

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Multiple Server Trace" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Multiple Server Trace}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/setup-multiple-server.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+
+	<property name="autopdProblem" value="Multiple_Server_Trace_Problem" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+		was_stack_mulitple_servers_init, 
+		zip_autopd_log,
+		
+		ftp_logs_to_ecurep,
+		script_completed_v2"> 
+		 
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery" description="Recover Portal Server state from AutoPD's failure" depends="collect_was_recovery_common">
+		<wsnlsecho key="AutoPD_recovery_is_performed" bundle="autopdtoolstrings" message="Automated Problem Determination Tool recovery has been performed" id="2269" level="info" />
+	</target>
+
+</project>

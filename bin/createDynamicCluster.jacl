@@ -1,0 +1,89 @@
+# (C) Copyright IBM Corp. 2004,2006 - All Rights Reserved.
+# DISCLAIMER:
+# The following source code is sample code created by IBM Corporation.
+# This sample code is provided to you solely for the purpose of assisting you
+# in the  use of  the product. The code is provided 'AS IS', without warranty or
+# condition of any kind. IBM shall not be liable for any damages arising out of your
+# use of the sample code, even if IBM has been advised of the possibility of
+# such damages.
+#
+#---------------------------------------------------
+# Create Dynamic Cluster
+#---------------------------------------------------
+#
+# Use this script to create a Dynamic Cluster. You
+# must have a Node Group created that you will
+# associate with your new Dynamic Cluster.
+#
+# Replace the variable NODE_GROUP_NAME with the
+# name of the Node Group with which you are
+# associating your new Dynamic Cluster.
+#
+# Replace the variable DYNAMIC_CLUSTER_NAME with
+# the name of your new Dynamic Cluster.
+#
+#  This is a bi-modal script: it can be included in the wsadmin
+#  command invocation like this:
+#     wsadmin -profile createDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#     or
+#     wsadmin -f createDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#
+#  or the script can be sourced from the wsadmin command line:
+#     wsadmin> source createDynamicCluster.jacl
+#     wsadmin> createDynamicCluster NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME
+#---------------------------------------------------
+set createDynamicClusterSyntax "createDynamicCluster NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME"
+proc createDynamicCluster {ngName dcName} {
+   set retval 1
+
+   #--------------------------------------------------------------
+   # set up globals
+   #--------------------------------------------------------------
+   global AdminControl
+   global createDynamicClusterSyntax
+
+   #--------------------------------------------------------------
+   # Check syntax
+   #--------------------------------------------------------------
+   set Syntax "Syntax: $createDynamicClusterSyntax"
+   if {([llength $ngName] == 0 || [llength $dcName] == 0)} {
+      puts ""
+      puts $Syntax
+      puts ""
+      return $retval
+   }
+
+   #--------------------------------------------------------------
+   # Create Dynamic Cluster
+   #--------------------------------------------------------------
+   set outputString "Creating Dynamic Cluster $dcName in Node Group $ngName"
+   puts ""
+   puts $outputString
+   set dcOName [$AdminControl queryNames WebSphere:*,process=dmgr,type=DynamicClusterConfigManager]
+   if {[catch { $AdminControl invoke "$dcOName" "createDynamicCluster" "$ngName $dcName \"\" \"\"" } result]} {
+       puts ""
+   	puts "WSADMIN EXCEPTION: ${result}"
+       puts ""
+       return $retval
+   } else {
+       set retval 0
+       puts ""
+       puts "createDynamicCluster: done."
+       puts ""
+       return $retval
+   }
+}
+
+#-----------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------
+if { !($argc == 2 ) } {
+	puts ""
+	puts "Usage: wsadmin -f createDynamicCluster.jacl NODE_GROUP_NAME DYNAMIC_CLUSTER_NAME"
+	puts ""
+} else {
+   set ngName [lindex $argv 0]
+   set dcName [lindex $argv 1]
+
+   createDynamicCluster $ngName $dcName
+}

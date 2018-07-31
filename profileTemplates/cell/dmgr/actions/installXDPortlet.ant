@@ -1,0 +1,81 @@
+<project name="installXDPortletProject" default="installXDPortlet" basedir=".">
+
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+	<taskdef name="wsadmin"  classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+	
+    <target name="detectCurrentOSFamily"
+            description="Detecs the current OS family (UNIX or Windows)">
+
+        <condition property="currentOSFamily" value="windows">
+            <os family="windows"/>
+        </condition>
+
+        <condition property="currentOSFamily" value="unix">
+            <os family="unix"/>
+        </condition>
+
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog>
+    </target>
+
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+
+        <pathconvert targetos="unix"
+            property="WAS_HOME_UNIX_STYLE"
+            refid="id.was.home"/>
+
+        <wscmtlog>WAS_HOME is ${WAS_HOME}</wscmtlog>
+        <wscmtlog>WAS_HOME_UNIX_STYLE is ${WAS_HOME_UNIX_STYLE}</wscmtlog>
+    </target>
+
+    <target name="setScriptExtension"
+            description="Sets the current script  for this platform (file.separator is unreliable on ANT 1.5.4)">
+
+        <condition property="scriptExtension" value="sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="scriptExtension" value="bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+    </target>
+
+
+    <target name="resolveWSADMINExecutableForTheCurrentPlatform"
+            description="Sets WSADMIN_EXECUTABLE to the WAS Java interpretor for the current platform">
+
+        <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.sh">
+            <equals arg1="${currentOSFamily}" arg2="unix"/>
+        </condition>
+
+        <condition property="WSADMIN_EXECUTABLE" value="${profilePath}/bin/wsadmin.bat">
+            <equals arg1="${currentOSFamily}" arg2="windows"/>
+        </condition>
+
+        <wscmtlog>wsadmin interpretor set to: ${WSADMIN_EXECUTABLE}</wscmtlog>
+    </target>
+    
+
+    <target name="installXDPortlet"
+            description="install XD Portlet into the ISC"
+            depends="detectCurrentOSFamily,
+            convertWASHomeToUNIXStylePath,
+            resolveWSADMINExecutableForTheCurrentPlatform">
+            
+        <exec executable="${WSADMIN_EXECUTABLE}"
+                output="${WS_CMT_LOG_HOME}/${profileName}/installXDPortlet.log">
+            <arg value="-conntype"/>
+            <arg value="NONE"/>
+            <arg value="-lang"/>
+            <arg value="jython"/>
+            <arg value="-f"/>
+            <arg value="${templatePath}/actions/scripts/installXDPortlet.py"/>
+            <arg value="-washome"/>
+            <arg value="${WAS_HOME_UNIX_STYLE}"/>
+        </exec>
+    </target>
+
+</project>
+

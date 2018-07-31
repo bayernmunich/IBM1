@@ -1,0 +1,357 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Crash Problem Step 1" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Crash Problem Step 1}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-set/was-crash-set-core-linux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-set/was-crash-set-core-aix.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-set/was-crash-set-core-solaris.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-set/was-crash-set-core-windows.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-set/was-crash-set-core-hp.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-aix.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-hp.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-linux.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-solaris.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/was/crash-collect/was-crash-collect-core-windows.xml"/>
+	
+
+	<property name="autopdProblem" value="WAS_Crash_Set_Core_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-crash-set-core" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+		description="This is AutoPD main to control running steps"
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2,
+		 validate_os,
+		 usage,
+		 was_stack_custom_init,
+
+					 query_was_cluster,
+					 set_crash_set_core_properties,
+					
+					 get_dmgr_hostname_attributes,
+			 		  	 					  
+					 set_windows_fullcore,					 
+					 was_jvm_working_directory, 
+
+					 set_aix_fullcore, 
+					 set_linux_fullcore,
+					 set_solaris_fullcore, 
+					 set_hp_fullcore,
+					 create_fullcore,
+
+					 restart_app_server_from_aix,
+					 restart_app_server_from_linux,
+					 restart_app_server_from_solaris,
+					 restart_app_server_from_hp,
+ 
+					 
+					 second_try_set_linux_fullcore,
+					 second_try_create_linux_fullcore,
+
+					 second_try_set_aix_fullcore,
+					 second_try_create_aix_fullcore, 
+					  
+					 second_try_set_solaris_fullcore, 
+					 
+					  second_try_set_hp_fullcore,
+					 second_try_create_hp_fullcore,
+					 
+					 restart_app_server_from_aix1,
+					 restart_app_server_from_linux1,  
+					 
+					 different_try_set_linux_fullcore,
+
+					 third_try_set_aix_fullcore, 
+					 third_try_set_linux_fullcore,
+					 third_try_set_hp_fullcore,
+					  
+					 wait_crash_pause, 
+					 gen_history_report,
+					 	 
+					 common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+		description="Recover Portal Server state from AutoPD's failure"
+		depends="collect_was_recovery_common">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+			bundle="autopdtoolstrings"
+			message="Automated Problem Determination Tool recovery has been performed"
+			id="2269" level="info" />
+	</target>
+
+	<!-- This target is used to try to create a full core via running command kill -11-->
+	<target name="create_fullcore"
+		description="Try to create system core file" unless="isWindows">
+
+		<waitfor maxwait="20" maxwaitunit="second">
+			<available file="/tmp/was.file.notexisting" type="file"
+				property="was.file.notexisting" />
+		</waitfor>
+
+		<wasprocessid key="was.java.process.id"
+			filename="${logFilePath}/${ServerName}.pid" />
+		<echo message="${was.java.process.id}" />
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_trying_to_create_core_file"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Trying to create core file"
+			replace="${autopdts};;${step.count}" id="1032" level="info" />
+
+		<autopdinput
+			message="To_create_core_file_Proceed_run_kill-11_command"
+			validargs="OK,Quit" addproperty="do.kill1"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nokill11">
+			<equals arg1="Quit" arg2="${do.kill1}" />
+		</condition>
+		<fail if="do.abort.nokill11">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+
+		<!-- issue kill -11 command -->
+		<copy
+			file="${bundle.basedir}/scripts/was/shell/kill-template.sh"
+			tofile="${bundle.basedir}/scripts/was/shell/kill-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="num" value="-11" />
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_2_minutes"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Waiting for two minutes" replace="${autopdts}"
+			id="1020" level="info" />
+
+		<!-- core available check -->
+		<waitfor maxwait="2" maxwaitunit="minute">
+			<available file="/tmp/was.file.notexisting" type="file"
+				property="was.file.notexisting" />
+		</waitfor>
+
+		<exec executable="sh" dir="${bundle.basedir}/scripts/was/shell"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<autopdtimestamp property="autopdts"
+			pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_30_seconds"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Waiting for 30 seconds" replace="${autopdts}"
+			id="1026" level="info" />
+
+		<!-- core available check -->
+		<waitfor maxwait="30" maxwaitunit="second">
+			<available file="/tmp/was.file.notexisting" type="file"
+				property="was.file.notexisting" />
+		</waitfor>
+
+		<autopdproperty name="core.regex.str" value="^core" />
+		<if isTrue="${isLinux}">
+			<autopdproperty name="core.regex.str"
+				value="^core\.${was.java.process.id}" />
+		</if>
+
+
+		<file_available path_key="system.core.path"
+			existing_key="core.existing"
+			paths="${was.jvm.workingDirectory}|${was.enhaced.root}/bin|/tmp"
+			pattern="${core.regex.str}" />
+
+		<autopdlog message="system.core.path: ${system.core.path}"
+			id="1023" level="info" />
+		<autopdlog message="core.existing: ${core.existing}" id="1024"
+			level="info" />
+
+		<condition property="aix.nocore">
+			<and>
+				<istrue value="${isAIX}" />
+				<not>
+					<istrue value="${core.existing}" />
+				</not>
+			</and>
+		</condition>
+
+		<condition property="aix.has.core">
+			<and>
+				<istrue value="${isAIX}" />
+				<istrue value="${core.existing}" />
+			</and>
+		</condition>
+
+
+		<condition property="linux.nocore">
+			<and>
+				<istrue value="${isLinux}" />
+				<not>
+					<istrue value="${core.existing}" />
+				</not>
+			</and>
+		</condition>
+
+		<condition property="linux.has.core">
+			<and>
+				<istrue value="${isLinux}" />
+				<istrue value="${core.existing}" />
+			</and>
+		</condition>
+
+		<condition property="solaris.nocore">
+			<and>
+				<istrue value="${isSolaris}" />
+				<not>
+					<istrue value="${core.existing}" />
+				</not>
+			</and>
+		</condition>
+
+		<condition property="solaris.has.core">
+			<and>
+				<istrue value="${isSolaris}" />
+				<istrue value="${core.existing}" />
+			</and>
+		</condition>
+
+		<condition property="hasCore1">
+			<istrue value="${core.existing}" />
+		</condition>
+
+	</target>
+
+	<!-- This target is used to pause after getting a core during an test -->
+	<target name="wait_crash_pause"
+		description="Pause until a crash occurs">
+
+		<inputdialogtask>
+			<fieldtask name="prompt1" label="Ask_how_to_proceed"
+				type="prompt" bundle="autopdtoolstrings" />
+			<fieldtask name="prompt2" label="wait_for_crash_or_quit_1"
+				type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt3" label="wait_for_crash_or_quit_2"
+				type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt4" label="wait_for_crash_or_quit_3"
+				type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="prompt4" label="wait_for_crash_or_quit_4"
+				type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<autopdinput message="wait_for_crash_or_quit"
+			validargs="Wait,Quit" addproperty="do.wait1"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="do.wait.quit1">
+			<equals arg1="Quit" arg2="${do.wait1}" />
+		</condition>
+		<fail if="do.wait.quit1">
+			Automated Problem Determination Tool aborted by user.
+		</fail>
+		<autopdinput message="click_OK_to_resume_after_crash"
+			validargs="OK" addproperty="do.collect"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+	<target name="set_crash_set_core_properties" description="">
+		<condition property="isAIXLinux">
+			<or>
+				<istrue value="${isAIX}" />
+				<istrue value="${isLinux}" />
+			</or>
+		</condition>
+		<condition property="${need.dmgr.properties}">
+			<and>
+				<istrue value="${isCluster}" />
+				<istrue value="${isAIXLinux}" />
+			</and>
+		</condition>
+	</target>
+
+	<target name="get_dmgr_hostname_attributes" description=""
+		if="isCluster">
+
+		<if isTrue="${isAIXLinux}">
+			<autopdxmlproperty
+				filename="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes/${dmgr.NodeName}/serverindex.xml"
+				path="ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint"
+				property="port" output="was.dmgr.soap.port" />
+			<echo message="was.dmgr.soap.port:${was.dmgr.soap.port}" />
+			<autopdxmlproperty
+				filename="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes/${dmgr.NodeName}/serverindex.xml"
+				path="ServerIndex" property="hostName" output="was.dmgr.hostname" />
+			<echo message="was.dmgr.hostname:${was.dmgr.hostname}" />
+		</if>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+		description="&lt;h2&gt;Step 1 of 2: Crash Problem&lt;/h2&gt;&lt;p&gt;
+							This script should be run on the deployment manager to set up the 
+							crash problem reproduction or when only a truncated or no core exists. 
+							Once this script has completed, move onto 'Step 2 of 2: Crash Problem'.&lt;/p&gt;">
+
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+				value="This script should be run on the deployment manager to set up the 
+crash problem reproduction or when only a truncated or no core exists. Once this script has 
+completed, move onto 'Step 2 of 2: Crash Problem'." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+				value="Step 1 of 2: Crash Problem =>
+This script should be run on the deployment manager to set up the
+crash problem reproduction or when only a truncated or no core exists.
+Once this script has completed, move onto 'Step 2 of 2: Crash Problem'." />
+		</if>
+
+		<autopdinput message="${collection.message}" validargs="OK"
+			addproperty="run.current.script"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

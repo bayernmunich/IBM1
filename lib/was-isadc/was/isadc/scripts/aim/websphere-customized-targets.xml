@@ -1,0 +1,706 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. 
+	All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Customized Targets">
+	
+	<dirname property="common.setup.targets.basedir" file="${ant.file.WebSphere Customized Targets}" />
+	<dirname property="common.setup.targets.parentdir" file="${common.setup.targets.basedir}" />
+	<dirname property="common.setup.targets.bundle.basedir" file="${common.setup.targets.parentdir}" />
+
+
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/trace-setup.xml"  />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/common-setup.xml"  />
+
+	<target name="was_stack_custom_init" 
+		depends="banner_message,ask_for_middleware_root,version_level_setup,was_stack_custom_init_part,
+		initialize_was_runtime_environment,ask_for_user_security_credentials,detect_server_running_status">
+	</target> 
+		
+	<target name="was_stack_custom1_init" 
+		depends="ask_for_middleware_root,version_level_setup,was_stack_custom1_init_part,
+		initialize_was_runtime_environment,ask_for_user_security_credentials,detect_server_running_status">
+	</target> 
+		
+	<target name="was_stack_custom2_init" 
+		depends="was_stck_custom2_init_part,version_level_setup,was_stack_custom1_init_part,
+		initialize_was_runtime_environment,ask_for_user_security_credentials,detect_server_running_status" >
+	</target> 
+	
+	<target name="banner_message" unless="skip_banner_message" >
+		<!-- 24232 -->
+		<wsnlsecho key="Banner_Message0"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message="This script will lead you through changing the application server trace specification, recreating the problem you are experiencing, collecting log and trace data, collecting application server configuration files, and collecting server topology information." 
+			console="true" />
+		<wsnlsecho message="" console="true" /> 
+		<wsnlsecho key="Banner_Message1"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message="This script may perform the following invasive actions:" 
+			console="true" />
+		<wsnlsecho key="Banner_Message2"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message=" - modify the application server's configured trace specification" 
+			console="true" />
+		<wsnlsecho key="Banner_Message3"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message=" - modify the application server's configured trace size" 
+			console="true" />
+		<wsnlsecho key="Banner_Message4"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+		    message=" - start/stop the application server" 
+			console="true" />
+		<wsnlsecho message="" console="true" /> 
+		
+	</target> 
+	
+	<target name="was_stack_custom_init_part"> 
+<!--  Profiles  -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.profile.root" value="${was.root}" />
+			<property name="was.enhanced.root" value="${was.root}" />
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+			<wasmultcomponents componentList="was.profiles"
+				appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+				component="profiles" attribute="name" delimiter="|" filterList=""
+				success="query.succeeded" />
+
+			<if isNotTrue="${query.succeeded}">
+				<fail>
+					The search for the profile names based on the root
+					${was.root} failed. Verify that your input is
+					correct and run the collection again.
+				</fail>
+			</if>
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="WAS_HOME_CUSTOM_TARGETS" 
+					propertyName="WAS_HOME_CUSTOM_TARGETS_LABEL"
+					replace="${was.root}" />
+
+			<if isTrue="${has.mult.profiles}">
+				<inputdialogtask>
+					<fieldtask name="prompt" label="Input_Required"
+						type="prompt" bundle="autopdtoolstrings" />
+					<fieldtask name="was.root" label="${WAS_HOME_CUSTOM_TARGETS_LABEL}"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+						initialValueSource="persisted" />
+					<fieldtask name="profileName"
+						label="was_profilename" list="${was.profiles}"
+						listDetails="${was.profiles}" type="selectlist"
+						accessibilityName="was_profilename"
+						accessibilityDesc="was_profilename"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+				</inputdialogtask>
+			</if>
+
+			<if isNotTrue="${has.mult.profiles}">
+				<property name="profileName" value="${was.profiles}" />
+			</if>
+ 
+			<wascomponent value="was.enhanced.root"
+				appInstallRoot="${was.root}" component="profiles" attribute="path"
+				filterList="name=${profileName}" delimiter="|"
+				success="enhanced.succeeded" />
+		</if>
+<!--  Set Was Components  -->
+		<wascomponent value="CellName" appInstallRoot="${was.root}"
+			component="servers" attribute="cellName"
+			filterList="profileId=${was.enhanced.root}" delimiter="|"
+			success="cell.succeeded" />
+		<wasmultcomponents componentList="was.nodes"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.nodes"
+			component="nodes" attribute="name" delimiter="|" filterList="profileId=${was.enhanced.root}"
+			success="node.query.succeeded" />
+		
+		<if isNotTrue="${node.query.succeeded}">
+			<fail>
+				The search for the node name based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.nodes}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="WAS_HOME_CUSTOM_TARGETS" 
+					propertyName="WAS_HOME_CUSTOM_TARGETS_LABEL"
+					replace="${was.root}" />
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="PROFILE_NAME_CUSTOM_TARGETS" 
+					propertyName="PROFILE_NAME_CUSTOM_TARGETS_LABEL"
+					replace="${profileName}" />
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="CELL_NAME_CUSTOM_TARGETS" 
+					propertyName="CELL_NAME_CUSTOM_TARGETS_LABEL"
+					replace="${CellName}" />
+			
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.root" label="${WAS_HOME_CUSTOM_TARGETS_LABEL}"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					initialValueSource="persisted" />
+				<fieldtask name="profileName"
+					label="${PROFILE_NAME_CUSTOM_TARGETS_LABEL}" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="CellName"
+					label="${CELL_NAME_CUSTOM_TARGETS_LABEL}" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="NodeName" label="was_nodename"
+					list="${was.nodes}" listDetails="${was.nodes}"
+					type="selectlist" accessibilityName="was_nodename"
+					accessibilityDesc="was_nodename"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+	<if isNotTrue="${has.mult.nodes}">
+			<property name="NodeName" value="${was.nodes}" />
+		</if> 
+<!--  Was Servers -->
+		<wasmultcomponents componentList="was.servers"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.servers"
+			component="servers" attribute="name" delimiter="|"
+			filterList="profileId=${was.enhanced.root}|nodeName=${NodeName}"
+			success="query.succeeded" />
+
+		
+		<if isNotTrue="${query.succeeded}">
+			<fail>
+				The search for the server names based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.servers}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="WAS_HOME_CUSTOM_TARGETS" 
+					propertyName="WAS_HOME_CUSTOM_TARGETS_LABEL"
+					replace="${was.root}" />
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="PROFILE_NAME_CUSTOM_TARGETS" 
+					propertyName="PROFILE_NAME_CUSTOM_TARGETS_LABEL"
+					replace="${profileName}" />
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="CELL_NAME_CUSTOM_TARGETS" 
+					propertyName="CELL_NAME_CUSTOM_TARGETS_LABEL"
+					replace="${CellName}" />
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="NODE_NAME_CUSTOM_TARGETS" 
+					propertyName="NODE_NAME_CUSTOM_TARGETS_LABEL"
+					replace="${NodeName}" />
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required"
+					type="prompt" bundle="autopdtoolstrings" />
+				<fieldtask name="was.root" label="${WAS_HOME_CUSTOM_TARGETS_LABEL}"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="label"
+					initialValueSource="persisted" />
+				<fieldtask name="profileName"
+					label="${PROFILE_NAME_CUSTOM_TARGETS_LABEL}" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="CellName"
+					label="${CELL_NAME_CUSTOM_TARGETS_LABEL}" type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="NodeName" label="${NODE_NAME_CUSTOM_TARGETS_LABEL}"
+					type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName" label="was_servername"
+					list="${was.servers}" listDetails="${was.servers}"
+					type="selectlist" accessibilityName="was_servername"
+					accessibilityDesc="was_servername"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+	    <if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+ 		
+	</target>
+	
+	
+	<!--  Trace Setup Custom -->
+	
+	<target name="trace_setup_custom" 
+		depends="get_default_trace_values,trace_setup_custom1,
+			stop_app_server_with_condition,set_was_runtime_trace_with_condition,
+			set_jvm_arguments, set_jvm_verboseClass, set_log_rollover,
+			issue_netstat_before,start_app_server_with_condition,issue_netstat_after,
+		
+			start_time,	pause_for_user_input, end_time,
+			prompt_for_stop,
+		
+			restore_user_default_trace_values,
+			disable_jvm_arguments,disable_jvm_verboseClass, restore_log_rollover,
+			sync_node_restore,gen_history_report,zip_trace_debug_files">
+		
+	</target>
+	
+	<target name="trace_setup_custom1" > 
+	<!--  How to proceed  -->
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Begin_Trace_Spec"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Initializing Tracing Module.."
+		           replace="${autopdts};;${step.count}"
+		           id="1109"
+		           level="info"
+		           component="\scripts\was\trace-setup.xml" />
+		<if isTrue="${was.server.isRunning}" >
+			<property name="was.server.isRunning.value" value="true"/> 
+			
+			<if isNotTrue="${jvm_arguments}" >
+				<inputdialogtask>
+					<fieldtask name="prompt1"
+		        		label="Information_Message"
+				        type="prompt"
+				        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label0"
+						label="Empty_Line"
+						type="label"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+					<fieldtask name="prompt2"
+						label="wsas_reset_trace_info_1"
+		        		type="label"
+				        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label0"
+						label="Empty_Line"
+						type="label"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+					<fieldtask name="prompt3"
+	        		   label="wsas_reset_trace_info_2"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label0"
+						label="Empty_Line"
+						type="label"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+					<fieldtask name="prompt4"
+			           label="wsas_reset_trace_info_3"
+		       		   type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="label0"
+						label="Empty_Line"
+						type="label"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+					<fieldtask name="prompt5"
+		       		   label="wsas_reset_trace_info_4"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="wsas.script.path"
+				       bundle="properties/SSEQTP/autopdtoolstrings_was"
+		        	   label="select_one"
+				       list="Restarting_a_server:Without_restarting_a_running_server"
+				       listDetails="Restarting_a_server:Without_restarting_a_running_server"
+		        	   type="selectlist" />
+				</inputdialogtask>
+				<condition property="restart.server.temp">
+					<equals arg1="Restarting_a_server" arg2="${wsas.script.path}" />
+				</condition>
+				<if isTrue="${restart.server.temp}">
+					<property name="restart.server" value="true"/> 
+				</if>
+				<!-- 25005--> 
+				<!--
+				<if isNotTrue="${restart.server.temp}">
+					<property name="restart.server" value="false"/> 
+				</if> 
+				--> 
+			</if> 
+			<if isTrue="${jvm_arguments}" > <!-- If Jvm Arguments is Set, prompt for Re-start --> 
+			<!--  No need to prompt 
+				<inputdialogtask >
+					<fieldtask name="prompt1"
+		        		label="Ask_how_to_proceed"
+				        type="prompt"
+				        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt2"
+						label="wsas_reset_trace_info_5"
+		        		type="label"
+				        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="prompt3"
+	        		   label="wsas_reset_trace_info_6"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+			-->
+				<property name="restart.server" value="true" />
+			</if> 
+
+
+			<if isTrue="${restart.server}">
+				<property name="script_restart" value="true" />
+				<property name="recovery.needed" value="true" />
+				<property name="do.warn.user" value="true" />
+				<property name="stop.app.server" value="true" />
+				<property name="start.app.server" value="true" />
+				<property name="recovery.completed.needed" value="true" />
+				<property name="enable.was.trace" value="true" />
+			</if>
+
+			<if isNotTrue="${restart.server}">
+				<property name="recovery.needed" value="true" />
+				<property name="recovery.completed.needed" value="true" />
+				<property name="enable.was.trace" value="true" />
+				<property name="server.stop" value="false" />
+			</if>
+
+		</if>
+			
+		<if isNotTrue="${was.server.isRunning}" >
+			<property name="was.server.isRunning.value" value="false"/> 
+			<property name="restart.server" value="true" />
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+<!-- 		<property name="stop.app.server" value="true" /> -->
+			<property name="start.app.server" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+			<property name="server.stop" value="true" />
+<!-- 
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Server_not_started"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="Prompt_for_restarting"
+				           label="Prompt_for_restarting1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+ -->			
+		</if>
+<!--  additional trace setting  -->		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Prompt_Add_TraceString"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Prompt User to Add additional Trace string"
+		           replace="${autopdts};;${step.count}"
+		           id="1109"
+		           level="info"
+		           component="\scripts\was\trace-setup.xml" />
+		
+		<if isTrue="${was.server.isRunning.value}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="SERVER_RUNNING_CUSTOM_TARGETS_TRUE" 
+					propertyName="SERVER_RUNNING_CUSTOM_TARGETS_LABEL"/>
+		</if>
+		<if isNotTrue="${was.server.isRunning.value}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="SERVER_RUNNING_CUSTOM_TARGETS_FALSE" 
+					propertyName="SERVER_RUNNING_CUSTOM_TARGETS_LABEL"/>
+		</if> 
+		<if isTrue="${restart.server}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="RESTART_VALUE_CUSTOM_TARGETS_TRUE" 
+					propertyName="RESTART_VALUE_CUSTOM_TARGETS_LABEL"/>
+		</if>
+		<if isNotTrue="${restart.server}">
+			<saveresourcebundleproperty 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					key="RESTART_VALUE_CUSTOM_TARGETS_FALSE" 
+					propertyName="RESTART_VALUE_CUSTOM_TARGETS_LABEL"/>
+		</if> 
+
+<!--		
+		<saveresourcebundleproperty 
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				key="SERVER_RUNNING_CUSTOM_TARGETS" 
+				propertyName="SERVER_RUNNING_CUSTOM_TARGETS_LABEL"
+				replace="${was.server.isRunning.value}" />
+		<saveresourcebundleproperty 
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				key="RESTART_VALUE_CUSTOM_TARGETS" 
+				propertyName="RESTART_VALUE_CUSTOM_TARGETS_LABEL"
+				replace="${restart.server}" />
+-->
+		<inputdialogtask>
+			
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+           <fieldtask name="label11" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="${SERVER_RUNNING_CUSTOM_TARGETS_LABEL}"/>
+           <fieldtask name="label12" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="${RESTART_VALUE_CUSTOM_TARGETS_LABEL}"/>
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label"
+			           label="Mustgather_Trace_Spec"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label"
+			           label="${was.trace.string}"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+			           label="Empty_Line"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label"
+					   label="Has_IBM_Support_requested_that_you_enter_additional_trace_strings"
+					   type="label"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="request.extra.trace"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was"
+					   label="select_one"
+					   list="no:yes"
+					   listDetails="no:yes"
+					   type="selectlist" />
+			<fieldtask name="trace_file_set"
+					 label="Set_Trace_Files"
+					 type="selectlist" 
+					 list="no:yes" listDetails="no:yes"
+				     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<condition property="set.trace.log">
+			<equals arg1="yes" arg2="${trace_file_set}" />
+		</condition>
+		<if isTrue="${set.trace.log}">
+			<property name="set.trace.log.value" value="true"/> 
+		</if>
+		<if isNotTrue="${set.trace.log}">
+			<property name="set.trace.log.value" value="false"/> 
+		</if>
+
+		
+		<condition property="more.trace.needed">
+			<equals arg1="yes" arg2="${request.extra.trace}" />
+		</condition>
+<!-- Additional trace -->	
+		<if isTrue="${more.trace.needed}">
+
+			<if isTrue="${useGuiConsole }">
+<!--				
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="SERVER_RUNNING_CUSTOM_TARGETS" 
+						propertyName="SERVER_RUNNING_CUSTOM_TARGETS_LABEL"
+						replace="${was.server.isRunning.value}" />
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="RESTART_VALUE_CUSTOM_TARGETS" 
+						propertyName="RESTART_VALUE_CUSTOM_TARGETS_LABEL"
+						replace="${restart.server}" />
+-->						
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="TRACE_SPEC_CUSTOM_TARGETS" 
+						propertyName="TRACE_SPEC_CUSTOM_TARGETS_LABEL"
+						replace="${was.trace.string}" />
+				
+				<inputdialogtask doSkip="true" noCancel="true">
+					<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+           <fieldtask name="label11" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="${SERVER_RUNNING_CUSTOM_TARGETS_LABEL}"/>
+           <fieldtask name="label12" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="${RESTART_VALUE_CUSTOM_TARGETS_LABEL}"/>
+           <fieldtask name="label13" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="${TRACE_SPEC_CUSTOM_TARGETS_LABEL}"/>
+					<fieldtask name="additional.was.trace.string"
+				           label="Answer"
+				           type="textarea" />
+				</inputdialogtask>
+			</if>
+
+			<if isNotTrue="${useGuiConsole }">
+				<inputdialogtask doSkip="true" noCancel="true">
+					<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="additional.was.trace.string"
+				           label="Answer"
+				           type="textarea" />
+				</inputdialogtask>
+			</if>
+			<!-- Remove white spaces --> 
+			<trim_filename key="additional.was.trace.string" filename="${additional.was.trace.string}" prefixTrim="^\s+" suffixTrim="\s+$"/> 
+				
+			<!-- Allow user to place strings on different lines for readablity -->
+			<if isTrue="${useGuiConsole }">
+				<condition property="no.additional.trace.string">
+					<or>
+						<equals arg1="${additional.was.trace.string}" arg2="" />
+						<not>
+							<isset property="additional.was.trace.string" />
+						</not>
+					</or>
+				</condition>
+			</if>
+			<if isNotTrue="${useGuiConsole }">
+				<condition property="no.additional.trace.string">
+					<or>
+						<equals arg1="${additional.was.trace.string}" arg2="" />
+						<not>
+							<isset property="additional.was.trace.string" />
+						</not>
+					</or>
+				</condition>
+			</if>
+	
+			<if isNotTrue="${no.additional.trace.string}">
+	
+				<!-- Window asking if user wants to append or replace -->
+				<autopdinput message="prompt_replace_append_trace"
+				             validargs="append,replace"
+				             addproperty="extra.trace.option"
+				             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	
+				<condition property="trace.replace">
+					<equals arg1="replace" arg2="${extra.trace.option}" />
+				</condition>
+				<echo message="You have selected to ${extra.trace.option} the trace string"/>
+			</if>
+	
+			<if isNotTrue="${no.additional.trace.string}">
+				<autopdreplace property="additional.was.trace.string" token="\n" value=":" />
+	
+				<!-- Append the two trace strings and separate with : -->
+				<if isTrue="${trace.replace}">
+					<autopdproperty name="was.trace.string"
+					                value="${additional.was.trace.string}" />
+				</if>
+	
+				<if isNotTrue="${trace.replace}">
+					<autopdproperty name="was.trace.string"
+					                value="${was.trace.string}:${additional.was.trace.string}" />
+				</if>
+				
+				<echo message="New Trace String settings are : ${was.trace.string}"/>
+			
+			</if>
+		 
+		</if>
+<!-- No redundant dialog		
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			     label="Information_Message"
+			     type="prompt"
+			     bundle="properties/SSEQTP/autopdtoolstrings_was" />
+           <fieldtask name="label11" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="Server Running : ${was.server.isRunning.value}"/>
+           <fieldtask name="label12" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="Restart : ${restart.server}"/>
+           <fieldtask name="label13" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			           label="Trace Specifications : ${was.trace.string}"/>
+			<fieldtask name="label14" type="label" bundle="properties/SSEQTP/autopdtoolstrings_was"
+					label="Log Rollover Size and Number : ${set.trace.log.value}" /> 
+		</inputdialogtask>
+--> 			
+	
+	</target>
+	
+	<target name="was_stack_custom1_init_part" > 
+		<!--		
+		<property file="properties/SSEQTP/was_init.properties" /> 
+--> 
+		<wascomponent value="was.enhanced.root"
+			appInstallRoot="${was.root}" component="profiles" attribute="path"
+			filterList="name=${profileName}" delimiter="|"
+			success="enhanced.succeeded" />
+
+		<echo message="was.root is ${was.root}"/> 
+		
+	</target> 
+	
+	<target name="was_stck_custom2_init_part" > 
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_WAS_Root"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Ask for WebSphere Application Root Directory and build environment..."
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+		
+		<!-- copy one setupCmdLine exec to autopdtmp -->
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec.sh"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec.sh" perm="766"/>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec" perm="766"/>
+		
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Input_Required"
+				type="prompt" bundle="autopdtoolstrings" />
+			<fieldtask name="was.root" label="WAS_root"
+				type="filebrowser" bundle="autopdtoolstrings"
+				defaultValue="${default.was.root}" initialValueSource="persisted" />
+			<fieldtask name="profileName" label="was_profilename" 
+				type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+			<fieldtask name="CellName" label="Input_Cell_Name_of_Your_Application_Server" 
+				type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+			<fieldtask name="NodeName" label="Input_Node_Name_of_Your_Application_Server" 
+				type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+			<fieldtask name="ServerName" label="Input_Server_Name_of_Your_Application_Server" 
+				type="plaintext" bundle="properties/SSEQTP/autopdtoolstrings_was" /> 
+		</inputdialogtask>
+
+		<middlewaremapbuilder
+			xmlPath="${was.shared.targets.bundle.basedir}" />
+
+		<!-- 1. WASTOPOLOGY -->
+		<middlewaretopology appInstallRoot="${was.root}"
+			taxonomy="${taxonomy}" baseTaxonomy="${baseTaxonomy}"
+			versionLevel="was.version.level" vrmf="was.product.version"
+			productName="was.product.name" isValid="was.root.existing" />
+
+
+		<if isNotTrue="${was.root.existing}">
+			<autopdinput
+				message="WAS_Root_Value_is_not_valid_Please_reset_this_value"
+				validargs="OK" addproperty="wasroot.wrong" />
+			<wsnlsecho key="WAS_Root_Directory_Inputed_Doesn't_Exist"
+				bundle="autopdtoolstrings"
+				message="The middleware root directory input by user does not exist"
+				id="2201" level="error" component="scripts\aim\common-setup.xml" />
+			<property name="no.was" value="true" /> 
+
+		</if>
+
+	</target> 
+	
+		
+</project> 

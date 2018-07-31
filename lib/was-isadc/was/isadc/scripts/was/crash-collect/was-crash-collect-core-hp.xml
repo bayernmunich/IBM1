@@ -1,0 +1,253 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS set core problem 
+	for HP platform. It should be included in the WAS set core Ant scripts. 
+-->
+<project name="was-crash-collect-core-hp">
+
+	<dirname property="was.crash.collect.core.hp.basedir"
+		file="${ant.file.was-crash-collect-core-hp}" />
+	<dirname property="was.crash.collect.core.hp.parentdir"
+		file="${was.crash.collect.core.hp.basedir}" />
+	<dirname property="was.crash.collect.core.hp.grandparentdir"
+		file="${was.crash.collect.core.hp.parentdir}" />
+	<dirname property="was.crash.collect.core.hp.bundle.basedir"
+		file="${was.crash.collect.core.hp.grandparentdir}" />
+
+	<!-- This target is used ot create core file output -->
+	<target name="create_hp_core_output"
+		description="Collect a full core" if="isHPUX">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1255218" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_HP_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating Crash Output for HP-UX..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+		
+<!-- Remove per L2 recommend 05/27/2009 
+		<inputdialogtask>
+			<fieldtask name="prompt1"
+        		label="Input_Required_WAS"
+		        type="prompt"
+		        bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="label0"
+				label="Empty_Line"
+				type="label"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="Arch_App_Server"
+	            label="Select_App_Arch"
+				list="32-bit:64-bit" listDetails="32-bit:64-bit"
+	            type="selectlist"
+			    bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="label0"
+				label="Empty_Line"
+				type="label"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+			<fieldtask name="Arch_HP_UX"
+	            label="Select_HPUX_Arch"
+	            type="selectlist"
+				list="64-bit Itanium:PA-RISC" listDetails="64-bit Itanium:PA-RISC"
+			    bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask> 
+		
+		<condition property="path.value" value="IA64N"> 
+			<and> 
+				<equals arg1="${Arch_App_Server}" arg2="32-bit" /> 
+				<equals arg1="${Arch_HP_UX}" arg2="64-bit Itanium" /> 
+			</and> 
+		</condition> 
+		<condition property="path.value" value="IA64W"> 
+			<and> 
+				<equals arg1="${Arch_App_Server}" arg2="64-bit" /> 
+				<equals arg1="${Arch_HP_UX}" arg2="64-bit Itanium" /> 
+			</and> 
+		</condition> 
+		<condition property="path.value" value="PA_RISC2.0"> 
+			<and> 
+				<equals arg1="${Arch_App_Server}" arg2="32-bit" /> 
+				<equals arg1="${Arch_HP_UX}" arg2="PA-RISC" /> 
+			</and> 
+		</condition> 
+		<condition property="path.value" value="PA_RISC2.0W"> 
+			<and> 
+				<equals arg1="${Arch_App_Server}" arg2="64-bit" /> 
+				<equals arg1="${Arch_HP_UX}" arg2="PA-RISC" /> 
+			</and> 
+		</condition> 
+
+		<copy file="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/hp/gdb-template.sh"
+			tofile="${autopdtmp}/autopd/crash/hp/gdb-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="java.path" value="${was.root}/java/jre/bin/${path.value}/java" />
+				<filter token="core.path" value="${core.file.path}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+			dir="$${autopdtmp}/autopd/crash/hp"
+			output="${autopd.echolog.instance}" append="true">
+			<arg line=" -f ${autopdtmp}/autopd/crash/hp/gdb-filled.sh" />
+		</exec>
+--> 		
+<!--
+		<property name="core.sdff.path"
+			value="${autopdtmp}/autopd/core.sdff" />
+		<copy
+			file="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/jextract-template.sh"
+			tofile="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/jextract-filled.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="jextract.path"
+					value="${was.root}/java/jre/bin/jextract" />
+				<filter token="core.sdff" value="${core.sdff.path}" />
+				<filter token="core.path" value="${core.file.path}" />
+			</filterset>
+		</copy>
+
+		<available file="${core.file.path}" type="file"
+			property="core.file.existing" />
+
+		<if isNotTrue="${core.file.existing}">
+			<autopdinput
+				message="The_core_file_input_by_user_doesnt_exist_and_continue_collection"
+				validargs="OK,Cancel" addproperty="do.cancel" />
+			<wsnlsecho key="The_core_file_input_by_user_doesnt_exist"
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				message="The core file input by user does not exist" id="2602"
+				level="error" component="was-crahs-collect-core-hp" />
+		</if>
+		<if isNotTrue="${core.file.existing}">
+			<condition property="do.abort.collect.hp.core">
+				<equals arg1="Cancel" arg2="${do.cancel}" />
+			</condition>
+		</if>
+		<if isNotTrue="${core.file.existing}">
+			<fail if="do.abort.collect.hp.core">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+		</if>
+
+		<if isTrue="${core.file.existing}">
+			<exec executable="sh"
+				dir="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell"
+				output="${autopd.echolog.instance}" append="true">
+				<arg
+					line=" -f ${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/jextract-filled.sh" />
+			</exec>
+		</if>
+-->		
+		<copy file="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/hp/hpjdk_mg.sh"
+			tofile="${autopdtmp}/autopd/crash/hp/hpjdk_mg.sh"
+			overwrite="true"/>
+			
+		<exec executable="sh"
+			dir="${autopdtmp}/autopd/crash/hp"
+			output="${autopd.echolog.instance}" append="true">
+			<arg line="hpjdk_mg.sh" />
+		</exec>
+
+	</target>
+
+	<target name="collect_hp_jdk_info"
+		description="run the hpjdk_mg.sh script" if="isHPUX">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_HP_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Crash Output for HP-UX..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+		
+		<copy file="${was.crash.collect.core.hp.bundle.basedir}/scripts/was/shell/hp/hpjdk_mg.sh"
+			tofile="${autopdtmp}/hpjdk_mg.sh"
+			overwrite="true"/>
+			
+		<exec executable="sh"
+			dir="${autopdtmp}"
+			output="${autopd.echolog.instance}" append="true">
+			<arg
+				line="hpjdk_mg.sh" />
+		</exec>
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}" prefix="autopdzip/hpjdk">
+				<include name="hpjdk_mg.out"/>
+			</zipfileset>
+			
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}">
+				<include name="**/packcore.tar.Z"/>
+				<include name="**/hs_err_pid*.log"/>
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- This target is used to collect core file and related output -->
+
+	<target name="collect_hp_was_core"
+		description="Collect was core problem" if="isHPUX">
+		
+<!--		
+		<trim_filename key="var.log.trimmed" filename="/var/log"
+			prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+--> 
+		<condition property="contains.was.jvm.workingdir">
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}"
+					arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}"
+					arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+<!--
+			<zipfileset file="${gdbtrace.out.path}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${core.sdff.path}"
+				prefix="autopdzip/autopd" />
+			<zipfileset file="${core.sdff.path}.hdr"
+				prefix="autopdzip/autopd" />
+--> 
+			<zipfileset dir="${autopdtmp}/autopd/crash/hp" prefix="${autopdProblem}" >
+<!--				<include name="packcore.tar.Z"/> --> 
+				<include name="hpjdk_mg.out" /> 
+			</zipfileset> 
+<!-- No need to collect /var/log/messages 			
+			<zipfileset dir="/var/log"
+				prefix="${autopdProblem}/${var.log.trimmed}">
+				<include name="messages" />
+			</zipfileset>
+--> 
+			<zipfileset dir="${was.enhanced.root}"
+				prefix="${autopdProblem}">
+				<include name="**/hs_err_pid*.log"/>
+			</zipfileset>
+		</zip>
+		<if isNotTrue="${contains.was.jvm.workingdir}">
+			<zip encoding="UTF8" destfile="${pmrfilename}"
+				update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}"
+					prefix="autopdzip/${jvm.working.path.trimmed}">
+					<include name="javacore*.*" />
+				</zipfileset>
+			</zip>
+		</if>
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${core.file.dir}" prefix="${autopdProblem}/Core" > 
+				<include name="${core.file.name}" /> 
+			</zipfileset> 
+		</zip> 
+<!--
+		<zipfileset file="${core.file.path}"
+			prefix="autopdzip/${core.file.dir.trimmed}" />
+--> 			
+	</target>
+</project>

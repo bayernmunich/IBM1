@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE symptomDatabase [
+
+<!ELEMENT symptomDatabase (runtime+)>
+<!ATTLIST symptomDatabase>
+
+<!ELEMENT runtime (symptom+ , solution+ , directive*)>
+<!ATTLIST runtime
+    id ID #REQUIRED
+    name CDATA #IMPLIED
+    symptomUrl CDATA #IMPLIED
+    localExternalFileLocation CDATA #IMPLIED>
+
+<!ELEMENT symptom (matchPattern+)>
+<!ATTLIST symptom
+    id ID #REQUIRED
+    description CDATA #IMPLIED
+    solutions IDREFS #REQUIRED>
+
+<!ELEMENT matchPattern EMPTY>
+<!ATTLIST matchPattern
+    name CDATA #IMPLIED
+    value CDATA #REQUIRED>
+
+<!ELEMENT solution EMPTY>
+<!ATTLIST solution
+    id ID #REQUIRED
+    description CDATA #IMPLIED
+    directives IDREFS #IMPLIED>
+
+<!ELEMENT directive EMPTY>
+<!ATTLIST directive
+    id ID #REQUIRED
+    description CDATA #IMPLIED
+    directiveString CDATA #REQUIRED>
+]>
+
+<symptomDatabase>
+    <runtime id="Runtime_0" name="" symptomUrl="" localExternalFileLocation="E:\symptomdb.xml">
+
+        <!-- Symptoms: -->
+        <symptom id="Symptom_001" description="" solutions="Solution_Normal">
+            <matchPattern name="" value="java.lang.NullPointerException"/>
+            <matchPattern name="" value="com.ibm.ws.activity.VUTrace.initialisation"/>
+        </symptom>
+        
+        
+        <symptom id="Symptom_002" description="" solutions="Solution_Normal">
+            <matchPattern name="" value="java.io.FileNotFoundException"/>
+            <matchPattern name="" value="com.ibm.ejs.jms.listener.AsyncMessageLog.readRequestLogFile"/>
+        </symptom>
+        
+        
+        <symptom id="Symptom_003" description="Security Directives" solutions="Solution_003">
+            <matchPattern name="" value="java.security.AccessControlException"/>
+            <matchPattern name="" value="java.security.AccessControlContext.checkPermission"/>
+            <matchPattern name="" value="java.security.AccessController.checkPermission"/>
+            <matchPattern name="" value="java.lang.SecurityManager.checkPermission"/>
+            <matchPattern name="" value="com.ibm.ws.security.core.SecurityManager.checkPermission "/>
+        </symptom>
+
+        <symptom id="Symptom_004" description="J2C Connection Manager Directives" solutions="Solution_004">
+            <matchPattern name="" value="com.ibm.websphere.ce.j2c.ConnectionWaitTimeoutException"/>
+            <matchPattern name="" value="com.ibm.ejs.j2c.ConnectionManager.allocateMCWrapper"/>
+        </symptom>
+
+        
+
+        <!-- Solutions: -->
+        <solution id="Solution_Normal" description="Normal Exception path : In most instances, this exception is considered to be part of the normal exception path." />
+        <solution id="Solution_002" description="Description" directives="Directive_001 Directive_002"/>
+        <solution id="Solution_003" description="Description" directives="Directive_003"/>
+        <solution id="Solution_004" description="J2C Conn Mgr" directives="Directive_004"/>
+
+        <!-- Directives: -->
+	  <directive id="Directive_001" description="This is a description of a directive" directiveString="Directive_1"/>
+	  <directive id="Directive_002" description="This is another Directive" directiveString="Directive_2a Directive_2b"/>
+	  <directive id="Directive_003" description="Directive for security" directiveString="ACE"/>
+          <directive id="Directive_004" description="Directive for J2C Conn Mgr" directiveString="MaxConnectionsReached"/>
+
+    </runtime>
+</symptomDatabase>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+  
+<!--============================-->
+<!-- EJB Deploy Batch Contributions     -->
+<!--============================-->
+   <extension
+         id="batch_extension"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="com.ibm.etools.ejbdeploy.batch.plugin.BatchExtension">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="EJBCommandExtension"
+         name="EJB Command Extension"
+         point="org.eclipse.jst.j2ee.EJBCommandExtension">
+      <command
+            key="DeleteEJBDeployedCodeCommand">
+         <run
+               class="com.ibm.etools.ejbdeploy.plugin.DeleteEJBDeployedCodeCommand">
+         </run>
+      </command>
+   </extension>
+   <extension
+         id="EJBDeployTest"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="com.ibm.etools.ejbdeploy.batch.impl.Test">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="problemmarker"
+         name="%DEPLOY_TASK_UI_"
+         point="org.eclipse.core.resources.markers">
+<!-- Problem markers must be a subtype of problemmarker to be displayed in the task view -->
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+   </extension>
+
+<!--============================-->
+<!-- EjbRdbMapping Validation Contributions-->
+<!--============================-->
+   <extension
+         id="MapValidation"
+         name="%MAP_VALIDATOR"
+         point="org.eclipse.wst.validation.validator">
+      <validator>
+         <enablement>
+		      <and>
+        		  <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="jst.java"/>
+			      <test property="org.eclipse.wst.common.project.facet.core.projectFacet" value="jst.ejb:2.1]"/>
+			  </and>
+		 </enablement> 
+         <projectNature
+               id="org.eclipse.wst.common.modulecore.ModuleCoreNature">
+         </projectNature>
+         <short
+               text="MAPs">
+         </short>
+         <run
+               class="com.ibm.etools.ejb.mapvalidator.MapValidation">
+         </run>
+         <helper
+               class="com.ibm.etools.validation.ejbmap.workbenchimpl.EJBMapHelper">
+         </helper>
+         <filter
+               objectClass="org.eclipse.core.resources.IFile"
+               nameFilter="Map.mapxmi">
+         </filter>
+         <filter
+               objectClass="org.eclipse.core.resources.IFile"
+               nameFilter="ejb-jar.xml">
+         </filter>
+         <filter
+               objectClass="org.eclipse.core.resources.IFile"
+               nameFilter="ibm-ejb-jar-bnd.xmi">
+         </filter>
+         <filter
+               objectClass="org.eclipse.core.resources.IFile"
+               nameFilter="*.dbm">
+         </filter>
+         <filter
+               objectClass="org.eclipse.core.resources.IFile"
+               nameFilter="MANIFEST.MF">
+         </filter>
+         <aggregateValidator
+               class="com.ibm.etools.ejb.mapvalidator.AttributeMapValidator">
+         </aggregateValidator>
+         <aggregateValidator
+               class="com.ibm.etools.ejb.mapvalidator.RelationshipMapValidator">
+         </aggregateValidator>
+         <aggregateValidator
+               class="com.ibm.etools.ejb.mapvalidator.AbstractMapValidator">
+         </aggregateValidator>
+         <aggregateValidator
+               class="com.ibm.etools.ejb.mapvalidator.SchemaValidator">
+         </aggregateValidator>
+         <aggregateValidator
+               class="com.ibm.etools.ejb.ejbqlvalidator.EJBQLValidator">
+         </aggregateValidator>
+      </validator>
+   </extension>
+   <extension id="EJBDeploy" name="EJB/RMIC Deployer" point="org.eclipse.jst.j2ee.DeployerExtension">
+   		<deployer
+        	deployer_class="com.ibm.etools.ejbdeploy.EJBDeployer">
+        	<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v85"/>
+        	<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v80"/>
+    	    <runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v70"/>
+        	<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v61"/>
+   			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v60"/>
+			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v61.portal"/>
+			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v60.portal"/>
+			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v7.v61.portal"/>
+			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v70.portal"/>
+			<runtime runtime_server_id="com.ibm.ws.ast.st.runtime.v80.portal"/>
+			<component component_type="jst.ear"/>
+       		<component component_type="jst.ejb"/>
+	
+        </deployer>
+	</extension>
+	<extension-point id="EJBDeployDictionaries" name="EJBDeployDictionaries"/>
+	<extension
+		id="com.ibm.etools.ejbdeploy.settingsHelper"
+		name="Deploy Settings Helper - Batch context"
+		point="org.eclipse.jem.util.uiContextSensitiveClass">
+ 		<uiContextSensitiveClass
+			key="deploySettingsHelper"
+			context="Headless"
+			className="com.ibm.etools.ejbdeploy.plugin.DeploySettingsHelper" />
+	</extension>
+
+	<!--extension
+         id="DeleteDeployCode"
+         name="DeleteDeployCodeExtension"
+         point="org.eclipse.jst.j2ee.ejb.DeleteDeployCode">
+      <deleteDeployCodeExt
+            id="com.ibm.etools.ejbdeploy.deleteDeployCode">
+         <run
+               class="com.ibm.etools.ejbdeploy.plugin.DeleteEJBDeployCodeMigrationHelper">
+         </run>
+      </deleteDeployCodeExt>
+	</extension-->
+
+</plugin>

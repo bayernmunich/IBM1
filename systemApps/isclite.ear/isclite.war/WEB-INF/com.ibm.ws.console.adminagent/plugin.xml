@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+<!--
+ * 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2007, 2009
+ * The source code for this program is not published or otherwise divested
+ * of its trade secrets, irrespective of what has been deposited with the
+ * U.S. Copyright Office.
+-->
+
+<plugin id="com.ibm.ws.console.adminagent"
+           name="adminagent"
+           version="1.0.0"
+           vendor-name="IBM Corp. - WebSphere Server Group"
+           embedded="true"
+           context-root="adminagent">
+
+	<requires>
+		<import plugin="com.ibm.ws.console.core" />
+	</requires>
+
+
+<!-- ============================================================================================ -->
+<!-- Admin Agent Panel Extensions                                                                 -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminagent.AdminAgent1" contextType="AdminAgent">
+        <categoryDefinition weight="20" id="managednodes.properties" parent="root" label="addprops.category.label.managednodes"/>
+        <categoryDefinition weight="30" id="serverinfrastructure.properties2" parent="root" label="addprops.category.label.serverinfrastructure"/>
+
+        <link
+              categoryId="managednodes.properties"
+              label="RegisteredNodes.displayName"
+              description="RegisteredNodes.withButtons.description"
+              actionURI="com.ibm.ws.console.adminagent.forwardCmd.do?forwardName=RegisteredNode.content.main&amp;sfname=registeredNode&amp;lastPage=AdminAgent.config.view">
+		  weight="10"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=AdminAgent.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+		  weight="20"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=services&amp;lastPage=AdminAgent.config.view">
+		  weight="30"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.customServices.displayName"
+              description="Server.customServices.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=CustomService.content.main&amp;sfname=customServices&amp;lastPage=AdminAgent.config.view">
+		  weight="40"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.services.ObjectRequestBroker.displayName"
+              description="Server.services.ObjectRequestBroker.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ObjectRequestBroker.config.view&amp;sfname=services&amp;lastPage=AdminAgent.config.view">
+		  weight="50"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ZosLocationService.displayName"
+              description="ZosLocationService.description"
+              actionURI="com.ibm.ws.console.zos.forwardCmd.do?forwardName=Daemon.config.view&amp;sfname=properties&#38;lastPage=AdminAgent.config.view">
+		  weight="55"
+		<compatibility>
+             <match key="com.ibm.websphere.cellType" value="(zoscell|zosbase)"/>
+          </compatibility>
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.TraceService.displayName"
+              description="ServerManagement.TraceService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=TraceService.config.view&amp;lastPage=AdminAgent.config.view">
+		<compatibility>
+            <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+			<match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+			<match key="com.ibm.websphere.baseProductMajorVersion" value="([7-9])"/>
+		</compatibility>
+		  weight="60"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="hpel.landing.page.labelName"
+              description="hpel.landing.page.description"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=HPEL.content.list&amp;lastPage=AdminAgent.config.view">
+          <compatibility>
+                 <match key="com.ibm.ws.isHPELEnabled" value="true"/>
+                 <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="([8,9,10])"/>
+          </compatibility>
+        </link>
+        
+        <link
+              categoryId="additional.properties"
+              label="ServerManagement.LoggingSpecification.displayName"
+              description="ServerManagement.LoggingSpecification.displayName"
+              actionURI="com.ibm.ws.console.probdetermination.forwardCmd.do?forwardName=LogHandlers.configspec.view&amp;lastPage=AdminAgent.config.view">
+		<compatibility>
+                 <match key="com.ibm.websphere.baseProductMajorVersion" value="[7-9]"/>
+                 <match key="com.ibm.ws.isHPELEnabled" value="false"/>
+		</compatibility>
+		  weight="70"
+        </link>
+
+	  <!-- end of additional properties -->
+
+        <link
+              categoryId="serverinfrastructure.properties2"
+              label="javaProcessDef.label.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.config.view&amp;sfname=processDefinitions&amp;lastPage=AdminAgent.config.view">
+		<compatibility>
+		  <match key="com.ibm.websphere.nodeOperatingSystem" value="(os400|aix|hpux|linux|solaris|windows)"/>
+		</compatibility>
+        </link>
+        <link
+              categoryId="serverinfrastructure.properties2"
+              label="javaProcessDef.label.displayName"
+              description="ProcessDef.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProcessDef.content.main&amp;sfname=processDefinitions&amp;lastPage=AdminAgent.config.view">
+		<compatibility>
+		  <match key="com.ibm.websphere.nodeOperatingSystem" value="(os390)"/>
+		</compatibility>
+        </link>
+        <link
+              categoryId="serverinfrastructure.properties2"
+              label="Server.serverInstance.displayName"
+              description="Server.serverInstance.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ServerInstance.config.view&amp;sfname=serverInstance&amp;lastPage=AdminAgent.config.view">
+            <compatibility>
+              <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </link>
+        <link
+              categoryId="serverinfrastructure.properties2"
+              label="InstalledSDKs.label"
+              description="InstalledSDKs.server.link.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=InstalledSDKs.server.content.main">
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.productInfo.displayName"
+              description="Server.productInfo.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ProductInfo.content.main&amp;lastPage=AdminAgent.config.view&amp;origin=AdminAgent.config.view&amp;ServerDetailForm=com.ibm.ws.console.adminagent.AdminAgentDetailForm"
+              perspective="runtime">
+        </link>
+
+    </linkSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.form">
+    <form id="AdminAgent.config.general.properties" contextType="AdminAgent">
+        <field
+              attributeName="shortName"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <field
+              attributeName="uniqueId"
+              perspective="config">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+            </compatibility>
+        </field >
+        <field 
+             attributeName="runIn64bitJVMMode"
+             perspective="config">
+            <compatibility>
+		  <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+		  <match key="com.ibm.websphere.baseProductVersion" value="((\d\d)|([7-9])|(6\.((\d\d)|[2-9]))|(6\.1\.[1-9])|(6\.1\.0\.((\d\d)|[4-9]))).*"/>
+            </compatibility>
+        </field >
+    </form>
+</extension>
+
+<!-- Detail Tabs -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminagent.detailTab1" contextType="AdminAgent">
+        <tab
+              label="tab.runtime"
+              contentURI="AdminAgent.runtime.tab.view">
+        </tab>
+        <tab
+              label="tab.configuration"
+              contentURI="AdminAgent.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Registered Node Panel Definitions                                                            -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminagent.RegisteredNode.action1" contextType="RegisteredNode">
+        <action
+              enablesFor="Collection"
+              label="JobManager.register.displayName"
+              actionURI="registeredNodeCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="JobManager.unregister.displayName"
+              actionURI="registeredNodeCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminagent.RegisteredNode.collectionItem1" contextType="RegisteredNode">
+      <item
+      	attributeName="name"
+            sortable="sort"
+            itemURI="registeredNodeCollection.do?EditAction=true"
+            label="RegisteredNodes.Name.displayName">
+      </item>
+	<item
+		attributeName="uniqueId"
+		sortable="sort"
+		itemURI=""
+		label="Server.uniqueId.displayName">
+	</item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminagent.RegisteredNode.detailItem1" contextType="RegisteredNode">
+        <tab
+              label="tab.configuration"
+              contentURI="RegisteredNode.config.view">
+        </tab>
+    </detailTab>
+</extension>
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="adminagent.RegisteredNode1" contextType="RegisteredNode">
+        <!-- BEGIN LIDB1891-8.6 -->
+        <link
+              categoryId="additional.properties"
+              label="NamedEndPoint.displayName"
+              description="EndPoint.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints&amp;lastPage=RegisteredNode.config.view"
+              summaryViewURI="NamedEndPoint.summary.view">
+		  weight="10"
+        </link>
+	  <!-- END LIDB1891-8.6 -->
+        <link
+              categoryId="additional.properties"
+              label="ThreadPools.displayName"
+              description="ThreadPools.description"
+              actionURI="com.ibm.ws.console.adminagent.forwardCmd.do?forwardName=ManagedNodeThreadPools.content.main&amp;sfname=services">
+		  weight="30"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="Server.adminService.displayName"
+              description="Server.adminService.description"
+              actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=AdminService.config.view&amp;sfname=adminService&amp;lastPage=RegisteredNode.config.view">
+		  weight="50"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="JobManager.displayName"
+              description="JobManager.withButtons.description"
+              actionURI="com.ibm.ws.console.adminagent.forwardCmd.do?forwardName=JManager.content.main&amp;sfname=jobManager&amp;lastPage=RegisteredNode.config.view">
+		  weight="60"
+        </link>
+        <link
+              categoryId="additional.properties"
+              label="RegisteredNodes.CustomProperties.displayName"
+              description="RegisteredNodes.CustomProperties.description"
+              actionURI="com.ibm.ws.console.adminagent.forwardCmd.do?forwardName=RegisteredNodeProperty.config.view&amp;sfname=properties&amp;lastPage=RegisteredNode.config.view">
+		  weight="70"
+        </link>
+    </linkSet>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- JManager Panel Definitions                                                                   -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminagent.JManager.action1" contextType="JManager">
+        <action
+              enablesFor="Collection"
+              label="JobManager.register.displayName"
+              actionURI="jManagerCollection.do"
+		  scope="Cell"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="JobManager.unregister.displayName"
+              actionURI="jManagerCollection.do"
+		  scope="Cell"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminagent.JManager.collectionItem1" contextType="JManager">
+	<item
+		attributeName="uuid"
+		sortable="sort"
+		itemURI="jManagerCollection.do?EditAction=true"
+		label="JobManager.Uuid.displayName">
+	</item>
+	<item
+		attributeName="url"
+		sortable="sort"
+		itemURI=""
+		label="JobManager.Url.displayName">
+	</item>
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminagent.JManager.detailItem1" contextType="JManager">
+        <tab
+              label="tab.configuration"
+              contentURI="JManager.config.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Register with Job Manager Panel Definitions                                                  -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminagent.RegisterJManager.detailItem1" contextType="RegisterJManager">
+        <tab
+              label="tab.configuration"
+              contentURI="RegisterJManager.config.tab.view">
+        </tab>
+    </detailTab>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Admin Agent Custom Property panel Definitions                                                -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminagent.AdminAgentProperty.collectionItem1" contextType="AdminAgentProperty">
+	<item
+		attributeName="name"
+		sortable="sort"
+		itemURI="adminAgentPropertyCollection.do?EditAction=true"
+		label="Property.name.displayName">
+	</item>
+	<item
+		attributeName="value"
+		sortable="sort"
+		itemURI=""
+		label="Property.value.displayName">
+	</item>
+
+    </collectionItem>
+</extension>
+<extension point="com.ibm.websphere.wsc.actionSet">
+    <actionSet id="adminagent.AdminAgentProperty.action1" contextType="AdminAgentProperty">
+        <action
+              enablesFor="Collection"
+              label="button.new"
+              actionURI="adminAgentPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+        <action
+              enablesFor="Collection"
+              label="button.delete"
+              actionURI="adminAgentPropertyCollection.do"
+              role="administrator,configurator">
+        </action>
+    </actionSet>
+</extension>
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="adminagent.AdminAgentProperty.detailItem1" contextType="AdminAgentProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="AdminAgentProperty.config.view">
+        </tab>
+    </detailTab>
+</extension>
+
+<!-- ============================================================================================ -->
+<!-- Node Property panel Definitions                                                              -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="registeredNode.RegisteredNodeProperty.detailItem1" contextType="RegisteredNodeProperty">
+        <tab
+              label="tab.configuration"
+              contentURI="RegisteredNodeProperty.config.view">
+        </tab>
+    </detailTab>
+</extension>
+<!-- Definition for generic custom properties widget -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="registeredNodeProperty.customProperty.collectionItem" contextType="registeredNodeProperty.customProperty">
+        <item
+              attributeName="name"
+              editable="true"
+              label="Property.name.displayName">
+        </item>
+        <item
+              attributeName="value"
+              editable="true"
+              label="Property.value.displayName">
+        </item>
+    </collectionItem>
+</extension>
+
+
+<!-- ============================================================================================ -->
+<!-- Managed Node Thread pool panel Definitions                                                   -->
+<!-- ============================================================================================ -->
+<extension point="com.ibm.websphere.wsc.collectionItem">
+    <collectionItem id="adminagent.ThreadPools.collectionItem1" contextType="ManagedNodeThreadPools">
+        <item
+              attributeName="name"
+              sortable="sort"
+              itemURI="managedNodeThreadPoolsCollection.do?EditAction=true"
+              label="ThreadPool.name.displayName">
+        </item>
+        <item
+              attributeName="description"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.description.displayName">
+        </item>
+        <item
+              attributeName="minimumSize"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.minimumSize.displayName">
+        </item>
+        <item
+              attributeName="maximumSize"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.maximumSize.displayName">
+        </item>
+        <!-- item
+              attributeName="inactivityTimeout"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.inactivityTimeout.displayName">
+        </item -->
+        <!-- item
+              attributeName="isGrowable"
+              sortable="sort"
+              itemURI=""
+              label="ThreadPool.isGrowable.displayName">
+        </item-->
+    </collectionItem>
+</extension>
+
+
+
+
+<!-- ============================================================================================ -->
+<!--                                 End of Definitions                                           -->
+<!-- ============================================================================================ -->
+
+</plugin>

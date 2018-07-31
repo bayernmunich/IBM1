@@ -1,0 +1,978 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Archive Utilities">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="was.shared.targets.basedir" file="${ant.file.Archive Utilities}" />
+	<dirname property="was.shared.targets.parentdir"
+	         file="${was.shared.targets.basedir}" />
+	<dirname property="was.shared.targets.bundle.basedir"
+	         file="${was.shared.targets.parentdir}" />
+
+	<!-- documentation target, only -->
+	<target name="internal-usage"
+	        description="This shared component contains the targets necessary to split the
+				archive into multiple pieces. The archive name is 'mangled' to match the
+				collection contents.">
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- BEGIN AIM SHARED COMBINED TARGETS ****************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- 1. ARCHIVE UTILITIES: COLLECT_WAS_COMMON *********************************** -->
+	<target name="collect_was_common"
+	        description="This target controls the collection activities common to the majority of the WebSphere Application
+		scripts.  Scripts should invoke this target first, then, if necessary, follow it with an invocation 
+		of their own target to add any script-unique files to the collection.&lt;br/gt;&lt;br/gt;
+		
+		Scripts that use this target should set the property 'infocollectProblemType' to the 
+		appropriate value before invoking this target."
+	        unless="wasnothere">
+
+		<wsnlsecho key="Time_To_Gather_Logs"
+		           bundle="autopdtoolstrings"
+		           message="Time to gather logs"
+		           id="2218"
+		           level="info"
+		           component="\scripts\was\was-collections.xml" />
+	
+		<if isTrue="${isZos}">
+			<mkdir dir="${autopdtmp}/autopd/logs" />
+			<mkdir dir="${autopdtmp}/autopd/options" />
+			<mkdir dir="${autopdtmp}/autopd/reports" />
+			<mkdir dir="${autopdtmp}/autopd/system" />
+			<mkdir dir="${autopdtmp}/autopd/joblogs" />
+			<mkdir dir="${autopdtmp}/autopd/noconvert" />
+			<antcall target="process_ebcdic_files" />
+			<antcall target="collect_zos_common" />
+			<antcall target="collect_ebcdic_ascii_files" />
+			<antcall target="collect_autopd_reports" />
+			<delete dir="${autopdtmp}/autopd/options" />
+			<delete dir="${autopdtmp}/autopd/reports" />
+			<delete dir="${autopdtmp}/autopd/logs" />
+			<delete dir="${autopdtmp}/autopd/system" />
+			<delete dir="${autopdtmp}/autopd/joblogs" />
+			<delete dir="${autopdtmp}/autopd/noconvert" />
+
+		</if>
+
+		<if isNotTrue="${isZos}">
+			<antcall target="collect_dist_common" />
+			<antcall target="collect_autopd_reports" />
+		</if>
+	</target>
+
+	<!-- 2. ARCHIVE UTILITIES: PROCESS_EBCDIC_FILES ********************************* -->
+	<target name="process_ebcdic_files"
+	        description="This target is z/OS specific. It processes EBCDIC files, using 
+			USS based shell scripts, transforming them to ASCII files iff 'isZos' is 'true'.
+		&lt;br/&gt;&lt;br/&gt;
+				Uses AIM Custom Tasks:&lt;br/&gt;
+				1. zosjoblogs"
+	        if="isZos">
+
+		<!-- job logs -->
+		<zosjoblogs appInstallRoot="${was.root}"
+		            jobShortNames="job.short.names"
+		            tempLogPath="temp.log.path"
+		            outputPath="output.path" />
+
+		<property environment="env" />
+		<exec executable="${bundle.basedir}/scripts/was/zos/zos.getjoblogs.rexx"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${output.path}"
+		      append="true">
+			<arg line="${temp.log.path}" />
+			<arg line="${job.short.names}" />
+		</exec>
+
+		<copy todir="${autopdtmp}/autopd/joblogs" flatten="true">
+			<fileset dir="./zos/joblogs" />
+		</copy>
+
+		<!-- transform the joblogs -->
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="zos.convertDir.sh" />
+			<arg line="${autopdtmp}/autopd/joblogs" />
+		</exec>
+
+		<!-- autopd log files -->
+		<copy todir="${autopdtmp}/autopd/logs" flatten="true">
+			<fileset dir="${loginstancedir}">
+				<include name="*.log" />
+			</fileset>
+		</copy>
+
+		<!-- transform the autopd logs -->
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="zos.convertDir.sh" />
+			<arg line="${autopdtmp}/autopd/logs" />
+		</exec>
+
+		<!-- network -->
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="zos.network.sh" />
+		</exec>
+
+		<copy todir="${autopdtmp}/autopd/system" flatten="true">
+			<fileset dir="./zos/OS" />
+		</copy>
+
+		<!-- system -->
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="zos.system.sh" />
+			<arg line="${was.root}" />
+		</exec>
+
+		<copy todir="${autopdtmp}/autopd/system" flatten="true">
+			<fileset dir="./zos/OS" />
+		</copy>
+
+		<!-- get any options files -->
+		<copy todir="${autopdtmp}/autopd/options" flatten="true">
+			<fileset dir="${was.enhanced.root}/config/cells">
+				<include name="**/*.jvm.options" />
+			</fileset>
+		</copy>
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/zos"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="zos.convertDir.sh" />
+			<arg line="${autopdtmp}/autopd/options" />
+		</exec>
+	</target>
+
+	<!-- 3. ARCHIVE UTILITIES: COLLECT_AUTOPD_REPORTS ******************************* -->
+	<target name="collect_autopd_reports"
+	        description="This target generates the autopd version, history, and analysis reports.
+		NOTE: This is here instead of in common-collections.xml because it is AutoPD specific.">
+
+		<property name="analysis.report.filename" value="autopd_analysis_report.html" />
+
+		<!-- NOTE: These should be moved to the proper targets, but can't be until any
+			target that references them is changed
+		-->
+		<if isNotTrue="${isZos}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+					<include name="historyReport.html" />
+					<include name="versionReport.html" />
+					<include name="levelreport.html" />
+					<include name="RequiredInfoFile.txt" />
+					<include name="AppProblemDescription.txt" />
+					<include name="TechnoteQualifier.txt" />
+					<include name="autopd-collection-environment-v2.xml" />
+
+				</zipfileset>
+				<zipfileset file="${topology.info.file}" prefix="${autopdProblem}" />
+			</zip>
+		</if>
+
+		<if isTrue="${isZos}">
+			<!-- process the analysis files -->
+			<copy todir="${autopdtmp}/autopd/reports" flatten="true">
+				<fileset dir="${autopdtmp}/autopd">
+					<include name="historyReport.html" />
+					<include name="versionReport.html" />
+					<include name="RequiredInfoFile.txt" />
+					<include name="AppProblemDescription.txt" />
+					<include name="*feedback.txt" />
+				</fileset>
+			</copy>
+
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+					<include name="levelreport.html" />
+				</zipfileset>
+			</zip>
+
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/zos"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="zos.convertDir.sh" />
+				<arg line="${autopdtmp}/autopd/reports" />
+			</exec>
+
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${autopdtmp}/autopd/reports"
+				            prefix="${autopdProblem}">
+					<include name="autopd_analysis_report.html.ascii" />
+					<include name="historyReport.html.ascii" />
+					<include name="versionReport.html.ascii" />
+					<include name="RequiredInfoFile.txt.ascii" />
+					<include name="AppProblemDescription.txt.ascii" />
+					<include name="*feedback.txt.ascii" />
+				</zipfileset>
+			</zip>
+		</if>
+	</target>
+
+	<!-- 4. ARCHIVE UTILITIES: COLLECT_ZOS_COMMON *********************************** -->
+	<target name="collect_zos_common"
+	        description="This target collects log tracing and other config information 
+			from z/OS that is not produced by JES iff 'isZos' is 'true'."
+	        unless="wasnothere"
+	        if="isZos">
+
+		<available file="${trace.log.file}"
+		           type="file"
+		           property="trace.log.file.available" />
+
+		<echo message="Collecting from z/OS" />
+
+		<!-- 1. trace.log -->
+		<if isTrue="${trace.log.file.available}">
+			<dirname property="trace.log.file.dir" file="${trace.log.file}" />
+			<trim_filename key="trace.log.file.dir.trimmed"
+			               filename="${trace.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="trace.log.file.name.prefix"
+			          file="${trace.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${trace.log.file.dir}"
+				            prefix="autopdzip/${trace.log.file.dir.trimmed}">
+					<include name="${trace.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+
+		<!-- 1. FFDC index and logs -->
+		<file_filter_by_latest key="ffdc.latest.file"
+		                       path="${was.enhanced.root}/logs/ffdc"
+		                       selector="${ServerName}_.[^g-zG-Z].*" />
+		<available file="${ffdc.latest.file}"
+		           type="file"
+		           property="ffdc.latest.file.available" />
+
+		<trim_filename key="ffdc.latest.file.trimmed"
+		               filename="${ffdc.latest.file}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+		<if isTrue="${ffdc.latest.file.available}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${ffdc.latest.file}"
+				            fullpath="autopdzip/${ffdc.latest.file.trimmed}" />
+			</zip>
+		</if>
+
+		<!-- 2. collect the wsadmin logs -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+				<include name="**/logs/**/wsadmin.*" />
+			</zipfileset>
+		</zip>
+
+		<!-- 3. collect the config files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+				<include name="**/config/cells/**/*.xml*" />
+			</zipfileset>
+		</zip>
+
+		<!-- 7. java cores -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}">
+				<include name="**/${java.core.regex}*" />
+				<include name="**/heapdump*" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- 5. ARCHIVE UTILITIES: COLLECT_EBCDIC_ASCII_FILES *************************** -->
+	<target name="collect_ebcdic_ascii_files"
+	        description="This target collects the ASCII files that were transformed from 
+			EBCDIC iff 'isZos' is 'true'."
+	        if="isZos">
+
+		<!-- zip up the options -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/options"
+			            prefix="autopdzip/autopd/options">
+				<include name="*.ascii" />
+			</zipfileset>
+		</zip>
+
+		<!-- zip up the logs -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/logs" prefix="autopdzip/autopd/logs">
+				<include name="*.ascii" />
+			</zipfileset>
+		</zip>
+
+		<!-- zip up the system -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/system" prefix="autopdzip/autopd/system">
+				<include name="*.ascii" />
+			</zipfileset>
+		</zip>
+
+		<!-- zip up the joblogs -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd/joblogs"
+			            prefix="autopdzip/autopd/joblogs">
+				<include name="*.ascii" />
+			</zipfileset>
+		</zip>
+
+	</target>
+
+	<!-- 6. ARCHIVE UTILITIES: COLLECT_DIST_COMMON ********************************** -->
+	<target name="collect_dist_common"
+	        description="This target is called on distributed systems to collect the 
+			configuration, properties, and meta-files files. The meta-files are the 
+			html/xml/properties files representing the middleware topology.&lt;br/&gt;
+			&lt;br/&gt;
+			TODO: This might be redundant when compared to the common-collections.xml
+			targets."
+	        unless="wasnothere">
+
+		<!-- get the log files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/logs" prefix="autopdzip/logs">
+				<include name="**/**" />
+			</zipfileset>
+		</zip>
+
+		<!-- XML config files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/config/cells/${CellName}"
+			            prefix="autopdzip/config">
+				<include name="**/*.xml" />
+			</zipfileset>
+		</zip>
+
+		<!-- properties files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}/properties"
+			            prefix="autopdzip/properties">
+				<include name="**/*" />
+			</zipfileset>
+		</zip>
+
+		<!-- collect the topology files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}" prefix="autopdzip/topology">
+				<include name="${was.topology}.xml" />
+				<include name="${was.topology}.html" />
+				<include name="${was.topology}.properties" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- 7. ARCHIVE UTILITIES: COLLECT_WAS_RECOVERY_COMMON ************************** -->
+	<target name="collect_was_recovery_common"
+	        description="This target is called if a recovery occurs due to an error. It 
+			collects the logs, trace, and other WebSphere files for the recovery archive.
+		&lt;br/&gt;&lt;br/&gt;
+		TODO: I am not sure why this is here. It is really a brute force collection of the
+			log files. It is a legacy target and it is a candidate for removal."
+	        unless="wasnothere">
+		
+		<available file="${trace.log.file}"
+		           type="file"
+		           property="trace.log.file.available" />
+		<available file="${systemout.log.file}"
+		           type="file"
+		           property="systemout.log.file.available" />
+		<available file="${systemerr.log.file}"
+		           type="file"
+		           property="systemerr.log.file.available" />
+		<available file="${native_stderr.log.file}"
+		           type="file"
+		           property="native_stderr.log.file.available" />
+		<available file="${native_stdout.log.file}"
+		           type="file"
+		           property="native_stdout.log.file.available" />
+
+		<if isTrue="${trace.log.file.available}">
+
+			<dirname property="trace.log.file.dir" file="${trace.log.file}" />
+			<trim_filename key="trace.log.file.dir.trimmed"
+			               filename="${trace.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="trace.log.file.name.prefix"
+			          file="${trace.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset dir="${trace.log.file.dir}"
+				            prefix="autopdzip/${trace.log.file.dir.trimmed}">
+					<include name="${trace.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isTrue="${systemout.log.file.available}">
+			<dirname property="systemout.log.file.dir" file="${systemout.log.file}" />
+			<trim_filename key="systemout.log.file.dir.trimmed"
+			               filename="${systemout.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="systemout.log.file.name.prefix"
+			          file="${systemout.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset dir="${systemout.log.file.dir}"
+				            prefix="autopdzip/${systemout.log.file.dir.trimmed}">
+					<include name="${systemout.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isTrue="${systemerr.log.file.available}">
+			<dirname property="systemerr.log.file.dir" file="${systemerr.log.file}" />
+			<trim_filename key="systemerr.log.file.dir.trimmed"
+			               filename="${systemerr.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="systemerr.log.file.name.prefix"
+			          file="${systemerr.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset dir="${systemerr.log.file.dir}"
+				            prefix="autopdzip/${systemerr.log.file.dir.trimmed}">
+					<include name="${systemerr.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isTrue="${native_stderr.log.file.available}">
+			<dirname property="native_stderr.log.file.dir"
+			         file="${native_stderr.log.file}" />
+			<trim_filename key="native_stderr.log.file.dir.trimmed"
+			               filename="${native_stderr.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="native_stderr.log.file.name.prefix"
+			          file="${native_stderr.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset dir="${native_stderr.log.file.dir}"
+				            prefix="autopdzip/${native_stderr.log.file.dir.trimmed}">
+					<include name="${native_stderr.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+		<if isTrue="${native_stdout.log.file.available}">
+
+			<dirname property="native_stdout.log.file.dir"
+			         file="${native_stdout.log.file}" />
+			<trim_filename key="native_stdout.log.file.dir.trimmed"
+			               filename="${native_stdout.log.file.dir}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<basename property="native_stdout.log.file.name.prefix"
+			          file="${native_stdout.log.file}"
+			          suffix=".log" />
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset dir="${native_stdout.log.file.dir}"
+				            prefix="autopdzip/${native_stdout.log.file.dir.trimmed}">
+					<include name="${native_stdout.log.file.name.prefix}*.log" />
+				</zipfileset>
+			</zip>
+		</if>
+
+
+		<file_filter_by_latest key="ffdc.latest.file"
+		                       path="${was.enhanced.root}/logs/ffdc"
+		                       selector="${ServerName}_.[^g-zG-Z].*" />
+		<available file="${ffdc.latest.file}"
+		           type="file"
+		           property="ffdc.latest.file.available" />
+
+		<trim_filename key="ffdc.latest.file.trimmed"
+		               filename="${ffdc.latest.file}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+
+		<if isTrue="${ffdc.latest.file.available}">
+			<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+				<zipfileset file="${ffdc.latest.file}"
+				            fullpath="autopdzip/${ffdc.latest.file.trimmed}" />
+			</zip>
+		</if>
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+				<exclude name="logs/${ServerName}/RasGUI/**/*" />
+				<exclude name="logs/${ServerName}/RasGUI" />
+				<exclude name="logs/${ServerName}/trace*.log" />
+				<exclude name="logs/${ServerName}/SystemOut*.log" />
+				<exclude name="logs/${ServerName}/SystemErr*.log" />
+				<exclude name="logs/${ServerName}/native_stderr*.log" />
+				<exclude name="logs/${ServerName}/native_stdout*.log" />
+				<exclude name="**/*.zip" />
+				<exclude name="**/*.jar" />
+				<include name="logs/${ServerName}" />
+				<include name="logs/ffdc/${ServerName}_exception.log" />
+			</zipfileset>
+
+
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+				<exclude name="config/**/*.ear" />
+				<include name="config/**/*" />
+			</zipfileset>
+
+
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+
+				<include name="logs/addNode.log" />
+				<include name="logs/removeNode.log" />
+				<include name="logs/nodeAgent.log" />
+			</zipfileset>
+		</zip>
+
+		<!-- Defect 25003 Remove levelreport -->
+		<!--
+		<if isNotTrue="${isOS400}">
+			<if isNotTrue="${isZos}">
+				<levelreporttask format="html"
+				                 filename="${autopdtmp}/autopd/levelreport.html" />
+			</if>
+		</if>
+		-->
+		<!--
+		<wsnlsecho key="Extract_Application_Server_Log_information"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Extracting Application Server log information"
+		           id="1076"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+
+		<wsnlsecho key="Timeout_value_for_problem_analysis_task"
+		           bundle="autopdtoolstrings"
+		           message="Timeout value for the problem analysis task: {0} milliseconds."
+		           replace="${infocollector.timeout}"
+		           id="2224"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+		           	
+		<infocollect problem="${infocollectProblemType}"
+		             patternFile="${was.shared.targets.bundle.basedir}/properties/SSEQTP/templates/pattern_template.xml"
+		             levelreport="${autopdtmp}/autopd/levelreport.html"
+		             autopdreport="${autopdtmp}/autopd/autopd_analysis_report.html"
+		             productname="${was.product.name}"
+		             productversion="${was.product.version}"
+		             autopdname="${autopd_name}"
+		             autopdversion="${autopd_version}"
+		             timeout="${infocollector.timeout}">
+			<autopdfileset filesetName="tracelog" filesetDir="${trace.log.file}" />
+		</infocollect>
+		-->
+		<property name="analysis.report.filename" value="autopd_analysis_report.html" />
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+				<include name="historyReport.html" />
+				<include name="versionReport.html" />
+				<include name="RequiredInfoFile.txt" />
+				<include name="AppProblemDescription.txt" />
+			</zipfileset>
+			<zipfileset file="${topology.info.file}" prefix="${autopdProblem}" />
+		</zip>
+
+		<merge_autopdlog destfile="${autopdlog}" sourcefile="${autopd.log.instance}" />
+		<merge_autopdlog destfile="${echolog}" sourcefile="${autopd.echolog.instance}" />
+
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- MULTI-ARCHIVE TARGETS ****************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- 8. ARCHIVE UTILITIES: ZIP_OOM_MUST_GATHER ********************************** -->
+	<target name="zip_OOM_Must_Gather"
+	        description="This target collects the native_stderr.log and javacores into a 
+			separate archive in order to reduce the archive size. Called from the 
+			'Out of Memory Problem' script.
+		&lt;br/&gt;&lt;br/&gt;
+				Uses AIM Custom Tasks:&lt;br/&gt;
+				1. collectorjarname&lt;br/&gt;
+				2. createregexp">
+
+		<condition property="has.mult.collections.oom">
+			<equals arg1="${multcollections}" arg2="true" />
+		</condition>
+
+		<if isTrue="${has.mult.collections.oom}">
+
+			<!-- 1. native stderr & javacores 1111111111111111111111 -->
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-jc-native" />
+
+			<!-- make a tmp dir under the logs dir -->
+			<mkdir dir="${jar.dir.name}/tmp" />
+
+			<!-- unjar the current jar file that was collected -->
+			<unzip src="${pmrfilename}" dest="${jar.dir.name}/tmp" />
+
+			<!-- set the permissions -->
+			<chmod dir="${jar.dir.name}/tmp" perm="ugo+rw" />
+
+			<createregexp prefix="javacore" regExp="java.core.regex" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/native_stderr.log" />
+					<include name="**/${java.core.regex}*" />
+					<include name="**/heapdump*" />
+				</zipfileset>
+			</zip>
+
+			<!-- 2. app logs, system out, system err 22222222222222222222222222222222 -->
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-systrc" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/System*.log" />
+					<include name="**/*trace*" />
+				</zipfileset>
+			</zip>
+
+			<!-- 3. heapdump 333333333333333333333333333333333 -->
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-heap" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/*heap*" />
+					<include name="**/*dump*" />
+					<include name="**/${perf.name}*.blg" />
+				</zipfileset>
+			</zip>
+
+			<antcall target="collect_was_memory_windows" />
+
+			<delete includeemptydirs="true">
+				<fileset dir="${jar.dir.name}/tmp" />
+			</delete>
+
+		</if>
+
+		<if isNotTrue="${has.mult.collections.oom}">
+			<property name="jar.file.name" value="${pmrfilename}" />
+			<antcall target="collect_was_memory_windows" />
+		</if>
+	</target>
+
+	<!-- 9. ARCHIVE UTILITIES: ZIP_HANG_MUST_GATHER ********************************** -->
+	<target name="zip_Hang_Must_Gather"
+	        description="This target collects the native_stderr.log and javacores into a 
+					separate archive in order to reduce the archive size. Called from the 
+					'Hang Problem' script.&lt;br/&gt;
+			&lt;br/&gt;
+			This target collects 2 seperate jar files containing the following:&lt;br/&gt;
+			1. javacores and application logs (systemErr, systemOut, native_stderr.log, etc)&lt;br/&gt;
+			2. all other files collected by the script.
+		&lt;br/&gt;&lt;br/&gt;
+						Uses AIM Custom Tasks:&lt;br/&gt;
+						1. collectorjarname&lt;br/&gt;
+						2. createregexp">
+
+		<condition property="has.mult.collections.hang">
+			<equals arg1="${multcollections}" arg2="true" />
+		</condition>
+
+		<if isTrue="${has.mult.collections.hang}">
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-jc-logs" />
+
+			<createregexp prefix="javacore" regExp="java.core.regex" />
+
+			<!-- make a tmp dir under the logs dir -->
+			<mkdir dir="${jar.dir.name}/tmp" />
+
+			<!-- unjar the current jar file that was collected -->
+			<unzip src="${pmrfilename}" dest="${jar.dir.name}/tmp" />
+
+			<!-- set the permissions -->
+			<chmod dir="${jar.dir.name}/tmp" perm="ugo+rw" />
+
+			<!-- javacores and application logs (systemErr, systemOut, native_stderr.log, etc) -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/autopd/*" />
+					<include name="**/logs/**/*.log" />
+					<include name="**/heapdump*" />
+					<include name="**/${java.core.regex}*" />
+				</zipfileset>
+			</zip>
+
+
+			<antcall target="collect_was_memory_windows" />
+
+			<delete includeemptydirs="true">
+				<fileset dir="${jar.dir.name}/tmp" />
+			</delete>
+		</if>
+
+		<if isNotTrue="${has.mult.collections.hang}">
+			<property name="jar.file.name" value="${pmrfilename}" />
+			<antcall target="collect_was_memory_windows" />
+		</if>
+	</target>
+
+	<!-- 10. ARCHIVE UTILITIES: ZIP_CRASH_MUST_GATHER ******************************* -->
+	<target name="zip_Crash_Must_Gather"
+	        description="This target collects various logs and trace files into a 
+			separate archive in order to reduce the archive size. Called from the 
+			'Crash Problem' script.&lt;br/&gt;
+			&lt;br/&gt;
+			This target creates 5 seperate files containing the following:&lt;br/&gt;
+				1. javacores, dbx output, native_stderr.log&lt;br/&gt;
+				2. core file and sdff file&lt;br/&gt;
+				3. output of the getlib.sh&lt;br/&gt;
+				4. application logs&lt;br/&gt;
+				5. all other files collected by the script
+		&lt;br/&gt;&lt;br/&gt;
+						Uses AIM Custom Tasks:&lt;br/&gt;
+						1. collectorjarname&lt;br/&gt;
+						2. createregexp">
+
+		<condition property="has.mult.collections.crash">
+			<equals arg1="${multcollections}" arg2="true" />
+		</condition>
+
+		<!-- 1. javacores, dbx, native_stderr.log -->
+		<if isTrue="${has.mult.collections.crash}">
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-jc-dbx-native_err" />
+
+			<!-- make a tmp dir under the logs dir -->
+			<mkdir dir="${jar.dir.name}/tmp" />
+
+			<!-- unjar the current jar file that was collected -->
+			<unzip src="${pmrfilename}" dest="${jar.dir.name}/tmp" />
+
+			<!-- set the permissions -->
+			<chmod dir="${jar.dir.name}/tmp" perm="ugo+rw" />
+
+			<createregexp prefix="javacore" regExp="java.core.regex" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/config/**" />
+					<exclude name="**/*back" />
+					<include name="**/native_stderr.log" />
+					<exclude name="**/${java.core.regex}*" />
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/heapdump*" />
+					<include name="**/*dbx*" />
+				</zipfileset>
+			</zip>
+
+			<!-- 2. core file and sdff file -->
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-core-sdff" />
+
+			<antcall target="collect_was_memory_windows" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/config/**" />
+					<exclude name="**/*back" />
+					<exclude name="**/*.xml*" />
+					<exclude name="**/heapdump*" />
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/${java.core.regex}*" />
+					<include name="**/*sdff*" />
+				</zipfileset>
+			</zip>
+
+			<delete includeemptydirs="true">
+				<fileset dir="${jar.dir.name}/tmp" />
+			</delete>
+		</if>
+
+		<if isNotTrue="${has.mult.collections.crash}">
+			<property name="jar.file.name" value="${pmrfilename}" />
+			<antcall target="collect_was_memory_windows" />
+		</if>
+	</target>
+
+	<!-- 11. ARCHIVE UTILITIES: ZIP_HIGH_CPU_MUST_GATHER **************************** -->
+	<target name="zip_High_CPU_Must_Gather"
+	        description="This target collects various logs and trace files into a 
+		separate archive in order to reduce the archive size. Called from the 
+		'High CPU Problem' script.&lt;br/&gt;
+		&lt;br/&gt;
+		This target creates 2 seperate files containing the following:&lt;br/&gt;
+		1. javacore, tprof data, dbx output and native_stderr.log&lt;br/&gt;
+		2. all other files collected by the script
+		&lt;br/&gt;&lt;br/&gt;
+						Uses AIM Custom Tasks:&lt;br/&gt;
+						1. collectorjarname&lt;br/&gt;
+						2. createregexp">
+
+		<condition property="has.mult.collections.cpu">
+			<equals arg1="${multcollections}" arg2="true" />
+		</condition>
+
+		<if isTrue="${has.mult.collections.cpu}">
+
+			<!-- 1. native stderr & javacores 1111111111111111111111 -->
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-jc-tprof" />
+
+			<!-- make a tmp dir under the logs dir -->
+			<mkdir dir="${jar.dir.name}/tmp" />
+
+			<!-- unjar the current jar file that was collected -->
+			<unzip src="${pmrfilename}" dest="${jar.dir.name}/tmp" />
+
+			<!-- set the permissions -->
+			<chmod dir="${jar.dir.name}/tmp" perm="ugo+rw" />
+
+			<createregexp prefix="javacore" regExp="java.core.regex" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<exclude name="**/config/**" />
+					<exclude name="**/*back" />
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+					<include name="**/native_stderr.log" />
+					<include name="**/${java.core.regex}*" />
+					<include name="**/heapdump*" />
+					<include name="**/*dbx*" />
+					<include name="**/*tprof*" />
+				</zipfileset>
+			</zip>
+
+			<antcall target="collect_was_memory_windows" />
+
+			<delete includeemptydirs="true">
+				<fileset dir="${jar.dir.name}/tmp" />
+			</delete>
+
+		</if>
+
+		<if isNotTrue="${has.mult.collections.cpu}">
+			<property name="jar.file.name" value="${pmrfilename}" />
+			<antcall target="collect_was_memory_windows" />
+		</if>
+	</target>
+
+	<!-- 12. ARCHIVE UTILITIES: ZIP_GENERAL_MUST_GATHER ***************************** -->
+	<target name="zip_General_Must_Gather"
+	        description="This target collects the various logs, trace, and other files
+			valuable to debugging a problem. Most of the other mustgathers will have some type of WAS trace (dynacache 
+		trace, session trace, etc).  2 seperate jar files containing:
+		the trace output and the server logs (SystemErr, SystemOut, native_stderr)
+		all other files collected by the script.
+		&lt;br/&gt;&lt;br/&gt;
+						Uses AIM Custom Tasks:&lt;br/&gt;
+						1. collectorjarname&lt;br/&gt;
+						2. createregexp">
+
+		<condition property="has.mult.collections.all">
+			<equals arg1="${multcollections}" arg2="true" />
+		</condition>
+
+		<if isTrue="${has.mult.collections.all}">
+			<collectorjarname jarDirName="jar.dir.name"
+			                  jarFileName="jar.file.name"
+			                  currentPmrName="${pmrfilename}"
+			                  suffix="-log_err_trc" />
+
+			<!-- make a tmp dir under the logs dir -->
+			<mkdir dir="${jar.dir.name}/tmp" />
+
+			<!-- unjar the current jar file that was collected -->
+			<unzip src="${pmrfilename}" dest="${jar.dir.name}/tmp" />
+
+			<!-- set the permissions -->
+			<chmod dir="${jar.dir.name}/tmp" perm="ugo+rw" />
+
+			<createregexp prefix="javacore" regExp="java.core.regex" />
+
+			<!-- create the jar with the javacores and application log files -->
+			<zip encoding="UTF8" destfile="${jar.file.name}" update="false">
+				<zipfileset dir="${jar.dir.name}/tmp">
+					<include name="**/*.log" />
+					<include name="**/*.trc" />
+					<include name="**/*.heap*" />
+					<include name="**/*.ascii" />
+					<include name="**/${java.core.regex}*" />
+					<exclude name="**/autopdinst*.log" />
+					<exclude name="**/autopdset*.log" />
+					<exclude name="**/echoinst*.log" />
+					<exclude name="**/core*.xml" />
+					<exclude name="**/*.zip" />
+					<exclude name="**/*.jar" />
+				</zipfileset>
+			</zip>
+
+			<antcall target="collect_was_memory_windows" />
+
+			<delete includeemptydirs="true">
+				<fileset dir="${jar.dir.name}/tmp" />
+			</delete>
+
+		</if>
+
+		<if isNotTrue="${has.mult.collections.all}">
+			<property name="jar.file.name" value="${pmrfilename}" />
+			<antcall target="collect_was_memory_windows" />
+		</if>
+	</target>
+	
+	<target name="zip_Technote_Qualifier" 
+		description="This targets checks to see if TechnoteQualifier.txt file exists 
+				and zips the file if it does. If it does not exist, it does not do anything" >
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true" >
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+							<include name="TechnoteQualifier.txt" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- END ARCHIVE UTILITIES ****************************************************** -->
+	<!-- **************************************************************************** -->
+</project>

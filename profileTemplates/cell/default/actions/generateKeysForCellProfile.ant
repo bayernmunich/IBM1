@@ -1,0 +1,300 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="generateKeysForCellProfile" default="generateKeysForCellProfile" basedir="."> 
+     
+    <taskdef name="wscmtlog" 
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/> 
+  
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+  	&importExternalLogs;
+    <target name="printKeyGenerationStart" 
+            description="Prints the beginning message."> 
+        <wscmtlog>Starting generateKeysForCellProfile ANT.</wscmtlog> 
+    </target> 
+
+    <target name="printKeyGenerationEnd" 
+            description="Prints the beginning message."> 
+        <wscmtlog>Ending generateKeysForCellProfile ANT.</wscmtlog> 
+    </target> 
+
+    <target name="setGenerateKeysForCellOptions" 
+            description="Prints the beginning message."> 
+        <wscmtlog>Setting up the command options</wscmtlog> 
+        <property name="baseOptions" value="-cellName ${cellName} -nodeName ${nodeName}"/>
+        
+        <condition property="defaultCertDN" value="${baseOptions} -defaultCertDN {${personalCertDN}}">
+                <and>
+	                <isset property="personalCertDN"/>
+		</and>
+        </condition>
+        <condition property="defaultCertDN" value="${baseOptions}">
+                <and>
+                <not>
+	                <isset property="personalCertDN"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="defaultCertValidityPeriod" value="${defaultCertDN} -defaultCertValidityPeriod {${personalCertValidityPeriod}}">
+                <and>
+	                <isset property="personalCertValidityPeriod"/>
+		</and>
+        </condition>
+        <condition property="defaultCertValidityPeriod" value="${defaultCertDN}">
+                <and>
+                <not>
+	                <isset property="personalCertValidityPeriod"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="rootCertValidityPeriod" value="${defaultCertValidityPeriod} -rootCertValidityPeriod {${signingCertValidityPeriod}}">
+                <and>
+	                <isset property="signingCertValidityPeriod"/>
+		</and>
+        </condition>
+        <condition property="rootCertValidityPeriod" value="${defaultCertValidityPeriod}">
+                <and>
+                <not>
+	                <isset property="signingCertValidityPeriod"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="rootCertDN" value="${rootCertValidityPeriod} -rootCertDN {${signingCertDN}}">
+                <and>
+	                <isset property="signingCertDN"/>
+		</and>
+        </condition>
+        <condition property="rootCertDN" value="${rootCertValidityPeriod}">
+                <and>
+                <not>
+	                <isset property="signingCertDN"/>
+		</not>
+                </and>
+        </condition>
+
+        <condition property="importDefaultCertKS" value="${rootCertDN} -importDefaultCertKS {${importPersonalCertKS}}">
+                <and>
+	                <isset property="importPersonalCertKS"/>
+		</and>
+        </condition>
+        <condition property="importDefaultCertKS" value="${rootCertDN}">
+                <and>
+                <not>
+	                <isset property="importPersonalCertKS"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="importDefaultCertKSType" value="${importDefaultCertKS} -importDefaultCertKSType {${importPersonalCertKSType}}">
+                <and>
+	                <isset property="importPersonalCertKSType"/>
+		</and>
+        </condition>
+        <condition property="importDefaultCertKSType" value="${importDefaultCertKS}">
+                <and>
+                <not>
+	                <isset property="importPersonalCertKSType"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="importDefaultCertKSPassword" value="${importDefaultCertKSType} -importDefaultCertKSPassword {${importPersonalCertKSPassword}}">
+                <and>
+	                <isset property="importPersonalCertKSPassword"/>
+		</and>
+        </condition>
+        <condition property="importDefaultCertKSPassword" value="${importDefaultCertKSType}">
+                <and>
+                <not>
+	                <isset property="importPersonalCertKSPassword"/>
+		</not>
+                </and>
+        </condition>
+   
+        <condition property="importDefaultCertAlias" value="${importDefaultCertKSPassword} -importDefaultCertAlias {${importPersonalCertKSAlias}}">
+                <and>
+	                <isset property="importPersonalCertKSAlias"/>
+		</and>
+        </condition>
+        <condition property="importDefaultCertAlias" value="${importDefaultCertKSPassword}">
+                <and>
+                <not>
+	                <isset property="importPersonalCertKSAlias"/>
+                </not>
+		</and>
+        </condition>
+        
+        <condition property="importRootCertKS" value="${importDefaultCertAlias} -importRootCertKS {${importSigningCertKS}}">
+                <and>
+	                <isset property="importSigningCertKS"/>
+		</and>
+        </condition>
+        <condition property="importRootCertKS" value="${importDefaultCertAlias}">
+                <and>
+                <not>
+	                <isset property="importSigningCertKS"/>
+                </not>
+		</and>
+        </condition>
+                
+        <condition property="importRootCertKSPassword" value="${importRootCertKS} -importRootCertKSPassword {${importSigningCertKSPassword}}">
+                <and>
+	                <isset property="importSigningCertKSPassword"/>
+		</and>
+        </condition>
+        <condition property="importRootCertKSPassword" value="${importRootCertKS}">
+                <and>
+		<not>
+	                <isset property="importSigningCertKSPassword"/>
+		</not>
+		</and>
+        </condition>
+
+        <condition property="importRootCertKSType" value="${importRootCertKSPassword} -importRootCertKSType {${importSigningCertKSType}}">
+                <and>
+	                <isset property="importSigningCertKSType"/>
+		</and>
+        </condition>
+        <condition property="importRootCertKSType" value="${importRootCertKSPassword}">
+                <and>
+		<not>
+	                <isset property="importSigningCertKSType"/>
+		</not>
+		</and>
+        </condition>
+        
+        <condition property="importRootCertAlias" value="${importRootCertKSType} -importRootCertAlias {${importSigningCertKSAlias}}">
+                <and>
+	                <isset property="importSigningCertKSAlias"/>
+		</and>
+        </condition>
+        <condition property="importRootCertAlias" value="${importRootCertKSType}">
+                <and>
+		<not>
+	                <isset property="importSigningCertKSAlias"/>
+		</not>
+		</and>
+        </condition>
+        
+        <condition property="genCellKeysOptions" value="${importRootCertAlias} -keyStorePassword {${keyStorePassword}}">
+                <and>
+	                <isset property="keyStorePassword"/>
+		</and>
+        </condition>
+        <condition property="genCellKeysOptions" value="${importRootCertAlias}">
+                <and>
+                <not>
+	                <isset property="keyStorePassword"/>
+		</not>
+                </and>
+        </condition>
+        
+    </target> 
+
+    <target name="detectCurrentOSFamily" 
+            description="Detects the current OS family (UNIX or Windows)"> 
+        <wscmtlog>here</wscmtlog> 
+        <!-- OS/400 setting must come before the unix setting -->
+        <condition property="currentOSFamily" value="os/400">
+            <equals arg1="${os.name}" arg2="OS/400"/>
+        </condition>
+        
+        <condition property="currentOSFamily" value="windows"> 
+            <os family="windows"/> 
+        </condition> 
+         
+        <condition property="currentOSFamily" value="unix">             
+            <os family="unix"/> 
+        </condition> 
+         
+        <wscmtlog>Detected current OS family to be: ${currentOSFamily}</wscmtlog> 
+    </target> 
+
+		<target name="checkIfDmgrProfileExists" 
+	    description="check if the dmgr profile path exists">
+       <wscmtlog>start of check</wscmtlog>
+       <condition property="dmgr.profile.exists" value ="true"> 
+        
+            <available file="${dmgrProfilePath}" type="dir"/>
+       </condition>
+       <wscmtlog>end of check</wscmtlog>
+    </target>
+
+    <target name="runPrepareKeysForCellProfileForDmgr" if="nodeProfilePath" 
+            description="Runs the prepareKeysForCellProfile task on the dmgr."> 
+             
+        <wscmtlog>Setting the security settings in the default security template, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log</wscmtlog>
+        <wscmtlog>${templatePath}</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->            
+        <wsadmin conntype="none"
+                  lang="jacl"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${cellName}"
+                  localNode="${nodeName}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+                  <command value="$AdminTask prepareKeysForCellProfile {-dmgrProfileRoot {${profilePath}} -nodeProfileRoot {${nodeProfilePath}}  ${genCellKeysOptions}}"/>
+          </wsadmin> 
+        <antcall target="importLogsToMain" >
+           <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log" />
+           <param name="description" value="Setting the security settings in the default security template" />
+           <param name="precondition" value="foetrue" />
+         </antcall>	           
+        <wscmtlog>finished executing wsadmin</wscmtlog>
+    </target> 
+
+
+    <target name="runPrepareKeysForCellProfileForNode" if="dmgr.profile.exists" 
+            description="Runs the prepareKeysForCellProfile task on the node."> 
+             
+        <wscmtlog>Setting the security settings in the default security template, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log</wscmtlog>
+        <wscmtlog>${templatePath}</wscmtlog>
+        <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->            
+        	<wsadmin conntype="none"
+                  lang="jacl"
+                  failonerror="false"
+                  returnproperty="rcProperty"
+                  tracefile="${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log"
+                  wasHome="${WAS_HOME}"
+                  wasInstallRoot="${WAS_HOME}"
+                  wasRepositoryRoot="${profilePath}/config"
+                  userInstallRoot="${profilePath}"
+                  localCell="${cellName}"
+                  localNode="${nodeName}"
+                  wsadminProps="${profilePath}/properties/wsadmin.properties"
+                  ipcFilename="${profilePath}/temp/wsadmin"
+                  >
+                  <command value="$AdminTask prepareKeysForCellProfile {-dmgrProfileRoot {${dmgrProfilePath}} -nodeProfileRoot {${profilePath}}  ${genCellKeysOptions}}"/>  
+                  <command value="$$AdminConfig save"/>
+          </wsadmin> 
+         <antcall target="importLogsToMain" >
+           <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/keyGeneration.log" />
+           <param name="description" value="Setting the security settings in the default security template" />
+           <param name="precondition" value="foetrue" />
+         </antcall>	          
+          <wscmtlog>finished executing wsadmin</wscmtlog>
+    </target> 
+ 
+    <target name="generateKeysForCellProfile"
+        description="Starts the tasks."           
+        depends="printKeyGenerationStart,
+                 detectCurrentOSFamily,
+                 setGenerateKeysForCellOptions,
+                 checkIfDmgrProfileExists,
+                 runPrepareKeysForCellProfileForNode,
+                 runPrepareKeysForCellProfileForDmgr,
+                 printKeyGenerationEnd">
+    </target>
+
+</project>
+

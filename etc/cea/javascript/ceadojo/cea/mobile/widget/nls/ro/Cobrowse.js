@@ -1,0 +1,1 @@
+({"COLLABORATION_WINDOW":"Fereastra Colaborare","SHOW_COLLABORATION_WINDOW":"Arată fereastra Colaborare","COBROWSE":"Co-răsfoire"})

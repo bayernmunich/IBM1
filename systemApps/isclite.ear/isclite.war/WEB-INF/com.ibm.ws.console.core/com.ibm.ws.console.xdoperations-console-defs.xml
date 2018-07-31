@@ -1,0 +1,1775 @@
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+       "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+	<!-- 
+	 !	Bug 9833: need to make the tile definitions available so we can manually set the correct
+	 !	breadcrumbs.
+	 -->
+	<definition name="xdoperations.main" path="/com.ibm.ws.console.xdoperations/xdOperationsTabs.jsp">
+		<put name="defaultSelectedTab" value="nav.reporting" />
+		<put name="retrieverFrameId" value="ops_message_frame_chart" />
+		<putList name="tabList">
+			<item value="nav.dashboard:operations.dashboard.main:dashboard.xdoperations.main.extends:DashboardOperations " link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.app.summary:operations.app.summary.main:app.xdoperations.main.extends:ApplicationSummaryOperations" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.dt.summary:operations.dt.summary.main:dt.xdoperations.main.extends:DeploymentTargetSummaryOperations" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.sp.summary:operations.sp.summary.main:sp.xdoperations.main.extends:ServicePolicySummaryOperations" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.xd.summmary:operations.xd.summary.main:extended.deployment.xdoperations.main.extends:XDOperations" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.reporting:xdoperations.chart.main:xdoperations.main:XDOperations" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+
+	<definition name="dashboard.xdoperations.main.extends" extends="xdoperations.main">
+		<put name="defaultSelectedTab" value="nav.dashboard" />
+	</definition>
+
+	<definition name="app.xdoperations.main.extends" extends="xdoperations.main">
+		<put name="contextType" value="ApplicationSummaryOperations" />
+		<put name="defaultSelectedTab" value="nav.app.summary" />
+	</definition>
+
+	<definition name="dt.xdoperations.main.extends" extends="xdoperations.main">
+		<put name="contextType" value="DeploymentTargetSummaryOperations" />
+		<put name="defaultSelectedTab" value="nav.dt.summary" />
+	</definition>
+
+	<definition name="sp.xdoperations.main.extends" extends="xdoperations.main">
+		<put name="contextType" value="ServicePolicySummaryOperations" />
+		<put name="defaultSelectedTab" value="nav.sp.summary" />
+	</definition>
+	
+	<definition name="extended.deployment.xdoperations.main.extends" extends="xdoperations.main">
+		<put name="defaultSelectedTab" value="nav.xd.summmary" />
+	</definition>
+	
+	<definition name="xdoperations.chart.main" path="/secure/layouts/vboxLayout.jsp">
+		<putList name="list">
+			<add value="xdoperations.chart.prefs" />
+			<add value="xdoperations.chart.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Reports tab, Operational status messages -->
+	<definition name="operations.chart.status.messages" path="/com.ibm.ws.console.xdoperations/messageLayout.jsp">
+		<put name="messageLegend" value="messages.operation.alerts" />
+		<put name="loading" value="loading" />
+		<put name="alertDivId" value="ops_message_div_chart" />
+		<put name="statusCellId" value="msg_status_chart" />
+		<put name="retrieverFrameId" value="ops_message_frame_chart" />
+	</definition>
+	
+	<definition name="operations.operational.status.messages" path="/com.ibm.ws.console.xdoperations/messageLayout.jsp">
+		<put name="messageLegend" value="messages.operation.alerts" />
+		<put name="loading" value="loading" />
+		<put name="alertDivId" value="ops_message_div" />
+		<put name="statusCellId" value="msg_status" />
+		<put name="retrieverFrameId" value="ops_message_frame" />
+	</definition>
+	
+	<definition name="operations.operational.status.message.retrival" path="/com.ibm.ws.console.xdoperations/messageRetriever.jsp"></definition>
+	
+	<definition name="xdoperations.chart.tabs" path="/com.ibm.ws.console.xdoperations/collectionTabsLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.chart.ChartTabsController">
+		<put name="contextType" value="XDOperations" />
+		<put name="formAction" value="ChartCollection.do" />
+		<put name="formName" value="ChartCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.ChartCollectionForm" />
+		<put name="iterationName" value="ChartCollectionForm" />
+		<put name="selectUri" value="DisplayChartDetail.do" />
+		<put name="detailFormAction" value="ChartDetail.do" />
+		<put name="detailFormName" value="ChartDetailForm" />
+		<put name="detailFormType" value="com.ibm.ws.console.xdoperations.chart.ChartDetailForm" />
+		<put name="instanceDetails" value="chartGroup"/>
+	</definition>
+	
+	<definition name="xdoperations.chart.prefs" path="/com.ibm.ws.console.xdoperations/preferences.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.prefs.PreferencesController">
+		<put name="formAction" value="PreferencesDetail.do" />
+		<put name="formName" value="PreferencesDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.prefs.PreferencesDetailForm" />
+		<put name="showButtons" value="yes" />
+		<put name="showOkButton" value="yes" />
+		<put name="showApplyButton" value="no" />
+		<put name="showCancelButton" value="no" />
+		<put name="showResetButton" value="yes" />
+		<put name="instanceDetails" value="name"/>
+	</definition>
+	
+	<!-- 
+		! Core group operations tile definitions
+		!
+	-->
+	<definition name="operations.coregroup.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="CoreGroupOperations.paging.extend" />
+			<add value="CoreGroupOperations.quicksearch.extend" />
+			<add value="CoreGroupOperations.collection.table.custom.filter.extend" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreGroupOperations.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="CoreGroupOperationsCollection.do?ToggleViewAction=false" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formAction" value="CoreGroupOperationsCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<putList name="searchList">
+			<add value="ClusterMember.memberName.displayName:name" />
+			<add value="scope.node.name:nodeName" />
+			<add value="resource.stability.label:stability" />
+			<add value="ops.coregroup.detail.currentview.column:currentView" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreGroupOperations.paging.extend" extends="operations.generic.paging">
+		<put name="displayLabelKey" value="nodes.label" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formAction" value="CoreGroupOperationsCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, Node subtab -->
+	<definition name="CoreGroupOperations.collection.table.custom.filter.extend" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationProperty" value="subsetList" />
+		<put name="contextType" value="CoreGroupOperations" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="iterationName" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formAction" value="CoreGroupOperationsCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.CoreGroupOperationsCollectionForm" />
+	    <!-- begin work around for base CMVC defect 414934 -->
+	    <!-- <put name="parent" value="com.ibm.ws.console.highavailabilitymgmt.forwardCmd.do?forwardName=CoreGroupReadOnly.config.view" /> -->
+        <put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=CoreGroupReadOnly.config.view"/>
+        <!-- end work around for base CMVC defect 414934 -->
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="statusType" value="unknown" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="htmlFilter" value="false" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/CoreGroupOperationsCollectionForm/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/CoreGroupOperationsCollectionForm/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!-- End Core group detail tile definitions -->
+	
+	<!-- 
+	 ! Application operations tile definitions
+	 !
+	-->
+	<definition name="operations.application.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.applications.detail.attributes" />
+			<add value="operations.applications.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Application detail, Operations tab, resource details -->
+	<definition name="operations.applications.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp">
+		<put name="includeTD" value="false" />
+	</definition>
+	
+	<!-- Application detail, Operations tab, tab layout -->
+	<definition name="operations.applications.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="ApplicationOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="ApplicationDeployment" />
+		<putList name="list">
+			<item value="ops.requestmanagement.label:operations.applications.requestmanagement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.applicationplacement.label:operations.applications.placement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.applications.taskmangement.ext" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- Application detail, Operations tab, Active tasks tab -->
+	<definition name="operations.applications.taskmangement.ext" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationTasksController">
+		<put name="helpTopic" value="XDOperations.application.operations.tasks" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsapp.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsapp.extend" />
+			<add value="taskmanagement.collection.table.extend.opsapp.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for application operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsapp.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ApplicationOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.ApplicationDeploymentRuntimeTaskCollectionForm" />
+	</definition>
+	
+	<!-- Quick search definition for application operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsapp.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="ApplicationOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ApplicationOperationTaskCollection.do" />
+	</definition>
+	
+	<!-- Collection table definition for application operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsapp.extend" extends="taskmanagement.collection.table.extend"
+		path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationDeploymentRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ApplicationOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=ApplicationDeployment.config.view&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Application detail, Operations tab, Request management tab -->
+	<definition name="operations.applications.requestmanagement" extends="custom.style.vbox.main">
+		<put name="helpTopic" value="XDOperations.application.operations.request" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.applications.requestmanagement.odr" />
+			<add value="operations.applications.requestmanagement.sp" />
+			<add value="operations.applications.requestmanagement.deploymenttarget" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.odr.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationsRequestManagementODRController">
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.sp.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationsRequestManagementSPController">
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.deploymenttarget" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.deploymenttarget" />
+		<put name="desc" value="ops.requestmangagement.deploymenttarget.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.deploymenttarget.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.appdeployment.forwardCmd.do?forwardName=ApplicationDeployment.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.applications.requestmanagement.deploymenttarget.detail"
+		path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationsRequestManagementDeploymentTargetController">
+		<put name="desc" value="ops.requestmangagement.deploymenttarget.desc" />
+	</definition>
+	
+	<!--  Application detail, Operations tab, Application placement tab -->
+	<definition name="operations.applications.placement" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationPlacementController">
+		<put name="helpTopic" value="XDOperations.application.operations.placement" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="contextType" value="ApplicationDeploymentOperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.app.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.app.placement.quicksearch" extends="quicksearch.main">
+		<put name="selectUri" value="OperationsCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="OperationsCollectionForm" />
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<putList name="searchList">
+			<add value="server.label:serverName" />
+			<add value="scope.node.name:nodeName" />
+			<add value="scope.clstr.name:clusterName"/>
+		</putList>
+	</definition>
+	
+	<definition name="ops.app.placement.collection.table" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationName" value="OperationsCollectionForm" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=ApplicationDeployment.config.view&#38;customDefaultSelectedTab=ops.applicationplacement.label" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown" />
+		<put name="htmlFilter" value="false" />
+		<put name="isSubTab" value="true" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ApplicationDeploymentOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ApplicationDeploymentOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	<definition name="ops.apps.placement.collection.buttons" extends="buttons.panel">
+		<put name="buttonCount" value="0" />
+		<put name="definitionName" value="ops.apps.placement.collection.buttons" />
+		<put name="includeForm" value="no" />
+		<putList name="actionList"></putList>
+	</definition>
+	
+	<!-- 
+	 ! Middleware Application operations tile definitions
+	 !
+	-->
+	<definition name="operations.middlewareapplication.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.applications.detail.attributes" />
+			<add value="operations.middlewareapplications.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Middleware Application detail, Operations tab, tab layout -->
+	<definition name="operations.middlewareapplications.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="MiddlewareApplicationOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="MiddlewareApps" />
+		<putList name="list">
+			<item value="ops.requestmanagement.label:operations.middlewareapplications.requestmanagement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.applicationplacement.label:operations.middlewareapps.placement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.middlewareapplications.taskmangement.ext" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- Middleware Application detail, Operations tab, Active tasks tab -->
+	<definition name="operations.middlewareapplications.taskmangement.ext" extends="operations.applications.taskmangement.ext"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationOperationTasksController">
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsmiddlewareapp.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsmiddlewareapp.extend" />
+			<add value="taskmanagement.collection.table.extend.opsmiddlewareapp.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for middleware application operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsmiddlewareapp.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareApplicationOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.MiddlewareAppsRuntimeTaskCollectionForm" />
+	</definition>
+	
+	<!-- Quick search definition for middleware application operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsmiddlewareapp.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="MiddlewareApplicationOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareApplicationOperationTaskCollection.do" />
+	</definition>
+	
+	<!-- Collection table definition for middleware application operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsmiddlewareapp.extend" extends="taskmanagement.collection.table.extend"
+		path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareAppsRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareApplicationOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.middlewareapps.forwardCmd.do?forwardName=MiddlewareApps.detail.view&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Middleware Application detail, Operations tab, Request management tab -->
+	<definition name="operations.middlewareapplications.requestmanagement" extends="operations.applications.requestmanagement">
+		<putList name="list">
+			<add value="operations.middlewareapplications.requestmanagement.odr" />
+			<add value="operations.middlewareapplications.requestmanagement.sp" />
+			<add value="operations.middlewareapplications.requestmanagement.deploymenttarget" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.middlewareapplications.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareapps.forwardCmd.do?forwardName=MiddlewareApps.detail.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.middlewareapplications.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareapps.forwardCmd.do?forwardName=MiddlewareApps.detail.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.middlewareapplications.requestmanagement.deploymenttarget" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.deploymenttarget" />
+		<put name="desc" value="ops.requestmangagement.deploymenttarget.desc" />
+		<put name="tiledefinition" value="operations.applications.requestmanagement.deploymenttarget.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareapps.forwardCmd.do?forwardName=MiddlewareApps.detail.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!--  Middleware Application detail, Operations tab, Application placement tab -->
+	<definition name="operations.middlewareapps.placement" extends="operations.applications.placement"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationPlacementController">
+		<put name="contextType" value="MiddlewareAppsOperations" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.mwapp.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.mwapp.placement.collection.table" extends="ops.app.placement.collection.table">
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=MiddlewareApps.detail.view&#38;customDefaultSelectedTab=ops.applicationplacement.label" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/MiddlewareAppsOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/MiddlewareAppsOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!-- 
+		! Application Server (Not middelware view) operations tile definitions
+		!
+	-->
+	<definition name="operations.server.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.server.detail.attributes" />
+			<add value="operations.server.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Server detail, Operations tab, resource details -->
+	<definition name="operations.server.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp">
+		<put name="includeTD" value="false" />
+	</definition>
+	
+	<!-- Server detail, Operations tab, tab layout -->
+	<definition name="operations.server.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="ServerOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="ApplicationServer" />
+		<putList name="list">
+			<item value="ops.requestmanagement.label:operations.server.requestmanagement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.colocation.label:operations.server.placement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.server.taskmangement.ext" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- Server detail, Operations tab, Active tasks tab -->
+	<definition name="operations.server.taskmangement.ext" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationTasksController">
+		<put name="helpTopic" value="XDOperations.server.operations.tasks" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+        <put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsserver.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsserver.extend" />
+			<add value="taskmanagement.collection.table.extend.opsserver.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for server operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsserver.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ServerOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.ApplicationServerRuntimeTaskCollectionForm" />
+	</definition>
+	
+	<!-- Quick search definition for server operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsserver.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="ServerOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ServerOperationTaskCollection.do" />
+	</definition>
+	
+	<!-- Collection table definition for server operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsserver.extend" extends="taskmanagement.collection.table.extend"
+		path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="ApplicationServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="ServerOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Server detail, Operations tab, Request management tab -->
+	<definition name="operations.server.requestmanagement" extends="custom.style.vbox.main">
+		<put name="helpTopic" value="XDOperations.server.operations.request" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+        <put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.server.requestmanagement.odr" />
+			<add value="operations.server.requestmanagement.application" />
+			<add value="operations.server.requestmanagement.sp" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.odr.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationsRequestManagementODRController">
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.sp.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationsRequestManagementSPController">
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.application" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.application" />
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.application.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ApplicationServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.server.requestmanagement.application.detail"
+		path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationsRequestManagementApplicationController">
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+	</definition>
+	
+	<!-- Server detail, Operations tab, Server colocation tab -->
+	<definition name="operations.server.placement" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerColocationController">
+		<put name="helpTopic" value="XDOperations.server.operations.colocation" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="contextType" value="ApplicationServerOperations" />
+        <put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.server.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.server.placement.collection.table" extends="ops.app.placement.collection.table">
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=ApplicationServer.config.view&#38;customDefaultSelectedTab=ops.colocation.label" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ApplicationServerOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ApplicationServerOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	
+	
+	
+	
+	<!-- 
+     ! Middleware Server operations tile definitions
+     !
+     -->
+	<definition name="operations.middlewareserver.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.server.detail.attributes" />
+			<add value="operations.middlewareserver.detail.tabs" />			
+		</putList>
+	</definition>
+
+	<!-- Middleware Server detail, Operations tab, tab layout -->
+	<definition name="operations.middlewareserver.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="MiddlewareServerOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="MiddlewareServer"/>
+		<putList name="list">
+            <item value="ops.requestmanagement.label:operations.middlewareserver.requestmanagement" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.colocation.label:operations.mws.placement" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.middlewareserver.taskmangement.ext" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+		
+	<!-- Middleware Server detail, Operations tab, Active tasks tab -->
+	<definition name="operations.middlewareserver.taskmangement.ext" extends="operations.server.taskmangement.ext" 
+	    controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerOperationTasksController">
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsmiddlewareserver.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsmiddlewareserver.extend" />
+			<add value="taskmanagement.collection.table.extend.opsmiddlewareserver.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for middleware server operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsmiddlewareserver.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareServerOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.MiddlewareServerRuntimeTaskCollectionForm" />
+	</definition>
+
+	<!-- Quick search definition for middleware server operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsmiddlewareserver.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="MiddlewareServerOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareServerOperationTaskCollection.do" />
+	</definition>
+		
+	<!-- Collection table definition for middleware server operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsmiddlewareserver.extend" extends="taskmanagement.collection.table.extend" path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formName" value="MiddlewareServerRuntimeTaskCollectionForm" />
+		<put name="formAction" value="MiddlewareServerOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.config.view&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Middleware Server detail, Operations tab, Request management tab -->
+	<definition name="operations.middlewareserver.requestmanagement" extends="operations.server.requestmanagement">
+		<putList name="list">
+			<add value="operations.middlewareserver.requestmanagement.odr" />
+			<add value="operations.middlewareserver.requestmanagement.application" />
+			<add value="operations.middlewareserver.requestmanagement.sp" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.middlewareserver.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.middlewareserver.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+
+	<definition name="operations.middlewareserver.requestmanagement.application" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.application" />
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+		<put name="tiledefinition" value="operations.server.requestmanagement.application.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+
+	<!-- Server detail, Operations tab, Server colocation tab -->
+	<definition name="operations.mws.placement" extends="operations.server.placement"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ServerColocationController">
+		<put name="contextType" value="MiddlewareServerOperations" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.mws.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.mws.placement.collection.table" extends="ops.app.placement.collection.table">
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=MiddlewareServer.config.view&#38;customDefaultSelectedTab=ops.colocation.label" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/MiddlewareServerOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/MiddlewareServerOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!--
+	 ! Static Cluster operations tile definitions
+	 !
+	-->
+	<definition name="operations.cluster.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.cluster.detail.attributes" />
+			<add value="operations.cluster.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Static Cluster detail, Operations tab, resource details -->
+	<definition name="operations.cluster.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp">
+		<put name="includeTD" value="false" />
+	</definition>
+	
+	<!-- Static Cluster detail, Operations tab, tab layout -->
+	<definition name="operations.cluster.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="ClsuterOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="ServerCluster" />
+		<putList name="list">
+			<item value="ops.requestmanagement.label:operations.cluster.requestmanagement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.serverplacement.label:operations.cluster.placement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.staticcluster.taskmangement.ext" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- Static cluster detail, Operations tab, Active tasks tab -->
+	<definition name="operations.staticcluster.taskmangement.ext" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationTasksController">
+		<put name="helpTopic" value="XDOperations.dc.operations.tasks" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsstaticcluster.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsstaticcluster.extend" />
+			<add value="taskmanagement.collection.table.extend.opsstaticcluster.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for static cluster operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsstaticcluster.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="StaticClusterOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.ServerClusterRuntimeTaskCollectionForm" />
+	</definition>
+	
+	<!-- Quick search definition for static cluster operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsstaticcluster.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="StaticClusterOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="StaticClusterOperationTaskCollection.do" />
+	</definition>
+	
+	<!-- Collection table definition for static cluster operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsstaticcluster.extend" extends="taskmanagement.collection.table.extend"
+		path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="ServerClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="StaticClusterOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ServerCluster.config.view&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Static Cluster detail, Operations tab, Request management tab -->
+	<definition name="operations.cluster.requestmanagement" extends="custom.style.vbox.main">
+		<put name="helpTopic" value="XDOperations.dc.operations.request" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.cluster.requestmanagement.odr" />
+			<add value="operations.cluster.requestmanagement.application" />
+			<add value="operations.cluster.requestmanagement.sp" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ServerCluster.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.odr.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationsRequestManagementODRController">
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ServerCluster.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.sp.detail" path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationsRequestManagementSPController">
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.application" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.application" />
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.application.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.distmanagement.forwardCmd.do?forwardName=ServerCluster.config.view" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.cluster.requestmanagement.application.detail"
+		path="/com.ibm.ws.console.xdoperations/requestManagementPortletContent.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationsRequestManagementApplicationController">
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+	</definition>
+	
+	<!--  Cluster detail, Operations tab, Application placement tab -->
+	<definition name="operations.cluster.placement" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationPlacementController">
+		<put name="helpTopic" value="XDOperations.dc.operations.placement" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<put name="contextType" value="ServerClusterOperations" />
+		<put name="modifyCSS" value="true" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.cluster.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.cluster.placement.collection.table" extends="ops.app.placement.collection.table">
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=ServerCluster.config.view&#38;customDefaultSelectedTab=ops.serverplacement.label" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ServerClusterOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ServerClusterOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!-- 
+	 ! Dynamic Cluster operations tile definitions
+	 !
+	-->
+	<definition name="operations.dynamic.cluster.main" path="/secure/layouts/vboxLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationsController">
+		<putList name="list">
+			<add value="operations.operational.status.messages" />
+			<add value="operations.cluster.detail.attributes" />
+			<add value="operations.dynamic.cluster.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Dynamic Cluster detail, Operations tab, tab layout -->
+	<definition name="operations.dynamic.cluster.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="tabContainerName" value="DynamicClusterOperations" />
+		<put name="defaultSelectedTab" value="ops.requestmanagement.label" />
+		<put name="contextType" value="DynamicCluster" />
+		<putList name="list">
+			<item value="ops.requestmanagement.label:operations.dynamic.cluster.requestmanagement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.serverplacement.label:operations.dynamiccluster.placement" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.tasks.label:operations.dynamiccluster.taskmangement.ext" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- Dynamic cluster detail, Operations tab, Active tasks tab -->	
+	<definition name="operations.dynamiccluster.taskmangement.ext" extends="operations.staticcluster.taskmangement.ext"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ClusterOperationTasksController">
+		<putList name="list">
+			<add value="taskmanagement.collection.paging.extend.opsdynamiccluster.extend" />
+			<add value="taskmanagement.collection.quicksearch.extend.opsdynamiccluster.extend" />
+			<add value="taskmanagement.collection.table.extend.opsdynamiccluster.extend" />
+		</putList>
+	</definition>
+	
+	<!-- Paging definition for dynamic cluster operations task view -->
+	<definition name="taskmanagement.collection.paging.extend.opsdynamiccluster.extend" extends="operations.generic.paging">
+		<put name="collectionForm" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="DynamicClusterOperationTaskCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.DynamicClusterRuntimeTaskCollectionForm" />
+	</definition>
+	
+	<!-- Quick search definition for dynamic cluster operations task view -->
+	<definition name="taskmanagement.collection.quicksearch.extend.opsdynamiccluster.extend" extends="taskmanagement.collection.quicksearch.extend">
+		<put name="selectUri" value="DynamicClusterOperationTaskCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="DynamicClusterOperationTaskCollection.do" />
+	</definition>
+	
+	<!-- Collection table definition for dynamic cluster operations task view -->
+	<definition name="taskmanagement.collection.table.extend.opsdynamiccluster.extend" extends="taskmanagement.collection.table.extend"
+		path="/com.ibm.ws.console.xdoperations/taskMgmtCollectionTableLayout.jsp">
+		<put name="iterationName" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formName" value="DynamicClusterRuntimeTaskCollectionForm" />
+		<put name="formAction" value="DynamicClusterOperationTaskCollection.do" />
+		<put name="parent" value="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dynamiccluster.detail.main&#38;customDefaultSelectedTab=ops.tasks.label" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!-- Dynamic Cluster detail, Operations tab, Request management tab -->
+	<definition name="operations.dynamic.cluster.requestmanagement" extends="operations.cluster.requestmanagement">
+		<putList name="list">
+			<add value="operations.dynamic.cluster.requestmanagement.odr" />
+			<add value="operations.dynamic.cluster.requestmanagement.application" />
+			<add value="operations.dynamic.cluster.requestmanagement.sp" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.dynamic.cluster.requestmanagement.odr" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.odr" />
+		<put name="desc" value="ops.requestmangagement.odr.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.odr.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dynamiccluster.detail.main" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.dynamic.cluster.requestmanagement.sp" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.sp" />
+		<put name="desc" value="ops.requestmangagement.sp.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.sp.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dynamiccluster.detail.main" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<definition name="operations.dynamic.cluster.requestmanagement.application" path="/com.ibm.ws.console.xdcore/portletLayout.jsp">
+		<put name="label" value="ops.requestmangagement.application" />
+		<put name="desc" value="ops.requestmangagement.application.desc" />
+		<put name="tiledefinition" value="operations.cluster.requestmanagement.application.detail" />
+		<put name="refreshLink" value="com.ibm.ws.console.dynamiccluster.forwardCmd.do?forwardName=dynamiccluster.detail.main" />
+		<put name="isSubTab" value="true" />
+	</definition>
+	
+	<!--  Dynamic Cluster detail, Operations tab, Application placement tab -->
+	<definition name="operations.dynamiccluster.placement" extends="operations.cluster.placement"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ApplicationPlacementController">
+		<put name="contextType" value="DynamicClusterOperations" />
+		<putList name="list">
+			<add value="operations.generic.paging" />
+			<add value="ops.app.placement.quicksearch" />
+			<add value="ops.dynamiccluster.placement.collection.table" />
+		</putList>
+	</definition>
+	
+	<definition name="ops.dynamiccluster.placement.collection.table" extends="ops.app.placement.collection.table">
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dynamiccluster.detail.main&#38;customDefaultSelectedTab=ops.serverplacement.label" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/DynamicClusterOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/DynamicClusterOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!-- 
+		! ODR operations tile definitions
+		!
+	-->
+	<definition name="operations.odr.main" path="/secure/layouts/vboxLayout.jsp">
+		<putList name="list">
+			<add value="operations.odr.detail.attributes" />
+			<add value="operations.odr.requestmanagement" />
+		</putList>
+	</definition>
+	
+	<!-- ODR detail, Operations tab, resource details -->
+	<definition name="operations.odr.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.ODROperationsController">
+		<put name="includeTD" value="false" />
+	</definition>
+	
+	<!-- ODR detail, Operations tab, Request management tab -->
+	<definition name="operations.odr.requestmanagement" path="/secure/layouts/vboxLayout.jsp">
+		<putList name="list"></putList>
+	</definition>
+	
+	<!-- 
+		! Reports, Extended Deployment Summary tab
+		!
+	-->
+	<definition name="operations.xd.summary.main" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.summary.XDSummaryController">
+		<put name="breadcrumbTitle" value="nav.xd.summmary" />
+		<put name="breadcrumbTileDefinition" value="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends&#38;scopeChanged=true&#38;WSC=true" />
+		<putList name="list">
+			<!-- add value="operations.operational.status.messages" / -->
+			<add value="operations.xd.summary.detail.attributes" />
+			<add value="operations.xd.summary.detail.tabs" />
+		</putList>
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details -->
+	<definition name="operations.xd.summary.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp">
+		<put name="includeTD" value="false" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, tab Layout -->
+	<definition name="operations.xd.summary.detail.tabs" path="/com.ibm.ws.console.xdoperations/xdOperationsTabLayout.jsp">
+		<put name="hideDojoScripts" value="true" />
+		<put name="tabContainerName" value="XDSummary" />
+		<put name="defaultSelectedTab" value="odrs.label" />
+		<put name="contextType" value="XDOperations" />
+		<putList name="list">
+			<item value="odrs.label:ODRSummary.content.main" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="coregroups.label:CoreGroupSummary.content.main" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="autonomic.mgrs.label:CoreComponentSummary.content.main" link="" icon="" tooltip=""
+				classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodes.label:NodeSummary.content.main" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- BEGIN ODR Summary tile definitions -->
+	<definition name="ODRSummary.content.main" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionController">
+		<put name="contextType" value="ODRSummary" />
+		<put name="helpTopic" value="XDOperations.odrsummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<add value="ODRSummary.paging.extend" />
+			<add value="ODRSummary.quicksearch.extend" />
+			<add value="ODRSummary.collection.table.custom.filter.extend" />
+		</putList>
+	</definition>
+	
+	<definition name="ODRSummary.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="ODRSummaryCollection.do?ToggleViewAction=false" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formAction" value="ODRSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<putList name="searchList">
+			<add value="ops.summary.name:name" />
+			<add value="scope.cell.name:cellName" />
+			<add value="scope.node.name:nodeName" />
+			<add value="app.type.label:type" />
+			<add value="Node.status.displayName:status" />
+			<add value="metric.tp.name:statColumn0" />
+		</putList>
+	</definition>
+	
+	<definition name="ODRSummary.paging.extend" extends="operations.generic.paging">
+		<put name="displayLabelKey" value="odrs.label" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formAction" value="ODRSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, ODR subtab -->
+	<definition name="ODRSummary.collection.table.custom.filter.extend" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationProperty" value="subsetList" />
+		<put name="contextType" value="ODRSummary" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="iterationName" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formAction" value="ODRSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.ODRSummaryCollectionForm" />
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends&amp;customDefaultSelectedTab=odrs.label" />
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="statusType" value="unknown" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="htmlFilter" value="false" />
+		<put name="isSubTab" value="true" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ODRSummaryCollectionForm/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ODRSummaryCollectionForm/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	<!-- End ODR Summary tile definitions -->
+	
+	<!-- BEGIN core group Summary tile definitions -->
+	<definition name="CoreGroupSummary.content.main" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionController">
+		<put name="contextType" value="CoreGroupSummary" />
+		<put name="helpTopic" value="XDOperations.coregroupsummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<add value="CoreGroupSummary.paging.extend" />
+			<add value="CoreGroupSummary.quicksearch.extend" />
+			<add value="CoreGroupSummary.collection.table.custom.filter.extend" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreGroupSummary.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="CoreGroupSummaryCollection.do?ToggleViewAction=false" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formAction" value="CoreGroupSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<putList name="searchList">
+			<add value="ops.summary.name:name" />
+			<add value="Node.status.displayName:status" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreGroupSummary.paging.extend" extends="operations.generic.paging">
+		<put name="displayLabelKey" value="coregroups.label" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formAction" value="CoreGroupSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, CoreGroup subtab -->
+	<definition name="CoreGroupSummary.collection.table.custom.filter.extend" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationProperty" value="subsetList" />
+		<put name="contextType" value="CoreGroupSummary" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="iterationName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formAction" value="CoreGroupSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreGroupSummaryCollectionForm" />
+		<put name="parent"
+			value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends&amp;customDefaultSelectedTab=coregroups.label" />
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="statusType" value="unknown" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="htmlFilter" value="false" />
+		<put name="isSubTab" value="true" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/CoreGroupSummaryCollectionForm/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/CoreGroupSummaryCollectionForm/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	<!-- End Core group Summary tile definitions -->
+	
+	<!-- BEGIN core component Summary tile definitions -->
+	<definition name="CoreComponentSummary.content.main" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionController">
+		<put name="contextType" value="CoreComponentSummary" />
+		<put name="helpTopic" value="XDOperations.corecomponentsummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<add value="CoreComponentSummary.paging.extend" />
+			<add value="CoreComponentSummary.quicksearch.extend" />
+			<add value="CoreComponentSummary.collection.table.custom.filter.extend" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreComponentSummary.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="CoreComponentSummaryCollection.do?ToggleViewAction=false" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formAction" value="CoreComponentSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<putList name="searchList">
+			<add value="ops.summary.name:name" />
+			<add value="ops.corecomponent.scope:scope" />
+			<add value="Node.status.displayName:status" />
+			<add value="ops.corecomponent.current.location:currentLocation" />
+		</putList>
+	</definition>
+	
+	<definition name="CoreComponentSummary.paging.extend" extends="operations.generic.paging">
+		<put name="displayLabelKey" value="autonomic.mgrs.label" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formAction" value="CoreComponentSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, CoreComponent subtab -->
+	<definition name="CoreComponentSummary.collection.table.custom.filter.extend" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationProperty" value="subsetList" />
+		<put name="contextType" value="CoreComponentSummary" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="iterationName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formAction" value="CoreComponentSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.CoreComponentSummaryCollectionForm" />
+		<put name="parent"
+			value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends&amp;customDefaultSelectedTab=autonomic.mgrs.label" />
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="statusType" value="unknown" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="htmlFilter" value="false" />
+		<put name="isSubTab" value="true" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/CoreComponentSummaryCollectionForm/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/CoreComponentSummaryCollectionForm/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<definition 
+		name="CoreComponentSummary.detail.main" path="/com.ibm.ws.console.xdoperations/contentNoHelpLayout.jsp">
+        <put name="contextType" value="CoreComponentDetail"/>
+        <put name="portletTitle" value="autonomic.mgrs.label"/>
+        <put name="parentLink" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends"/>
+        <put name="parentTitle" value="nav.xd.summmary"/>
+        <putList name="contentList"> 
+        	<add value="operations.xd.corecomponent.detail.attributes"/>
+        	<add value="operations.xd.corecomponent.detail.messages"/> 
+        </putList>	
+    </definition>   
+    
+	<definition name="operations.xd.corecomponent.detail.attributes" path="/com.ibm.ws.console.xdcore/textDetailLayout.jsp">
+		<put name="includeTD" value="false" />
+	</definition>    
+ 	<definition name="operations.xd.corecomponent.detail.messages" path="/com.ibm.ws.console.xdoperations/componentMessageLayout.jsp">
+		<put name="messageLegend" value="component.messages" />
+	</definition>    
+     
+    <!-- End Core component Summary tile definitions -->
+	
+	<!-- BEGIN Node Summary tile definitions -->
+	<definition name="NodeSummary.content.main" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionController">
+		<put name="contextType" value="NodeSummary" />
+		<put name="helpTopic" value="XDOperations.nodesummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<add value="NodeSummary.paging.extend" />
+			<add value="NodeSummary.quicksearch.extend" />
+			<add value="NodeSummary.collection.table.custom.filter.extend" />
+		</putList>
+	</definition>
+	
+	<definition name="NodeSummary.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="NodeSummaryCollection.do?ToggleViewAction=false" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formAction" value="NodeSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<putList name="searchList">
+			<add value="ops.summary.name:name" />
+			<add value="scope.cell.name:cellName" />
+			<add value="ops.node.agent:agent" />
+			<add value="node.version.displayName:version" />
+			<add value="metric.cpu.name:cpuUtil" />
+			<add value="Node.status.displayName:status" />
+			<add value="Node.mode.displayName:mode" />
+		</putList>
+	</definition>
+	
+	<definition name="NodeSummary.paging.extend" extends="operations.generic.paging">
+		<put name="displayLabelKey" value="nodes.label" />
+		<put name="collectionForm" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formAction" value="NodeSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+	</definition>
+	
+	<!-- Reports, Extended Deployment Summary details, Node subtab -->
+	<definition name="NodeSummary.collection.table.custom.filter.extend" path="/com.ibm.ws.console.xdoperations/collectionTableLayout.jsp">
+		<put name="iterationProperty" value="subsetList" />
+		<put name="contextType" value="NodeSummary" />
+		<put name="showCheckBoxes" value="false" />
+		<put name="iterationName" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formAction" value="NodeSummaryCollection.do" />
+		<put name="formName" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.summary.NodeSummaryCollectionForm" />
+		<put name="parent"
+			value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=extended.deployment.xdoperations.main.extends&amp;customDefaultSelectedTab=nodes.label" />
+		<put name="buttons" value="ops.apps.placement.collection.buttons" />
+		<put name="statusType" value="node" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="htmlFilter" value="false" />
+		<put name="isSubTab" value="true" />
+		<putList name="statusCols">
+			<add value="node" />
+		</putList>
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/NodeSummaryCollectionForm/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/NodeSummaryCollectionForm/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	<!-- End Node Summary tile definitions -->
+	
+	<!-- 
+		! XD Operations, Dashboard tab
+		!
+	-->
+	<definition name="operations.dashboard.main" extends="custom.style.vbox.main">
+		<put name="breadcrumbTitle" value="nav.dashboard" />
+		<put name="breadcrumbTileDefinition" value="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=xdoperations.main&#38;scopeChanged=true&#38;WSC=true" />
+		<putList name="list">
+			<add value="xdoperations.dashboard.prefs" />
+			<add value="xdoperations.dashboard.charts" />
+		</putList>
+	</definition>
+	
+	<definition name="xdoperations.dashboard.prefs" path="/com.ibm.ws.console.xdoperations/preferences.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.prefs.DashboardPreferencesController">
+		<put name="formAction" value="DashboardPreferencesDetail.do" />
+		<put name="formName" value="PreferencesDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.prefs.PreferencesDetailForm" />
+		<put name="showButtons" value="yes" />
+		<put name="showOkButton" value="yes" />
+		<put name="showApplyButton" value="no" />
+		<put name="showCancelButton" value="no" />
+		<put name="showResetButton" value="yes" />
+		<put name="instanceDetails" value="name"/>
+	</definition>
+
+	<definition name="xdoperations.dashboard.charts" path="/com.ibm.ws.console.xdoperations/dashboardLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.chart.DashboardController">
+	</definition>
+	
+	<!-- 
+		! XD Operations, Application Summary tab
+		!
+	-->
+	<definition name="operations.app.summary.main" extends="custom.style.vbox.main">
+		<put name="breadcrumbTitle" value="nav.app.summary" />
+		<put name="breadcrumbTileDefinition" value="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=app.xdoperations.main.extends&#38;scopeChanged=true&#38;WSC=true" />
+		<put name="helpTopic" value="XDOperations.appsummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<!-- <add value="xdoperations.summary.chart.prefs" /> -->
+			<add value="operations.portlet.app.main.ext" />
+			<add value="operations.app.summary.attributes" />
+		</putList>
+	</definition>
+	
+    <!-- 
+	 ! Tile definition: Portlet layout extension for Application summary views
+     ! Date added: 01-11-2008
+     ! Description: Adds porlet look around tile definition
+     ! Known uses:
+     !  (1) Application summary views
+	 !-->
+	<definition name="operations.portlet.app.main.ext" extends="operations.portlet.main.ext">
+		<put name="label" value="nav.app.summary" />
+		<put name="desc" value="nav.app.summary" />
+		<put name="refreshLink" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=app.xdoperations.main.extends" />
+	</definition>
+
+	<!--  Application Summary attributes (collection table) -->
+	<definition name="operations.app.summary.attributes" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionController">
+		<put name="enableTableTags" value="true" />
+		<putList name="list">
+			<add value="operations.generic.paging.includeTR.ext" />
+			<add value="operations.generic.quicksearch.app.ext" />
+			<add value="operations.generic.collection.table.app.ext" />
+		</putList>
+	</definition>
+
+	<!-- Overriding generic operations quicksearch to specify application summary collection columns -->
+	<definition name="operations.generic.quicksearch.app.ext" extends="operations.generic.quicksearch">
+    	<put name="filter" value="app.custom.filter.multiple.main.extends" />
+		<putList name="searchList">
+			<add value="nameFilter" />
+			<add value="cellNameFilter" />
+			<add value="editionFilter" />
+			<add value="applicationTypeFilter" />
+        	<add value="stateFilter" />
+        	<add value="stabilityFilter" />
+			<add value="servicePolicyAssociationsFilter" />
+		</putList>
+	</definition>
+
+	<!-- Overriding generic operations collection table to specify parent -->
+	<definition name="operations.generic.collection.table.app.ext" extends="operations.generic.collection.table">
+		<put name="showCheckBoxes" value="false" />
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=app.xdoperations.main.extends&#38;scopeChanged=true" />
+    	<put name="filter" value="app.custom.filter.multiple.main.extends" />
+    	<put name="tableControls" value="custom.table.controls.main.extends" />
+		<put name="includeTR" value="true" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ApplicationSummaryOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ApplicationSummaryOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+
+	<definition name="app.custom.filter.multiple.main.extends" extends="custom.filter.multiple.main.extends">
+		<putList name="attributeList">
+			<!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+			<item value="ops.summary.name:nameFilter:no:Text:app.name.label:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="scope.cell.name:cellNameFilter:no:Text:scope.cell.name:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="appEdition.edition.label:editionFilter:no:Text:appEdition.edition.label:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="app.type.label:applicationTypeFilter:no:CustomDynamicSelect:ops.type.label.desc:no:yes: : :applicationTypeList:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="Node.status.displayName:stateFilter:no:CustomDynamicSelect:Node.status.displayName:no:yes: : :stateList:true:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.stability.label:stabilityFilter:no:CustomDynamicSelect:ops.stability.label.desc:no:yes: : :stabilityList:true:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.sp.summary:servicePolicyAssociationsFilter:no:Text:nav.sp.summary:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+	
+	<!-- 
+		! XD Operations, Deployment Target Summary tab
+		!
+	-->
+	<definition name="operations.dt.summary.main" extends="custom.style.vbox.main">
+		<put name="breadcrumbTitle" value="nav.dt.summary" />
+		<put name="breadcrumbTileDefinition" value="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dt.xdoperations.main.extends&#38;scopeChanged=true&#38;WSC=true" />
+		<put name="helpTopic" value="XDOperations.dtsummary.collection" />
+		<put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+		<putList name="list">
+			<!-- <add value="xdoperations.summary.chart.prefs" /> -->
+			<add value="operations.portlet.dt.main.ext" />
+			<add value="operations.dt.summary.attributes" />
+		</putList>
+	</definition>
+
+    <!-- 
+	 ! Tile definition: Portlet layout extension for Deployment target summary views
+     ! Date added: 01-11-2008
+     ! Description: Adds porlet look around tile definition
+     ! Known uses:
+     !  (1) Deployment target summary views
+	 !-->
+	<definition name="operations.portlet.dt.main.ext" extends="operations.portlet.main.ext">
+		<put name="label" value="nav.dt.summary" />
+		<put name="desc" value="nav.dt.summary" />
+		<put name="refreshLink" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dt.xdoperations.main.extends" />
+	</definition>
+		
+	<!--  Deployment target Summary attributes (collection table) -->
+	<definition name="operations.dt.summary.attributes" extends="custom.style.vbox.main"
+		controllerClass="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionController">
+		<put name="enableTableTags" value="true" />
+		<putList name="list">
+			<add value="operations.generic.paging.includeTR.ext" />
+			<add value="operations.generic.quicksearch.dt.ext" />
+			<add value="operations.generic.collection.table.dt.ext" />
+		</putList>
+	</definition>
+	
+	<!-- Overriding generic operations quicksearch to specify deployment target summary collection columns -->
+	<definition name="operations.generic.quicksearch.dt.ext" extends="operations.generic.quicksearch">
+    	<put name="filter" value="dt.custom.filter.multiple.main.extends" />
+		<putList name="searchList">
+			<add value="nameFilter" />
+			<add value="cellNameFilter" />
+			<add value="serverTypeFilter" />
+			<add value="stateFilter" />
+        	<add value="stabilityFilter" />
+        	<add value="weightFilter" />        	
+			<add value="servicePolicyAssociationsFilter" />
+			<add value="topApplicationsFilter" />
+		</putList>
+	</definition>
+
+	<!-- Overriding generic operations collection table to specify parent -->
+	<definition name="operations.generic.collection.table.dt.ext" extends="operations.generic.collection.table">
+		<put name="showCheckBoxes" value="false" />
+		<put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=dt.xdoperations.main.extends&#38;scopeChanged=true" />
+    	<put name="filter" value="dt.custom.filter.multiple.main.extends" />
+    	<put name="tableControls" value="custom.table.controls.main.extends" />
+		<put name="includeTR" value="true" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/DeploymentTargetSummaryOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/DeploymentTargetSummaryOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<definition name="dt.custom.filter.multiple.main.extends" extends="custom.filter.multiple.main.extends">
+		<putList name="attributeList">
+			<!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+			<item value="ops.summary.name:nameFilter:no:Text:app.name.label:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="scope.cell.name:cellNameFilter:no:Text:scope.cell.name:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="app.type.label:serverTypeFilter:no:CustomDynamicSelect:ops.type.label.desc:no:yes: : :serverTypeList:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="Node.status.displayName:stateFilter:no:CustomDynamicSelect:Node.status.displayName:no:yes: : :stateList:true:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="ops.stability.label:stabilityFilter:no:CustomDynamicSelect:ops.stability.label.desc:no:yes: : :stabilityList:true:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="server.weight.label:weightFilter:no:Text:server.weight.label:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nav.sp.summary:servicePolicyAssociationsFilter:no:Text:nav.sp.summary:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="top.apps:topApplicationsFilter:no:Text:top.apps:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+
+    <!-- 
+        ! XD Operations, Service Policy Summary tab
+        !
+    -->
+    <definition name="operations.sp.summary.main" extends="custom.style.vbox.main">
+		<put name="breadcrumbTitle" value="nav.sp.summary" />
+		<put name="breadcrumbTileDefinition" value="/com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=sp.xdoperations.main.extends&#38;scopeChanged=true&#38;WSC=true" />
+        <put name="helpTopic" value="XDOperations.spsummary.collection" />
+        <put name="pluginId" value="com.ibm.ws.console.xdoperations" />
+        <putList name="list">
+            <!-- <add value="xdoperations.summary.chart.prefs" /> -->
+            <add value="operations.portlet.sp.main.ext" />
+            <add value="operations.sp.summary.attributes" />
+        </putList>
+    </definition>
+    
+    <!-- 
+	 ! Tile definition: Portlet layout extension for Service policy summary views
+     ! Date added: 01-11-2008
+     ! Description: Adds porlet look around tile definition
+     ! Known uses:
+     !  (1) Service policy summary views
+	 !-->
+	<definition name="operations.portlet.sp.main.ext" extends="operations.portlet.main.ext">
+		<put name="label" value="nav.sp.summary" />
+		<put name="desc" value="nav.sp.summary" />
+		<put name="refreshLink" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=sp.xdoperations.main.extends" />
+	</definition>
+
+
+    <!--  Service Policy Summary attributes (collection table) -->
+    <definition name="operations.sp.summary.attributes" extends="custom.style.vbox.main"
+        controllerClass="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionController">
+        <put name="enableTableTags" value="true" />
+        <putList name="list">
+            <add value="operations.generic.paging.includeTR.ext" />
+            <add value="operations.generic.quicksearch.sp.ext" />
+            <add value="operations.generic.collection.table.sp.ext" />
+        </putList>
+    </definition>
+    
+    <!-- Overriding generic operations quicksearch to specify service policy summary collection columns -->
+    <definition name="operations.generic.quicksearch.sp.ext" extends="operations.generic.quicksearch">
+        <put name="filter" value="sp.custom.filter.multiple.main.extends" />
+        <putList name="searchList">
+            <add value="nameFilter" />
+			<add value="cellNameFilter" />
+            <add value="importanceFilter" />
+            <add value="goalFilter" />
+            <add value="stabilityFilter" />
+        </putList>
+    </definition>
+
+    <!-- Overriding generic operations collection table to specify parent -->
+    <definition name="operations.generic.collection.table.sp.ext" extends="operations.generic.collection.table">
+        <put name="showCheckBoxes" value="false" />
+        <put name="parent" value="com.ibm.ws.console.xdoperations.forwardCmd.do?forwardName=sp.xdoperations.main.extends&#38;scopeChanged=true" />
+        <put name="filter" value="sp.custom.filter.multiple.main.extends" />
+    	<put name="tableControls" value="custom.table.controls.main.extends" />
+		<put name="includeTR" value="true" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ServicePolicySummaryOperations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ServicePolicySummaryOperations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+    </definition>
+
+    <definition name="sp.custom.filter.multiple.main.extends" extends="custom.filter.multiple.main.extends">
+        <putList name="attributeList">
+            <!-- value is list of label, attribute name, isrequired, type, description, isReadonly, showdescription, enumValues(optional) and enumDesc(optional) -->
+            <item value="ops.summary.name:nameFilter:no:Text:sp.name.label:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="scope.cell.name:cellNameFilter:no:Text:scope.cell.name:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="sp.importance.label:importanceFilter:no:CustomDynamicSelect:sp.importance.label.desc:no:yes: : :servicePolicyImportanceList:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="sp.goal.label:goalFilter:no:Text:sp.goal.label.desc:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="ops.stability.label:stabilityFilter:no:CustomDynamicSelect:ops.stability.label.desc:no:yes: : :stabilityList:true:true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+        </putList>
+    </definition>
+
+	<!--  
+	  - The follow console definitions are generic collection
+	  - definitions that use the OperationsCollectionForm.
+	  -  
+	  - In most instances the "operations.generic.paging" can be
+	  - used directly. The "operations.generic.quicksearch" only 
+	  - need the searchList attribute overriden.  The searchList
+	  - is where you specify the collection table columns and column
+	  - headers.
+	  -
+	  - The "operations.generic.collection.table" most likely just needs
+	  - the parent attribute overriden.  The default is to have 0 buttons.
+	  - So if buttons are needed then the "operations.generic.collection.buttons"
+	  - needs to be overriden as well as the buttons attribute in the
+	  - generic collection table to point to your new console definition.
+	  -->
+	<definition name="operations.generic.paging" extends="paging.main" path="/com.ibm.ws.console.xdoperations/pagingLayout.jsp">
+		<put name="collectionForm" value="OperationsCollectionForm" />
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<put name="includeTR" value="false" />
+	</definition>
+	
+    <!-- Overriding generic operations paging to specify to include row tags -->
+	<definition name="operations.generic.paging.includeTR.ext" extends="operations.generic.paging">
+		<put name="includeTR" value="true" />
+	</definition>
+	
+	<definition name="operations.generic.quicksearch" extends="custom.quicksearch.main">
+		<put name="selectUri" value="OperationsCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="OperationsCollectionForm" />
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<putList name="searchList">
+			<add value="scope.srv.name:serverName" />
+			<add value="scope.node.name:nodeName" />
+			<add value="scope.clstr.name:clusterName"/>
+		</putList>
+	</definition>
+	
+	<definition name="operations.generic.collection.table" path="/com.ibm.ws.console.xdcore/customFilterCollectionTableLayout.jsp">
+		<put name="iterationName" value="OperationsCollectionForm" />
+		<put name="iterationProperty" value="subsetList" />
+        <put name="preferenceAction" value="/xdPreferenceAction.do"/>
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<put name="buttons" value="operations.generic.collection.buttons" />
+		<!-- Add your own parent attribute when you extend this tile.  -->
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown" />
+		<put name="htmlFilter" value="false" />
+		<put name="filter" value="custom.filter.multiple.main.extends" />
+		<put name="isSubTab" value="false" />
+		<put name="includeTR" value="false" />
+		<putList name="statusCols" />
+		<putList name="collectionList" />
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/Operations/Preferences#maximumRows:25"
+				link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/Operations/Preferences#retainSearchCriteria:32"
+				link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc"
+				classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<definition name="operations.generic.collection.buttons" extends="buttons.panel">
+		<put name="buttonCount" value="0" />
+		<put name="definitionName" value="operations.generic.collection.buttons" />
+		<put name="includeForm" value="no" />
+		<putList name="actionList"></putList>
+	</definition>
+	
+    <!-- 
+	 ! Tile definition: Multiple field custom filter layout.
+     ! Date added: 06-29-2007
+     ! Description: Generic definition for the multiple field
+     !	custom filter layout.
+     ! Known uses:
+	 -->
+	<definition name="custom.filter.multiple.main.extends" extends="custom.filter.multiple.main">
+		<put name="readOnlyView" value="false" />
+		<put name="formAction" value="OperationsCollection.do" />
+		<put name="formName" value="OperationsCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.detail.operations.OperationsCollectionForm" />
+		<putList name="attributeList">
+		    <!-- Overide in your definition -->
+			<!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+		</putList>
+	</definition>
+	
+    <!-- 
+	 ! Tile definition: Table controls custom layout.
+     ! Date added: 09-20-2007
+     ! Description: Generic definition for the custom table controls for operations summary
+     !	custom filter layout.
+     ! Known uses:
+	 -->
+	<definition name="custom.table.controls.main.extends" extends="custom.table.controls.main">
+        <put name="showCheckBoxes" value="false"/>
+        <put name="formName" value="OperationsCollectionForm"/>
+	</definition>
+	
+    <!-- END of generic operations collection definitions -->
+
+    <!-- BEGIN of generic summary charting definitions -->
+    <!-- 
+	 ! Tile definition: Single chart lite instance.
+     ! Date added: 06-29-2007
+     ! Description: Shows only the chart.
+     ! Known uses:
+     !  (1) Application, DT, and service policy summary views
+	 !-->
+	<definition name="operations.summary.chart" path="/com.ibm.ws.console.xdoperations/chartLayout.jsp"
+		controllerClass="com.ibm.ws.console.xdoperations.chart.ChartDetailController">
+	</definition>
+
+    <!-- 
+	 ! Tile definition: Portlet layout extension for summary views
+     ! Date added: 01-11-2008
+     ! Description: Adds porlet look around tile definition
+     ! Known uses:
+     !  (1) Application, DT, and service policy summary views
+     ! path="/com.ibm.ws.console.xdcore/portletLayout.jsp"
+	 !-->
+	<definition name="operations.portlet.main.ext" extends="operations.portlet.main">
+		<put name="isLabelNLSKey" value="true" />
+		<put name="tiledefinition" value="operations.summary.chart" />
+		<put name="tileDefinitionType" value="name" />
+		<put name="isSubTab" value="false" />
+	</definition>
+    
+	<definition name="xdoperations.summary.chart.prefs" extends="xdoperations.chart.prefs"
+		controllerClass="com.ibm.ws.console.xdoperations.prefs.PreferencesController">
+		<put name="formAction" value="PreferencesDetail.do" />
+		<put name="formName" value="PreferencesDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.xdoperations.prefs.PreferencesDetailForm" />
+		<put name="showButtons" value="no" />
+		<put name="showOkButton" value="no" />
+		<put name="showApplyButton" value="no" />
+		<put name="showCancelButton" value="no" />
+		<put name="showResetButton" value="yes" />
+		<put name="instanceDetails" value="name"/>
+	</definition>
+    <!-- END of generic summary preferences definition -->
+	
+</tiles-definitions>

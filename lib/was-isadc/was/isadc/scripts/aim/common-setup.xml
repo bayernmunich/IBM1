@@ -1,0 +1,2111 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. 
+	All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Common Setup">
+
+	<!-- need to set the classpath to include the latest plugin -->
+	<dirname property="common.setup.targets.basedir"
+		file="${ant.file.Common Setup}" />
+	<dirname property="common.setup.targets.parentdir"
+		file="${common.setup.targets.basedir}" />
+	<dirname property="common.setup.targets.bundle.basedir"
+		file="${common.setup.targets.parentdir}" />
+
+	<import>
+		<javaresource name="scripts/sharedtargets.xml"/>
+	</import>
+	<import>
+		<javaresource name="scripts/sharedelements/sharedelements-sharedtargets.xml"/>
+	</import>
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/archive-utilities.xml" />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/win-common-targets.xml" />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/websphere-customized-targets.xml" />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/aim/common-collections.xml" />
+	<autopdimport file="${common.setup.targets.bundle.basedir}/scripts/was/was-sharedtargets.xml" />
+		
+	<taskdef file="${common.setup.targets.bundle.basedir}/properties/SSEQTP/aimpdtaskdef.properties" />
+
+	<!-- documentation target, only -->
+	<target name="internal-usage"
+		description="These instruction explain how to incorporate the AIM shared components 
+		into your script. &lt;br/&gt;&lt;br/&gt;
+		1. Scripts that need to be imported:&lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/sharedtargets.xml&quot; osgiBundle=&quot;com.ibm.autopd&quot; GT &lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/portal-was-sharedtargets.xml&quot; osgiBundle=&quot;com.ibm.autopd&quot; GT &lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/was/was-sharedtargets.xml&quot; osgiBundle=&quot;com.ibm.esupport.client.product.SSEQTP&quot; GT &lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/aim/common-setup.xml&quot; osgiBundle=&quot;com.ibm.esupport.client.product.SSEQTP&quot; GT &lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/aim/common-collections.xml&quot; osgiBundle=&quot;com.ibm.esupport.client.product.SSEQTP&quot; GT &lt;br/&gt;
+		LT autopdimport file=&quot;${autopdimportdir}/scripts/aim/archive-utilities.xml&quot; osgiBundle=&quot;com.ibm.esupport.client.product.SSEQTP&quot; GT &lt;br/&gt;
+		&lt;br/&gt;
+		2. Properties that need to be setup prior to calling 'autopdmain':
+		&lt;br/&gt;
+		LT property name=&quot;autopdProblem&quot; value=&quot;[collection name]&quot; GT &lt;br/&gt;
+		LT property name=&quot;infocollectProblemType&quot; value=&quot;[problem type]&quot; GT &lt;br/&gt;
+		LT property name=&quot;was_log_redirect.needed&quot; value=&quot;[true | false]&quot; GT &lt;br/&gt;
+		LT property name=&quot;app.updated.version&quot; value=&quot;[true]&quot; GT &lt;br/&gt;
+		LT property name=&quot;taxonomy&quot; value=&quot;[product taxonomy]&quot; GT &lt;br/&gt;
+		LT property name=&quot;baseTaxonomy&quot; value=&quot;[SSEQTP]&quot; GT &lt;br/&gt;
+		&lt;br/&gt;
+		3. Targets called in the 'depends' attribute of 'autopdmain'
+		&lt;br/&gt;
+		LT target name=&quot;autopdmain&quot;&lt;br/&gt;
+			depends=&quot;set_was_problem_type,&lt;br/&gt;
+			setup_autopd,&lt;br/&gt; 
+			validate_os,&lt;br/&gt;
+			was_stack_general_init,&lt;br/&gt;	
+			[product specific targets go here],&lt;br/&gt;       
+			common_postamble_general_with_ftp&quot; GT ">
+	</target>
+
+	<!-- EXAMPLE: *******************************************************************
+		USING AIM SHARED COMBINED TARGETS EXAMPLE:
+		
+		PROPERTIES:
+		<property name="autopdProblem" value="[Collection Name]" />
+		<property name="infocollectProblemType" value="[problem type]" />
+		<property name="was_log_redirect.needed" value="[true | false]" />
+		<property name="app.updated.version" value="[true]" />
+		<property name="taxonomy" value="[product taxonomy]" />
+		<property name="baseTaxonomy" value="[SSEQTP]" />
+		
+		TARGETS:
+		<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="set_was_problem_type,
+		setup_autopd, 
+		validate_os,
+		was_stack_general_init,	
+		
+		[product specific targets go here], 
+		
+		common_postamble_general_with_ftp">
+		</target>
+		END EXAMPLE ***************************************************************** -->
+
+	<!-- **************************************************************************** -->
+	<!-- BEGIN AIM SHARED COMBINED TARGETS ****************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- A. AIM SHARED TARGET: WAS_STACK_GENERAL_INIT ******************************* -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.
+		
+		PRE-CONDITIONS:
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+		'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.
+		POST-CONDITIONS:
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known.
+	-->
+	<!-- **************************************************************************** -->
+	<target name="was_stack_general_init"
+		description="After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+			'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known."
+		depends="check_app_level,
+			check_for_zos_support,
+			query_create_mult_jars,
+			query_pmrfilename,
+			ask_for_middleware_root,
+			initialize_middleware_static_environment,
+			version_level_setup,
+			ask_for_was_profile,
+			set_was_components,
+			ask_for_was_servers,
+			set_middleware_properties_for_how_to_proceed,
+			initialize_was_runtime_environment,
+			ask_for_user_security_credentials,
+			detect_server_running_status,
+			analyze_was" />
+
+	<!-- B. AIM SHARED TARGET: WAS_STACK_SIMPLE_INIT ******************************** -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all static information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.
+		
+		PRE-CONDITIONS:
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+		'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.
+		POST-CONDITIONS:
+		After complete, the object model will be populated with all of the available application
+		server information.
+	-->
+	<!-- **************************************************************************** -->
+	<target name="was_stack_simple_init"
+		description="After this target is complete, all static information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+			'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.&lt;br/&gt;
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.
+		&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		After complete, the object model will be populated with all of the available application
+		server information."
+		depends="check_app_level,
+			check_for_zos_support,
+			query_create_mult_jars,
+			query_pmrfilename,
+			ask_for_middleware_root,
+			initialize_middleware_static_environment,
+			version_level_setup,
+			analyze_was" />
+
+	<target name="was_stack_init"
+		description="After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.&lt;br/&gt;&lt;br/&gt;
+
+		This target is same as 'was_stack_general_init' except it does not 
+		have 'query_create_mult_jars' option so that it could be used by other products.
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+			'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known."
+		depends="check_app_level,
+			check_for_zos_support,
+			query_pmrfilename,
+			ask_for_middleware_root,
+			initialize_middleware_static_environment,
+			version_level_setup,
+			ask_for_was_profile,
+			set_was_components,
+			ask_for_was_servers,
+			set_middleware_properties_for_how_to_proceed,
+			initialize_was_runtime_environment,
+			ask_for_user_security_credentials,
+			detect_server_running_status,
+			analyze_was" />
+	
+	<!-- AIM SHARED TARGET ********************************************************** -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.
+		
+		PRE-CONDITIONS:
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+		'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.
+		POST-CONDITIONS:
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known.
+	-->
+	<!-- A. AIM SHARED TARGET: WAS_DMGR_GENERAL_INIT ******************************* -->
+	<target name="was_dmgr_general_init"
+		description="After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+			'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known."
+		depends="check_app_level,
+			check_for_zos_support,
+			query_create_mult_jars,
+			query_pmrfilename,
+			ask_for_middleware_root,
+			initialize_middleware_static_environment,
+			version_level_setup,
+			retrieve_dmgr_profile,
+			set_was_components,
+			ask_for_was_servers,
+			set_middleware_properties_for_how_to_proceed,
+			initialize_was_runtime_environment,
+			ask_for_user_security_credentials,
+			detect_server_running_status,
+			analyze_was" />
+
+	<!-- AIM SHARED TARGET ********************************************************** -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.
+		
+		PRE-CONDITIONS:
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+		'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.
+		POST-CONDITIONS:
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known.
+	-->
+	<!-- A. AIM SHARED TARGET: WAS_NA_GENERAL_INIT ******************************* -->
+	<target name="was_na_general_init"
+		description="After this target is complete, all static and runtime information about the 
+		WebSphere Application Server installation will be available through the 
+		'wascomponent' and 'wasmultcomponents' targets.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		1. The properties 'autopdProblem', 'infocollectProblemType', 'was_log_redirect.needed',
+			'app.updated.version', 'taxonomy', and 'baseTaxonomy' must be set.
+		2. The targets 'set_was_problem_type', 'setup_autopd', and 'validate_os' must be called.&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		After complete, the object model will be populated with all of the available application
+		server information AND the runtime status of the application server will be known."
+		depends="check_app_level,
+			check_for_zos_support,
+			query_create_mult_jars,
+			query_pmrfilename,
+			ask_for_middleware_root,
+			initialize_middleware_static_environment,
+			version_level_setup,
+			ask_for_was_profile,
+			set_was_components,
+			retrieve_node_agents,
+			set_middleware_properties_for_how_to_proceed,
+			initialize_was_runtime_environment,
+			ask_for_user_security_credentials,
+			detect_server_running_status,
+			analyze_was" />
+
+	<!-- C. AIM SHARED TARGET: COMMON_POSTAMBLE_GENERAL_WITH_FTP ******************** -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all of the WebSphere Application Server 
+		configuration, log, and meta information will be collected and archived
+		in the file defined in the variable 'pmrfilename'. This information will
+		then be uploaded to the ECUREP server.
+		
+		PRE-CONDITIONS:
+		The was_stack_general_init or was_stack_simple_init targets must be called.
+		
+		POST-CONDITIONS:
+		The collection script will complete.
+	-->
+	<!-- **************************************************************************** -->
+	<target name="common_postamble_general_with_ftp"
+		description="After this target is complete, all of the WebSphere Application Server 
+		configuration, log, and meta information will be collected and archived
+		in the file defined in the variable 'pmrfilename'. This information will
+		then be uploaded to the ECUREP server.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		The was_stack_general_init or was_stack_simple_init targets must be called.
+		&lt;br/&gt;&lt;br/&gt;
+		
+		POST-CONDITIONS:&lt;br/&gt;
+		The collection script will complete."
+		depends="collect_all,collect_autopd_reports,
+						zip_autopd_log,
+						zip_General_Must_Gather,
+						 was_server_general_cleanup,
+						 log_collection_file_size,
+						 ftp_logs_to_ecurep,
+						 script_completed_v2" />
+
+	<!-- D. AIM SHARED TARGET COMMON_POSTAMBLE_GENERAL_NO_FTP *********************** -->
+	<!-- 
+		DESCRIPTION:
+		After this target is complete, all of the WebSphere Application Server 
+		configuration, log, and meta information will be collected and archived
+		in the file defined in the variable 'pmrfilename'.
+		
+		PRE-CONDITIONS:
+		The was_stack_general_init or was_stack_simple_init targets must be called
+		
+		POST-CONDITIONS:
+		The collection script will complete
+	-->
+	<!-- **************************************************************************** -->
+	<target name="common_postamble_general_no_ftp"
+		description="After this target is complete, all of the WebSphere Application Server 
+		configuration, log, and meta information will be collected and archived
+		in the file defined in the variable 'pmrfilename'.&lt;br/&gt;&lt;br/&gt;
+		
+		PRE-CONDITIONS:&lt;br/&gt;
+		The was_stack_general_init or was_stack_simple_init targets must be called
+		&lt;br/&gt;&lt;br/&gt;
+		POST-CONDITIONS:&lt;br/&gt;
+		The collection script will complete"
+		depends="collect_all,collect_autopd_reports,
+						 zip_autopd_log,
+						 zip_General_Must_Gather,
+				         was_server_general_cleanup,
+				         script_completed_v2" />
+	
+	<target name="common_postamble_general" 
+		depends="collect_all,collect_autopd_reports,
+	 			 zip_autopd_log,
+	 			 zip_General_Must_Gather" /> 
+	<target name="common_postamble_ftp" 
+		depends="log_collection_file_size,
+				 ftp_logs_to_ecurep,
+	 			 script_completed_v2" />
+
+	<!-- **************************************************************************** -->
+	<!-- END AIM SHARED COMBINED TARGETS ******************************************** -->
+	<!-- **************************************************************************** -->
+
+
+	<!-- **************************************************************************** -->
+	<!-- BEGIN AIM SHARED INDIVIDUAL TARGETS **************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!--  1. CHECK_APP_LEVEL ******************************************************** -->
+	<target name="check_app_level"
+		description="Verify that the calling application is at the correct level">
+
+		<if isNotTrue="${app.updated.version}">
+			<autopdinput
+				message="The current level of plug-in you are using is incompatible with the supporting infrastructure. Please use the Updater to upgrade your plug-in."
+				validargs="Quit" addproperty="app.needs.update" />
+		</if>
+		<condition property="do.abort.needs.update">
+			<equals arg1="Quit" arg2="${app.needs.update}" />
+		</condition>
+		<fail if="do.abort.needs.update"> <!-- Task 21862 --> 
+			The plug-in needs updating. ISA Data Collector Tool terminated.
+		</fail>
+	</target>
+
+	<!--  2. CHECK_FOR_ZOS_SUPPORT ************************************************** -->
+	<target name="check_for_zos_support"
+		description="This target determines whether the script is appropriate for
+			the z/OS platform.">
+
+		<condition property="isZos">
+			<equals arg1="z/OS" arg2="${os.name}" />
+		</condition>
+
+		<if isTrue="${isZos}">
+			<property name="was_log_redirect.needed" value="false" />
+
+			<condition property="autopd.problem.not.supported">
+				<equals arg1="${autopdProblem}"
+					arg2="WAS_zOS_Collector" />
+			</condition>
+		</if>
+
+		<fail if="autopd.problem.not.supported">
+			The problem type '${autopdProblem}' is not supported on this
+			platform. Please run one of the supported problem types: 1.
+			General Problem
+		</fail>
+
+	</target>
+
+	<!-- 3. ARCHIVE UTILITIES: QUERY_CREATE_MULTIPLE_JARS ************************** -->
+	<target name="query_create_mult_jars"
+		description="This target queries the user to determine if they want to make a
+			single or multiple set of archives during this collection.">
+
+		<!--
+			<inputdialogtask>
+			<fieldtask name="prompt" label="Create_mult_jars" type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="create.mult.jars" bundle="properties/SSEQTP/autopdtoolstrings_was" label="Click_yes_to_create_mult_jars" list="yes:no" listDetails="yes:no" type="selectlist" />
+			</inputdialogtask>
+			
+			<condition property="mult.jar.collection">
+			<equals arg1="${create.mult.jars}" arg2="yes" />
+			</condition>
+		-->
+		<if isTrue="${useISAGuiCollector}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="${autopdProblem}_mg_link" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+<!--
+					<fieldtask name="multcollections"
+					label="prompt_mult_jars" list="false:true" listDetails="no:yes"
+					type="selectlist" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+-->					
+			</inputdialogtask>
+		</if>
+<!--
+		<if isNotTrue="${useISAGuiCollector}">
+			<inputdialogtask>
+				<fieldtask name="multcollections"
+					label="prompt_mult_jars" list="true:false" listDetails="yes:no"
+					type="selectlist" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+-->		
+	</target>
+
+	<!--  4. COMMON_SETUP: query_pmrfilename ************************************ -->
+	<target name="query_pmrfilename"
+		description="This target queries the user for the file name they want to use. 
+		The instructions from the level 2 support are displayed to guide the
+		user through the PMR file name format.
+		&lt;br/&gt;&lt;br/&gt;
+		Uses AIM Custom Tasks:&lt;br/&gt;
+		1. pmrnameutil">
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_Output_File"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Ask for Collection File Name"
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+
+		<if isTrue="${useISAGuiCollector}">
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Input_Required_WAS"
+					type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex0" label="pmr_ex0" type="label"
+					accessibilityName="pmr_ex0" accessibilityDesc="pmr_ex0"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+<!--				
+				<fieldtask name="pmr.ex1" label="pmr_ex1" type="label"
+					accessibilityName="pmr_ex1" accessibilityDesc="pmr_ex1"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex2" label="pmr_ex2" type="label"
+					accessibilityName="pmr_ex2" accessibilityDesc="pmr_ex2"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex3" label="pmr_ex3" type="label"
+					accessibilityName="pmr_ex3" accessibilityDesc="pmr_ex3"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex4" label="pmr_ex4" type="label"
+					accessibilityName="pmr_ex4" accessibilityDesc="pmr_ex4"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex5" label="pmr_ex5" type="label"
+					accessibilityName="pmr_ex5" accessibilityDesc="pmr_ex5"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex6" label="pmr_ex6" type="label"
+					accessibilityName="pmr_ex6" accessibilityDesc="pmr_ex6"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex7" label="pmr_ex7" type="label"
+					accessibilityName="pmr_ex7" accessibilityDesc="pmr_ex7"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="pmr.ex8" label="pmr_ex8" type="label"
+					accessibilityName="pmr_ex8" accessibilityDesc="pmr_ex8"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+-->					
+				<fieldtask name="pmrfilename"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" type="filebrowser"
+					label="Get_pmr_file_name_html" defaultValue=""
+					initialValueSource="persisted" />
+			</inputdialogtask>
+		</if>
+
+		<echo message="Collection File Name is : ${pmrfilename} " />
+		<pmrnameutil pmrFileName="pmrfilename"
+			pmrNoPathFileName="pmrnopathfilename"
+			userPmrFileName="${pmrfilename}" />
+
+		<persistproperty property="pmrfilename" />
+
+		<autopdproperty name="collection.results.path"
+			value="${pmrfilename}" />
+
+		<available file="${pmrfilename}" property="pmr.name.exists" />
+
+		<if isTrue="${pmr.name.exists}">
+			<delete file="${pmrfilename}" quiet="true" failonerror="false" />
+<!--
+			<autopdinput message="Query_Append_Current_Archive"
+				validargs="Append,New File" addproperty="archive.decision"
+				bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<condition property="delete.archive">
+				<equals arg1="New File" arg2="${archive.decision}" />
+			</condition>
+-->			
+		</if>
+<!--
+		<if isTrue="${delete.archive}">
+			<delete file="${pmrfilename}" />
+		</if>
+-->		
+	</target>
+
+	<!--  5. ASK_FOR_MIDDLEWARE_ROOT ************************************************ -->
+	<target name="ask_for_middleware_root"
+		description="Ask for middleware root directory, including the appserver&lt;br/&gt;
+		For example: /opt/IBM/WebSphere/AppServer"
+		unless="wasnothere">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Ask_For_WAS_Root"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Ask for WebSphere Application Root Directory and build environment..."
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+		
+		<!-- copy one setupCmdLine exec to autopdtmp -->
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec.sh"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec.sh"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/was/shell/setupCmdLine-exec"
+			tofile="${autopdtmp}/setup/setupCmdLine-exec"
+			overwrite="true">
+			<filterset>
+				<filter token="output.file" value="${autopdtmp}/setup/setupCmdLine-output.txt" />
+			</filterset>
+		</copy>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec.sh" perm="766"/>
+		<chmod file="${autopdtmp}/setup/setupCmdLine-exec" perm="766"/>
+
+		<!-- Check to see if WAS root is already set from the GUI,
+			from the utility that launched the tool, or in some other way. -->
+		<property file="${common.setup.targets.bundle.basedir}/properties/SSEQTP/was_init.properties" /> 
+<!--		<echo message="was.root is ${was.root}"/> 
+		<echo message="profileName is ${profileName}"/> -->  
+
+		<!-- 24112 --> 
+		<if isTrue="${isWindows}">
+			<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine.bat" property="was.root.true" />
+		</if> 
+		<if isNotTrue="${isWindows}" >
+			<!-- Defect 27259 --> 
+			<if isNotTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine.sh" property="was.root.true" />
+			</if> 
+			<if isTrue="${isOS400}">
+				<available type="file" file="${common.setup.targets.bundle.basedir}/../../../../bin/setupCmdLine" property="was.root.true" />
+			</if> 
+		</if> 
+		<if isTrue="${was.root.true}" >
+			<property name="was.root" location="${common.setup.targets.bundle.basedir}/../../../../" /> 
+		</if>
+		<!--25004  --> 
+		<mkdir dir="${autopdtmp}/trace/config"/> 
+		<mkdir dir="${autopdtmp}/trace/jacl"/> 
+		
+		<property name="autopd.echolog.instance" value="${autopdtmp}/trace/config/Output.txt" />
+		
+		<condition property="no.was">
+			<not>
+				<isset property="was.root" />
+			</not>
+		</condition>
+
+		<!-- Use WAS_HOME if avaliable - otherwise, set to empty string  -->
+		<condition property="default.was.root.set">
+			<isset property="env.WAS_HOME" />
+		</condition>
+
+		<property name="default.was.root" value="" />
+		<if isTrue="${default.was.root.set}">
+			<autopdproperty name="default.was.root"
+				value="${env.WAS_HOME}" />
+		</if>
+
+		<autopdproperty name="exitloop" value="true"/> 
+		<autopdwhile property="exitloop" > 
+
+			<if isTrue="${no.was}">
+	
+				<inputdialogtask>
+					<fieldtask name="prompt" label="Input_Required"
+						type="prompt" bundle="autopdtoolstrings" />
+					<fieldtask name="was.root" label="WAS_root"
+						type="filebrowser" bundle="autopdtoolstrings"
+						defaultValue="${default.was.root}" initialValueSource="persisted" />
+				</inputdialogtask>
+			</if>
+			<!-- Simple check if dir root provided is valid --> 
+			<available file="${was.root}" type="dir" property="was.root.provided.valid.dir" /> 
+			<if isTrue="${was.root.provided.valid.dir}" > 
+			
+					<!-- Initialize WAS Environment --> 
+					<middlewaremapbuilder
+						xmlPath="${was.shared.targets.bundle.basedir}" />
+			
+					<!-- 1. WASTOPOLOGY -->
+					<middlewaretopology appInstallRoot="${was.root}"
+						taxonomy="${taxonomy}" baseTaxonomy="${baseTaxonomy}"
+						versionLevel="was.version.level" vrmf="was.product.version"
+						productName="was.product.name" isValid="was.root.existing" />
+			
+			
+					<if isNotTrue="${was.root.existing}">
+						<autopdinput
+							message="WAS_Root_Value_is_not_valid_Please_reset_this_value"
+							validargs="OK" addproperty="wasroot.wrong" />
+						<wsnlsecho key="WAS_Root_Directory_Inputed_Doesn't_Exist"
+							bundle="autopdtoolstrings"
+							message="The middleware root directory input by user does not exist"
+							id="2201" level="error" component="scripts\aim\common-setup.xml" />
+						<property name="no.was" value="true" /> 
+			
+					</if>
+					<if isTrue="${was.root.existing}">
+						<autopdproperty name="exitloop" value="false"/> 
+					</if>
+			</if> 
+			<if isNotTrue="${was.root.provided.valid.dir}" >
+				<wsnlsecho key="WAS_Root_Value_is_not_valid_Please_reset_this_value" bundle="properties/SSEQTP/autopdtoolstrings_was" console="true" /> 
+			</if> 
+		</autopdwhile> 
+
+		<persistproperty property="was.root" />
+		
+	</target>
+
+	<!--  6. INITIALIZE_MIDDLEWARE_STATIC_ENVIRONMENT******************************** -->
+	<target name="initialize_middleware_static_environment"
+		description="Initialize the WebSphere object model with the available values. 
+					After completion, the topology and configuration will be derived.
+					An example of what is collected includes;&lt;br/&gt;
+					&lt;ul&gt;
+					&lt;li&gt;product=IBM WebSphere Application Server - ND&lt;/li&gt; 
+					&lt;li&gt;WAS_CELL=host1-lt60pCell01&lt;/li&gt; 
+					&lt;li&gt;bootstrap=com.ibm.aim.middleware.was.WasMiddlewareDiscovery&lt;/li&gt; 
+					&lt;li&gt;base-product=SSEQTP&lt;/li&gt; 
+					&lt;li&gt;was.enhanced.root=C:\IBM\WebSphere\AppServer/profiles/AppSrv01&lt;/li&gt; 
+					&lt;li&gt;Build Level=cf30542.05&lt;/li&gt; 
+					&lt;li&gt;profile.cell=host1-lt60pCell01&lt;/li&gt; 
+					&lt;li&gt;collection.root=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;id=ND&lt;/li&gt; 
+					&lt;li&gt;WAS_HOME=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;maintenance=2&lt;/li&gt; 
+					&lt;li&gt;Version=6.0.2.3&lt;/li&gt; 
+					&lt;li&gt;profile.collection=false&lt;/li&gt; 
+					&lt;li&gt;USER_INSTALL_ROOT=C:\IBM\WebSphere\AppServer/profiles/AppSrv01&lt;/li&gt; 
+					&lt;li&gt;taxonomy=SSEQTP&lt;/li&gt; 
+					&lt;li&gt;Name=IBM WebSphere Application Server - ND&lt;/li&gt; 
+					&lt;li&gt;APP_INSTALL_ROOT=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;name=IBM WebSphere Application Server - ND&lt;/li&gt; 
+					&lt;li&gt;was.build.level=cf30542.05&lt;/li&gt; 
+					&lt;li&gt;WAS_NODE=host1-lt60pNode02&lt;/li&gt; 
+					&lt;li&gt;release=0&lt;/li&gt; 
+					&lt;li&gt;baseInstallRoot=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;profile.node=host1-lt60pNode02&lt;/li&gt; 
+					&lt;li&gt;version=6&lt;/li&gt; 
+					&lt;li&gt;was.root=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;fixpack=3&lt;/li&gt; 
+					&lt;li&gt;Build Date=10/18/05&lt;/li&gt; 
+					&lt;li&gt;appInstallRoot=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;was.base.root=C:\IBM\WebSphere\AppServer&lt;/li&gt; 
+					&lt;li&gt;was.product.id=ND&lt;/li&gt; 
+					&lt;li&gt;ID=ND&lt;/li&gt;
+					&lt;/ul&gt;
+					
+					&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. middlewaremapbuilder&lt;br/&gt;
+					2. middlewaretopology">
+<!-- Combined with "ask_for_middleware_root"
+
+		<wsnlsecho key="Initialize_WAS_Env"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Initializing WebSphere Application Environment. This may take several minutes - Please wait..."
+		           replace="${autopdts};;${step.count}"
+		           id="1100"
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+
+		<middlewaremapbuilder
+			xmlPath="${was.shared.targets.bundle.basedir}" />
+
+		<middlewaretopology appInstallRoot="${was.root}"
+			taxonomy="${taxonomy}" baseTaxonomy="${baseTaxonomy}"
+			versionLevel="was.version.level" vrmf="was.product.version"
+			productName="was.product.name" isValid="was.root.existing" />
+
+
+		<if isNotTrue="${was.root.existing}">
+			<autopdinput
+				message="WAS_Root_Value_is_not_valid_Please_reset_this_value"
+				validargs="OK" addproperty="wasroot.wrong" />
+			<wsnlsecho key="WAS_Root_Directory_Inputed_Doesn't_Exist"
+				bundle="autopdtoolstrings"
+				message="The middleware root directory input by user does not exist"
+				id="2201" level="error" component="scripts\aim\common-setup.xml" />
+
+		</if>
+		<condition property="do.abort.wasroot.wrong">
+			<equals arg1="OK" arg2="${wasroot.wrong}" />
+		</condition>
+		<fail if="do.abort.wasroot.wrong">
+			Middleware root directory input by user doesn't exist.
+			ISA Data Collector Tool terminated.
+		</fail>
+
+		<persistproperty property="was.root" />
+--> 		
+	</target>
+
+	<!--  7. VERSION_LEVEL_SETUP **************************************************** -->
+	<target name="version_level_setup"
+		description="This target determines the version
+			level of the WebSphere Application Server.">
+		<condition property="isWASVersion5">
+			<equals arg1="5.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion5">
+			<equals arg1="5.1" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.1" arg2="${was.version.level}" />
+		</condition>
+		
+		<condition property="isWASVersion6">
+			<equals arg1="7.0" arg2="${was.version.level}" />
+		</condition>
+		<condition property="isWASVersion6"> 
+			<equals arg1="8.0" arg2="${was.version.level}" />
+		</condition> 
+		<condition property="isWASVersion6"> 
+			<equals arg1="8.5" arg2="${was.version.level}" />
+		</condition> 
+
+		<condition property="isWASVersion50" > 
+			<equals arg1="5.0" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion51" > 
+			<equals arg1="5.1" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion60" > 
+			<equals arg1="6.0" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion61" > 
+			<equals arg1="6.1" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion70" > 
+			<equals arg1="7.0" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion80" > 
+			<equals arg1="8.0" arg2="${was.version.level}" /> 
+		</condition> 
+		<condition property="isWASVersion85" > 
+			<equals arg1="8.5" arg2="${was.version.level}" /> 
+		</condition> 
+	</target>
+
+	<!--  8. ASK_FOR_WAS_PROFILE **************************************************** -->
+	<target name="ask_for_was_profile"
+		description="This target sets the profile for the collection. If there is more
+				than one profile, it asks the user to choose the profile. If it is a
+				version of WAS less than V6, it sets the WAS root as the profile.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wasmultcomponents&lt;br/&gt;
+					2. wascomponent">
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.profile.root" value="${was.root}" />
+			<property name="was.enhanced.root" value="${was.root}" />
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+			<wasmultcomponents componentList="was.profiles"
+				appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+				component="profiles" attribute="name" delimiter="|" filterList=""
+				success="query.succeeded" />
+
+			<if isNotTrue="${query.succeeded}">
+				<fail>
+					The search for the profile names based on the root
+					${was.root} failed. Verify that your input is
+					correct and run the collection again.
+				</fail>
+			</if>
+
+			<if isTrue="${has.mult.profiles}">
+				<inputdialogtask>
+					<fieldtask name="prompt"
+						label="Input_Profile_Name_of_Your_Application_Server"
+						type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="profileName"
+						label="was_profilename" list="${was.profiles}"
+						listDetails="${was.profiles}" type="selectlist"
+						accessibilityName="was_profilename"
+						accessibilityDesc="was_profilename"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+				</inputdialogtask>
+			</if>
+
+			<if isNotTrue="${has.mult.profiles}">
+				<property name="profileName" value="${was.profiles}" />
+			</if>
+
+			<wascomponent value="was.enhanced.root"
+				appInstallRoot="${was.root}" component="profiles" attribute="path"
+				filterList="name=${profileName}" delimiter="|"
+				success="enhanced.succeeded" />
+		</if>
+	</target>
+
+	<!--  9. RETRIEVE_DMGR_PROFILE ************************************************** -->
+	<target name="retrieve_dmgr_profile"
+		description="This target retrieves the deployment manager and sets the profile 
+					for the collection. If it is a
+				version of WAS less than V6, it sets the WAS root as the profile.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wasmultcomponents&lt;br/&gt;
+					2. wascomponent">
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.profile.root" value="${was.root}" />
+			<property name="was.enhanced.root" value="${was.root}" />
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+
+			<wasmultcomponents componentList="was.profiles"
+				appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+				component="profiles" attribute="name" delimiter="|"
+				filterList="isDmgr=true" success="query.succeeded" />
+
+			<if isNotTrue="${query.succeeded}">
+				<fail>
+					The search for the Deployment Manager based on the
+					root ${was.root} failed. Verify that your input is
+					correct and run the collection again.
+				</fail>
+			</if>
+
+			<if isTrue="${has.mult.profiles}">
+				<inputdialogtask>
+					<fieldtask name="prompt"
+						label="Input_Profile_Name_of_Your_Application_Server"
+						type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="profileName"
+						label="was_profilename" list="${was.profiles}"
+						listDetails="${was.profiles}" type="selectlist"
+						accessibilityName="was_profilename"
+						accessibilityDesc="was_profilename"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+				</inputdialogtask>
+			</if>
+
+			<if isNotTrue="${has.mult.profiles}">
+				<property name="profileName" value="${was.profiles}" />
+			</if>
+
+			<wascomponent value="was.enhanced.root"
+				appInstallRoot="${was.root}" component="profiles" attribute="path"
+				filterList="name=${profileName}" delimiter="|"
+				success="enhanced.succeeded" />
+		</if>
+	</target>
+
+	<!--  10. SET_WAS_COMPONENTS **************************************************** -->
+	<target name="set_was_components"
+		description="This target sets the cell and node that will be used for the
+				collection. These values are derived from the profile and server
+				values.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wascomponent">
+
+		<wascomponent value="CellName" appInstallRoot="${was.root}"
+			component="servers" attribute="cellName"
+			filterList="profileId=${was.enhanced.root}" delimiter="|"
+			success="cell.succeeded" />
+<!--
+		<wascomponent value="NodeName" appInstallRoot="${was.root}"
+			component="servers" attribute="nodeName"
+			filterList="profileId=${was.enhanced.root}" delimiter="|"
+			success="node.succeeded" />
+-->			
+		<wasmultcomponents componentList="was.nodes"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.nodes"
+			component="nodes" attribute="name" delimiter="|" filterList="profileId=${was.enhanced.root}"
+			success="node.query.succeeded" />
+		
+		<if isNotTrue="${node.query.succeeded}">
+			<fail>
+				The search for the node name based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_Node_Name_of_Your_Application_Server" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="NodeName" label="was_nodename"
+					list="${was.nodes}" listDetails="${was.nodes}"
+					type="selectlist" accessibilityName="was_nodename"
+					accessibilityDesc="was_nodename"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.nodes}">
+			<property name="NodeName" value="${was.nodes}" />
+		</if>
+	</target>
+
+	<!-- 11. ASK_FOR_WAS_SERVERS **************************************************** -->
+	<target name="ask_for_was_servers"
+		description="This target sets the server for the collection. If there is more
+				than one server, it asks the user to choose the application server.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wasmultcomponents">
+
+		<wasmultcomponents componentList="was.servers"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.servers"
+			component="servers" attribute="name" delimiter="|"
+			filterList="profileId=${was.enhanced.root}|nodeName=${NodeName}"
+			success="query.succeeded" />
+
+		
+		<if isNotTrue="${query.succeeded}">
+			<fail>
+				The search for the server names based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_Server_Name_of_Your_Application_Server" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName" label="was_servername"
+					list="${was.servers}" listDetails="${was.servers}"
+					type="selectlist" accessibilityName="was_servername"
+					accessibilityDesc="was_servername"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+	</target>
+	
+	<!-- 11.PartA ASK_FOR_WAS_SERVERS FOR PROFILE******************************************** -->
+	<target name="ask_for_was_servers_for_profile"
+		description="This target sets the server for a particular profile. If there is more
+				than one server, it asks the user to choose the application server.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wasservers">
+
+		<wasservers servers="was.servers"
+			appInstallRoot="${was.root}" hasMultServers="has.mult.servers"
+			wasEnhancedRoot="${was.enhanced.root}" />
+
+		<if isTrue="${has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_Server_Name_of_Your_Application_Server" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName" label="was_servername"
+					list="${was.servers}" listDetails="${was.servers}"
+					type="selectlist" accessibilityName="was_servername"
+					accessibilityDesc="was_servername"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter=":" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+	</target>
+
+	<!-- 11. RETRIEVE_NODE_AGENTS **************************************************** -->
+	<target name="retrieve_node_agents"
+		description="This target sets the node agent for the collection. If there is more
+				than one node agent, it asks the user to choose the specific node agent.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wasmultcomponents">
+
+		<wasmultcomponents componentList="was.servers"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.nodes"
+			component="servers" attribute="name" delimiter="|"
+			filterList="profileId=${was.enhanced.root}|name=nodeagent"
+			success="query.succeeded" />
+
+		<if isNotTrue="${query.succeeded}">
+			<fail>
+				The search for the server names based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_Server_Name_of_Your_Application_Server" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName" label="was_servername"
+					list="${was.servers}" listDetails="${was.servers}"
+					type="selectlist" accessibilityName="was_servername"
+					accessibilityDesc="was_servername"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.nodes}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+
+	</target>
+
+	<!-- 11. SET_MIDDLEWARE_PROPERTIES_FOR_HOW_TO_PROCEED *************************** -->
+	<target name="set_middleware_properties_for_how_to_proceed"
+		description="This target sets the various middleware properties for how to
+				proceed. They are set depending on whether the user has chosen
+				to allow the restart of the server, or not.">
+
+		<if isTrue="${restart.server}">
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+			<property name="stop.app.server" value="true" />
+			<property name="start.app.server" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+			<property name="detect.was.status.needed" value="true" />
+			<property name="set.server.restore.status.needed"
+				value="true" />
+		</if>
+
+		<if isNotTrue="${restart.server}">
+			<property name="recovery.needed" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.runtime.trace" value="true" />
+			<property name="detect.was.status.needed" value="true" />
+		</if>
+		<if isTrue="isSunOS">
+			<property name="was.trace.modify" value="true" />
+			<property name="enable.was.jvm.arguments" value="true" />
+		</if>
+
+	</target>
+
+	<!-- 12. DETERMINE_IF_IS_SECURE ************************************************* -->
+	<target name="determine_if_is_secure"
+		description="This target checks the cell security to determine if the security
+				has been set.
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. wascomponent"
+		unless="wasnothere">
+
+		<wascomponent value="is.cell.secure"
+			appInstallRoot="${was.root}" component="cells"
+			attribute="securityEnabled" filterList="name=${CellName}"
+			delimiter="|" success="secure.check.succeeded" />
+
+		<condition property="isSecure">
+			<equals arg1="true" arg2="${is.cell.secure}" />
+		</condition>
+
+		<if isNotTrue="${isSecure}">
+			<autopdproperty name="was.admin.info" value=" " />
+		</if>
+
+		<condition property="isNotSecure">
+			<equals arg1="false" arg2="${is.cell.secure}" />
+		</condition>
+		
+	</target> 
+		
+	<target name="determine_wsadmin_arguments"> 
+		
+<!-- Since we are going to invoke wsadmin calls to determine security settings 
+We want to ensure that we have the correct soap port value.
+In case of ManagedServer, the soap port to use would be Dmgr.
+If its not a managed server, the soap port should be that of the Application Server.
+-->
+<!-- 		
+		<condition property="base.product.was" > 
+			<or> 
+				<equals arg1="${baseTaxonomy}" arg2="SSEQTP" /> 
+			</or> 
+		</condition> 
+
+		<if isTrue="${base.product.was}">
+			<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+		</if> 
+		
+		<if isNotTrue="${base.product.was}">
+		</if>
+-->		 
+		<condition property="is.Not.App.Server" > 
+			<or> 
+				<equals arg1="${ServerName}" arg2="${dmgr.ServerName}" /> 
+			</or> 
+		</condition> 
+
+		<if isTrue="${is.Not.App.Server}">
+<!-- It is dmgr or Nodeagent - 
+The wsadmin arguments should be localhost and soap port 
+--> 
+			<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+			<property name="wsadmin.args1" value="-conntype NONE"/> 
+				
+		</if>
+			
+		<if isNotTrue="${is.Not.App.Server}"> 
+				
+			<condition property="is.NA"> 
+				<or> 
+					<equals arg1="${ServerName}" arg2="${nodeagent.ServerName}" /> 
+				</or> 
+			</condition>
+			<wascomponent value="isManagedServer" appInstallRoot="${was.root}" 
+				component="servers" attribute="managedServer" filterList="id=${profileName}:${CellName}/${NodeName}/${ServerName}" 
+				delimiter="|" success="enhanced.succeeded" />
+			<condition property="Na.or.Managed.App" >
+				<or>
+					<equals arg1="${is.NA}" arg2="true" /> 
+					<equals arg1="${isManagedServer}" arg2="true" /> 
+				</or>
+			</condition>
+				
+			<if isNotTrue="${Na.or.Managed.App}">
+				<property name="wsadmin.args" value="-port ${was.server.soap.port}"/> 
+				<property name="wsadmin.args1" value="-conntype NONE"/> 
+			</if> 
+
+			<if isTrue="${Na.or.Managed.App}" > 
+<!-- Check to see wsadmin.properties file exist and if it does find 
+	com.ibm.ws.scripting.port
+	com.ibm.ws.scripting.host
+values 
+-->
+				<available file="${was.enhanced.root}/properties/wsadmin.properties" type="file" 
+					property="wsadmin.properties.exist" />
+				<if isTrue="${wsadmin.properties.exist}">
+					<autopd_property_reader key="scripting.port" name="com.ibm.ws.scripting.port" 
+						filename="${was.enhanced.root}/properties/wsadmin.properties" />
+					<autopd_property_reader key="scripting.host" name="com.ibm.ws.scripting.host" 
+						filename="${was.enhanced.root}/properties/wsadmin.properties" />
+<!-- At this time prompt to ensure that Dmgr And Nodeagent are running -->
+<!-- User responsibility to keep them active (but not appserver) at the time the wsadmin is invoked 
+Used from "managed-server-status" target in setup-multiple-server.xml --> 
+					
+					<inputdialogtask_v2 noCancel="true"> 
+						<fieldtask name="prompt" type="prompt"
+							bundle="properties/SSEQTP/autopdtoolstrings_was"
+							label="Information_Message"/>
+						<fieldtask name="label0" type="label"
+							label="Empty_Line"
+							bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+						<fieldtask name="label1" type="label"
+							label="Keep_Dmgr_Nodeagent_Active0"	
+							bundle="properties/SSEQTP/autopdtoolstrings_was"/> 	
+						<fieldtask name="label1" type="label"
+							label="Keep_Dmgr_Nodeagent_Active1"	
+							bundle="properties/SSEQTP/autopdtoolstrings_was"/> 	
+					</inputdialogtask_v2>
+	 					
+					<property name="wsadmin.args" value="-port ${scripting.port} -host ${scripting.host}" /> 
+					<property name="wsadmin.args1" value="-port ${scripting.port} -host ${scripting.host}"/> 
+					<property name="sync.arg" value="${scripting.host} ${scripting.port}" /> 
+					
+				</if>
+					
+				</if> 
+			</if> 
+		
+		<echo message="WSAdmin Arguments is ${wsadmin.args}"/> 
+		<echo message="WSAdmin Arguments (1)  is ${wsadmin.args1}"/> 
+ 		
+	</target>
+
+	<!-- 13. ASK_FOR_SECURITY_CREDENTIALS ******************************************* -->
+	<target name="ask_for_user_security_credentials"
+		description="This target asks
+			the user for the login credentials if the cell has been determined to
+			be secured."
+		depends="determine_if_is_secure,determine_wsadmin_arguments">
+
+		<if isTrue="${isSecure}">
+			<autopd_unset_property name="exitloop" /> 
+			<property name="exitloop" value="true" /> 
+			
+			<autopdwhile property="exitloop"> 
+				<inputdialogtask>
+					<fieldtask name="prompt"
+						label="Input_WAS_admin_information" defaultValue="default"
+						type="prompt" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="was.admin.user" label="admin_username"
+						defaultValue="" type="plaintext" initialValueSource="persisted" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="was.admin.password"
+						label="admin_password" defaultValue="" type="password" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				</inputdialogtask>
+
+				<property name="was.security.file" value="${autopdtmp}/trace/config/was-security.txt" />
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+					dir="${was.enhanced.root}/bin" output="${was.security.file}"
+					append="true" os="${os.windows}">
+					<arg
+						line=' ${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+				</exec>
+	
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+					dir="${was.enhanced.root}/bin" output="${was.security.file}"
+					append="true" os="${os.unixkind.exclude.iseries}">
+					<arg
+						line=' ${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+				</exec>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin"
+					dir="${was.enhanced.root}/bin" output="${was.security.file}"
+					append="true" os="OS/400">
+					<arg
+						line=' ${wsadmin.args} -user ${was.admin.user} -password ${was.admin.password}' />
+				</exec>
+				<available file="${was.security.file}" property="was.security.file.exists" />
+			
+				<if isTrue="${was.security.file.exists}">
+					<securitystatus securityFile="${was.security.file}" 
+						regexp="ADMN0022E"
+						secStatus="secStatus" /> 
+				</if>
+
+				<if isNotTrue="${secStatus}">
+					<autopdproperty name="was.admin.info"
+						value=" -user ${was.admin.user} -password ${was.admin.password}" />
+					<persistproperty property="was.admin.user" />
+					<autopdproperty name="exitloop" value="false"/> 
+ 
+				</if>
+				<if isTrue="${secStatus}">
+					<!-- Credentials not correct --> 
+					<autopdproperty name="exitloop" value="true" /> 
+					<wsnlsecho key="WAS_Credentials_Not_Correct" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						message="The WebSphere Administrative User Id and Password are not correct. Please enter the correct values." />
+				</if> 
+			</autopdwhile>				
+		</if>
+
+		<if isNotTrue="${isSecure}">
+			<autopdproperty name="was.admin.info" value="" />
+		</if>
+	</target>
+
+	<!--  14. INITIALIZE_WAS_RUNTIME_ENVIRONMENT ************************************ -->
+	<target name="initialize_was_runtime_environment"
+		description="This target initializes the object model with the state of the
+				application server - STARTED or STOPPED. then, the location of the
+				log files are derived through variable expansion. Finally, the
+				information is persisted to the HTML/XML/properties files that
+				describe the topology.
+				
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. inittopology&lt;br/&gt;
+					2. logredirect&lt;br/&gt;
+					3. persistattributes">
+
+		<!-- a. INITTOPOLOGY -->
+		<inittopology appInstallRoot="${was.root}"
+			taxonomy="${baseTaxonomy}" />
+
+		<!-- b. LOGDIRECT -->
+		<logredirect
+			id="${profileName}:${CellName}/${NodeName}/${ServerName}"
+			defaultPath="${was.enhanced.root}/logs/${ServerName}"
+			appInstallRoot="${was.root}" traceLog="trace.log.file"
+			sysErrLog="systemerr.log.file" sysOutLog="systemout.log.file"
+			nativeStdErrLog="native_stderr.log.file"
+			nativeStdOutLog="native_stdout.log.file" />
+
+		<!-- c. persist the collection -->
+		<persistattributes appInstallRoot="${was.root}"
+			taxonomy="${taxonomy}" problemType="${problem.type}"
+			outputPath="${autopdtmp}" name="meta.output.name" persist="true" />
+		<property name="meta.output.name" value="aim-meta-data" />
+
+	</target>
+
+
+	<!--  15. DETECT_SERVER_RUNNING_STATUS ****************************************** -->
+	<target name="detect_server_running_status"
+		description="Detect the running status of the application server. It will have
+				a value of either STARTED or STOPPED.">
+
+		<property name="was.status.file"
+			value="${autopdtmp}/trace/config/was-status.txt" />
+		
+		<available file="${was.status.file}" type="file" property="was.status.file.available" />
+
+		<if isTrue="${was.status.file.available}" >
+			<delete file="${was.status.file}" quiet="true" failonerror="false" />
+		</if> 
+
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-server-status-template.jacl"
+			tofile="${autopdtmp}/trace/config/was-server-status-filled.jacl"
+			overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+			</filterset>
+		</copy>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			dir="${was.enhanced.root}/bin" output="${was.status.file}"
+			append="true" os="${os.windows}">
+			<arg
+				line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			dir="${was.enhanced.root}/bin" output="${was.status.file}"
+			append="true" os="${os.unixkind.exclude.iseries}">
+			<arg
+				line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin"
+			dir="${was.enhanced.root}/bin" output="${was.status.file}"
+			append="true" os="OS/400">
+			<arg
+				line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} -p "${was.enhanced.root}/properties/wsadmin.properties"' />
+		</exec>
+
+		<detectserverstatus statusFile="${was.status.file}"
+			regexp="${ServerName} is STARTED"
+			serverRunningStatus="was.server.running.status" />
+
+		<condition property="was.server.isRunning">
+			<equals arg1="STARTED" arg2="${was.server.running.status}" />
+		</condition>
+
+		<!-- 23668 Defect --> 
+ 		<if isNotTrue="${was.server.isRunning}">
+			
+			<property name="was.status.file"
+				value="${autopdtmp}/trace/config/was-status.txt" />
+			
+			<available file="${was.status.file}" type="file" property="was.status.file.available" />
+
+			<if isTrue="${was.status.file.available}" >
+				<delete file="${was.status.file}" quiet="true" failonerror="false" />
+			</if> 
+
+			<copy
+				file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-server-status-template.jacl"
+				tofile="${autopdtmp}/was-server-status-filled.jacl"
+				overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				dir="${was.enhanced.root}/bin" output="${was.status.file}"
+				append="true" os="${os.windows}">
+				<arg
+					line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				dir="${was.enhanced.root}/bin" output="${was.status.file}"
+				append="true" os="${os.unixkind.exclude.iseries}">
+				<arg
+					line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin"
+				dir="${was.enhanced.root}/bin" output="${was.status.file}"
+				append="true" os="OS/400">
+				<arg
+					line=' -f "${autopdtmp}/trace/config/was-server-status-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+
+			<detectserverstatus statusFile="${was.status.file}"
+				regexp="${ServerName} is STARTED"
+				serverRunningStatus="was.server.running.status" />
+
+			<condition property="was.server.isRunning">
+				<equals arg1="STARTED"
+					arg2="${was.server.running.status}" />
+			</condition>
+
+		</if>
+
+	</target>
+
+	<!--  16. DETECT_NODE_AGENT_RUNNING_STATUS ************************************** -->
+	<target name="detect_node_agent_running_status"
+		description="Detect the running status of the application server. It will have
+				a value of either STARTED or STOPPED.">
+
+		<property name="was.status.file"
+			value="${autopdtmp}/was-status.txt" />
+		<delete file="${was.status.file}" quiet="true" failonerror="false"/>
+
+		<copy
+			file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-server-status-template.jacl"
+			tofile="${autopdtmp}/was-server-status-filled.jacl"
+			overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+			</filterset>
+		</copy>
+		
+		<wascomponent value="node.agent.soap.port" appInstallRoot="${was.root}" component="connections" attribute="SOAP_CONNECTOR_ADDRESS.port" filterList="id=${profileName}:${CellName}/${NodeName}/nodeagent" delimiter="|" success="enhanced.succeeded" />
+		
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			dir="${was.enhanced.root}/bin" output="${was.status.file}"
+			append="true" os="${os.windows}">
+			<arg
+				line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -port "${node.agent.soap.port}"' />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			dir="${was.enhanced.root}/bin" output="${was.status.file}"
+			append="true" os="${os.unixkind.exclude.iseries}">
+			<arg
+				line=' -f "${autopdtmp}/was-server-status-filled.jacl" ${was.admin.info} -port "${node.agent.soap.port}"' />
+		</exec>
+
+		<detectserverstatus statusFile="${was.status.file}"
+			regexp="${ServerName} is STARTED"
+			serverRunningStatus="was.server.running.status" />
+
+		<condition property="was.server.isRunning">
+			<equals arg1="STARTED" arg2="${was.server.running.status}" />
+		</condition>
+
+		<echo
+			message="Server ${ServerName} is ${was.server.running.status}" />
+	</target>
+
+	<!--  16. ARCHIVE_EXISTING_WAS_LOGS ******************************************** -->
+	<target name="archive_existing_was_logs"
+		description="This target archives the 
+			current WebSphere logs."
+		depends="save_pmrfilename,log_trace_collection,restore_pmrfilename">
+		<!-- this target saves the name of the PMR file name, collect all of the logs, restore the PMR file name -->
+	</target>
+
+	<!--  17. SAVE_PMRFILENAME ***************************************************** -->
+	<target name="save_pmrfilename"
+		description="This target saves the PMR file name
+			in order to use the collection log to archive the current set of logs.">
+		<property name="saved.pmrfilename" value="pmrfilename" />
+	</target>
+
+	<!--  18. RESTORE_PMRFILENAME ************************************************** -->
+	<target name="restore_pmrfilename"
+		description="This target restores the pmrfilename
+			to the variable to be used for the collection.">
+		<property name="pmrfilename" value="saved.pmrfilename" />
+	</target>
+
+	<!--  19. DISPLAY_MESSAGE ******************************************************* -->
+	<target name="display_message"
+		description="This target is a utility debug tool 
+			that can be called from a Java custom Ant task in order to display some 
+			trace to the output stream.">
+		<autopdinput message="${collection.message}" validargs="OK"
+			addproperty="no.prop"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- END INIT - BEGIN COMPLETE ************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!--  collect_all - see common-collections.xml ********************************** -->
+	<!--  collect_autopd_reports - see common-collections.xml *********************** -->
+	<!--  zip_General_Must_Gather  - see was-collections.xml ************************ -->
+	<!--  19. WAS_SERVER_GENERAL_CLEANUP  ******************************************* -->
+	<target name="was_server_general_cleanup"
+		description="TODO: This target needs to be implemented. The intent is to
+				clean up the temporary artifacts created during the collection." />
+
+
+	<!--  20. COMMON_SCRIPT_COMPLETED *********************************************** -->
+	<target name="common_script_completed"
+		description="This target calls the custom Ant task 'cleanup' to remove the
+				temporary artifacts (either was_server_general_cleanup is redundant or
+				this target is).
+				&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. cleanup">
+
+		<cleanup appInstallRoot="${was.root}" taxonomy="${taxonomy}"
+			result="output.result" />
+
+		<if isNotTrue="${useISAGuiCollector}">
+			<autopdinput message="This_data_collection_is_completed_now"
+				validargs="OK" bundle="autopdtoolstrings" />
+		</if>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- IHS Targets **************************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!--  24. ASK_USER_IF_OKAY_TO_SET_TRACE ***************************************** -->
+	<target name="ask_user_if_okay_to_set_trace_on_ihs"
+		description="This target queries
+			the user to get permission to manage IHS (stop/start/set debug).">
+
+		<autopdinput message="Ask_To_Manage_IHS"
+			validargs="OK,Skip,Quit" addproperty="manage.ihs.answer"
+			bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="stop.ihs.collection">
+			<equals arg1="Quit" arg2="${manage.ihs.answer}" />
+		</condition>
+
+		<if isTrue="${stop.ihs.collection}">
+			<fail message="Collection aborted by user." />
+		</if>
+
+		<condition property="ihs.collection.only">
+			<equals arg1="Skip" arg2="${manage.ihs.answer}" />
+		</condition>
+
+		<condition property="ihs.set.log.level">
+			<equals arg1="OK" arg2="${manage.ihs.answer}" />
+		</condition>
+	</target>
+
+	<!--  25. ASK_FOR_IHS_CONF_PATH ************************************************* -->
+	<target name="ask_for_ihs_conf_path"
+		description="This target queries the user
+			for the path to the httpd.conf file.
+			&lt;br/&gt;&lt;br/&gt;
+					Uses AIM Custom Tasks:&lt;br/&gt;
+					1. ihsconfreader">
+
+		<property name="default.ihs.path"
+			value="[path to ihs conf]/httpd.conf" />
+		<inputdialogtask>
+			<fieldtask name="prompt" label="Input_Required"
+				type="prompt" bundle="autopdtoolstrings" />
+			<fieldtask name="ihs.conf.path" label="IHS_Conf_Path"
+				type="filebrowser" bundle="properties/SSEQTP/autopdtoolstrings_was"
+				defaultValue="${default.ihs.path}" initialValueSource="persisted" />
+		</inputdialogtask>
+
+		<ihsconfreader confPath="${ihs.conf.path}" serverRoot="ihs.root"
+			docRoot="ihs.doc.root" logLevel="ihs.log.level"
+			accessLog="ihs.access.log" errorLog="ihs.error.log"
+			customLog="ihs.custom.log" ihsPid="ihs.pid"
+			wasPluginPath="ihs.was.plugin.path" success="ihs.conf.read.succeeded"
+			message="ihs.message" />
+
+		<if isNotTrue="${ihs.conf.read.succeeded}">
+			<fail message="${ihs.message}" />
+		</if>
+
+
+		<available file="${ihs.was.plugin.path}" type="file"
+			property="plugin.exists" />
+
+		<delete file="${autopdtmp}/ihs-httpd-conf.properties" />
+		<concat destfile="${autopdtmp}/ihs-httpd-conf.properties"
+			append="false">
+			# IHS
+			Properties${line.separator}ServerRoot=${ihs.root}${line.separator}LogLevel=${ihs.log.level}${line.separator}IhsPid=${ihs.pid}${line.separator}PluginPath=${ihs.was.plugin.path}
+		</concat>
+
+		<persistproperty property="ihs.conf.path" />
+
+		<!--  make a copy of the httpd.conf file -->
+		<copy file="${ihs.conf.path}" todir="${autopdtmp}" />
+
+		<available file="${ihs.was.plugin.path}" type="file"
+			property="plugin.exists" />
+		<if isTrue="${plugin.exists}">
+			<copy file="${ihs.was.plugin.path}" todir="${autopdtmp}" />
+		</if>
+	</target>
+
+	<!--  26. SET_IHS_LOG_LEVEL_PLUGIN_TRACE **************************************** -->
+	<target name="set_ihs_log_level_plugin_trace"
+		description="This target sets the
+			trace in the httpd.conf file to LogLevel=debug iff the user has given
+			permission to manage the web server."
+		unless="ihs.collection.only">
+
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${was.status.file}" append="true" os="${os.windows}">
+			<arg line="/c Apache -k stop" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl"
+			dir="${ihs.root}/bin" output="${was.status.file}" append="true"
+			os="${os.unixkind}">
+			<arg line=" -k stop" />
+		</exec>
+
+		<!-- set the plugin trace -->
+
+		<!--  set the log level to  LogLevel=debug -->
+		<!--  start the IHS server  with ' -e debug' -->
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${was.status.file}" append="true" os="${os.windows}">
+			<arg line="/c Apache.exe -e debug" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl"
+			dir="${ihs.root}/bin" output="${was.status.file}" append="true"
+			os="${os.unixkind}">
+			<arg line=" -e debug" />
+		</exec>
+	</target>
+
+	<!--  27. RETRIEVE_IHS_INFO ***************************************************** -->
+	<target name="retrieve_ihs_info"
+		description="This target executes the switches using -V, -l, -L, and -t. 
+				Output is sent to the AutoPD temp directory as 'ihs-properties.txt'.">
+
+		<delete file="${autopdtmp}/ihs-properties.txt" />
+		<concat destfile="${autopdtmp}/ihs-properties.txt"
+			append="true">
+			IHS information
+			-------------------------------------------:${line.separator}
+			-----------------------------------------------------------:${line.separator}
+			Compile Settings
+			------------------------------------------:${line.separator}
+		</concat>
+
+		<!-- get the verbose Version information -->
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.windows}">
+			<arg line="/c Apache -V" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.unixkind}">
+			<arg line=" -V" />
+		</exec>
+
+		<concat destfile="${autopdtmp}/ihs-properties.txt"
+			append="true">
+			${line.separator}Compiled in Modules
+			---------------------------------------:${line.separator}
+		</concat>
+
+		<!-- -l List in compiled in modules -->
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.windows}">
+			<arg line="/c Apache -l" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.unixkind}">
+			<arg line=" -l" />
+		</exec>
+
+		<concat destfile="${autopdtmp}/ihs-properties.txt"
+			append="true">
+			${line.separator}Available Configuration Directives
+			------------------------:${line.separator}
+		</concat>
+		<!-- -L List available configuration directives -->
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.windows}">
+			<arg line="/c Apache -L" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.unixkind}">
+			<arg line=" -L" />
+		</exec>
+
+		<concat destfile="${autopdtmp}/ihs-properties.txt"
+			append="true">
+			${line.separator}Syntax check
+			----------------------------------------------:${line.separator}
+		</concat>
+		<!-- -t Check the syntax of the current httpd.conf file -->
+		<exec executable="cmd.exe" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.windows}">
+			<arg line="/c Apache -t" />
+		</exec>
+
+		<exec executable="${ihs.root}/bin/apachectl" dir="${ihs.root}/bin"
+			output="${autopdtmp}/ihs-properties.txt" append="true"
+			os="${os.unixkind}">
+			<arg line=" -t" />
+		</exec>
+
+	</target>
+
+	<!--  28. RESTORE_ORIGINAL_HTTPD_PLUGIN_CONF ************************************ -->
+	<target name="restore_original_httpd_plugin_conf"
+		description="This target restores the original httpd.conf and plugin-cfg.xml files">
+		<!--  make a copy of the httpd.conf file -->
+		
+		<copy file="${autopdtmp}/httpd.conf" tofile="${ihs.conf.path}" />
+
+		<if isTrue="${plugin.exists}">
+			<copy file="${autopdtmp}/plugin-cfg.xml"
+				tofile="${ihs.was.plugin.path}" />
+			<!-- set the trace in the plugin XML file -->
+		</if>
+	</target>
+
+	<!--  29. ANALYZE_WAS *********************************************************** -->
+	<target name="analyze_was"
+		description="This target runs PLRT against the middleware installations to
+	        	gather information.">
+		
+<!-- 
+		<fixcrlf srcdir="${common.setup.targets.parentdir}"
+			includes="**/*.sh" eol="lf" eof="remove" />
+-->			
+<!--
+		<if isNotTrue="${isOS400}">
+			<levelreporttask format="html"
+				filename="${autopdtmp}/autopd/levelreport.html" />
+		</if>
+
+		<echo
+			message="Timeout value for problem analysis task: ${infocollector.timeout} millisecond" />
+-->			
+<!--
+		<echo message="infocollectProblemType : ${infocollectProblemType}" />
+		<echo message="was.problem : ${was.problem}" />
+		<echo message="was.product.name : ${was.product.name}" />
+		<echo message="was.product.version : ${was.product.version}" />
+		<echo message="autopd_name : ${autopd_name}" />
+		<echo message="autopd_version : ${autopd_version}" />
+-->
+<!--		
+		<infocollect problem="${infocollectProblemType}"
+			patternFile="${was.shared.targets.bundle.basedir}/properties/SSEQTP/templates/pattern_template.xml"
+			levelreport="${autopdtmp}/autopd/levelreport.html"
+			autopdreport="${autopdtmp}/autopd/autopd_analysis_report.html"
+			productname="${was.product.name}"
+			productversion="${was.product.version}" autopdname="${autopd_name}"
+			autopdversion="${autopd_version}">
+		</infocollect>
+
+		<property name="analysis.report.filename"
+			value="autopd_analysis_report.html" />
+		<property name="analysis.report.location"
+			value="${autopdtmp}/autopd/autopd_analysis_report.html" />
+
+		<property name="autopdRecoveryPerformed" value="true" />
+
+		<merge_autopdlog destfile="${autopdlog}"
+			sourcefile="${autopd.log.instance}" />
+		<merge_autopdlog destfile="${echolog}"
+			sourcefile="${autopd.echolog.instance}" />
+-->			
+	</target>
+
+	<!--  HISTORICAL TARGETS ******************************************************** -->
+	<target name="log_collection_file_size" > 
+		
+		<length file="${pmrfilename}" property="size.of.collection"/> 
+		
+		<echo file="${autopdtmp}/autopd/SizeOfCollection.txt" message="${size.of.collection}" /> 
+		
+		<echo message="The file size for the collection is ${size.of.collection}."/> 
+		
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${autopdtmp}/autopd" prefix="${autopdProblem}">
+				<include name="SizeOfCollection.txt" />
+			</zipfileset> 
+		</zip>
+		
+		
+	</target> 
+	<!--  30. FTP_LOGS_TO_ECUREP **************************************************** -->
+	<target name="ftp_logs_to_ecurep"
+		description="This target FTPs the archive to
+			ECUREP."
+		depends="ftp_message_shared, 
+					 ftp_collected_information_shared" />
+
+	<target name="determine_verbosegc_enabled" > 
+		
+		<echo message=" " />
+		<stepcount/>
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Determine_VerboseGC_Mode"
+			bundle="properties/SSEQTP/autopdtoolstrings_was"
+			message="[{0}] Step {1}: Checking to see whether Verbose Garbage Collection (verbosegc) is enabled..."
+			replace="${autopdts};;${step.count}" 
+			id="2202" level="error" component="scripts\was\was-outofmemory.xml" />
+		
+		<if isNotTrue="${user.verboseModeGarbageCollection}"> 
+			<echo message="Verbose Garbage Collection (verbosegc) is set to false." />
+			
+			<if isTrue="${isIsaWorkbench}||${isIsaAgent}||${isIsaLiteSwingGui}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="Set_Verbosegc_Command2" 
+						propertyName="Set_Verbosegc_URL"
+						message="For more information : {0}"
+						replace="${verbosegc.web.url}" />
+			</if> 
+			<if isTrue="${isIsaPortable}||${isIsaLiteConsole}">
+				<saveresourcebundleproperty 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						key="Set_Verbosegc_Command2" 
+						propertyName="Set_Verbosegc_URL"
+						message="For more information : {0}"
+						replace="${verbosegc.web.url.text}" />
+			</if> 
+			
+
+			<inputdialogtask_v2  
+				bundle="properties/SSEQTP/autopdtoolstrings_was"
+				noCancel="true">
+				<fieldtask name="prompt4"
+	           		label="Information_Message"
+	           		type="prompt"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="lable01"
+			        label="Set_Verbosegc_Command1"
+	        		type="label"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="lable02"
+			        label="${Set_Verbosegc_URL}"
+	        		type="label"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask_v2>
+
+			
+		</if>
+
+<!--			
+			<inputdialogtask noCancel="true" > 
+				<fieldtask name="prompt4"
+	           		label="Information_Message"
+	           		type="prompt"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="lable01"
+			        label="Set_Verbosegc_Command1"
+	        		type="label"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="lable02"
+			        label="Set_Verbosegc_Command2"
+	        		type="label"
+	           		bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+-->		
+
+	</target>
+
+	<target name="determine_based_on_versions" > 
+		
+		<condition property="jextract_prev" > 
+			<or> 
+				<equals arg1="${isWASVersion50}" arg2="true" /> 
+				<equals arg1="${isWASVersion51}" arg2="true" /> 
+				<equals arg1="${isWASVersion60}" arg2="true" /> 
+			</or> 
+		</condition> 
+		<condition property="jextract_new" > 
+			<or> 
+				<equals arg1="${isWASVersion61}" arg2="true" /> 
+				<equals arg1="${isWASVersion70}" arg2="true" /> 
+				<equals arg1="${isWASVersion80}" arg2="true" />
+				<equals arg1="${isWASVersion85}" arg2="true" />
+			</or> 
+		</condition> 
+		
+	</target>
+
+	
+	<!-- **************************************************************************** -->
+	<!-- END Individual common API targets ****************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- Commerce Init scripts --> 
+	
+	<target name="was_stack_commerce_init" depends="check_app_level,
+		check_for_zos_support,
+		query_pmrfilename,
+		ask_for_middleware_root,
+		initialize_middleware_static_environment,
+		version_level_setup,
+		commerce_environment_init,
+		set_middleware_properties_for_how_to_proceed,
+		initialize_was_runtime_environment,
+		ask_for_user_security_credentials,
+		detect_server_running_status,
+		analyze_was" /> 
+	
+	<target name="commerce_environment_init">
+		
+		<wsnlsecho key="WAS_ENV_PROPERTY_SET"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Profile is set to ${profileName} and Server is set to ${ServerName}."
+		           level="info"
+		           component="\scripts\was\common-setup.xml" />
+
+<!--
+		<if isTrue="${isWASVersion5}">
+			<property name="was.profile.root" value="${was.root}" />
+			<property name="was.enhanced.root" value="${was.root}" />
+		</if>
+--> 
+		<if isTrue="${isWASVersion6}">
+<!--			
+			<wasmultcomponents componentList="was.profiles"
+				appInstallRoot="${was.root}" hasMultComponents="has.mult.profiles"
+				component="profiles" attribute="name" delimiter="|" filterList=""
+				success="query.succeeded" />
+
+			<if isNotTrue="${query.succeeded}">
+				<fail>
+					The search for the profile names based on the root
+					${was.root} failed. Verify that your input is
+					correct and run the collection again.
+				</fail>
+			</if>
+
+			<if isTrue="${has.mult.profiles}">
+				<inputdialogtask>
+					<fieldtask name="prompt"
+						label="Input_Profile_Name_of_Your_Application_Server"
+						type="prompt" bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					<fieldtask name="profileName"
+						label="was_profilename" list="${was.profiles}"
+						listDetails="${was.profiles}" type="selectlist"
+						accessibilityName="was_profilename"
+						accessibilityDesc="was_profilename"
+						bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+				</inputdialogtask>
+			</if>
+
+			<if isNotTrue="${has.mult.profiles}">
+				<property name="profileName" value="${was.profiles}" />
+			</if>
+--> 
+			<wascomponent value="was.enhanced.root"
+				appInstallRoot="${was.root}" component="profiles" attribute="path"
+				filterList="name=${profileName}" delimiter="|"
+				success="enhanced.succeeded" />
+		</if>
+	
+		<wascomponent value="CellName" appInstallRoot="${was.root}"
+			component="servers" attribute="cellName"
+			filterList="profileId=${was.enhanced.root}" delimiter="|"
+			success="cell.succeeded" />
+
+		<wascomponent value="NodeName" appInstallRoot="${was.root}"
+			component="servers" attribute="nodeName"
+			filterList="profileId=${was.enhanced.root}" delimiter="|"
+			success="node.succeeded" />
+
+<!--		
+		<wasmultcomponents componentList="was.servers"
+			appInstallRoot="${was.root}" hasMultComponents="has.mult.servers"
+			component="servers" attribute="name" delimiter="|"
+			filterList="profileId=${was.enhanced.root}"
+			success="query.succeeded" />
+
+		<if isNotTrue="${query.succeeded}">
+			<fail>
+				The search for the server names based on the profile
+				${was.enhanced.root} failed. Verify that your input is
+				correct and run the collection again.
+			</fail>
+		</if>
+
+		<if isTrue="${has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+					label="Input_Server_Name_of_Your_Application_Server" type="prompt"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName" label="was_servername"
+					list="${was.servers}" listDetails="${was.servers}"
+					type="selectlist" accessibilityName="was_servername"
+					accessibilityDesc="was_servername"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" delimiter="|" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+--> 
+		
+	</target> 
+		
+
+	<target name="detectServerStatusWithPid" > 
+		
+<!--		<if isNotTrue="${was.server.isRunning}"> --> 
+			
+			<property name="processList" value="${autopdtmp}/trace/config/ProcessList.txt" />
+			<echo message="java.process.id is ${was.java.process.id}"/> 
+			<exec executable="tasklist"
+			      dir="${was.enhanced.root}/bin"
+			      output="${processList}"
+			      append="true"
+			      os="${os.windows}">
+			</exec>
+			<exec executable="ps"
+			      dir="${was.enhanced.root}/bin"
+			      output="${processList}"
+			      append="true"
+			      os="${os.unixkind.exclude.iseries}">
+				<arg line=" -ef" />
+			</exec>
+			<exec executable="ps"
+			      dir="${was.enhanced.root}/bin"
+			      output="${processList}"
+			      append="true"
+			      os="OS/400">
+				<arg line=" -ef " />
+			</exec>
+			
+			<pidWindows filename="${processList}" pid="${was.java.process.id}" pidAlive="pidAlive"  />
+			<echo message="pidAlive is ${pidAlive}"/> 
+			
+<!--		</if> -->
+	</target> 
+	
+</project>

@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Admin Console Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA" />
+
+	<dirname property="script.basedir" file="${ant.file.Admin Console Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml" />
+	
+	<property name="autopdProblem" value="WAS_Admin_Console_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-admin-console" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os, 
+
+					was_stack_custom_init,	    
+					ask_if_login_possible,
+					generate_admin_console_trace_string,
+		
+					trace_setup_custom, 
+		
+					execute_collector,
+					execute_vce_info_for_was,
+					common_postamble_general_with_ftp">
+	</target>
+
+	<target name="ask_if_login_possible" description="ask the user if they can log in">
+		<autopdinput message="ask_if_able_to_login_to_admin_console"
+		             validargs="Yes,No"
+		             addproperty="do.login.possible"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="can.login">
+			<equals arg1="Yes" arg2="${do.login.possible}" />
+		</condition>
+	</target>
+
+	<target name="generate_admin_console_trace_string"
+	        description="Generate trace string depending on user problem">
+
+		<!-- WAS v6 -->
+		<if isTrue="${isWASVersion6}">
+			<!-- can not log in -->
+			<if isNotTrue="${can.login}">
+				<if isNotTrue="${isSecure}">
+					<property name="was.trace.string"
+					          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webcontainer=all:Webui=all" />
+				</if>
+
+				<if isTrue="${isSecure}">
+					<property name="was.trace.string"
+					          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webcontainer=all:StartupService=all:SASRas=all:com.ibm.ws.security.*=all:SSL=all:Webui=all" />
+				</if>
+			</if>
+
+			<!--  can log in -->
+			<if isTrue="${can.login}">
+				<if isNotTrue="${isSecure}">
+					<property name="was.trace.string"
+					          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:Webui=all" />
+				</if>
+
+				<if isTrue="${isSecure}">
+					<property name="was.trace.string"
+					          value="*=info:com.ibm.ws.management.*=all:com.ibm.ws.sm.*=all:com.ibm.ws.security.*=all:Webui=all" />
+				</if>
+			</if>
+		</if>
+
+		<!-- WAS v5 -->
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string"
+			          value="Webui=all=enabled:Admin=all=enabled:com.ibm.ws.webcontainer.*=all=enabled" />
+
+		</if>
+
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;Administrative Console Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category should be run on the Deployment Manager machine, or, the standalone server
+						containing the administrative console. During the process trace is set on the Deployment Manager,
+				the user is given the opportunity to reproduce the problem, and the logs, trace, and configuration files
+					are collected for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1199337" />
+		
+		<condition property="remote.collector.only">
+							<equals arg1="NO_GUI" arg2="${console}"/>
+						</condition>
+		
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category should be run on the Deployment Manager machine, 
+or, the standalone server containing the administrative console. During the process trace is set on the 
+Deployment Manager, the user is given the opportunity to reproduce the problem, and the logs, trace, 
+and configuration files are collected for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Administrative Console Problem =>
+This problem category should be run on the Deployment Manager machine, or, the standalone server
+containing the administrative console. During the process trace is set on the Deployment Manager,
+the user is given the opportunity to reproduce the problem, and the logs, trace, and configuration files
+are collected for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

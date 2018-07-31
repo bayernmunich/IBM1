@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Java Messaging Service Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir"
+	         file="${ant.file.WebSphere Java Messaging Service Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml" />
+	<autopdimport file="${bundle.basedir}/scripts/was/was-mq-sharedtargets.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+
+	<property name="autopdProblem" value="WAS_JMS_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-jms" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+					set_problem_type_with_nls_bundle,
+					setup_autopd_v2, 
+					validate_os,
+
+					was_stack_custom_init,					 
+
+			         jms_generate_trace_string, 
+					 jms_questions, 
+		
+					 trace_setup_custom,
+							         
+					 collect_mq_info, 
+		
+					 execute_collector, 
+					 execute_vce_info_for_was,
+				     common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="jms_generate_trace_string"
+	        description="generate trace strings for different versions, or conditions">
+
+
+		<if isTrue="${isWASVersion60}">
+			<property name="was.trace.string"
+			          value="*=info:JMSApi=all:JMSServer=all:Messaging=all:JMS_WASTraceAdapter=all:com.ibm.mq.*=all:jmsApi=all:WAS.j2c=all:Transaction=all:EJBContainer=all" />
+		</if>
+		<if isTrue="${isWASVersion61}">
+			<property name="was.trace.string"
+			          value="*=info:JMSApi=all:JMSServer=all:Messaging=all:JMS_WASTraceAdapter=all:com.ibm.mq.*=all:jmsApi=all:WAS.j2c=all:Transaction=all:EJBContainer=all" />
+		</if>
+		<if isTrue="${isWASVersion70}">
+			<property name="was.trace.string"
+			          value="*=info:JMSApi=all:JMSServer=all:Messaging=all:JMS_WASTraceAdapter=all:com.ibm.mq.*=all:jmsApi=all:WAS.j2c=all:Transaction=all:EJBContainer=all" />
+		</if>
+		<if isTrue="${isWASVersion80}">
+			<property name="was.trace.string"
+			          value="*=info:JMSApi=all:Messaging=all:com.ibm.mq.*=all:WAS.j2c=all:Transaction=all:EJBContainer=all" />
+		</if> 
+		<if isTrue="${isWASVersion80}">
+			<property name="was.trace.string"
+			          value="*=info:JMSApi=all:Messaging=all:com.ibm.mq.*=all:WAS.j2c=all:Transaction=all:EJBContainer=all" />
+		</if> 
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string"
+			          value="Messaging=all=enabled:JMSServer=all=enabled:JMSApi=all=enabled:WAS.j2c=all=enabled:EJBContainer=all=enabled" />
+		</if>
+		
+		<echo message="Trace specification string: ${was.trace.string}" />
+		
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="jms_generate_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}" />
+
+		<property name="generic.jvm.arguments" value="-DMQJMS_TRACE_LEVEL=base" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="jms_generate_jvm_arguments_with_condition"
+	        description="generate generic JVM arguments"
+	        if="jms.generate.jvm.arguments.needed">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		<property name="generic.jvm.arguments" value="-DMQJMS_TRACE_LEVEL=base" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+	<!-- This target is used to set the path for how to proceed-->
+	<target name="set_jvm_properties_for_how_to_proceed">
+
+		<if isTrue="${restart.server}">
+			<property name="enable.was.jvm.arguments" value="true" />
+			<property name="restore.was.jvm.arguments" value="true" />
+			<property name="jms.generate.jvm.arguments.needed" value="true" />
+		</if>
+	</target>
+
+	<!-- Provide an overview of script actions  -->
+	<target name="was_jms_information">
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Summary_of_JMS_collection"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.jms1"
+			           label="1The_tool_will_now_begin_collecting_logs_and_other_property_files_related_to_the_JMS_components"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.jms2"
+			           label="2In_addition_the_WebSphere_Application_Server_and_Java_Virtual_Machine_trace_level_settings_are_set_to_values_to_help_provide_more_information"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.jms3"
+			           label="3This_script_may_start/restart_your_server"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.jms4"
+			           label="4Traces_reset"
+			           type="label"
+			           accessibilityName="was_orb_script_info"
+			           accessibilityDesc="was_orb_script_info"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+	</target>
+
+	<target name="jms_questions" >
+		
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_query_jms_problem_type"
+		           bundle="autopdtoolstrings"
+		           message="[{0}] Step {1}: Questions for JMS Problem..."
+		           replace="${autopdts};;${step.count}"
+		           id="1189"
+		           level="info" />
+		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jms.question1"
+			           label="JMS_Q1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jms.question2"
+			           label="JMS_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="broker.type"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JMS_Q4"
+			           list="Embedded Broker:WBI Event Broker:WBI Message Broker:WebSphere MQ Pub/Sub Broker:Don't Know"
+			           listDetails="Embedded Broker:WBI Event Broker:WBI Message Broker:WebSphere MQ Pub/Sub Broker:Don't Know"
+			           type="selectlist" />
+			<fieldtask name="message.type"
+	    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JMS_Q3"
+	    		       list="WebSphere Embedded Messaging:WebSphere MQ:Generic JMS Provider"
+	           		   listDetails="WebSphere Embedded Messaging:WebSphere MQ:Generic JMS Provider"
+					   type="selectlist" />
+			<fieldtask name="ws.jms.question3"
+			           label="JMS_Q5"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Provide a full description of the problem that you have encountered, including the stack traces of any errors or exceptions that are occurring. Provide any logs that contain the errors or exceptions.${line.separator}
+						${ws.jms.question1}${line.separator}
+				</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Under what circumstances does the problem occur? Does it occur every time a certain task is done or does it occur intermittently? Has this problem always occurred? If not, was a change recently made before the problem started to occur?${line.separator}
+						${ws.jms.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			If you are using Publish-Subscribe messaging, what broker are you using ?${line.separator}
+						${broker.type}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What messaging system is your application connecting to ?${line.separator}
+						${message.type}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			What are the names and JNDI names of the JMS connection factories and destinations that are involved in the problem scenario? If a message-driven bean (MDB) is involved in the problem, what is the name of the listener port and the MDB?${line.separator}
+						${ws.jms.question3}${line.separator}
+		</concat>
+
+		<condition property="jms.mq.configured">
+			<or>
+				<equals arg1="WebSphere Embedded Messaging" arg2="${message.type}" />
+				<equals arg1="WebSphere MQ" arg2="${message.type}" />
+			</or>
+		</condition>
+		
+		<if isTrue="${jms.mq.configured}">
+			<echo message="Prompting the user for WebSphere MQ/WebSphere Embedded JMS Questions" />
+			<inputdialogtask noCancel="true" doSkip="true">
+				<fieldtask name="ws.runtime.prompt"
+				           label="Input_Required"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+				<fieldtask name="ws.jms.question6"
+				           label="JMS_Q6"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+				
+			<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+				What is the version of WebSphere MQ / WebSphere Embedded Messaging${line.separator}
+							${ws.jms.question6}${line.separator}
+			</concat>	
+			
+		</if>
+
+	</target>
+			
+	
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Java Messaging Service Problem&lt;/h2&gt;&lt;p&gt;
+				This problem category is run on the managed node experiencing the JMS problem. The trace
+				is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+				configuration, and trace files are collected and made available for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1153217" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the JMS 
+problem. The trace is set, the JVM properties are set, and the problem can then be reproduced. The 
+logs, configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="WebSphere Java Messaging Service Problem =>
+This problem category is run on the managed node experiencing the JMS problem. The trace
+is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+</project>

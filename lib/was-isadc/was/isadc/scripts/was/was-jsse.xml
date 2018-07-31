@@ -1,0 +1,433 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WAS JSSE Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WAS JSSE Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_JSSE_Security_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-jsse" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" 
+		depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os,
+
+		was_stack_custom_init,
+		
+		jsse_collect_info,
+		jsse_required_files, 
+		jsse_required_files_password,
+		generate_jsse_trace_string,
+		generate_jsse_jvm_arguments,
+		
+		trace_setup_custom, 
+			
+		execute_collector, 
+		execute_vce_info_for_was,
+			         
+		common_postamble_general_with_ftp">
+	</target>
+
+	<target name="jsse_collect_info" description="Provide JSSE collection info">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_providing_information_for_the_jsse_specific_problem"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Providing information for the JSSE/SSL specific problem"
+		           replace="${autopdts};;${step.count}"
+		           id="1123"
+		           level="info" />
+
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jsse.question1"
+			           label="JSSE_Q1"
+			           type="selectlist"
+			           list="I am using the default Java Secure Socket Extension(JSSE) providers:I have modified the java.security file"
+			           listDetails="I am using the default Java Secure Socket Extension(JSSE) providers:I have modified the java.security file"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.question4"
+    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="JSSE_Q4"
+		           list="Between client and Web server (i.e  When trying to access a Web resource on the Web server over HTTPS):Between client and Application Server built-in Web server (i.e When trying to access the Application Server Administrative Console):Between Web server Plug-in and Application Server (i.e When trying to access a Web resource on the Application Server over HTTPS):Using SSL connecting to LDAP:Custom Application making HTTPS call:Custom Application making SSL call"
+		           listDetails="Between client and Web server (i.e  When trying to access a Web resource on the Web server over HTTPS):Between client and Application Server built-in Web server (i.e When trying to access the Application Server Administrative Console):Between Web server Plug-in and Application Server (i.e When trying to access a Web resource on the Application Server over HTTPS):Using SSL connecting to LDAP:Custom Application making HTTPS call:Custom Application making SSL call"
+				   type="selectlist" />
+
+<!--			
+			<fieldtask name="ws.jsse.question2"
+			           label="JSSE_Q2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.question3"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JSSE_Q3"
+			           type="textarea" />
+-->			           
+		</inputdialogtask>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Are you using the default Java Secure Socket Extension (JSSE) providers or you have modified your java.security file.${line.separator}
+					${ws.jsse.question1}${line.separator}
+				</concat>
+<!--		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Are you using the default (dummy) certificates, a self-signed certificate, or a Certificate Authority (CA) issued certificate. Have you made any recent changes to your certificate?${line.separator}
+					${ws.jsse.question2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			If you changed your default key, did you change your keystore files?${line.separator}
+					${ws.jsse.question3}${line.separator}
+		</concat>
+
+		<inputdialogtask  noCancel="true" doSkip="true"> 
+			<fieldtask name="ws.runtime.prompt"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jsse.question4"
+    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           label="JSSE_Q4"
+		           list="Between client and Web server (i.e  When trying to access a Web resource on the Web server over HTTPS):Between client and Application Server built-in Web server (i.e When trying to access the Application Server Administrative Console):Between Web server Plug-in and Application Server (i.e When trying to access a Web resource on the Application Server over HTTPS):Using SSL connecting to LDAP:Custom Application making HTTPS call:Custom Application making SSL call"
+		           listDetails="Between client and Web server (i.e  When trying to access a Web resource on the Web server over HTTPS):Between client and Application Server built-in Web server (i.e When trying to access the Application Server Administrative Console):Between Web server Plug-in and Application Server (i.e When trying to access a Web resource on the Application Server over HTTPS):Using SSL connecting to LDAP:Custom Application making HTTPS call:Custom Application making SSL call"
+				   type="selectlist" />
+		</inputdialogtask>
+-->
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Where is the SSL problem occurring?${line.separator}
+					${ws.jsse.question4}${line.separator}
+		</concat>
+
+	</target>
+		
+	<target name="jsse_required_files">
+
+		<autopdproperty name="exitloop" value="true" /> 
+		
+		<autopdwhile property="exitloop" > 
+			<inputdialogtask noCancel="true" doSkip="true" actionProperty="user.script.continue" >
+				<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+				<fieldtask name="prompt0"
+				           label="JSSE_Require_Files0"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label1"
+				           label="JSSE_Require_Files1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+					       label="JSSE_Require_Files2"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label2"
+					       label="JSSE_Require_Files3"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label3"
+					       label="JSSE_Require_Files4"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label3"
+					       label="JSSE_Require_Files5"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="label3"
+					       label="JSSE_Require_Files6"
+					       type="label"
+					       bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+						   label="Empty_Line"
+						   type="label"
+						   bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="ws.jsse.files1"
+				           label="JSSE_Require_Files7"
+				           type="filebrowser"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		
+			<autopd_unset_property name="isSkipped"/>
+			<condition property="isSkipped">
+				<equals arg1="skip" arg2="${user.script.continue}" casesensitive="false" />
+			</condition>
+							
+			<autopd_if isTrue="${isSkipped}">
+				<wsnlsecho key="Skip_Registry_JSSE" 
+					bundle="properties/SSEQTP/autopdtoolstrings_was"
+					message="Skipping the collection for Registry Information in JSSE Problem." />
+				<autopdproperty name="exitloop" value="false"/>  <!-- exit loop -->
+			</autopd_if>
+			
+			<autopd_if isNotTrue="${isSkipped}">
+				
+				<available file="${ws.jsse.files1}" type="file" property="available.jsse.files1" />
+	
+				<if isNotTrue="${available.jsse.files1}" > 
+					<wsnlsecho key="File_Does_Not_Exist" 
+						bundle="properties/SSEQTP/autopdtoolstrings_was"
+						message="The file '${ws.jsse.files1}' does not eixst. Please enter the correct file or choose Skip." />
+					<inputdialogtask noCancel="true" > 
+						<fieldtask name="prompt0"
+						           label="Information_Message"
+						           type="prompt"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label1"
+					    	       label="File_Not_Existing"
+					        	   type="label"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+						<fieldtask name="label1"
+					    	       label="${ws.jsse.files1}"
+					        	   type="label"
+						           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+					</inputdialogtask>
+				
+				</if> 
+				<if isTrue="${available.jsse.files1}" > 
+					<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+						<zipfileset file="${ws.jsse.files1}"  prefix="${autopdProblem}/jsse" />
+					</zip>
+					<autopdproperty name="exitloop" value="false" /> <!-- exit loop -->
+				</if>
+
+			</autopd_if> 
+				
+				
+		</autopdwhile> 
+		
+		<available file="${was.root}/java/jre/lib/security/java.security" type="file" property="was.jre.lib.security.exists" /> 
+		<if isTrue="${was.jre.lib.security.exists}">
+			<zipfileset dir="${was.root}/java/jre/lib/security" prefix="${autopdProblem}/jsse" >
+				<include name="java.security"/>
+			</zipfileset>
+<!--		
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${was.root}/java/jre/lib/security/java.security"  prefix="${autopdProblem}/jsse" />
+			</zip>
+--> 			
+		</if> 
+<!--		
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+			           label="Input_Required"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="label0"
+			           label="JSSE_Require_Files"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.files1"
+			           label="JSSE_Files1"
+			           type="filebrowser"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.files2"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JSSE_Files2"
+			           type="filebrowser" />
+			<fieldtask name="ws.jsse.files3"
+	    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JSSE_Files3"
+					   type="filebrowser" />
+			<fieldtask name="ws.jsse.files4"
+	    		       bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           label="JSSE_Files4"
+					   type="filebrowser" />
+		</inputdialogtask>
+
+		
+		<available file="${ws.jsse.files1}" type="file" property="available.jsse.files1" />
+		<available file="${ws.jsse.files2}" type="file" property="available.jsse.files2" />
+		<available file="${ws.jsse.files3}" type="file" property="available.jsse.files3" />
+		<available file="${ws.jsse.files4}" type="file" property="available.jsse.files4" />
+		
+		<if isTrue="${available.jsse.files1}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${ws.jsse.files1}"  prefix="${autopdProblem}/jsse" />
+			</zip>
+		</if>
+		
+		<if isTrue="${available.jsse.files2}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${ws.jsse.files2}"  prefix="${autopdProblem}/jsse" />
+			</zip>
+		</if>
+		
+		<if isTrue="${available.jsse.files3}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${ws.jsse.files3}"  prefix="${autopdProblem}/jsse" />
+			</zip>
+		</if>
+
+		<if isTrue="${available.jsse.files4}">
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset file="${ws.jsse.files4}"  prefix="${autopdProblem}/jsse" />
+			</zip>
+		</if>
+
+
+-->			
+	</target>
+		
+
+	<target name="jsse_required_files_password" >
+	
+		<inputdialogtask noCancel="true" doSkip="true">
+			<fieldtask name="ws.runtime.prompt"
+		           label="Input_Required"
+		           type="prompt"
+		           bundle="autopdtoolstrings" />
+			<fieldtask name="ws.jsse.pass1"
+				   label="JSSE_PASS1"
+				   type="password"	
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.pass2"
+				   label="JSSE_PASS2"
+				   type="password"	
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="ws.jsse.pass4"
+				   label="JSSE_PASS4"
+				   type="password"	
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Keystore password, if applicable${line.separator}
+					${ws.jsse.pass1}${line.separator}
+		</concat>
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Truststore password, if applicable${line.separator}
+					${ws.jsse.pass2}${line.separator}
+		</concat>		
+		
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			Plugin.kdb password, if applicable${line.separator}
+					${ws.jsse.pass4}${line.separator}
+		</concat>						
+
+	</target>
+
+	<target name="generate_jsse_trace_string" description="generate jsse trace string">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating trace strings"
+		           replace="${autopdts};;${step.count}"
+		           id="2060"
+		           level="info" />
+		
+		<if isTrue="${isWASVersion6}">
+			<property name="was.trace.string" value="SSL=all" />
+		</if>
+<!--
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="ORBRas=all=enabled" />
+		</if>
+-->
+		<echo message="Trace specification string: ${was.trace.string}" />
+
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_jsse_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+
+		<property name="jvm_arguments" value="true" />
+		<property name="generic.jvm.arguments"
+		          value='"-Djavax.net.debug=true"' />
+		<autopdlog message="Generic JVM arguments: ${generic.jvm.arguments}"
+		           id="1184"
+		           level="info" />
+		<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;JSSE/SSL Problem&lt;/h2&gt;&lt;p&gt;
+					This problem category is run on the managed node experiencing the JSSE/SSL problem. The trace
+					is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+					configuration, and trace files are collected and made available for further analysis.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1162961" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category is run on the managed node experiencing the JSSE/SSL
+problem. The trace is set, the JVM properties are set, and the problem can then be reproduced. The
+logs, configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="JSSE/SSL Problem =>
+This problem category is run on the managed node experiencing the JSSE/SSL problem. The trace
+is set, the JVM properties are set, and the problem can then be reproduced. The logs,
+configuration, and trace files are collected and made available for further analysis." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+		
+
+</project>

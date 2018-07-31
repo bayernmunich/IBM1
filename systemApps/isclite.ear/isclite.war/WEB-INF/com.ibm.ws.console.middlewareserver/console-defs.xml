@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <!--  Server - Collection View -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MiddlewareServerController"
+        name="MiddlewareServer.content.main" path="/com.ibm.ws.console.middlewareserver/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer"/>
+        <put name="descTitle" value="MiddlewareServer.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="MiddlewareServer.description"/>
+        <put name="serverType" value="MIDDLEWARESERVER_SERVER"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.paging.extend"/>
+            <add value="MiddlewareServer.quicksearch.extend"/>
+            <add value="MiddlewareServer.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="MiddlewareServer.paging.extend">
+        <put name="displayLabelKey" value="MiddlewareServer.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+    </definition>
+    <!--
+    <definition extends="quicksearch.main" name="MiddlewareServer.quicksearch.extend">
+    -->
+    <definition name="MiddlewareServer.quicksearch.extend" path="/com.ibm.ws.console.middlewareserver/quicksearchLayout.jsp">
+        <put name="selectUri" value="MiddlewareServerCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.content.main"/>
+        <put name="parameterName" value="quickSearchState"/>
+        <putList name="searchList">
+            <add value="ManagedObject.name.displayName:name"/>
+            <add value="Server.node.displayName:node"/>
+            <add value="node.version.displayName:version"/>
+            <add value="Server.type.displayName:type"/>
+            <add value="Server.status.displayName:status:ExecutionState.STARTED,ExecutionState.STOPPED,ExecutionState.UNAVAILABLE,ExecutionState.All"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.collection.table.extends" path="/com.ibm.ws.console.middlewareserver/collectionTableLayoutwFilter.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="buttons" value="MiddlewareServer.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.content.main"/>
+        <put name="serverType" value="MiddlewareServer"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/MiddlewareServer/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/MiddlewareServer/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.collection.buttons.panel" path="/com.ibm.ws.console.middlewareserver/buttonLayout.jsp">
+        <put name="buttonCount" value="6"/>
+        <put name="definitionName" value="MiddlewareServer.collection.buttons.panel"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerCollectionForm"/>
+        <put name="includeForm" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.maintenance.label:modeAction:no:Select:middlewareserver.maintenance.desc:no:yes:middlewareserver.maintenance.label,middlewareserver.maintenance.maint,middlewareserver.maintenance.maint_break,middlewareserver.maintenance.maint_stop,middlewareserver.maintenance.normal:middlewareserver.maintenance.label,middlewareserver.maintenance.maint,middlewareserver.maintenance.maint_break,middlewareserver.maintenance.maint_stop,middlewareserver.maintenance.normal"/>
+        </putList>
+        <putList name="actionList"/>
+    </definition>
+    <!--  Server - Detail View -->
+    <definition extends="detail.config.view" name="MiddlewareServer.config.view">
+        <put name="contextType" value="MiddlewareServer"/>
+        <putList name="list">
+            <add value="MiddlewareServer.detail.title"/>
+            <add value="MiddlewareServer.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="MiddlewareServer.detail.title">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="titleKey" value="MiddlewareServer.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="MiddlewareServer.description"/>
+        <put name="displayName" value="MiddlewareServer.displayName"/>
+    </definition>
+    <definition name="MiddlewareServer.detail.tabsLayout" path="/com.ibm.ws.console.middlewareserver/tabsLayout.jsp">
+        <put name="selectUri" value="MiddlewareServerDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view"
+        name="MiddlewareServer.config.tab.view" path="/com.ibm.ws.console.middlewareserver/configTabLayout.jsp">
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+        <putList name="list">
+            <add value="MiddlewareServer.detail.buttons.panel"/>
+            <add value="MiddlewareServer.config.general.properties"/>
+            <add value="MiddlewareServer.config.additional.properties"/>
+            <add value="MiddlewareServer.config.related.items"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.tab.view"
+        name="MiddlewareServer.external.log.config.tab.view" path="/com.ibm.ws.console.middlewareserver/configTabLayout.jsp">
+        <put name="helpTopic" value="MiddlewareServer.ExternalLogFile.viewer"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+        <putList name="list">
+            <add value="MiddlewareServer.detail.buttons.panel"/>
+            <add value="MiddlewareServer.config.general.properties"/>
+            <add value="MiddlewareServer.config.additional.properties"/>
+            <add value="MiddlewareServer.config.related.items"/>
+        </putList>
+    </definition>
+    <definition extends="detail.config.tab.view"
+        name="MiddlewareServer.external.config.tab.view" path="/com.ibm.ws.console.middlewareserver/configTabLayout.jsp">
+        <put name="helpTopic" value="MiddlewareServer.ExternalConfigFile.editor"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+        <putList name="list">
+            <add value="MiddlewareServer.detail.buttons.panel"/>
+            <add value="MiddlewareServer.config.general.properties"/>
+            <add value="MiddlewareServer.config.additional.properties"/>
+            <add value="MiddlewareServer.config.related.items"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServer.detail.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="MiddlewareServer.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties"
+        name="MiddlewareServer.config.general.properties" path="/secure/layouts/configGenPropLayout.jsp">
+        <put name="formAction" value="MiddlewareServerDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ApplicationServer.name.displayName:name:no:Text:ApplicationServer.name.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="Server.mbean.nodeName.displayName:node:no:Text:Server.mbean.nodeName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.propgroups.displayPropGroups: :yes:jsp:middlewareserver.propgroups.description:no:yes: : :/com.ibm.ws.console.middlewareserver/foreignserver.jsp"/>
+            <!-- <item  value="SessionManager.sessionTimeout.displayName: :no:Custom:SessionManager.sessionTimeout.description:no:yes: : :/com.ibm.ws.console.servermanagement/webcontainer/sessionTimeout.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/> -->
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.config.additional.properties" path="/com.ibm.ws.console.middlewareserver/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition name="MiddlewareServer.config.related.items" path="/secure/layouts/relatedItemsLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition name="MiddlewareServer.config.foreignserver" path="/com.ibm.ws.console.middlewareserver/foreignserver.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition name="MiddlewareServer.config.propertygroup" path="/com.ibm.ws.console.middlewareserver/propgroup.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.PropertyGroupDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <definition name="MiddlewareServer.config.properties" path="/com.ibm.ws.console.middlewareserver/properties.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.PropertiesDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <!-- MiddleWare Server Class Wizard -->
+    <definition name="MiddlewareServerClass.wizard.steps" path="/com.ibm.ws.console.middlewareserver/stepsLayout.jsp">
+        <put name="contextType" value="MiddlewareServerClass.wizard.steps"/>
+        <put name="titleKey" value="middlewareserver.create.new"/>
+        <put name="descKey" value="middlewareserver.create.new.description"/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value="CreateNewMiddlewareServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="stepArraySessionKey" value="MIDDLEWARE_SERVER_CLASSTEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerClass" value="middlewareserver.class.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerNode" value="middlewareserver.class.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerRuntime" value="middlewareserver.class.step2a"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerTemplate" value="middlewareserver.class.step3"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/ConfirmCreateMiddlewareServer" value="middlewareserver.class.step4"/>
+        </putList>
+    </definition>
+    <definition extends="MiddlewareServerClass.wizard.steps" name="middlewareserver.class.step1">
+        <put name="actionHandler" value="selectMiddlewareServerClass"/>
+        <put name="jspName" value="SelectMiddlewareServerClass"/>
+        <put name="actionForm" value="SelectMiddlewareServerClassForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+    </definition>
+    <definition extends="MiddlewareServerClass.wizard.steps" name="middlewareserver.class.step2">
+        <put name="actionHandler" value="selectMiddlewareServerNode"/>
+        <put name="jspName" value="SelectMiddlewareServerNode"/>
+        <put name="actionForm" value="SelectMiddlewareServerNodeForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="showPrevious" value="no"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+    </definition>
+    <definition extends="MiddlewareServerClass.wizard.steps" name="middlewareserver.class.step2a">
+        <put name="actionHandler" value="selectMiddlewareServerRuntime"/>
+        <put name="jspName" value="SelectMiddlewareServerRuntime"/>
+        <put name="actionForm" value="SelectMiddlewareServerRuntimeForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+    </definition>
+    <definition extends="MiddlewareServerClass.wizard.steps" name="middlewareserver.class.step3">
+        <put name="actionHandler" value="selectMiddlewareServerTemplate"/>
+        <put name="jspName" value="SelectMiddlewareServerTemplate"/>
+        <put name="actionForm" value="SelectMiddlewareServerTemplateForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+    </definition>
+    <definition extends="MiddlewareServerClass.wizard.steps" name="middlewareserver.class.step4">
+        <put name="actionHandler" value="confirmCreateMiddlewareServer"/>
+        <put name="jspName" value="ConfirmCreateMiddlewareServer"/>
+        <put name="actionForm" value="ConfirmCreateMiddlewareServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="helpTopic" value="MiddlewareServer.create.wizard.new"/>
+        <put name="pluginId" value="com.ibm.ws.console.middlewareserver"/>
+    </definition>
+    <!--Middleware Server  File View page -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MiddlewareServerEditConfigController"
+        extends="detail.config.tab.view" name="MiddlewareServer.file.view">
+        <put name="contextType" value="MiddlewareServer"/>
+        <put name="descTitle" value="middlewareserver.configFile.displayName"/>
+        <put name="descText" value="middlewareserver.configFile.description"/>
+        <putList name="list">
+            <!--
+            <add value="MiddlewareServer.file.detail.title"/>
+			  -->
+            <add value="MiddlewareServer.file.detail.viewLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="MiddlewareServer.file.detail.title">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerEditConfigForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerEditConfigForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="titleKey" value="middlewareserver.configFile.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="configFileName"/>
+        <put name="instanceDescription" value="middlewareserver.configFile.description"/>
+        <put name="displayName" value="middlewareserver.configFile.displayName"/>
+    </definition>
+    <definition name="MiddlewareServer.file.detail.viewLayout" path="/com.ibm.ws.console.middlewareserver/configFileViewLayout.jsp">
+        <put name="label" value="middlewareserver.configFile.displayName"/>
+        <put name="size" value="50"/>
+        <put name="property" value="fileText"/>
+        <put name="formAction" value="middlewareServerFileView.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerEditConfigForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerEditConfigForm"/>
+    </definition>
+    <!--End of Middleware Server Edit Configuration File Page -->
+    <!--  Server Operations - Collection View -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsController"
+        name="MiddlewareServerOps.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServerOps"/>
+        <put name="descTitle" value="middlewareserver.serverops.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="middlewareserver.serverops.description"/>
+        <put name="helpTopic" value="MiddlewareServerOperations"/>
+        <put name="serverType" value="MIDDLEWARESERVER_SERVER"/>
+        <putList name="contentList">
+            <add value="MiddlewareServerOps.paging.extend"/>
+            <add value="MiddlewareServerOps.quicksearch.extend"/>
+            <add value="MiddlewareServerOps.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="MiddlewareServerOps.paging.extend">
+        <put name="displayLabelKey" value="middlewareserver.serverops.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerOpsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="MiddlewareServerOps.quicksearch.extend">
+        <put name="selectUri" value="MiddlewareServerOpsCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerOpsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <putList name="searchList">
+            <add value="ManagedObject.name.displayName:name"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServerOps.collection.table.extends" path="/com.ibm.ws.console.middlewareserver/collectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="useRefId" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerOpsCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsCollectionForm"/>
+        <put name="buttons" value="MiddlewareServerOps.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerOps.content.main"/>
+        <put name="serverType" value="MiddlewareServer"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/MiddlewareServerOps/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/MiddlewareServerOps/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServerOps.collection.buttons.panel">
+        <put name="buttonCount" value="5"/>
+        <put name="definitionName" value="MiddlewareServerOps.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <!--  Server Operations - Detail View -->
+    <!-- NamedPrcessDef page -->
+    <definition extends="detail.config.view" name="MiddlewareServerOps.ProcDef.config.view">
+        <put name="contextType" value="MiddlewareServerOpsProcDef"/>
+        <putList name="list">
+            <add value="MiddlewareServerOps.ProcDef.detail.title"/>
+            <add value="MiddlewareServerOps.ProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="MiddlewareServerOps.ProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="titleKey" value="MiddlewareServer.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerOps.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="MiddlewareServer.description"/>
+        <put name="displayName" value="MiddlewareServer.displayName"/>
+        <put name="helpTopic" value="MiddlewareServerOperations.selectoperations"/>
+    </definition>
+    <definition name="MiddlewareServerOps.ProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="MiddlewareServerOpsDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view"
+        name="MiddlewareServerOps.ProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="MiddlewareServerOps.ProcDef.detail.buttons.panel"/>
+            <add value="MiddlewareServerOps.ProcDef.config.general.properties"/>
+            <add value="MiddlewareServerOps.ProcDef.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServerOps.ProcDef.detail.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="MiddlewareServerOps.ProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties"
+        name="MiddlewareServerOps.ProcDef.config.general.properties" path="/com.ibm.ws.console.middlewareserver/configGenPropLayout.jsp">
+        <put name="formAction" value="MiddlewareServerOpsDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayName:name:yes:Text:ProcessDef.executableName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutable:executableName:no:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVar:usernameVar:no:Text:middlewareserver.operation.usernameVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVal:usernameVal:no:Text:middlewareserver.operation.usernameVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVar:passwordVar:no:Text:middlewareserver.operation.passwordVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVal:passwordVal:no:Password:middlewareserver.operation.passwordVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayOsnames:osnamesList:no:DynamicSelect:middlewareserver.operation.osnames.description:no:yes:windows,unix,zos:middlewareserver.operation.windows,middlewareserver.operation.unix,middlewareserver.operation.zos: :true"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayPidVarName:pidVarName:no:Text:middlewareserver.operation.pidVarName.description:no:yes"/>
+        </putList>
+    </definition>
+    <!-- for wizard: attributeList must keep the same as above -->
+    <definition name="MiddlewareServerOps.wizard.ProcDef" path="/com.ibm.ws.console.middlewareserver/createProcDef.jsp">
+        <put name="formName" value="SelectMiddlewareServerOpsProcDefForm"/>
+        <put name="actionForm" value="SelectMiddlewareServerOpsProcDefForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayName:name:yes:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutable:executableName:no:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVar:usernameVar:no:Text:middlewareserver.operation.usernameVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVal:usernameVal:no:Text:middlewareserver.operation.usernameVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVar:passwordVar:no:Text:middlewareserver.operation.passwordVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVal:passwordVal:no:Password:middlewareserver.operation.passwordVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayOsnames:osnamesList:no:DynamicSelect:middlewareserver.operation.osnames.description:no:yes:windows,unix,zos:middlewareserver.operation.windows,middlewareserver.operation.unix,middlewareserver.operation.zos: :true"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayPidVarName:pidVarName:no:Text:middlewareserver.operation.pidVarName.description:no:yes"/>
+        </putList>
+    </definition>
+    <definition
+        name="MiddlewareServerOps.ProcDef.config.additional.properties" path="/secure/layouts/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <!-- NamedJavaPrcessDef page -->
+    <definition extends="detail.config.view" name="MiddlewareServerOps.JavaProcDef.config.view">
+        <put name="contextType" value="MiddlewareServerOpsJavaProcDef"/>
+        <putList name="list">
+            <add value="MiddlewareServerOps.JavaProcDef.detail.title"/>
+            <add value="MiddlewareServerOps.JavaProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="MiddlewareServerOps.JavaProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="titleKey" value="MiddlewareServer.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerOps.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="MiddlewareServer.description"/>
+        <put name="displayName" value="MiddlewareServer.displayName"/>
+        <put name="helpTopic" value="MiddlewareServerOperations.selectoperations"/>
+    </definition>
+    <definition name="MiddlewareServerOps.JavaProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="MiddlewareServerOpsDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view"
+        name="MiddlewareServerOps.JavaProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="MiddlewareServerOps.JavaProcDef.detail.buttons.panel"/>
+            <add value="MiddlewareServerOps.JavaProcDef.config.general.properties"/>
+            <add value="MiddlewareServerOps.JavaProcDef.config.additional.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServerOps.JavaProcDef.detail.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="MiddlewareServerOps.JavaProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties"
+        name="MiddlewareServerOps.JavaProcDef.config.general.properties" path="/com.ibm.ws.console.middlewareserver/configGenPropLayout.jsp">
+        <put name="formAction" value="MiddlewareServerOpsDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayName:name:yes:Text:ProcessDef.executableName.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutableTarget:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:yes:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutable:executableName:no:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVar:usernameVar:no:Text:middlewareserver.operation.usernameVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVal:usernameVal:no:Text:middlewareserver.operation.usernameVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVar:passwordVar:no:Text:middlewareserver.operation.passwordVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVal:passwordVal:no:Password:middlewareserver.operation.passwordVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayOsnames:osnamesList:no:Dynamicselect:middlewareserver.operation.osnames.description:no:yes:windows,unix,zos:middlewareserver.operation.windows,middlewareserver.operation.unix,middlewareserver.operation.zos: :true"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayPidVarName:pidVarName:no:Text:middlewareserver.operation.pidVarName.description:no:yes"/>
+        </putList>
+    </definition>
+    <!-- for wizard: attributeList must keep the same as above -->
+    <definition name="MiddlewareServerOps.wizard.JavaProcDef" path="/com.ibm.ws.console.middlewareserver/createProcDef.jsp">
+        <put name="formName" value="SelectMiddlewareServerOpsProcDefForm"/>
+        <put name="actionForm" value="SelectMiddlewareServerOpsProcDefForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayName:name:yes:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutableTarget:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:yes:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayExecutable:executableName:no:Text:ProcessDef.executableName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVar:usernameVar:no:Text:middlewareserver.operation.usernameVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.usernameVal:usernameVal:no:Text:middlewareserver.operation.usernameVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVar:passwordVar:no:Text:middlewareserver.operation.passwordVar.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.passwordVal:passwordVal:no:Password:middlewareserver.operation.passwordVal.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayOsnames:osnamesList:no:Dynamicselect:middlewareserver.operation.osnames.description:no:yes:windows,unix,zos:middlewareserver.operation.windows,middlewareserver.operation.unix,middlewareserver.operation.zos: :true"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="middlewareserver.operation.displayPidVarName:pidVarName:no:Text:middlewareserver.operation.pidVarName.description:no:yes"/>
+        </putList>
+    </definition>
+    <definition
+        name="MiddlewareServerOps.JavaProcDef.config.additional.properties" path="/secure/layouts/addPropLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerOpsDetailForm"/>
+        <putList name="list"/>
+    </definition>
+    <!-- Server Operations Create Operation Wizard -->
+    <definition name="MiddlewareServerOps.wizard.steps" path="/secure/layouts/stepsLayout.jsp">
+        <put name="contextType" value="MiddlewareServerOps.wizard.steps"/>
+        <put name="titleKey" value="middlewareserverops.create.new"/>
+        <put name="descKey" value="middlewareserverops.create.new.description"/>
+        <put name="actionHandler" value=""/>
+        <put name="actionForm" value="CreateNewMiddlewareServerOpsForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerOpsForm"/>
+        <put name="reqdTaskSessionKey" value=""/>
+        <put name="stepArraySessionKey" value="MIDDLEWARE_SERVEROPS_STEPARRAY"/>
+        <put name="disableStepsLink" value="true"/>
+        <putList name="stepsList">
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerOpsType" value="middlewareserverops.new.step1"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/SelectMiddlewareServerOpsProcDef" value="middlewareserverops.new.step2"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.AppInstallItem"
+                link="/com.ibm.ws.console.middlewareserver/ConfirmCreateMiddlewareServerOps" value="middlewareserverops.new.step3"/>
+        </putList>
+    </definition>
+    <definition extends="MiddlewareServerOps.wizard.steps" name="middlewareserverops.new.step1">
+        <put name="actionHandler" value="selectMiddlewareServerOpsType"/>
+        <put name="jspName" value="SelectMiddlewareServerOpsType"/>
+        <put name="actionForm" value="SelectMiddlewareServerOpsTypeForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerOpsForm"/>
+    </definition>
+    <definition extends="MiddlewareServerOps.wizard.steps" name="middlewareserverops.new.step2">
+        <put name="actionHandler" value="selectMiddlewareServerOpsProcDef"/>
+        <put name="jspName" value="SelectMiddlewareServerOpsProcDef"/>
+        <put name="actionForm" value="SelectMiddlewareServerOpsProcDefForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerOpsForm"/>
+    </definition>
+    <definition extends="MiddlewareServerOps.wizard.steps" name="middlewareserverops.new.step3">
+        <put name="actionHandler" value="confirmCreateMiddlewareServerOps"/>
+        <put name="jspName" value="ConfirmCreateMiddlewareServerOps"/>
+        <put name="actionForm" value="ConfirmCreateMiddlewareServerOpsForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerOpsForm"/>
+    </definition>
+    <!-- MiddlewareServer Template Panels -->
+    <!-- MiddlewareServer Template Collection View -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateController"
+        name="MiddlewareServerTemplate.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServerTemplate"/>
+        <put name="descTitle" value="ServerTemplate.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="ServerTemplate.description"/>
+        <put name="helpTopic" value="MiddlewareServerTemplate"/>
+        <putList name="contentList">
+            <add value="MiddlewareServerTemplate.paging.extend"/>
+            <add value="MiddlewareServerTemplate.quicksearch.extend"/>
+            <add value="MiddlewareServerTemplate.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="MiddlewareServerTemplate.quicksearch.extend">
+        <put name="selectUri" value="MiddlwareServerTemplateCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <putList name="searchList">
+            <add value="template.name:name"/>
+            <add value="ServerTemplate.platform.displayName:platform"/>
+            <add value="ServerTemplate.version.displayName:version"/>
+            <add value="template.description:description"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="MiddlewareServerTemplate.paging.extend">
+        <put name="displayLabelKey" value="ServerTemplate.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.main" name="MiddlewareServerTemplate.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerTemplateCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateCollectionForm"/>
+        <put name="buttons" value="MiddlewareServerTemplate.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServerTemplate.content.main"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/MiddlewareServerTemplate/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/MiddlewareServerTemplate/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServerTemplate.collection.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="MiddlewareServerTemplate.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.templates.SelectMiddlewareServerController"
+        name="MiddlewareServer.selectserver.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer.selectserver.main"/>
+        <put name="descTitle" value="serverForTemplate.select.title"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="serverForTemplate.select.text"/>
+        <put name="helpTopic" value="MiddlewareServer.selectserver"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.selectserver.paging.extend"/>
+            <!--             <add value="MiddlewareServer.selectserver.quicksearch.extend"/>  -->
+            <add value="MiddlewareServer.select.server"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="MiddlewareServer.selectserver.paging.extend">
+        <put name="displayLabelKey" value="servers.displayName"/>
+        <put name="collectionForm" value="selectMiddlewareServerForm"/>
+        <put name="formAction" value="selectMiddlewareServerForTemplate.do"/>
+        <put name="formName" value="selectMiddlewareServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServersCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="MiddlewareServer.selectserver.quicksearch.extend">
+        <put name="selectUri" value="selectMiddlewareServerForTemplate.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="selectMiddlewareServerForm"/>
+        <put name="formAction" value="selectMiddlewareServerForTemplate.do"/>
+        <put name="formName" value="selectMiddlewareServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServersCollectionForm"/>
+        <putList name="searchList">
+            <add value="servers.displayName:server"/>
+            <add value="nodes.displayName:node"/>
+            <add value="node.version.displayName:version"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.createtemplate.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer.createtemplate"/>
+        <put name="descTitle" value="middlewareserver.create.new.template"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="middlewareserver.create.new.template.description"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.select.type"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.select.type" path="/com.ibm.ws.console.middlewareserver/selectMiddlewareServerTemplateType.jsp">
+        <put name="formAction" value="selectMiddlewareServerTemplateType.do"/>
+        <put name="formName" value="SelectMiddlewareServerTemplateTypeForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.CreateNewMiddlewareServerForm"/>
+        <put name="createButtons" value="true"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.templates.SelectMiddlewareServerController"
+        name="MiddlewareServer.select.server" path="/com.ibm.ws.console.middlewareserver/selectServerForTemplateCollectionLayout.jsp">
+        <put name="iterationName" value="selectMiddlewareServerForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="single"/>
+        <put name="createButtons" value="true"/>
+        <put name="selectName" value="selectedServer"/>
+        <put name="formAction" value="selectMiddlewareServerForTemplate.do"/>
+        <put name="formName" value="selectMiddlewareServerForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServersCollectionForm"/>
+        <put name="includeButtonTile" value="false"/>
+        <putList name="columnList"/>
+    </definition>
+    <definition name="MiddlewareServer.create.template" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer.create.template"/>
+        <put name="descTitle" value="CreateNewTemplate.descTitle"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="CreateNewTemplate.description"/>
+        <put name="helpTopic" value="MiddlewareServerTemplate"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.create.new.template"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.create.new.template" path="/com.ibm.ws.console.middlewareserver/createNewTemplate.jsp">
+        <put name="formAction" value="createMiddlewareServerTemplate.do"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.templates.MiddlewareServerTemplateDetailForm"/>
+    </definition>
+    <!-- begin Variables -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MwsVariableSubstitutionEntryController"
+        name="mwsVariableSubstitutionEntry.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MWSVariableSubstitutionEntry"/>
+        <put name="descTitle" value="VariableSubstitutionEntry.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.environment"/>
+        <put name="descText" value="VariableSubstitutionEntry.description"/>
+        <putList name="contentList">
+            <add value="mwsVariableSubstitutionEntry.paging.extend"/>
+            <add value="mwsVariableSubstitutionEntry.quicksearch.extend"/>
+            <add value="mwsVariableSubstitutionEntry.collection.table.extends"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="mwsVariableSubstitutionEntry.quicksearch.extend">
+        <put name="selectUri" value="mwsVariableSubstitutionEntryCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formAction" value="mwsVariableSubstitutionEntryCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.environment.variables.VariableSubstitutionEntryCollectionForm"/>
+        <putList name="searchList">
+            <add value="VariableSubstitutionEntry.displayName:symbolicName"/>
+            <add value="VariableSubstitutionEntry.value.displayName:value"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="mwsVariableSubstitutionEntry.paging.extend">
+        <put name="displayLabelKey" value="VariableSubstitutionEntry.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formAction" value="mwsVariableSubstitutionEntryCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.environment.variables.VariableSubstitutionEntryCollectionForm"/>
+    </definition>
+    <definition extends="collection.table.main" name="mwsVariableSubstitutionEntry.collection.table.extends">
+        <put name="iterationName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formAction" value="mwsVariableSubstitutionEntryCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.environment.variables.VariableSubstitutionEntryCollectionForm"/>
+        <put name="buttons" value="mwsVariableSubstitutionEntry.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=mwsVariableSubstitutionEntry.content.main"/>
+        <put name="idColumn" value="uniqueId"/>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/VariableSubstitutionEntry/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/VariableSubstitutionEntry/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="mwsVariableSubstitutionEntry.collection.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="VariableSubstitutionEntry.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MwsVariableSubstitutionEntryController"
+        extends="detail.config.view" name="mwsVariableSubstitutionEntry.config.view">
+        <put name="contextType" value="MWSVariableSubstitutionEntry"/>
+        <putList name="list">
+            <add value="mwsVariableSubstitutionEntry.detail.title"/>
+            <add value="mwsVariableSubstitutionEntry.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="mwsVariableSubstitutionEntry.detail.title">
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryDetailForm"/>
+        <put name="objectTypeImage" value="VariableSubstitutionEntry.smallIcon:pluginId=com.ibm.ws.console.environment"/>
+        <put name="titleKey" value="VariableSubstitutionEntry.displayName"/>
+        <put name="collectionLink" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=mwsVariableSubstitutionEntry.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="symbolicName"/>
+        <put name="instanceDescription" value="VariableSubstitutionEntry.description"/>
+        <put name="displayName" value="VariableSubstitutionEntry.displayName"/>
+    </definition>
+    <definition name="mwsVariableSubstitutionEntry.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryDetailForm"/>
+        <put name="selectUri" value="mwsVariableSubstitutionEntryCollection.do"/>
+        <put name="selectedIndex" value="1"/>
+        <put name="parameterName" value="tabIndex"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="mwsVariableSubstitutionEntry.config.tab.view">
+        <putList name="list">
+            <add value="mwsVariableSubstitutionEntry.detail.buttons.panel"/>
+            <add value="mwsVariableSubstitutionEntry.config.general.properties"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="mwsVariableSubstitutionEntry.detail.buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="mwsVariableSubstitutionEntry.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList"/>
+    </definition>
+    <definition extends="detail.config.general.properties" name="mwsVariableSubstitutionEntry.config.general.properties">
+        <put name="formAction" value="mwsVariableSubstitutionEntryDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.environment.VariableSubstitutionEntryDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.environment.variables.VariableSubstitutionEntryDetailForm"/>
+        <put name="formFocus" value="symbolicName"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="environment.label.name:symbolicName:yes:Text:VariableSubstitutionEntry.symbolicName.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="VariableSubstitutionEntry.value.displayName:value:no:Text:VariableSubstitutionEntry.value.description:no:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="environment.label.description:description:no:TextArea:VariableSubstitutionEntry.description.description:no:yes"/>
+        </putList>
+    </definition>
+    <!-- end Variables -->
+    <!-- Creation of External Configuration Service -->
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServController"
+        name="MiddlewareServer.externalConfiguration.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer.externalConfiguration"/>
+        <put name="descTitle" value="middlewareServer.external.config.service.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="middlewareServer.external.config.service.description"/>
+        <put name="helpTopic" value="MiddlewareServer.ExternalConfigService"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.extConfigSrv.enableConfigService"/>
+            <add value="MiddlewareServer.extConfigSrv.collection"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.extConfigSrv.enableConfigService" path="/com.ibm.ws.console.middlewareserver/addConfigService.jsp">
+        <put name="label" value="middlewareserver.configFile.displayName"/>
+        <put name="size" value="50"/>
+        <put name="property" value="filePath"/>
+        <put name="formAction" value="MiddlewareServerExtConfigServConfigCollection.do?viewType=config"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.externalConfiguration.main"/>
+        <put name="serverType" value="MiddlewareServer"/>
+        <put name="viewType" value="config"/>
+    </definition>
+    <!-- <definition extends="collection.table.main" name="MiddlewareServer.extConfigSrv.collection"> -->
+    <definition name="MiddlewareServer.extConfigSrv.collection" path="/com.ibm.ws.console.middlewareserver/extConfigCollectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerExtConfigServCollection.do?viewType=config"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="buttons" value="MiddlewareServer.extConfigSrv.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.externalConfiguration.main"/>
+        <put name="serverType" value="MiddlewareServer"/>
+        <put name="viewType" value="config"/>
+        <put name="idColumn" value="pathName"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="middlewareServer.external.config.service.header1" value="pathName:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="middlewareServer.external.config.service.header2" value="pathPrivledges:read:middlewareServer.external.privileges.read:write:middlewareServer.external.privileges.write:sort"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/MiddlewareServer/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/MiddlewareServer/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServer.extConfigSrv.collection.buttons.panel">
+        <put name="buttonCount" value="5"/>
+        <put name="definitionName" value="MiddlewareServer.extConfigSrv.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <put name="viewType" value="config"/>
+        <putList name="actionList">
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="button.remove:MiddlewareServerExtConfigServCollection.do?viewType=config"/>
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="button.toggle:MiddlewareServerExtConfigServCollection.do?viewType=config"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServController"
+        name="MiddlewareServer.externalLog.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="MiddlewareServer.externalConfiguration"/>
+        <put name="descTitle" value="middlewareServer.remote.log.service.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.middlewareserver"/>
+        <put name="descText" value="middlewareServer.remote.log.service.displayName"/>
+        <put name="helpTopic" value="MiddlewareServer.ExternalLogService"/>
+        <putList name="contentList">
+            <add value="MiddlewareServer.extLogSrv.enableConfigService"/>
+            <add value="MiddlewareServer.extLogSrv.collection"/>
+        </putList>
+    </definition>
+    <definition name="MiddlewareServer.extLogSrv.enableConfigService" path="/com.ibm.ws.console.middlewareserver/addLogService.jsp">
+        <put name="label" value="middlewareServer.remote.log.service.displayName"/>
+        <put name="size" value="50"/>
+        <put name="property" value="filePath"/>
+        <put name="formAction" value="MiddlewareServerExtConfigServLogCollection.do?viewType=log"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="viewType" value="log"/>
+    </definition>
+    <!--   <definition extends="collection.table.main" name="MiddlewareServer.extLogSrv.collection"> -->
+    <definition name="MiddlewareServer.extLogSrv.collection" path="/com.ibm.ws.console.middlewareserver/extConfigCollectionTableLayout.jsp">
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="showCheckBoxes" value="true"/>
+        <put name="sortIconLocation" value="right"/>
+        <put name="columnWidth" value="25%"/>
+        <put name="iterationName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formAction" value="MiddlewareServerExtConfigServCollection.do?viewType=log"/>
+        <put name="formName" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.middlewareserver.MiddlewareServerExtConfigServCollectionForm"/>
+        <put name="buttons" value="MiddlewareServer.extLogSrv.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.middlewareserver.forwardCmd.do?forwardName=MiddlewareServer.externalLog.main"/>
+        <put name="serverType" value="MiddlewareServer"/>
+        <put name="viewType" value="log"/>
+        <put name="idColumn" value="pathName"/>
+        <putList name="collectionList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="middlewareServer.external.config.service.header1" value="pathName"/>
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/MiddlewareServer/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/MiddlewareServer/Preferences#retainSearchCriteria:32"/>
+        </putList>
+    </definition>
+    <definition extends="buttons.panel" name="MiddlewareServer.extLogSrv.collection.buttons.panel">
+        <put name="buttonCount" value="5"/>
+        <put name="definitionName" value="MiddlewareServer.extLogSrv.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <put name="viewType" value="log"/>
+        <putList name="actionList">
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="button.remove:MiddlewareServerExtConfigServCollection.do?viewType=log"/>
+        </putList>
+    </definition>
+</tiles-definitions>

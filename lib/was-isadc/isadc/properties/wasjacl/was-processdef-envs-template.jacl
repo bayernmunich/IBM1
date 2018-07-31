@@ -1,0 +1,14 @@
+#(C) COPYRIGHT International Business Machines Corp., 2008. 
+# All Rights Reserved * Licensed Materials - Property of IBM
+#
+
+set server [$AdminConfig getid /Cell:@CellName@/Node:@NodeName@/Server:@ServerName@/]
+set jc [$AdminConfig list JavaProcessDef $server]
+set PropID [$AdminConfig getid /Property:@property.name@]
+if { $PropID != "" } {
+	set PropValue [subst {{value @property.value@}}]
+	$AdminConfig modify $PropID $PropValue
+} else {
+	$AdminConfig create Property $jc [subst {{name @property.name@} {value @property.value@} {required false}}]
+}
+$AdminConfig save

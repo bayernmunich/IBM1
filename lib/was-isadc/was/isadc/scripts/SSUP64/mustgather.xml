@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2011. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Intelligent Management Pack Must-Gather" default="autopdmain">
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Intelligent Management Pack Must-Gather}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<property name="autopdProblem" value="WVE_mustgather" />
+
+	<property name="taxonomy" value="SSUP64" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+	<property name="autopdProblem_nlsbundle" value="properties/${baseTaxonomy}/autopdtoolstrings_was" />
+	<property name="app.updated.version" value="true"/>
+	<property name="skip_banner_message" value="true" /> 
+	
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-collections.xml"	/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/archive-utilities.xml" 	/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"		 />
+	<autopdimport file="${bundle.basedir}/scripts/${taxonomy}/mustgather-core.xml"	 />
+	
+
+
+
+<!--  
+The first set of targets initializes autopd - 
+The second set zips logs, invokes FTP targets to ecurep and completes the scripts. 
+The middle (wve) targets are product-specific work.
+This does not include any CISA run. 
+ -->
+	<target name="autopdmain"
+	        description="main target for general collection"
+	  	     depends="load_sharedelements_tasks,
+				set_problem_type_with_nls_bundle,
+				setup_autopd_v2, 
+				validate_os, 
+				was_stack_custom_init,
+
+				wve_init,
+				wve_mustgather,
+				wve_include_mustgather_archive,
+				wve_clean_post_run,
+
+				zip_autopd_log,
+				ftp_message_shared,
+				ftp_collected_information_shared,
+				script_completed_v2">
+		<wvedebug message="autopdmain"/>
+	</target>		
+
+</project>

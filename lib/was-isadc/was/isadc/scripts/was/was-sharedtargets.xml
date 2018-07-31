@@ -1,0 +1,4638 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="was-sharedtargets">
+
+	<!-- need to set the classpath to include the latest plugin -->
+
+	<dirname property="was.shared.targets.basedir" file="${ant.file.was-sharedtargets}" />
+	<dirname property="was.shared.targets.parentdir" file="${was.shared.targets.basedir}" />
+	<dirname property="was.shared.targets.bundle.basedir" file="${was.shared.targets.parentdir}" />
+
+	<taskdef file="${was.shared.targets.bundle.basedir}/properties/SSEQTP/aimpdtaskdef.properties" />
+
+	<!-- documentation target, only -->
+	<target name="aim_documentation">
+		
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="documentation_link"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+			<fieldtask name="pd_link"
+			           label="file://${was.shared.targets.basedir}/docs/${problem.type.script}"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"/>
+		</inputdialogtask>
+		
+	</target>
+
+	<target name="internal-usage"
+	        description="This Ant build file contains legacy WAS shared targets, some of which are
+			deprecated. Included in this file are the targets necessary to set the was problem type
+			plus other targets used by various AIM and non-AIM plug-ins.&lt;br/&gt;&lt;br/&gt;
+			1. Scripts that use this file need to import it (see the usage of 'aim/common-setup.xml'):&lt;br/&gt;
+			LT autopdimport file=&quot;${autopdimportdir}/scripts/was/was-sharedtargets.xml&quot; osgiBundle=&quot;com.ibm.esupport.client.product.SSEQTP&quot; GT &lt;br/&gt;
+			&lt;br/&gt;
+			2. In order to call 'set_was_problem_type' the  'autopdmain':
+			&lt;br/&gt;
+			LT property name=&quot;autopdProblem&quot; value=&quot;[collection name]&quot; GT &lt;br/&gt;
+			LT property name=&quot;infocollectProblemType&quot; value=&quot;[problem type]&quot; GT &lt;br/&gt;
+			&lt;br/&gt;">
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  COLLECTION TARGETS ******************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- set the was problem type, determine various attributes ********************* -->
+	<target name="set_was_problem_type"
+	        description="This target sets the property 'problem.type' for the collection.
+						This target can be overridden for other products or brands.">
+
+		<property environment="env" />
+		<property file="${autopdrootdir}/properties/autopd.properties" />
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+
+		<!--  Testing processing for problem.type 
+					<property name="autopdProblemSelected" value="Portal_Login_Problem"/> -->
+
+		<condition property="autopdProblemSelected.set">
+			<isset property="autopdProblemSelected" />
+		</condition>
+
+		<if isTrue="${autopdProblemSelected.set}">
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="${autopdProblemSelected}"
+			                            propertyName="problem.type"
+			                            message="Problem Type" />
+		</if>
+
+		<condition property="problem.type.set">
+			<isset property="problem.type" />
+		</condition>
+
+		<if isNotTrue="${problem.type.set}">
+			<!-- If we didn't get the value from the AutoPD
+						environment, we'll use the one from the script. -->
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="${autopdProblem}"
+			                            propertyName="problem.type"
+			                            message="Problem Type" />
+		</if>
+	</target>
+
+	<target name="collect_sychronization_info"
+	        description="This target queries the user to provide clock synchronization 
+			information about the various nodes. The user is expected to enter free form 
+			text explaining how out of sync the various servers are, after manually running 
+			the 'date' command on each host.">
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Please_provide_clock_synchronization_information_for_all_Web_Servers_and_Application_Servers"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="notes"
+			           label="Notes"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="nodes.label1"
+			           label="If_clocks_were_not_synchronized"
+			           type="label"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer-syn" label="Answer" type="textarea" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			1. Provide clock synchronization information for all web
+			servers and WebSphere Application Servers${line.separator}
+		</concat>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			${answer-syn}${line.separator}
+		</concat>
+	</target>
+
+	<target name="collect_jar_atts"
+	        description="This target collects the JAR file attributes of the WebSphere
+			installation. Currently used by the webservices gateway and uddi scripts.">
+
+		<property name="jar.atts.output.file" value="${loginstancedir}/jar_atts.txt" />
+
+		<property name="jar.exec.script" value="list-dir-contents" />
+
+		<exec executable="ls"
+		      dir="${was.root}\lib"
+		      output="${jar.atts.output.file}"
+		      os="${os.unixkind}">
+			<arg line="-l" />
+		</exec>
+
+		<exec executable="cmd.exe"
+		      dir="${was.root}/lib"
+		      output="${jar.atts.output.file}"
+		      os="${os.windows}">
+			<arg line="/c dir" />
+		</exec>
+	</target>
+
+	<target name="determine_if_zos"
+	        description="This target determines if the OS is z/OS and set the 'isZos' to true or false.">
+		<condition property="isZos">
+			<equals arg1="z/OS" arg2="${os.name}" />
+		</condition>
+
+		<if isTrue="${isZos}">
+			<property name="was_log_redirect.needed" value="false" />
+		</if>
+
+	</target>
+
+	<target name="run_collector_zos"
+	        description="This target creates the z/OS portable collector."
+	        if="isZos">
+		<if isTrue="${isZos}">
+			<exec executable="./zos/zcollector.sh -JarOutName ${pmrfilename}"
+			      dir="${autopdtmp}/autopd"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line="${was.enhanced.root}" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="run_collector" description="Run the collector tool" unless="wasnothere">
+
+		<if isNotTrue="${isZos}">
+			<exec executable="${was.root}/bin/collector.bat -JarOutName ${pmrfilename}"
+			      dir="${autopdtmp}/autopd"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line="" />
+			</exec>
+			<exec executable="${was.root}/bin/collector.sh -JarOutName ${pmrfilename}"
+			      dir="${autopdtmp}/autopd"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line="" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="start_time" description="get the beginning time of reproducing problem">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Get_beginning_time"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Get beginning time"
+		           replace="${autopdts};;${step.count}"
+		           id="1108"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+		<autopdtimestamp property="problem.starttime"
+		                 pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	</target>
+
+	<target name="end_time" description="get ending time of reproducing problem">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Get_ending_time"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Get ending time"
+		           replace="${autopdts};;${step.count}"
+		           id="1109"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+		<autopdtimestamp property="problem.endtime" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+	</target>
+
+	<target name="temp_set"
+	        description="Sets the temporary install directory based on the OS">
+
+		<!-- RA Change: Added a default for unsupported UNIX platforms, such as HP-UX -->
+		<property name="was.install.temp" value="/tmp" />
+
+		<if isTrue="${isWindows}">
+			<property name="was.install.temp" value="${env.TEMP}" />
+		</if>
+		<if isTrue="${isOS400}">
+			<property name="was.install.temp" value="/tmp/InstallShield" />
+		</if>
+		<if isTrue="${isAIX}">
+			<property name="was.install.temp" value="/tmp" />
+		</if>
+		<if isTrue="${isSunOS}">
+			<property name="was.install.temp" value="/tmp" />
+		</if>
+		<if isTrue="${isLinux}">
+			<property name="was.install.temp" value="/tmp" />
+		</if>
+	</target>
+
+	<target name="query_was_cluster"
+	        description="Check if the App Server is running in a cluster environment">
+
+		<autopdinput message="Is_your_Application_Server_running_in_a_cluster_environment?"
+		             validargs="Yes,No"
+		             addproperty="cellType"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<condition property="isCluster">
+			<equals arg1="Yes" arg2="${cellType}" />
+		</condition>
+		<condition property="isStandalone">
+			<equals arg1="No" arg2="${cellType}" />
+		</condition>
+	</target>
+
+	<target name="zip_collector_jarfile"
+	        description="Zip the jar file generated by WSAS collector tool">
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="zip_collector_jarfile_recovery"
+	        description="Zip the jar file generated by WSAS collector tool">
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="was_collect_from_ND"
+	        description="Invoke standard collector from ND machine"
+	        if="ND.collect.needed">
+
+		<autopdinput message="Proceed_to_collect_trace_and_config_information_from_ND_machine"
+		             validargs="OK,Skip"
+		             addproperty="ND.collect.ok"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.ND.collect">
+			<equals arg1="${ND.collect.ok}" arg2="OK" />
+		</condition>
+		<if isTrue="${do.ND.collect}">
+			<inputdialogtask noCancel="true" doSkip="true">
+				<fieldtask name="prompt"
+				           label="Instructions_to_collect_trace_and_config_information_from_ND_machine"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft29"
+				           label="1Start_RasGUI_tool_in_ND_machine"
+				           type="label"
+				           accessibilityName="was_collect_from_ND"
+				           accessibilityDesc="was_collect_from_ND"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft30"
+				           label="2Select_problem_type_with_WSAS_RAS_Collector_tool"
+				           type="label"
+				           accessibilityName="was_collect_from_ND"
+				           accessibilityDesc="was_collect_from_ND"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft31"
+				           label="3Type_PMR_file_name"
+				           type="label"
+				           accessibilityName="was_collect_from_ND"
+				           accessibilityDesc="was_collect_from_ND"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft32"
+				           label="4Click_the_Collect_Data_button"
+				           type="label"
+				           accessibilityName="was_collect_from_ND"
+				           accessibilityDesc="was_collect_from_ND"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft33"
+				           label="5Send_the_PMR_file_to_IBM_support_center_via_RasGUI_FTP_facility_or_manually"
+				           type="label"
+				           accessibilityName="was_collect_from_ND"
+				           accessibilityDesc="was_collect_from_ND"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+	</target>
+
+	<target name="master_script"
+	        description="This is a target to declare that a scipt is a master script">
+
+		<autopdinput message="This_is_a_master_script_which_might_require_some_slave_scripts_running_in_other_machines"
+		             validargs="OK"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+	<target name="slave_script"
+	        description="This is a target to declare that a scipt is a slave script">
+
+		<autopdinput message="This_is_a_slave_script_which_follows_the_directives_from_a_master_script"
+		             validargs="OK"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+	</target>
+
+	<target name="filter_sensitive_info"
+	        description="Filter out sensitive information from a collection zip file">
+
+		<property name="excluded.directive.file"
+		          value="${was.shared.targets.bundle.basedir}/properties/SSEQTP/security/excludedFile.xml" />
+		<property name="filtered.directive.file"
+		          value="${was.shared.targets.bundle.basedir}/properties/SSEQTP/security/filteredFile.xml" />
+
+		<filter_security_info filename="${pmrfilename}"
+		                      nopathfilename="${pmrnopathfilename}"
+		                      excludeDirectiveFile="${excluded.directive.file}"
+		                      filterDirectiveFile="${filtered.directive.file}" />
+	</target>
+
+	<target name="terminate_if_server_not_running"
+	        description="Some scripts need a running server to complete. This target determines if the collection should terminate if the server is not running.">
+
+		<if isNotTrue="${was.server.isRunning}">
+<!--		
+			<property name="restart.server" value="true" />
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+			<property name="stop.app.server" value="true" />
+			<property name="start.app.server" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+
+			<autopdinput message="Display_terminate_message"
+			             validargs="Quit"
+			             addproperty="abort.start.server"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<condition property="do.abort.start.server">
+				<equals arg1="Quit" arg2="${abort.start.server}" />
+			</condition>
+			
+			<fail if="do.abort.start.server">
+				Automated Problem Determination Tool aborted.
+			</fail>
+--> 
+				
+			<inputdialogtask noCancel="true" > 
+				<fieldtask name="prompt1"
+    				label="Information_Message"
+			        type="prompt"
+	    		    bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="Empty_Line"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt2"
+					label="HighCPU_Terminate_if_server1"
+			    	type="label"
+				    bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="${ServerName}"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt3"
+		           label="HighCPU_Terminate_if_server2"
+				   type="label"
+				   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="Empty_Line"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt4"
+				    label="HighCPU_Terminate_if_server3"
+			     	type="label"
+				    bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="label0"
+					label="Empty_Line"
+					type="label"
+					bundle="properties/SSEQTP/autopdtoolstrings_was" />				
+				<fieldtask name="prompt4"
+				    label="HighCPU_Terminate_if_server4"
+			     	type="label"
+				    bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask> 
+			
+			<fail >
+				The selected server ${ServerName} is not running. Exiting the High CPU / Performance collector. 
+			</fail>
+
+		</if>
+	</target>
+
+	<target name="detect_was_running_status"
+	        description="Detect the running status of Application Server">
+
+		<property name="was.status.file" value="${autopdtmp}/autopd/was-status.txt" />
+		<delete file="${was.status.file}" />
+		<exec executable="${was.enhanced.root}/bin/serverStatus.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/serverStatus.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="true"
+		      os="${os.unixkind.exclude.iseries}">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/serverStatus"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.status.file}"
+		      append="true"
+		      os="OS/400">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<available file="${was.status.file}"
+		           type="file"
+		           property="was.status.file.existing" />
+
+		<if isTrue="${was.status.file.existing}">
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${was.status.file}" />
+			</concat>
+			<was_status key="was.server.running.status"
+			            pattern="${ServerName}.*STARTED"
+			            filename="${was.status.file}" />
+		</if>
+
+		<if isNotTrue="${was.status.file.existing}">
+			<autopdinput message="The_tool_couldn't_detect_the_status_of_Application_Server_please_answer_if_Application_Server_is_running?"
+			             validargs="Yes,No"
+			             addproperty="was.server.started" />
+		</if>
+		<if isNotTrue="${was.status.file.existing}">
+			<condition property="was.server.isRunning">
+				<equals arg1="${was.server.started}" arg2="Yes" />
+			</condition>
+		</if>
+		<if isTrue="${was.server.isRunning}">
+			<autopdproperty name="was.server.running.status" value="STARTED" />
+		</if>
+
+		<if isTrue="${was.status.file.existing}">
+			<condition property="was.server.isRunning">
+				<equals arg1="${was.server.running.status}" arg2="STARTED" />
+			</condition>
+		</if>
+	</target>
+
+	<target name="set_no_server_restart"
+	        description="This target sets the property 'restart.server' to 'false'.">
+		<property name="restart.server" value="false" />
+	</target>
+
+	<target name="list_was_apps"
+	        description="This targets lists the installed applications and information about the problematic application&lt;br/&gt;
+				NOTE: This is used by the WAS XD plug-in, only, and should be deprecated and the WAS XD plug-in updated.">
+		<!-- DEPRECATED target -->
+		<was6profiles name="was.profiles"
+		              propertiesRoot="${was.root}/properties"
+		              filters="profileRegistry.xml"
+		              delimiter=":"
+		              multipleProfiles="has.mult.profiles" />
+		<if isTrue="${has.mult.profiles}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Profile_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="profileName"
+				           label="was_profilename"
+				           list="${was.profiles}"
+				           listDetails="${was.profiles}"
+				           type="selectlist"
+				           accessibilityName="was_profilename"
+				           accessibilityDesc="was_profilename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<wasapps name="was.apps.list"
+		         wasEnhancedRoot="${was.enhanced.root}"
+		         cellName="${CellName}"
+		         delimiter=":" />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="WAS_Apps_Info"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="was.app.select"
+			           label="WAS_Select_App"
+			           list="${was.apps.list}"
+			           listDetails="${was.apps.list}"
+			           accessibilityName="WAS_Select_App"
+			           accessibilityDesc="WAS_Select_App"
+			           type="selectlist"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="app.problem.information"
+			           label="Provide_App_Info"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           defaultValue="" />
+		</inputdialogtask>
+
+		<concat destfile="${autopdtmp}/autopd/AppProblemDescription.txt" append="true">
+			${was.app.select}${line.separator}
+			${app.problem.information}${line.separator}
+		</concat>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  TRACE TARGETS ************************************************************* -->
+	<!-- **************************************************************************** -->
+
+	<!-- set various traces ********************************************************* -->
+	<target name="set_was_trace"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+				the trace value using the configuration option of the application
+				server. NOTE: All trace should be set using runtime and this target
+				should be deprecated."
+	        unless="wasnothere">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+	</target>
+
+	<target name="set_was_trace_with_condition"
+	        description="This target uses the wsadmin tool and a jacl script to set the 
+				trace value if 'enable.was.trace' is 'true'."
+	        if="enable.was.trace">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+	</target>
+
+	<target name="check_set_trace_choice_valid_with_condition"
+	        description="This target queries the user if the server is not running and
+			iff 'enable.was.trace' is 'true'. The user is asked whether they want to 
+			restart the server."
+	        if="enable.was.runtime.trace">
+
+		<if isNotTrue="${was.server.isRunning}">
+			<property name="restart.server" value="true" />
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+			<property name="stop.app.server" value="true" />
+			<property name="start.app.server" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Server_not_started"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="Prompt_for_restarting"
+				           label="Prompt_for_restarting1"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="Prompt_for_restarting"
+				           label="Prompt_for_restarting2"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+
+		</if>
+	</target>
+
+	<target name="set_was_runtime_trace"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+						the trace value using the runtime option of the application
+						server iff the server is running."
+	        if="was.server.isRunning">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info}  ${wsadmin.args}" />
+		</exec>
+
+	</target>
+
+	<target name="set_was_runtime_trace_with_condition"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+						the trace value using the runtime option of the application
+						server iff the server is running AND 'enable.was.runtime.trace' 
+						is set to 'true'."
+	        if="enable.was.runtime.trace">
+
+		<if isTrue="${was.server.isRunning}">
+
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="true" />
+					<filter token="TraceSpecification" value="${was.trace.string}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info}  ${wsadmin.args}" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="set_jvm_arguments"
+	        description="This target uses wsadmin and a jacl file to set the
+	        	JVM arguments.">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="genericJvmArguments" value="${generic.jvm.arguments}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+
+	</target>
+
+	<target name="set_jvm_arguments_with_condition"
+	        description="This target uses wsadmin and a jacl file to set the
+    	JVM arguments iff 'enable.was.jvm.arguments' is 'true'."
+	        if="enable.was.jvm.arguments">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="genericJvmArguments" value="${generic.jvm.arguments}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+
+	</target>
+
+	<target name="enable_jvm_verbose_gc"
+	        description="This target uses wsadmin and a jacl file to enable verbose GC on the JVM.">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-verbosegc-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-verbosegc.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="verboseModeGarbageCollection" value="true" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-verbosegc.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-verbosegc.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+
+	</target>
+
+	<target name="generate_VM_string"
+	        description="This target generates a JVM string for
+			HPUX and Sun OS.">
+		<!-- Set jvm args (if needed) -->
+
+		<!-- are we supporting HPUX? -->
+		<property name="hpux.stdout" value="${was.enhanced.root}/logs/hpux.cpu.trace" />
+		<if isTrue="${isHPUX}">
+			<property name="genericJvmArguments"
+			          value="-Xverbosegc:file=${hpux.stdout}" />
+			<property name="restore.was.jvm.arguments" value="true" />
+		</if>
+
+		<if isTrue="${isSunOS}">
+			<if isNotTrue="${isWASVersion5}">
+				<property name="genericJvmArguments"
+				          value="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC" />
+				<property name="restore.was.jvm.arguments" value="true" />
+			</if>
+		</if>
+
+	</target>
+
+	<target name="disable_was_trace"
+	        description="This target uses the wsadmin tool and a jacl script to disable 
+				the trace value using the configuration option of the application
+				server."
+	        unless="wasnothere">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="false" />
+				<filter token="TraceSpecification" value="*=all=disabled" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info}' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}" />
+		</exec>
+	</target>
+
+	<target name="disable_jvm_arguments"
+	        description="This target uses the wsadmin tool and a jacl script to disable 
+				the JVM trace arguments.">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="genericJvmArguments " value="" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl" ${was.admin.info}' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-jvm-args.jacl ${was.admin.info}" />
+		</exec>
+	</target>
+
+	<target name="set_was_trace_dmgr"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+				the trace value using the configuration option of the deployment 
+				manager iff 'dmgr.trace.needed' is 'true'. NOTE: All trace should 
+				be set using runtime and this target should be deprecated."
+	        if="dmgr.trace.needed">
+
+		<if isTrue="${isDMGRSOAP}">
+			<property name="dmgr.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl" />
+		</if>
+
+		<if isTrue="${isDMGRNONE}">
+			<property name="dmgr.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl" />
+		</if>
+
+		<copy file="${dmgr.trace.template.file}"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${dmgr.CellName}" />
+				<filter token="NodeName" value="${dmgr.NodeName}" />
+				<filter token="ServerName" value="${dmgr.ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+
+		<if isTrue="${isDMGRSOAP}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+
+		<if isTrue="${isDMGRNONE}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="set_was_trace_appserver"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+				the trace value using the configuration option of the application
+				server iff 'appserver.trace.needed' is 'true'. NOTE: All trace 
+				should be set using runtime and this target should be deprecated."
+	        if="appserver.trace.needed">
+
+		<if isTrue="${isAppServerSOAP}">
+			<property name="appserver.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl" />
+		</if>
+
+		<if isTrue="${isAppServerNONE}">
+			<property name="appserver.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl" />
+		</if>
+
+		<copy file="${appserver.trace.template.file}"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+
+		<if isTrue="${isAppServerSOAP}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+
+		<if isTrue="${isAppServerNONE}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="set_was_trace_nodeagent"
+	        description="This target uses the wsadmin tool and a jacl script to set 
+				the trace value using the configuration option of the nodeagent iff 
+				'nodeagent.trace.needed' is 'true'. NOTE: All trace should be set 
+				using runtime and this target should be deprecated."
+	        if="nodeagent.trace.needed">
+
+		<if isTrue="${isNodeAgentSOAP}">
+			<property name="nodeagent.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl" />
+		</if>
+
+		<if isTrue="${isNodeAgentNONE}">
+			<property name="nodeagent.trace.template.file"
+			          value="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl" />
+		</if>
+
+		<copy file="${nodeagent.trace.template.file}"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${nodeagent.CellName}" />
+				<filter token="NodeName" value="${nodeagent.NodeName}" />
+				<filter token="ServerName" value="${nodeagent.ServerName}" />
+				<filter token="enable" value="true" />
+				<filter token="TraceSpecification" value="${was.trace.string}" />
+			</filterset>
+		</copy>
+		<if isTrue="${isNodeAgentSOAP}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+		<if isTrue="${isNodeAgentNONE}">
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="set_appserver_trace_from_admin_console"
+	        description="set up trace for Application Server from Admin console"
+	        if="appserver.adminconsole.trace.needed">
+
+		<if isTrue="${isWASVersion5}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_set_up_trace_on_failing_server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft1"
+				           label="1In_the_Administrative_Console_expand_the_Troubleshooting_section_and_click_on_Logs_and_Trace"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft2"
+				           label="2Click_on_the_link_for_your_server"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft3"
+				           label="3Click_on_Diagnostic_Trace"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft4"
+				           label="4In_the_Trace_Specification_enter_the_following"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft5"
+				           label="${was.trace.string}"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft6"
+				           label="5Click_on_Apply"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft7"
+				           label="6Save_and_sync_your_configuration"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_set_up_trace_on_failing_server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft8"
+				           label="1In_the_Administrative_Console_expand_the_Servers_section_and_click_on_Application_Servers"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft9"
+				           label="2Click_on_the_link_for_your_server"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft10"
+				           label="3Click_on_change_log_details"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft11"
+				           label="4In_the_textbox_enter_the_following"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft12"
+				           label="${was.trace.string}"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft13"
+				           label="5Click_on_Apply"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft14"
+				           label="6Save_and_sync_your_configuration"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<autopdinput message="I_have_finished_setting_up_trace_on_the_failing_server"
+		             validargs="OK,Skip"
+		             addproperty="do.syncnode"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+	<target name="set_nodeagent_trace_from_admin_console"
+	        description="set up trace for Application Server from Admin console"
+	        if="nodeagent.adminconsole.trace.needed">
+
+		<if isTrue="${isWASVersion5}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_set_up_trace_on_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft15"
+				           label="1In_the_Administrative_Console_expand_the_Troubleshooting_section_and_click_on_Logs_and_Trace"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft16"
+				           label="2Click_on_the_link_for_nodeagent"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft17"
+				           label="3Click_on_Diagnostic_Trace"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft18"
+				           label="4In_the_Trace_Specification_enter_the_following"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft19"
+				           label="${was.nodeagent.trace.string}"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft20"
+				           label="5Click_on_Apply"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft21"
+				           label="6Save_and_sync_your_configuration"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<if isTrue="${isWASVersion6}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Instructions_to_set_up_trace_on_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft22"
+				           label="1In_the_Administrative_Console_expand_the_Servers_section_and_click_on_Application_Servers"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft23"
+				           label="2Click_on_the_link_for_nodeagent"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft24"
+				           label="3Click_on_change_log_details"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft25"
+				           label="4In_the_textbox_enter_the_following"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft26"
+				           label="${was.nodeagent.trace.string}"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft27"
+				           label="5Click_on_Apply"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_set_trace"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was.ft28"
+				           label="6Save_and_sync_your_configuration"
+				           type="label"
+				           accessibilityName="was_set_trace"
+				           accessibilityDesc="was_sync_problem"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+
+		<autopdinput message="I_have_finished_setting_up_trace_on_the_Node_Agent"
+		             validargs="OK,Skip"
+		             addproperty="do.syncnode1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+
+	<target name="ask_how_to_proceed_with_trace_enabling_with_condition"
+	        description="This target asks the user whether to proceed with 
+				trace resetting dynamically iff 'ask.how.to.proceed' is 'true'"
+	        if="ask.how.to.proceed">
+
+		<inputdialogtask>
+			<fieldtask name="prompt1"
+			           label="Ask_how_to_proceed"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt2"
+			           label="wsas_reset_trace_info_1"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt3"
+			           label="wsas_reset_trace_info_2"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt4"
+			           label="wsas_reset_trace_info_3"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt5"
+			           label="wsas_reset_trace_info_4"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="wsas.script.path"
+			           bundle="autopdtoolstrings"
+			           label="select_one"
+			           list="Restarting_a_server:Without_restarting_a_running_server"
+			           listDetails="Restarting_a_server:Without_restarting_a_running_server"
+			           type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="restart.server">
+			<equals arg1="Restarting_a_server" arg2="${wsas.script.path}" />
+		</condition>
+
+		<if isTrue="${restart.server}">
+
+			<inputdialogtask>
+				<fieldtask name="announce.prompt"
+				           label="announce_proceeding_with_restarting_a_server_for_enabling_trace"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+			</inputdialogtask>
+		</if>
+
+		<if isNotTrue="${restart.server}">
+			<inputdialogtask>
+				<fieldtask name="announce.prompt"
+				           label="announce_proceeding_without_restarting_a_server_for_enabling_trace"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+			</inputdialogtask>
+
+		</if>
+
+	</target>
+
+	<target name="get_default_trace_values"
+	        description="This target usese the wsadmin tool and a jacl script to
+			determine the current trace value of the app server."
+	        unless="wasnothere">
+
+		<!-- Create/Clear file to store defaults -->
+		<property name="user.defaults.file"
+		          value="${autopdtmp}/autopd/user_settings.txt" />
+		<delete file="${user.defaults.file}" />
+
+		<!--  TraceService (runtime)-->
+		<if isNotTrue="${restart.server}">
+
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl ${was.admin.info} ${wsadmin.args}" />
+			</exec>
+		</if>
+
+		<!-- Save extra information if restart required -->
+		<if isTrue="${restart.server}">
+			<!-- TraceService, TraceLog and JVM -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+		<!-- Load properties to project -->
+		<loaduserwasproperties filename="${user.defaults.file}"
+		                       prefix="user"
+		                       separator="." />
+
+	</target>
+
+	<target name="get_default_trace_values_with_condition"
+	        description="This target usese the wsadmin tool and a jacl script to
+					determine the current trace value of the app server
+					iff 'was.modify.trace' is 'true'."
+	        if="was.trace.modify">
+
+		<property name="user.defaults.file"
+		          value="${autopdtmp}/autopd/user_settings.txt" />
+		<delete file="${user.defaults.file}" />
+
+		<if isNotTrue="${restart.server}">
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl ${was.admin.info} ${wsadmin.args}" />
+			</exec>
+		</if>
+
+		<!-- Save extra information if restart required -->
+		<if isTrue="${restart.server}">
+			<!-- TraceService, TraceLog and JVM -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+		<!-- Load properties to project -->
+		<loaduserwasproperties filename="${user.defaults.file}"
+		                       prefix="user"
+		                       separator="." />
+
+	</target>
+
+	<target name="get_appserver_trace_values"
+	        description="This target usese the wsadmin tool and a jacl script to
+					determine the current trace value of the app server."
+	        if="get.appserver.trace.needed">
+
+		<!-- Create/Clear file to store defaults -->
+		<property name="user.defaults.file"
+		          value="${autopdtmp}/autopd/user_settings.txt" />
+		<delete file="${user.defaults.file}" />
+
+		<if isTrue="${isAppServerSOAP}">
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl ${was.admin.info}" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Save extra information if restart required -->
+		<if isTrue="${isAppServerNONE}">
+			<!-- TraceService, TraceLog and JVM -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Load properties to project -->
+		<loaduserwasproperties filename="${user.defaults.file}" prefix="appserver." />
+	</target>
+
+	<target name="get_nodeagent_trace_values"
+	        description="This target usese the wsadmin tool and a jacl script to
+					determine the current trace value of the nodeagent
+					iff 'get.nodeagent.trace.needed' is 'true'."
+	        if="get.nodeagent.trace.needed">
+
+		<!-- Create/Clear file to store defaults -->
+		<property name="user.defaults.file"
+		          value="${autopdtmp}/autopd/user_settings.txt" />
+		<delete file="${user.defaults.file}" />
+
+		<if isTrue="${isNodeAgentSOAP}">
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${nodeagent.CellName}" />
+					<filter token="NodeName" value="${nodeagent.NodeName}" />
+					<filter token="ServerName" value="${nodeagent.ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl ${was.admin.info}" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Save extra information if restart required -->
+		<if isTrue="${isNodeAgentNONE}">
+			<!-- TraceService, TraceLog and JVM -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${nodeagent.CellName}" />
+					<filter token="NodeName" value="${nodeagent.NodeName}" />
+					<filter token="ServerName" value="${nodeagent.ServerName}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Load properties to project -->
+		<loaduserwasproperties filename="${user.defaults.file}" prefix="nodeagent." />
+	</target>
+
+	<target name="get_dmgr_trace_values"
+	        description="This target usese the wsadmin tool and a jacl script to
+							determine the current trace value of the nodeagent
+							iff 'get.dmgr.trace.needed' is 'true'."
+	        if="get.dmgr.trace.needed">
+
+		<!-- Create/Clear file to store defaults -->
+		<property name="user.defaults.file"
+		          value="${autopdtmp}/autopd/user_settings.txt" />
+		<delete file="${user.defaults.file}" />
+
+		<if isTrue="${isDMGRSOAP}">
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${dmgr.CellName}" />
+					<filter token="NodeName" value="${dmgr.NodeName}" />
+					<filter token="ServerName" value="${dmgr.ServerName}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-user-defaults-runtime-filled.jacl ${was.admin.info}" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Save extra information if restart required -->
+		<if isTrue="${isDMGRNONE}">
+			<!-- TraceService, TraceLog and JVM -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${dmgr.CellName}" />
+					<filter token="NodeName" value="${dmgr.NodeName}" />
+					<filter token="ServerName" value="${dmgr.ServerName}" />
+				</filterset>
+			</copy>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${user.defaults.file}"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-get-trace-filled.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${user.defaults.file}" />
+			</concat>
+
+		</if>
+
+		<!-- Load properties to project -->
+		<loaduserwasproperties filename="${user.defaults.file}" prefix="dmgr." />
+	</target>
+
+	<target name="ask_how_to_proceed_with_trace_enabling"
+	        description="This target asks the user whether to proceed with 
+						trace resetting dynamically."
+	        unless="wasnothere">
+
+		<inputdialogtask>
+			<fieldtask name="prompt1"
+			           label="Ask_how_to_proceed"
+			           type="prompt"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt2"
+			           label="wsas_reset_trace_info_1"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt3"
+			           label="wsas_reset_trace_info_2"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt4"
+			           label="wsas_reset_trace_info_3"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="prompt5"
+			           label="wsas_reset_trace_info_4"
+			           type="label"
+			           bundle="autopdtoolstrings" />
+			<fieldtask name="wsas.script.path"
+			           bundle="autopdtoolstrings"
+			           label="select_one"
+			           list="Restarting_a_server:Without_restarting_a_running_server"
+			           listDetails="Restarting_a_server:Without_restarting_a_running_server"
+			           type="selectlist" />
+		</inputdialogtask>
+
+		<condition property="restart.server">
+			<equals arg1="Restarting_a_server" arg2="${wsas.script.path}" />
+		</condition>
+
+		<if isTrue="${restart.server}">
+
+			<inputdialogtask>
+				<fieldtask name="announce.prompt"
+				           label="announce_proceeding_with_restarting_a_server_for_enabling_trace"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+			</inputdialogtask>
+		</if>
+
+		<if isNotTrue="${restart.server}">
+
+			<inputdialogtask>
+				<fieldtask name="announce.prompt"
+				           label="announce_proceeding_without_restarting_a_server_for_enabling_trace"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+			</inputdialogtask>
+		</if>
+	</target>
+
+	<target name="prompt_for_additional_trace_string"
+	        description="This target prompts the user for any additional
+			trace string they might have been supplied."
+	        unless="wasnothere">
+
+		<autopdinput message="Has_IBM_Support_requested_that_you_enter_additional_trace_strings"
+		             validargs="Yes,No"
+		             addproperty="request.extra.trace"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="more.trace.needed">
+			<equals arg1="Yes" arg2="${request.extra.trace}" />
+		</condition>
+
+	</target>
+
+	<target name="add_additional_trace_strings"
+	        description="This target prompts the user for any additional
+					trace string they might have been supplied iff 'more.trace.needed'."
+	        if="more.trace.needed"
+	        unless="wasnothere">
+
+		<if isTrue="${isWindows}">
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="Paste_instructions_windows"
+			                            propertyName="paste.instructions"
+			                            message="To paste a string into the text area, use ctrl-v" />
+			<echo message="paste.instructions: ${paste.instructions}" />
+		</if>
+		<if isNotTrue="${isWindows}">
+			<saveresourcebundleproperty bundle="properties/SSEQTP/autopdtoolstrings_was"
+			                            key="Paste_instructions_unix"
+			                            propertyName="paste.instructions"
+			                            message="To copy and paste a string into the text area, select the text with your mouse and right click in the text area below." />
+		</if>
+
+		<if isTrue="${useGuiConsole }">
+			<inputdialogtask doSkip="true" noCancel="true">
+				<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="prompt2"
+				           label="${paste.instructions}"
+				           type="label"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="additional.was.trace.string"
+				           label="Answer"
+				           type="textarea" />
+			</inputdialogtask>
+		</if>
+
+		<if isNotTrue="${useGuiConsole }">
+			<inputdialogtask doSkip="true" noCancel="true">
+				<fieldtask name="prompt"
+				           label="Input_Trace_String"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="additional.was.trace.string"
+				           label="Answer"
+				           type="textarea" />
+			</inputdialogtask>
+		</if>
+
+		<!-- Allow user to place strings on different lines for readablity -->
+		<if isTrue="${useGuiConsole }">
+			<condition property="no.additional.trace.string">
+				<or>
+					<equals arg1="${additional.was.trace.string}" arg2="" />
+					<not>
+						<isset property="additional.was.trace.string" />
+					</not>
+				</or>
+			</condition>
+		</if>
+		<if isNotTrue="${useGuiConsole }">
+			<condition property="no.additional.trace.string">
+				<or>
+					<equals arg1="${additional.was.trace.string}" arg2="" />
+					<not>
+						<isset property="additional.was.trace.string" />
+					</not>
+				</or>
+			</condition>
+		</if>
+
+		<if isNotTrue="${no.additional.trace.string}">
+
+			<!-- Window asking if user wants to append or replace -->
+			<autopdinput message="prompt_replace_append_trace"
+			             validargs="append,replace"
+			             addproperty="extra.trace.option"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+			<condition property="trace.replace">
+				<equals arg1="replace" arg2="${extra.trace.option}" />
+			</condition>
+		</if>
+
+		<if isNotTrue="${no.additional.trace.string}">
+			<autopdreplace property="additional.was.trace.string" token="\n" value=":" />
+
+			<!-- Append the two trace strings and separate with : -->
+			<if isTrue="${trace.replace}">
+				<autopdproperty name="was.trace.string"
+				                value="${additional.was.trace.string}" />
+			</if>
+
+			<if isNotTrue="${trace.replace}">
+				<autopdproperty name="was.trace.string"
+				                value="${was.trace.string}:${additional.was.trace.string}" />
+			</if>
+		</if>
+
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  LOG/PLUGIN TARGETS ******************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- the various log handling targets ******************************************* -->
+	<target name="set_log_file_rollover"
+	        description="Reset Application Server log file size"
+	        unless="wasnothere">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="rolloverSize" value="${rolloverSize}" />
+				<filter token="maxNumberOfBackupFiles"
+				        value="${maxNumberOfBackupFiles}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+	</target>
+
+	<target name="set_log_file_rollover_with_condition"
+	        description="Reset Application Server log file size"
+	        if="set.log.file.rollover.needed"
+	        unless="wasnothere">
+
+		<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-template.jacl"
+		      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl"
+		      overwrite="true">
+			<filterset>
+				<filter token="CellName" value="${CellName}" />
+				<filter token="NodeName" value="${NodeName}" />
+				<filter token="ServerName" value="${ServerName}" />
+				<filter token="rolloverSize" value="${rolloverSize}" />
+				<filter token="maxNumberOfBackupFiles"
+				        value="${maxNumberOfBackupFiles}" />
+			</filterset>
+		</copy>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl" ${was.admin.info} -conntype NONE' />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-log-rollover.jacl ${was.admin.info} -conntype NONE" />
+		</exec>
+	</target>
+
+	<target name="gen_history_report"
+	        description="Generate history report"
+	        unless="wasnothere">
+
+		<exec executable="${was.enhanced.root}/bin/genHistoryReport.bat"
+		      dir="${autopdtmp}/autopd"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line="" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/genVersionReport.bat"
+		      dir="${autopdtmp}/autopd"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line="" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/genHistoryReport.sh"
+		      dir="${autopdtmp}/autopd"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line="" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/genVersionReport.sh"
+		      dir="${autopdtmp}/autopd"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line="" />
+		</exec>
+	</target>
+
+	<target name="was_backup_server.xml"
+	        description="Backup server.xml file"
+	        unless="wasnothere">
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true" preservelastmodified="true">
+			<fileset dir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}"
+		      overwrite="true"
+		      preservelastmodified="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="was_backup_server.xml_with_condition"
+	        description="Backup server.xml file"
+	        if="was.backup.server.xml.needed">
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true" preservelastmodified="true">
+			<fileset dir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}"
+		      overwrite="true"
+		      preservelastmodified="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="was_logs_backup"
+	        description="Backing up log files for WebSphere Application Server"
+	        unless="wasnothere">
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true">
+			<fileset dir="${was.enhanced.root}">
+				<exclude name="logs/RasGUI/**/*" />
+				<exclude name="logs/RasGUI" />
+				<exclude name="logs/${ServerName}/trace.log" />
+				<exclude name="logs/${ServerName}/SystemOut.log" />
+				<exclude name="logs/${ServerName}/SystemErr.log" />
+				<exclude name="logs/${ServerName}/native_stderr.log" />
+				<exclude name="logs/${ServerName}/native_stdout.log" />
+				<include name="logs/${ServerName}/**/*" />
+				<include name="logs/ffdc/**/*" />
+			</fileset>
+			<fileset file="${trace.log.file}" />
+			<fileset file="${systemout.log.file}" />
+			<fileset file="${systemerr.log.file}" />
+			<fileset file="${native_stderr.log.file}" />
+			<fileset file="${native_stdout.log.file}" />
+		</copy>
+
+		<copy todir="${autopdrecoveryDirWithTimestamp}" overwrite="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="backup_http_plugin-cfg.xml" description="Make backup of http-cfg.xml">
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true">
+			<fileset file="${http_plugin_cfg.location}" />
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}" overwrite="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="plugin-cfg.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="backup_http_plugin-cfg_with_condition"
+	        description="Make backup of http-cfg.xml"
+	        if="backup.http.plugin.cfg.xml.needed">
+
+		<copy todir="${autopdtmp}/autopd" overwrite="true">
+			<fileset file="${http_plugin_cfg.location}" />
+		</copy>
+		<copy todir="${autopdrecoveryDirWithTimestamp}" overwrite="true">
+			<fileset dir="${autopdtmp}/autopd">
+				<include name="plugin-cfg.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="set_http_plugin_trace" description="Reset http plug in trace">
+
+		<if isTrue="${plugin-cfg.available}">
+			<http_plugin_cfg_changer xmlfilename="${http_plugin_cfg.location}"
+			                         elementname="Log">
+				<property name="LogLevel" value="trace" />
+			</http_plugin_cfg_changer>
+		</if>
+	</target>
+
+	<target name="set_http_plugin_trace_with_condition"
+	        description="Reset http plug in trace"
+	        if="set.http.plugin.trace.needed">
+
+		<if isTrue="${plugin-cfg.available}">
+			<http_plugin_cfg_changer xmlfilename="${http_plugin_cfg.location}"
+			                         elementname="Log">
+				<property name="LogLevel" value="trace" />
+			</http_plugin_cfg_changer>
+		</if>
+	</target>
+
+	<target name="was_jvm_working_directory" description="Try to find the core file">
+
+		<available file="${was.enhanced.root}\config\cells\${CellName}\nodes\${NodeName}\servers\${ServerName}\server.xml"
+		           type="file"
+		           property="was.server.existing" />
+
+		<if isNotTrue="${was.server.existing}">
+			<autopdinput message="You_have_used_a_wrong_server_name_node_name_cell_name_please_give_correct_one_and_run_tool_for_this_problem_again"
+			             validargs="OK"
+			             addproperty="was.server.wrong" />
+		</if>
+
+		<xmlproperty file="${was.enhanced.root}\config\cells\${CellName}\nodes\${NodeName}\servers\${ServerName}\server.xml" />
+
+		<condition property="uses.XMI.rootelement">
+			<isset property="xmi:XMI.process:Server.processDefinition(xmi:id)" />
+		</condition>
+
+		<if isTrue="${uses.XMI.rootelement}">
+			<propertyexpand name="was.jvm.workingDirectory"
+			                value="${xmi:XMI.process:Server.processDefinition(workingDirectory)}"
+			                cellname="${CellName}"
+			                nodename="${NodeName}"
+			                servername="${ServerName}"
+			                wasroot="${was.enhanced.root}" />
+		</if>
+
+		<!-- added to support WAS 6 Profiles -->
+		<condition property="uses.processdefinition">
+			<isset property="process:Server.processDefinition(xmi:id)" />
+		</condition>
+
+
+		<if isTrue="${uses.processdefinition}">
+			<propertyexpand name="was.jvm.workingDirectory"
+			                value="${process:Server.processDefinition(workingDirectory)}"
+			                cellname="${CellName}"
+			                nodename="${NodeName}"
+			                servername="${ServerName}"
+			                wasroot="${was.enhanced.root}" />
+		</if>
+
+		<condition property="uses.processdefinitions">
+			<isset property="process:Server.processDefinitions(xmi:id)" />
+		</condition>
+
+		<if isTrue="${uses.processdefinitions}">
+			<propertyexpand name="was.jvm.workingDirectory"
+			                value="${process:Server.processDefinitions(workingDirectory)}"
+			                cellname="${CellName}"
+			                nodename="${NodeName}"
+			                servername="${ServerName}"
+			                wasroot="${was.enhanced.root}" />
+		</if>
+		<!-- end of WAS 6 section -->
+		<trim_filename key="jvm.working.path.trimmed"
+		               filename="${was.jvm.workingDirectory}"
+		               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  UTILITY ******************************************************************* -->
+	<!-- **************************************************************************** -->
+	<target name="progress_message"
+	        description="This target is a utility for 
+			streaming information from a Java class to the
+			ISA console.">
+		<output_message />
+	</target>
+
+	<macrodef name="output_message">
+		<sequential>
+			<echo message=" " />
+			<echo message="Status message => ${output.message}" />
+		</sequential>
+	</macrodef>
+
+	<!-- **************************************************************************** -->
+	<!--  WEB SERVER TARGETS ******************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- the various log handling targets ******************************************* -->
+	<target name="stop_web_server" description="Stop Web server">
+
+		<autopdinput message="To_perform_this_collection_please_manually_stop_Web_Server_now"
+		             validargs="I_have_stopped_Web_server,quit"
+		             addproperty="do.stop.web.server"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="do.stop.web.server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="do.stop.web.server is {0}"
+		           replace="${do.stop.web.server}"
+		           level="info"
+		           component="/scripts/was/was-sharedtargets.xml" />
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.stop.web.server}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<target name="stop_web_server_with_condition"
+	        description="Stop Web server iff 'stop.web.server.needed' is 'true'"
+	        if="stop.web.server.needed">
+
+		<autopdinput message="To_perform_this_collection_please_manually_stop_Web_Server_now"
+		             validargs="I_have_stopped_Web_server,quit"
+		             addproperty="do.stop.web.server"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="do.stop.web.server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="do.stop.web.server is {0}"
+		           replace="${do.stop.web.server}"
+		           level="info"
+		           component="/scripts/was/was-sharedtargets.xml" />
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.stop.web.server}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<target name="start_web_server" description="Start Web server">
+
+		<autopdinput message="To_perform_this_collection_please_manually_start_Web_Server_now"
+		             validargs="I_have_started_Web_server,quit"
+		             addproperty="do.start.web.server"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="do.start.web.server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="do.start.web.server is {0}"
+		           replace="${do.start.web.server}"
+		           id="1146"
+		           level="info"
+		           component="/scripts/was/was-sharedtargets.xml" />
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.start.web.server}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<target name="start_web_server_with_condition"
+	        description="Start Web server iff 'start.web.server.needed' is 'true'"
+	        if="start.web.server.needed">
+
+		<autopdinput message="To_perform_this_collection_please_manually_start_Web_Server_now"
+		             validargs="I_have_started_Web_server,quit"
+		             addproperty="do.start.web.server"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<wsnlsecho key="do.start.web.server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="do.start.web.server is {0}"
+		           replace="${do.start.web.server}"
+		           id="1146"
+		           level="info"
+		           component="/scripts/was/was-sharedtargets.xml" />
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.start.web.server}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  RESTORE OPERATIONS ******************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- restore the state of the app server **************************************** -->
+
+	<target name="restore_user_default_trace_values"
+	        description="This target restores the default trace values."
+	        unless="wasnothere">
+
+		<if isNotTrue="${restart.server}">
+			<!-- TraceSpecification (runtime) -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="TraceSpecification"
+					        value="${user.traceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info} ${wsadmin.args}" />
+			</exec>
+		</if>
+
+		<if isTrue="${restart.server}">
+
+			<!-- TraceSpecification (runtime) Modify only when sever is running  -->
+			<if isTrue="${was.server.isRunning}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="TraceSpecification"
+						        value="${user.startupTraceSpecification}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info} ${wsadmin.args}" />
+				</exec>
+			</if>
+
+			<!-- TraceSpecfication -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="${user.enable}" />
+					<filter token="TraceSpecification"
+					        value="${user.startupTraceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+
+			<!-- TraceLog -->
+			<if isTrue="${restore.log.file.rollover.needed}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="maxNumberOfBackupFiles"
+						        value="${user.maxNumberOfBackupFiles}" />
+						<filter token="rolloverSize" value="${user.rolloverSize}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl" ${was.admin.info} -conntype NONE' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl ${was.admin.info} -conntype NONE" />
+				</exec>
+			</if>
+			<!-- JVM -->
+			<if isTrue="${restore.was.jvm.arguments}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="genericJvmArguments"
+						        value="${user.genericJvmArguments}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl" ${was.admin.info} -conntype NONE' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl ${was.admin.info} -conntype NONE" />
+				</exec>
+			</if>
+		</if>
+	</target>
+
+	<target name="restore_user_default_trace_values_with_condition"
+	        description="This target restores the default trace values iff 
+			'was.trace.modify' is 'true'."
+	        if="was.trace.modify">
+
+		<if isNotTrue="${restart.server}">
+			<!-- TraceSpecification (runtime) -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="TraceSpecification"
+					        value="${user.traceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info} ${wsadmin.args}" />
+			</exec>
+		</if>
+
+		<if isTrue="${restart.server}">
+
+			<!-- TraceSpecification (runtime) Modify only when sever is running  -->
+			<if isTrue="${was.server.isRunning}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="TraceSpecification"
+						        value="${user.startupTraceSpecification}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info} ${wsadmin.args}' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info} ${wsadmin.args}" />
+				</exec>
+			</if>
+
+			<!-- TraceSpecfication -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="${user.enable}" />
+					<filter token="TraceSpecification"
+					        value="${user.startupTraceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+
+			<!-- TraceLog -->
+			<if isTrue="${restore.log.file.rollover.needed}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="maxNumberOfBackupFiles"
+						        value="${user.maxNumberOfBackupFiles}" />
+						<filter token="rolloverSize" value="${user.rolloverSize}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl" ${was.admin.info} -conntype NONE' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-log-rollover-filled.jacl ${was.admin.info} -conntype NONE" />
+				</exec>
+			</if>
+			<!-- JVM -->
+			<if isTrue="${restore.was.jvm.arguments}">
+				<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-template.jacl"
+				      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl"
+				      overwrite="true">
+					<filterset>
+						<filter token="CellName" value="${CellName}" />
+						<filter token="NodeName" value="${NodeName}" />
+						<filter token="ServerName" value="${ServerName}" />
+						<filter token="genericJvmArguments"
+						        value="${user.genericJvmArguments}" />
+					</filterset>
+				</copy>
+
+				<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.windows}">
+					<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl" ${was.admin.info} -conntype NONE' />
+				</exec>
+				<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+				      dir="${was.enhanced.root}/bin"
+				      output="${autopd.echolog.instance}"
+				      append="true"
+				      os="${os.unixkind}">
+					<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-jvm-args-filled.jacl ${was.admin.info} -conntype NONE" />
+				</exec>
+			</if>
+		</if>
+
+	</target>
+
+	<target name="restore_nodeagent_trace_values"
+	        description="This target restores the default nodeagent trace values iff 
+					'restore.nodeagent.trace.needed' is 'true'."
+	        if="restore.nodeagent.trace.needed">
+
+		<if isTrue="${isNodeAgentSOAP}">
+			<!-- TraceSpecification (runtime) -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="TraceSpecification"
+					        value="${nodeagent.traceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+
+		<if isTrue="${isNodeAgentNONE}">
+
+			<!-- TraceSpecfication -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="${nodeagent.enable}" />
+					<filter token="TraceSpecification"
+					        value="${nodeagent.startupTraceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+	</target>
+
+	<target name="restore_dmgr_trace_values"
+	        description="This target restores the default deployment manager trace values iff 
+							'restore.dmgr.trace.needed' is 'true'."
+	        if="restore.dmgr.trace.needed">
+
+		<if isTrue="${isDMGRSOAP}">
+			<!-- TraceSpecification (runtime) -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="TraceSpecification"
+					        value="${dmgr.traceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+
+		<if isTrue="${isDMGRNONE}">
+
+			<!-- TraceSpecfication -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="${dmgr.enable}" />
+					<filter token="TraceSpecification"
+					        value="${dmgr.startupTraceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+
+	</target>
+
+	<target name="filter_sensitive_info_recovery"
+	        description="Filter out sensitive information from a collection zip file">
+		<property name="excluded.directive.file"
+		          value="${was.shared.targets.bundle.basedir}/properties/SSEQTP/security/excludedFile.xml" />
+		<property name="filtered.directive.file"
+		          value="${was.shared.targets.bundle.basedir}/properties/SSEQTP/security/filteredFile.xml" />
+
+		<filter_security_info filename="${recovery_pmrfilename}"
+		                      nopathfilename="recovery_${pmrnopathfilename}"
+		                      excludeDirectiveFile="${excluded.directive.file}"
+		                      filterDirectiveFile="${filtered.directive.file}" />
+	</target>
+
+	<target name="restore_app_server_status"
+	        description="This target stops the WebSphere Application Server. The 
+					server is started using the 'stopServer.[sh | bat]' script iff the 
+					'restore.app.server.status.needed' property is set to 'true'."
+	        if="restore.app.server.status.needed">
+
+		<exec executable="${was.enhanced.root}/bin/stopServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/stopServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<if isTrue="${was.server.running.status}">
+
+			<exec executable="${was.enhanced.root}/bin/startServer.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=" ${ServerName}" />
+			</exec>
+
+			<exec executable="${was.enhanced.root}/bin/startServer.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" ${ServerName}" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="restore_appserver_trace_values"
+	        description="this target restores the application server trace
+				values iff 'restore.appserver.trace.needed' is 'true'."
+	        if="restore.appserver.trace.needed"
+	        unless="wasnothere">
+
+		<if isTrue="${isAppServerSOAP}">
+			<!-- TraceSpecification (runtime) -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="TraceSpecification"
+					        value="${appserver.traceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl" ${was.admin.info}' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-runtime-filled-trace.jacl ${was.admin.info}" />
+			</exec>
+		</if>
+
+		<if isTrue="${isAppServerNONE}">
+
+			<!-- TraceSpecfication -->
+			<copy file="${was.shared.targets.bundle.basedir}/scripts/jacl/was-trace-template.jacl"
+			      tofile="${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl"
+			      overwrite="true">
+				<filterset>
+					<filter token="CellName" value="${CellName}" />
+					<filter token="NodeName" value="${NodeName}" />
+					<filter token="ServerName" value="${ServerName}" />
+					<filter token="enable" value="${appserver.enable}" />
+					<filter token="TraceSpecification"
+					        value="${appserver.startupTraceSpecification}" />
+				</filterset>
+			</copy>
+
+			<exec executable="${was.enhanced.root}/bin/wsadmin.bat"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.windows}">
+				<arg line=' -f "${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl" ${was.admin.info} -conntype NONE' />
+			</exec>
+			<exec executable="${was.enhanced.root}/bin/wsadmin.sh"
+			      dir="${was.enhanced.root}/bin"
+			      output="${autopd.echolog.instance}"
+			      append="true"
+			      os="${os.unixkind}">
+				<arg line=" -f ${was.shared.targets.bundle.basedir}/scripts/jacl/was-filled-trace.jacl ${was.admin.info} -conntype NONE" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="restore_http_plugin-cfg" description="Restore the plugin cfg file.">
+
+		<copy tofile="${http_plugin_cfg.location}"
+		      file="${autopdtmp}/autopd/plugin-cfg.xml"
+		      overwrite="true"
+		      failonerror="false" />
+
+	</target>
+
+	<target name="restore_http_plugin-cfg_with_condition"
+	        description="Restore the plugin cfg file iff 'restore.http.phugin.cfg.needed' is 'true'."
+	        if="restore.http.phugin.cfg.needed">
+
+		<copy tofile="${http_plugin_cfg.location}"
+		      file="${autopdtmp}/autopd/plugin-cfg.xml"
+		      overwrite="true"
+		      failonerror="false" />
+
+	</target>
+
+	<target name="was_restore_server.xml"
+	        description="This target restores the server.xml for the app server."
+	        unless="wasnothere">
+
+		<copy todir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}"
+		      overwrite="true"
+		      preservelastmodified="true">
+			<fileset dir="${autopdtmp}/autopd/">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="was_restore_server.xml_with_condition"
+	        description="This target restores the server.xml for the app server iff 'was.restore.server.xml.needed' is 'true'."
+	        if="was.restore.server.xml.needed">
+
+		<copy todir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}"
+		      overwrite="true"
+		      preservelastmodified="true">
+			<fileset dir="${autopdtmp}/autopd/">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="was_recovery_server.xml"
+	        description="See was_restore_server.xml"
+	        unless="wasnothere">
+
+		<copy todir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}"
+		      overwrite="true"
+		      preservelastmodified="true">
+			<fileset dir="${autopdtmp}/autopd/">
+				<include name="server.xml" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="reset_for_recovery"
+	        description="Reset the application server for recovery from a failure.">
+
+		<merge_autopdlog destfile="${autopdlog}" sourcefile="${autopd.log.instance}" />
+		<merge_autopdlog destfile="${echolog}" sourcefile="${autopd.echolog.instance}" />
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+			<zipfileset file="${autopdlog}" prefix="autopdzip/autopd" />
+			<zipfileset file="${echolog}" prefix="autopdzip/autopd" />
+			<zipfileset dir="${loginstancedir}" prefix="autopdzip/autopd/loginstance" />
+		</zip>
+	</target>
+
+	<target name="set_server_restore_status"
+	        description="Set the application server restore property iff the application
+				server is not running."
+	        unless="wasnothere">
+
+		<if isNotTrue="${was.server.isRunning}">
+			<property name="restore.app.server.status.needed" value="true" />
+		</if>
+	</target>
+
+	<target name="set_server_restore_status_with_condition"
+	        description="Set the application server restore property iff the application
+				server is not running AND 'set.server.restore.status.needed' is 'true'."
+	        if="set.server.restore.status.needed">
+
+		<if isNotTrue="${was.server.isRunning}">
+			<property name="restore.app.server.status.needed" value="true" />
+		</if>
+	</target>
+
+	<target name="was_logs_restore"
+	        description="This target does a back-up of all of the WebSphere logs."
+	        unless="wasnothere">
+
+		<mkdir dir="${was.enhanced.root}/logs/RasGUI" />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<move todir="${was.enhanced.root}/logs/RasGUI/logs_${autopdts}">
+			<fileset dir="${was.enhanced.root}/logs">
+				<exclude name="RasGUI/**/*" />
+				<exclude name="RasGUI" />
+				<exclude name="${ServerName}/trace.log" />
+				<exclude name="${ServerName}/SystemOut.log" />
+				<exclude name="${ServerName}/SystemErr.log" />
+				<exclude name="${ServerName}/native_stderr.log" />
+				<exclude name="${ServerName}/native_stdout.log" />
+				<include name="${ServerName}/**/*" />
+				<include name="ffdc/**/*" />
+			</fileset>
+			<fileset file="${trace.log.file}" />
+			<fileset file="${systemout.log.file}" />
+			<fileset file="${systemerr.log.file}" />
+			<fileset file="${native_stderr.log.file}" />
+			<fileset file="${native_stdout.log.file}" />
+		</move>
+		<copy todir="${was.enhanced.root}/logs" overwrite="true">
+			<fileset dir="${autopdrecoveryDirWithTimestamp}/logs">
+				<exclude name="RasGUI/**/*" />
+				<exclude name="RasGUI" />
+				<exclude name="${ServerName}/trace.log" />
+				<exclude name="${ServerName}/SystemOut.log" />
+				<exclude name="${ServerName}/SystemErr.log" />
+				<exclude name="${ServerName}/native_stderr.log" />
+				<exclude name="${ServerName}/native_stdout.log" />
+				<include name="${ServerName}/**/*" />
+				<include name="ffdc/**/*" />
+			</fileset>
+		</copy>
+		<copy tofile="${trace.log.file}"
+		      file="${autopdrecoveryDirWithTimestamp}/log/${ServerName}/trace.log"
+		      overwrite="true"
+		      failonerror="false" />
+		<copy tofile="${systemout.log.file}"
+		      file="${autopdrecoveryDirWithTimestamp}/log/${ServerName}/SystemOut.log"
+		      overwrite="true"
+		      failonerror="false" />
+		<copy tofile="${systemerr.log.file}"
+		      file="${autopdrecoveryDirWithTimestamp}/log/${ServerName}/SystemErr.log"
+		      overwrite="true"
+		      failonerror="false" />
+		<copy tofile="${native_stderr.log.file}"
+		      file="${autopdrecoveryDirWithTimestamp}/log/${ServerName}/native_stderr.log"
+		      overwrite="true"
+		      failonerror="false" />
+		<copy tofile="${native_stdout.log.file}"
+		      file="${autopdrecoveryDirWithTimestamp}/log/${ServerName}/native_stdout.log"
+		      overwrite="true"
+		      failonerror="false" />
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  OS OPERATIONS ************************************************************* -->
+	<!-- **************************************************************************** -->
+
+	<!-- create java cores, heap dumps, thread dumps, and netstats ****************** -->
+
+	<target name="create_unix_hangs_javacore"
+	        description="This target creates the javacore file(s) on UNIX platforms if
+				it is a supported UNIX platform."
+	        if="isSupportedUnix">
+
+		<autopdinput message="To_create_core_file_Proceed_run_kill-3_command"
+		             validargs="OK,Quit"
+		             addproperty="do.kill"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nokill3">
+			<equals arg1="Quit" arg2="${do.kill}" />
+		</condition>
+		<fail if="do.abort.nokill3">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+
+		<!-- issue kill -3 command -->
+		<copy file="${bundle.basedir}/scripts/was/shell/kill-template.sh"
+		      tofile="${bundle.basedir}/scripts/was/shell/kill-filled.sh"
+		      overwrite="true">
+			<filterset>
+				<filter token="num" value="-3" />
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_2_minutes"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Waiting for two minutes"
+		           replace="${autopdts}"
+		           id="1020"
+		           level="info" />
+		<!-- core available check -->
+		<waitfor maxwait="2" maxwaitunit="minute">
+			<available file="/tmp/was.file.notexisting"
+			           type="file"
+			           property="was.file.notexisting" />
+		</waitfor>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<if isTrue="${isSunOS}">
+
+			<property name="pstack.out.path2" value="${autopdtmp}/autopd/pstack2.out" />
+
+			<copy file="${bundle.basedir}/scripts/was/shell/solaris/pstack-template.sh"
+			      tofile="${bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="pstack.out" value="${pstack.out.path2}" />
+					<filter token="pid" value="${was.java.process.id}" />
+				</filterset>
+			</copy>
+		</if>
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell/solaris"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="SunOS">
+			<arg line=" -f ${bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_trying_to_create_javacore_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Trying to create javacore file"
+		           replace="${autopdts};;${step.count}"
+		           id="1022"
+		           level="info" />
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Waiting_for_2_minutes"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Waiting for two minutes"
+		           replace="${autopdts}"
+		           id="1020"
+		           level="info" />
+
+		<!-- core available check -->
+		<waitfor maxwait="2" maxwaitunit="minute">
+			<available file="/tmp/was.file.notexisting"
+			           type="file"
+			           property="was.file.notexisting" />
+		</waitfor>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<if isTrue="${isSunOS}">
+			<echo message=" " />
+			<stepcount />
+			<wsnlsecho key="Step_running_commands_to_obtain_pstack_output"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="[{0}] Step {1}: Running commands to obtain pstack output"
+			           replace="${autopdts};;${step.count}"
+			           id="1021"
+			           level="info" />
+		</if>
+		<property name="pstack.out.path3" value="${autopdtmp}/autopd/pstack3.out" />
+
+		<copy file="${bundle.basedir}/scripts/was/shell/solaris/pstack-template.sh"
+		      tofile="${bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh"
+		      overwrite="true">
+			<filterset>
+				<filter token="pstack.out" value="${pstack.out.path3}" />
+				<filter token="pid" value="${was.java.process.id}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell/solaris"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="SunOS">
+			<arg line=" -f ${bundle.basedir}/scripts/was/shell/solaris/pstack-filled.sh" />
+		</exec>
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_trying_to_create_javacore_file"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Trying to create javacore file"
+		           replace="${autopdts};;${step.count}"
+		           id="1022"
+		           level="info" />
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+		</exec>
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_waiting_for_30_seconds"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Waiting for 30 seconds"
+		           replace="${autopdts}"
+		           id="1026"
+		           level="info" />
+
+		<!-- core available check -->
+		<waitfor maxwait="30" maxwaitunit="second">
+			<available file="/tmp/was.file.notexisting"
+			           type="file"
+			           property="was.file.notexisting" />
+		</waitfor>
+	</target>
+
+	<target name="create_unix_hangs_systemcore"
+	        description="This target queries the user and asks them if they want to 
+				issue a 'kill -11' command via a UNIX shell script (except on Sun OS) 
+				when the automated core production has failed."
+	        if="isSupportedUnixExceptSunOS">
+
+		<!-- if the javacore isn't created, or truncated, run kill -11 to do that -->
+
+		<autopdinput message="To_create_systemcore_file_Proceed_run_kill-11_command"
+		             validargs="OK,Skip,Quit"
+		             addproperty="do.kill1"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort.nokill11">
+			<equals arg1="Quit" arg2="${do.kill1}" />
+		</condition>
+		<fail if="do.abort.nokill11">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+
+		<condition property="do.ok11">
+			<equals arg1="OK" arg2="${do.kill1}" />
+		</condition>
+
+		<!-- issue kill -11 command -->
+		<if isTrue="${do.ok11}">
+			<copy file="${bundle.basedir}/scripts/was/shell/kill-template.sh"
+			      tofile="${bundle.basedir}/scripts/was/shell/kill-filled.sh"
+			      overwrite="true">
+				<filterset>
+					<filter token="num" value="-11" />
+					<filter token="pid" value="${was.java.process.id}" />
+				</filterset>
+			</copy>
+
+			<exec executable="sh"
+			      dir="${bundle.basedir}/scripts/was/shell"
+			      output="${autopd.echolog.instance}"
+			      append="true">
+				<arg line="-f ${bundle.basedir}/scripts/was/shell/kill-filled.sh" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="create_unix_hangs_output_options"
+	        description="This target issues the netstat and vmstat commands
+			command via a UNIX shell script (except on Sun OS)."
+	        if="isSupportedUnixExceptSunOS">
+
+		<property name="netstat.out.path3" value="${autopdtmp}/autopd/netstat3.out" />
+		<property name="vmstat.out.path3" value="${autopdtmp}/autopd/vmstat3.log" />
+
+		<copy file="${bundle.basedir}/scripts/was/shell/collect-state-template.sh"
+		      tofile="${bundle.basedir}/scripts/was/shell/collect-state-filled.sh"
+		      overwrite="true">
+			<filterset>
+				<filter token="netstat.args" value="-an" />
+				<filter token="netstat.out" value="${netstat.out.path3}" />
+				<filter token="vmstat.out" value="${vmstat.out.path3}" />
+			</filterset>
+		</copy>
+
+		<exec executable="sh"
+		      dir="${bundle.basedir}/scripts/was/shell"
+		      output="${autopd.echolog.instance}"
+		      append="true">
+			<arg line=" -f ${bundle.basedir}/scripts/was/shell/collect-state-filled.sh" />
+		</exec>
+	</target>
+
+	<target name="issue_netstat_before"
+	        description="This target runs the 'netstat -an' command before stopping 
+				the application server">
+
+		<exec executable="netstat"
+		      dir="${was.root}"
+		      output="${loginstancedir}/netstat_before.txt"
+		      os="${os.unixkind}">
+			<arg line="-an" />
+		</exec>
+
+		<exec executable="cmd.exe"
+		      dir="${was.root}"
+		      output="${loginstancedir}/netstat_before.txt"
+		      os="${os.windows}">
+			<arg line="/c netstat -an" />
+		</exec>
+	</target>
+
+	<target name="issue_netstat_after"
+	        description="This target runs the 'netstat -an' after stopping the 
+				application server">
+
+		<exec executable="netstat"
+		      dir="${was.root}"
+		      output="${loginstancedir}/netstat_after.txt"
+		      os="${os.unixkind}">
+			<arg line="-an" />
+		</exec>
+
+		<exec executable="cmd.exe"
+		      dir="${was.root}"
+		      output="${loginstancedir}/netstat_after.txt"
+		      os="${os.windows}">
+			<arg line="/c netstat -an" />
+		</exec>
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!--  WEBSPHERE OPERATIONS ****************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- start/stop/restore application server ************************************** -->
+
+	<target name="warn_user"
+	        description="This target informs the user that the server is being
+				stopped and re-started unless WAS is not on the system."
+	        unless="wasnothere">
+
+		<autopdinput message="To_perform_this_collection_WebSphere_Application_Server_must_be_stopped_and_restarted"
+		             validargs="Proceed_with_stopping/restarting_was,quit"
+		             addproperty="do.warn"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.warn}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<target name="warn_user_with_condition"
+	        description="This target informs the user that the server is being
+					stopped and re-started if the user needs to be warned."
+	        if="do.warn.user">
+
+		<autopdinput message="To_perform_this_collection_WebSphere_Application_Server_must_be_stopped_and_restarted"
+		             validargs="Proceed_with_stopping/restarting_was,quit"
+		             addproperty="do.warn"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		<condition property="do.abort">
+			<equals arg1="quit" arg2="${do.warn}" />
+		</condition>
+		<fail if="do.abort">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+
+	</target>
+
+	<target name="start_app_server"
+	        description="This target starts the WebSphere Application Server. The 
+				server is started using the 'startServer.[sh | bat]' script unless 
+				WebSphere is not installed."
+	        unless="wasnothere">
+
+		<delete file="${autopdtmp}/autopd/was-start-status.txt" />
+		<property name="was.start.status.file"
+		          value="${autopdtmp}/autopd/was-start-status.txt" />
+
+		<exec executable="${was.enhanced.root}/bin/startServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.start.status.file}"
+		      os="${os.windows}">
+			<arg line=" ${ServerName}" />
+		</exec>
+
+		<exec executable="${was.enhanced.root}/bin/startServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.start.status.file}"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName}" />
+		</exec>
+
+		<available file="${was.start.status.file}"
+		           type="file"
+		           property="was.start.status.file.existing" />
+
+		<if isTrue="${was.start.status.file.existing}">
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${was.start.status.file}" />
+			</concat>
+			<was_status key="was.server.started.status"
+			            pattern="${ServerName}.*open\ for\ e-business"
+			            filename="${was.start.status.file}" />
+		</if>
+
+		<condition property="was.server.isStarted.detected">
+			<equals arg1="${was.server.started.status}" arg2="STARTED" />
+		</condition>
+
+
+		<if isTrue="${was.server.isStarted.detected}">
+			<autopdinput message="Application_Server_has_started" validargs="OK" />
+			<wsnlsecho key="Application_Server_started"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="Application Server started"
+			           id="1060"
+			           level="info"
+			           component="\scripts\was\was-sharedtargets.xml" />
+		</if>
+		<if isNotTrue="${was.server.isStarted.detected}">
+			<autopdinput message="The_tool_couldn't_start_the_Application_Server_Please_manually_start_Application_Server"
+			             validargs="OK,Quit"
+			             addproperty="abort.start.server"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</if>
+		<condition property="do.abort.start.server">
+			<equals arg1="Quit" arg2="${abort.start.server}" />
+		</condition>
+		<fail if="do.abort.start.server">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+
+		<if isTrue="${was.server.not.started}">
+			<autopdinput message="I_have_manually_started_Application_Server"
+			             validargs="OK,Quit"
+			             addproperty="abort.start.server1" />
+		</if>
+		<condition property="do.abort.start.server1">
+			<equals arg1="Quit" arg2="${abort.start.server1}" />
+		</condition>
+		<fail if="do.abort.start.server1">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+
+	</target>
+
+	<target name="start_app_server_with_condition"
+	        description="This target starts the WebSphere Application Server. The 
+				server is started using the 'startServer.[sh | bat]' script iff the 
+			'start.app.server' property is set to 'true'."
+	        if="start.app.server">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Start_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Start Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="1101"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+		<delete file="${autopdtmp}/autopd/was-start-status.txt" />
+		<property name="was.start.status.file"
+		          value="${autopdtmp}/autopd/was-start-status.txt" />
+
+		<exec executable="${was.enhanced.root}/bin/startServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.start.status.file}"
+		      os="${os.windows}">
+			<arg line=" ${ServerName}" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/startServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${was.start.status.file}"
+		      os="${os.unixkind}">
+			<arg line=" ${ServerName}" />
+		</exec>
+
+
+		<available file="${was.start.status.file}"
+		           type="file"
+		           property="was.start.status.file.existing" />
+
+		<if isTrue="${was.start.status.file.existing}">
+			<concat destfile="${autopd.echolog.instance}" append="true">
+				<fileset file="${was.start.status.file}" />
+			</concat>
+			<was_status key="was.server.started.status"
+			            pattern="${ServerName}.*open\ for\ e-business"
+			            filename="${was.start.status.file}" />
+		</if>
+
+		<condition property="was.server.isStarted.detected">
+			<equals arg1="${was.server.started.status}" arg2="STARTED" />
+		</condition>
+
+		<if isTrue="${was.server.isStarted.detected}">
+			<autopdinput message="Application_Server_has_started" validargs="OK" />
+			<wsnlsecho key="Application_Server_started"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was"
+			           message="Application Server started"
+			           id="1060"
+			           level="info"
+			           component="\scripts\was\was-sharedtargets.xml" />
+		</if>
+
+		<if isNotTrue="${was.server.isStarted.detected}">
+			<autopdinput message="The_tool_couldn't_start_the_Application_Server_Please_manually_start_Application_Server"
+			             validargs="OK,Quit"
+			             addproperty="abort.start.server"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</if>
+		<condition property="do.abort.start.server">
+			<equals arg1="Quit" arg2="${abort.start.server}" />
+		</condition>
+		<fail if="do.abort.start.server">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+		<if isTrue="${was.server.not.started}">
+			<autopdinput message="I_have_manually_started_Application_Server"
+			             validargs="OK,Quit"
+			             addproperty="abort.start.server1" />
+		</if>
+		<condition property="do.abort.start.server1">
+			<equals arg1="Quit" arg2="${abort.start.server1}" />
+		</condition>
+		<fail if="do.abort.start.server1">
+				Automated Problem Determination Tool aborted by user.
+			</fail>
+	</target>
+
+	<target name="stop_app_server"
+	        description="This target stops the WebSphere Application Server. The 
+					server is started using the 'stopServer.[sh | bat]' script unless 
+					WebSphere is not installed."
+	        unless="wasnothere">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="1102"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+
+		<exec executable="${was.enhanced.root}/bin/stopServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}"
+		      timeout="${server.shutdown.time}"
+		      resultproperty="stop.returncode">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}"
+		      timeout="${server.shutdown.time}"
+		      resultproperty="stop.returncode">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<echo message="Stop Server return code: ${stop.returncode}" />
+		<condition property="stop.not.completed">
+			<equals arg1="1" arg2="${stop.returncode}" />
+		</condition>
+
+		<if isTrue="${stop.not.completed}">
+			<echo message="Server not able to be stopped automatically" />
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Auto_shutdown_failed" type="prompt" />
+				<fieldtask name="was.admin.user"
+				           label="Perform_shutdown_manually"
+				           type="label" />
+			</inputdialogtask>
+		</if>
+
+		<wsnlsecho key="Application_Server_stopped"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Application Server stopped"
+		           id="1103"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+	</target>
+
+	<target name="stop_app_server_with_condition"
+	        description="Stop Application Server"
+	        if="stop.app.server">
+
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_Stop_Application_Server"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Stop Application Server"
+		           replace="${autopdts};;${step.count}"
+		           id="1102"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+		<exec executable="${was.enhanced.root}/bin/stopServer.bat"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.windows}"
+		      timeout="${server.shutdown.time}"
+		      resultproperty="stop.returncode">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+		<exec executable="${was.enhanced.root}/bin/stopServer.sh"
+		      dir="${was.enhanced.root}/bin"
+		      output="${autopd.echolog.instance}"
+		      append="true"
+		      os="${os.unixkind}"
+		      timeout="${server.shutdown.time}"
+		      resultproperty="stop.returncode">
+			<arg line=" ${ServerName} ${was.admin.info}" />
+		</exec>
+
+		<echo message="Stop Server return code: ${stop.returncode}" />
+		<condition property="stop.not.completed">
+			<equals arg1="1" arg2="${stop.returncode}" />
+		</condition>
+
+		<if isTrue="${stop.not.completed}">
+			<echo message="Server not able to be stopped automatically" />
+			<inputdialogtask>
+				<fieldtask name="prompt" label="Auto_shutdown_failed" type="prompt" />
+				<fieldtask name="was.admin.user"
+				           label="Perform_shutdown_manually"
+				           type="label" />
+			</inputdialogtask>
+		</if>
+
+		<wsnlsecho key="Application_Server_stopped"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="Application Server stopped"
+		           id="1103"
+		           level="info"
+		           component="\scripts\was\was-sharedtargets.xml" />
+	</target>
+
+	<!-- **************************************************************************** -->
+	<!-- DEPRECATED: **************************************************************** -->
+	<!-- **************************************************************************** -->
+
+	<!-- Deprecated targets that determine the WAS root version, level, component ***
+		properties, etc. ************************************************************ -->
+
+	<target name="was_product_version"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<property name="was.product.name" value="IBM WebSphere Application Server" />
+
+		<wasversioninfo versionkey="was.product.version" wasroot="${was.root}" />
+
+	</target>
+
+	<target name="ask_for_was_root"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<!-- Check to see if WAS root is already set from the GUI,
+				from the utility that launched the tool, or in some other way. -->
+		<condition property="no.was">
+			<not>
+				<isset property="was.root" />
+			</not>
+		</condition>
+
+		<!-- Use WAS_HOME if avaliable - otherwise, set to empty string  -->
+		<condition property="default.was.root.set">
+			<isset property="env.WAS_HOME" />
+		</condition>
+
+		<property name="default.was.root" value="" />
+		<if isTrue="${default.was.root.set}">
+			<autopdproperty name="default.was.root" value="${env.WAS_HOME}" />
+		</if>
+
+		<if isTrue="${no.was}">
+
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Required"
+				           type="prompt"
+				           bundle="autopdtoolstrings" />
+				<fieldtask name="was.root"
+				           label="WAS_root"
+				           type="filebrowser"
+				           bundle="autopdtoolstrings"
+				           defaultValue="${default.was.root}"
+				           initialValueSource="persisted" />
+			</inputdialogtask>
+		</if>
+
+		<persistproperty property="was.root" />
+	</target>
+
+	<target name="validate_was_root"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<available file="${was.root}/deploytool"
+		           type="dir"
+		           property="was.root.existing" />
+		<if isNotTrue="${was.root.existing}">
+			<autopdinput message="WAS_Root_Value_is_not_valid_Please_reset_this_value"
+			             validargs="OK"
+			             addproperty="wasroot.wrong" />
+		</if>
+		<condition property="do.abort.wasroot.wrong">
+			<equals arg1="OK" arg2="${wasroot.wrong}" />
+		</condition>
+		<fail if="do.abort.wasroot.wrong">
+				WAS root directory input by user doesn't exist. Automated
+				Problem Determination Tool terminated.
+			</fail>
+	</target>
+
+	<target name="determine_was_version"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<property name="was.product.name" value="IBM WebSphere Application Server" />
+
+		<wasversioninfo versionkey="was.product.version" wasroot="${was.root}" />
+	</target>
+
+	<target name="determine_was_version_level_with_condition"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="was.version.level.needed"
+	        unless="wasnothere">
+
+		<!-- DEPRECATED target -->
+		<versionlevel property="was.version.level"
+		              version="${was.product.version}"
+		              level="4.0:5.0:5.1:6.0:6.1" />
+
+		<condition property="isWASVersion4.0">
+			<equals arg1="4.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion5">
+			<equals arg1="5.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion5">
+			<equals arg1="5.1" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.1" arg2="${was.version.level}" />
+		</condition>
+
+		<if isTrue="${was.v4.supported}">
+			<condition property="isWASVersion5">
+				<or>
+					<istrue value="${isWASVersion4.0}" />
+					<istrue value="${isWASVersion5}" />
+				</or>
+			</condition>
+		</if>
+
+		<if isNotTrue="${was.v4.supported}">
+			<condition property="isWASVersion5">
+				<istrue value="${isWASVersion5}" />
+			</condition>
+			<if isTrue="${isWASVersion4.0}">
+				<wsnlsecho key="WSASv4_not_supported"
+				           bundle="autopdtoolstrings"
+				           message="WebSphere Application Server v4.0 is not supported"
+				           id="2293"
+				           level="error"
+				           component="\scripts\portal-was-sharedtargets.xml" />
+				<fail message="WebSphere Application Server v4.0 is not supported" />
+			</if>
+		</if>
+
+	</target>
+
+	<target name="determine_was_version_level"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<!-- DEPRECATED target -->
+		<versionlevel property="was.version.level"
+		              version="${was.product.version}"
+		              level="4.0:5.0:5.1:6.0:6.1" />
+
+		<condition property="isWASVersion4.0">
+			<equals arg1="4.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion5">
+			<equals arg1="5.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion5">
+			<equals arg1="5.1" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.0" arg2="${was.version.level}" />
+		</condition>
+
+		<condition property="isWASVersion6">
+			<equals arg1="6.1" arg2="${was.version.level}" />
+		</condition>
+
+		<if isTrue="${was.v4.supported}">
+			<condition property="isWASVersion5">
+				<or>
+					<istrue value="${isWASVersion4.0}" />
+					<istrue value="${isWASVersion5}" />
+				</or>
+			</condition>
+		</if>
+
+		<if isNotTrue="${was.v4.supported}">
+			<condition property="isWASVersion5">
+				<istrue value="${isWASVersion5}" />
+			</condition>
+			<if isTrue="${isWASVersion4.0}">
+				<wsnlsecho key="WSASv4_not_supported"
+				           bundle="autopdtoolstrings"
+				           message="WebSphere Application Server v4.0 is not supported"
+				           id="2293"
+				           level="error"
+				           component="\scripts\portal-was-sharedtargets.xml" />
+				<fail message="WebSphere Application Server v4.0 is not supported" />
+			</if>
+		</if>
+
+	</target>
+
+	<target name="set_problem_type_with_nls_bundle_ws"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+		<property environment="env" />
+		<property file="${autopdrootdir}/properties/autopd.properties" />
+
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+
+		<!--  Testing processing for problem.type 
+				<property name="autopdProblemSelected" value="Portal_Login_Problem"/> -->
+
+		<condition property="autopdProblemSelected.set">
+			<isset property="autopdProblemSelected" />
+		</condition>
+
+		<if isTrue="${autopdProblemSelected.set}">
+			<saveresourcebundleproperty bundle="${autopdProblem_nlsbundle}"
+			                            key="${autopdProblemSelected}"
+			                            propertyName="problem.type"
+			                            message="Problem Type" />
+		</if>
+
+		<condition property="problem.type.set">
+			<isset property="problem.type" />
+		</condition>
+
+		<if isNotTrue="${problem.type.set}">
+			<!-- If we didn't get the value from the AutoPD
+					environment, we'll use the one from the script. -->
+			<saveresourcebundleproperty bundle="${autopdProblem_nlsbundle}"
+			                            key="${autopdProblem}"
+			                            propertyName="problem.type"
+			                            message="Problem Type" />
+		</if>
+
+		<wsnlsecho key="Problem_type_for_script"
+		           bundle="autopdtoolstrings"
+		           message="Problem Type: ---{0}---"
+		           replace="${problem.type}"
+		           id="2245"
+		           level="info"
+		           component="\scripts\sharedtargets.xml" />
+
+		<echo message=" " />
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="${autopdProblem}_mg_link"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	</target>
+
+	<target name="was_properties_dmgr"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+		<getsubdirectories name="was.cells"
+		                   rootdir="${was.enhanced.root}/config/cells"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.cells" />
+		<if isTrue="${dmgr.has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.cells}">
+			<property name="dmgr.CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+		<if isTrue="${dmgr.has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.nodes}">
+			<property name="dmgr.NodeName" value="${was.nodes}" />
+		</if>
+
+		<getsubdirectories name="was.servers"
+		                   rootdir="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes/${dmgr.NodeName}/servers"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.servers" />
+		<if isTrue="${dmgr.has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Server_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.ServerName"
+				           label="was_servername"
+				           list="${was.servers}"
+				           listDetails="${was.servers}"
+				           type="selectlist"
+				           accessibilityName="was_servername"
+				           accessibilityDesc="was_servername"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.servers}">
+			<property name="dmgr.ServerName" value="${was.servers}" />
+		</if>
+	</target>
+
+	<target name="was_properties_dmgr_with_condition"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="need.dmgr.properties">
+
+		<getsubdirectories name="was.cells"
+		                   rootdir="${was.enhanced.root}/config/cells"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.cells" />
+		<if isTrue="${dmgr.has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.cells}">
+			<property name="dmgr.CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+		<if isTrue="${dmgr.has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.nodes}">
+			<property name="dmgr.NodeName" value="${was.nodes}" />
+		</if>
+
+		<getsubdirectories name="was.servers"
+		                   rootdir="${was.enhanced.root}/config/cells/${dmgr.CellName}/nodes/${dmgr.NodeName}/servers"
+		                   delimiter=":"
+		                   multipledirs="dmgr.has.mult.servers" />
+		<if isTrue="${dmgr.has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Server_Name_of_Deployment_Manager"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="dmgr.ServerName"
+				           label="was_servername"
+				           list="${was.servers}"
+				           listDetails="${was.servers}"
+				           type="selectlist"
+				           accessibilityName="was_servername"
+				           accessibilityDesc="was_servername"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${dmgr.has.mult.servers}">
+			<property name="dmgr.ServerName" value="${was.servers}" />
+		</if>
+	</target>
+
+	<target name="was_properties"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<!-- at this point, we need to get the actual profile root -->
+
+		<if isTrue="${isWASVersion6}">
+			<wasgetproperty value="was.enhanced.root" key="${profileName}" />
+		</if>
+
+		<wascellnames name="was.cells"
+		              rootDir="${was.enhanced.root}/config/cells"
+		              delimiter="="
+		              multipleDirs="has.mult.cells" />
+
+		<if isTrue="${has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.cells}">
+			<property name="CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+
+		<if isTrue="${has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.nodes}">
+			<property name="NodeName" value="${was.nodes}" />
+		</if>
+
+		<getsubdirectories name="was.servers"
+		                   rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers"
+		                   delimiter=":"
+		                   multipledirs="has.mult.servers" />
+
+		<if isTrue="${has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Server_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName"
+				           label="was_servername"
+				           list="${was.servers}"
+				           listDetails="${was.servers}"
+				           type="selectlist"
+				           accessibilityName="was_servername"
+				           accessibilityDesc="was_servername"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+	</target>
+
+	<target name="was_properties_with_condition"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="need.appserver.properties">
+
+		<getsubdirectories name="was.cells"
+		                   rootdir="${was.enhanced.root}/config/cells"
+		                   delimiter=":"
+		                   multipledirs="has.mult.cells" />
+
+		<if isTrue="${has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.cells}">
+			<property name="CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+
+		<if isTrue="${has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.nodes}">
+			<property name="NodeName" value="${was.nodes}" />
+		</if>
+
+		<getsubdirectories name="was.servers"
+		                   rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers"
+		                   delimiter=":"
+		                   multipledirs="has.mult.servers" />
+
+		<if isTrue="${has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Server_Name_of_Your_Application_Server"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="ServerName"
+				           label="was_servername"
+				           list="${was.servers}"
+				           listDetails="${was.servers}"
+				           type="selectlist"
+				           accessibilityName="was_servername"
+				           accessibilityDesc="was_servername"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${has.mult.servers}">
+			<property name="ServerName" value="${was.servers}" />
+		</if>
+	</target>
+
+	<target name="was_properties_nodeagent"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+		<getsubdirectories name="was.cells"
+		                   rootdir="${was.enhanced.root}/config/cells"
+		                   delimiter=":"
+		                   multipledirs="nagent.has.mult.cells" />
+		<if isTrue="${nagent.has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="nodeagent.CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${nagent.has.mult.cells}">
+			<property name="nodeagent.CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${nodeagent.CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="nagent.has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+
+		<if isTrue="${nagent.has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="nodeagent.NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${nagent.has.mult.nodes}">
+			<property name="nodeagent.NodeName" value="${was.nodes}" />
+		</if>
+
+		<getsubdirectories name="was.servers"
+		                   rootdir="${was.enhanced.root}/config/cells/${nodeagent.CellName}/nodes/${nodeagent.NodeName}/servers"
+		                   delimiter=":"
+		                   multipledirs="nagent.has.mult.servers" />
+
+		<if isTrue="${nagent.has.mult.servers}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Server_Name_of_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="nodeagent.ServerName"
+				           label="was_servername"
+				           list="${was.servers}"
+				           listDetails="${was.servers}"
+				           type="selectlist"
+				           accessibilityName="was_servername"
+				           accessibilityDesc="was_servername"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${nagent.has.mult.servers}">
+			<property name="nodeagent.ServerName" value="${was.servers}" />
+		</if>
+
+	</target>
+
+	<target name="was_properties_nodeagent_with_condition"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="need.nodeagent.properties">
+
+		<getsubdirectories name="was.cells"
+		                   rootdir="${was.enhanced.root}/config/cells"
+		                   delimiter=":"
+		                   multipledirs="nagent.has.mult.cells" />
+		<if isTrue="${nagent.has.mult.cells}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Cell_Name_of_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="nodeagent.CellName"
+				           label="was_cellname"
+				           list="${was.cells}"
+				           listDetails="${was.cells}"
+				           type="selectlist"
+				           accessibilityName="was_cellname"
+				           accessibilityDesc="was_cellname"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${nagent.has.mult.cells}">
+			<property name="nodeagent.CellName" value="${was.cells}" />
+		</if>
+
+		<getsubdirectories name="was.nodes"
+		                   rootdir="${was.enhanced.root}/config/cells/${nodeagent.CellName}/nodes"
+		                   delimiter=":"
+		                   multipledirs="nagent.has.mult.nodes" />
+
+		<wasnodenames name="was.nodes"
+		              nodes="${was.nodes}"
+		              rootdir="${was.enhanced.root}/config/cells/${CellName}/nodes"
+		              delimiter=":"
+		              multipledirs="has.mult.nodes" />
+
+
+		<if isTrue="${nagent.has.mult.nodes}">
+			<inputdialogtask>
+				<fieldtask name="prompt"
+				           label="Input_Node_Name_of_Node_Agent"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="nodeagent.NodeName"
+				           label="was_nodename"
+				           list="${was.nodes}"
+				           listDetails="${was.nodes}"
+				           type="selectlist"
+				           accessibilityName="was_nodename"
+				           accessibilityDesc="was_nodename"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+		</if>
+		<if isNotTrue="${nagent.has.mult.nodes}">
+			<property name="nodeagent.NodeName" value="${was.nodes}" />
+		</if>
+
+		<property name="nodeagent.ServerName" value="nodeagent" />
+	</target>
+
+	<target name="set_properties_for_how_to_proceed"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+		<if isTrue="${restart.server}">
+			<property name="recovery.needed" value="true" />
+			<property name="do.warn.user" value="true" />
+			<property name="stop.app.server" value="true" />
+			<property name="start.app.server" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.trace" value="true" />
+			<property name="detect.was.status.needed" value="true" />
+			<property name="set.server.restore.status.needed" value="true" />
+		</if>
+
+		<if isNotTrue="${restart.server}">
+			<property name="recovery.needed" value="true" />
+			<property name="recovery.completed.needed" value="true" />
+			<property name="enable.was.runtime.trace" value="true" />
+			<property name="detect.was.status.needed" value="true" />
+		</if>
+		<if isTrue="isSunOS">
+			<property name="was.trace.modify" value="true" />
+			<property name="enable.was.jvm.arguments" value="true" />
+		</if>
+
+	</target>
+
+	<target name="dist_was_log_redirect"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="was_log_redirect.needed"
+	        unless="wasnothere">
+
+		<if isNotTrue="${isZos}">
+
+			<available file="${was.enhanced.root}\config\cells\${CellName}\nodes\${NodeName}\servers\${ServerName}\server.xml"
+			           type="file"
+			           property="was.server.existing" />
+
+			<if isNotTrue="${was.server.existing}">
+				<autopdinput message="You_have_used_a_wrong_server_name_node_name_cell_name_please_give_correct_one_and_run_tool_for_this_problem_again"
+				             validargs="OK"
+				             addproperty="was.server.wrong" />
+				<wsnlsecho key="You_have_used_a_wrong_server_name_node_name_cell_name_please_give_correct_one_and_run_tool_for_this_problem_again"
+				           bundle="autopdtoolstrings"
+				           message="You have used an incorrect server name, node name, or cell name.  Please correct the error and run the Automated Problem Determination tool again for this problem."
+				           id="2298"
+				           level="warning"
+				           component="\scripts\portal-was-sharedtargets.xml" />
+			</if>
+
+			<condition property="do.abort.was.server.wrong">
+				<equals arg1="OK" arg2="${was.server.wrong}" />
+			</condition>
+
+			<fail if="do.abort.was.server.wrong">
+					Automated Problem Determination Tool aborted by user.
+				</fail>
+
+			<!--
+				<xmlproperty file="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/servers/${ServerName}/server.xml" />
+				-->
+
+			<logredirect id="${profileName}:${CellName}/${NodeName}/${ServerName}"
+			             appInstallRoot="${was.root}"
+			             traceLog="trace.log.file"
+			             sysErrLog="systemerr.log.file"
+			             sysOutLog="systemout.log.file"
+			             nativeStdErrLog="native_stderr.log.file"
+			             nativeStdOutLog="native_stdout.log.file" />
+
+			<!--
+				<echo message="LOG REDIRECT: traceLog=${trace.log.file} sysErrLog={systemerr.log.file} sysOutLog=${systemout.log.file} nativeStdErrLog=${native_stderr.log.file} nativeStdOutLog=${native_stdout.log.file}"/>
+				-->
+
+			<!-- end of WAS 6 section -->
+
+			<!-- Trim filenames now, before the script enters the recovery_needed /
+					recovery_completed section. -->
+			<trim_filename key="trace.log.file.trimmed"
+			               filename="${trace.log.file}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<trim_filename key="systemout.log.file.trimmed"
+			               filename="${systemout.log.file}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<trim_filename key="systemerr.log.file.trimmed"
+			               filename="${systemerr.log.file}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<trim_filename key="native_stderr.log.file.trimmed"
+			               filename="${native_stderr.log.file}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+			<trim_filename key="native_stdout.log.file.trimmed"
+			               filename="${native_stdout.log.file}"
+			               prefixTrim=".:\\|.:/|..:\\|..:/|/" />
+		</if>
+
+		<if isTrue="${isZos}">
+			<exec executable="zcollector.sh"
+			      dir="${autopdtmp}/../scripts/was/zos"
+			      output="${autopdtmp}/details.txt"
+			      os="${os.unixkind}">
+				<arg line="${was.enhanced.root}" />
+			</exec>
+		</if>
+	</target>
+
+	<target name="obtain_was_java_processid"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+<!--	<available file="${was.enhanced.root}/logs/${ServerName}/${ServerName}.pid"
+<		Changes made 01/30/08 DNS    -->
+		<available file="${logFilePath}/${ServerName}.pid"
+		           type="file"
+		           property="was.pid.existing" />
+		
+		<if isNotTrue="${was.pid.existing}">
+			<inputdialogtask noCancel="true">
+				<fieldtask name="prompt"
+				           label="pid_error"
+				           type="prompt"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+				<fieldtask name="was_server_pid"
+				           label="No_PID_Start_Over0"
+				           type="textarea"
+				           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			</inputdialogtask>
+			<property name="was.java.process.id" value="${was_server_pid}" /> 
+<!-- Task 21870 - remove fail
+			<fail>
+					Tool cannot collect the rest of the information without
+					pid
+				</fail>
+--> 				
+		</if>
+		<if isTrue="${was.pid.existing}">
+			<wasprocessid key="was.java.process.id"
+		              filename="${logFilePath}/${ServerName}.pid" />
+		</if> 
+	</target>
+
+	<target name="was_load_topology"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+	</target>
+
+	<target name="query_was_dmgr_properties"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="query.was.dmgr.properties.needed">
+
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_Cell_Name_of_Deployment_Manager"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="dmgr.CellName"
+			           label="was_cellname"
+			           type="plaintext"
+			           accessibilityName="was_cellname"
+			           accessibilityDesc="was_cellname"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_Node_Name_of_Deployment_Manager"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="dmgr.NodeName"
+			           label="was_nodename"
+			           type="plaintext"
+			           accessibilityName="was_nodename"
+			           accessibilityDesc="was_nodename"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<inputdialogtask>
+			<fieldtask name="prompt"
+			           label="Input_Server_Name_of_Deployment_Manager"
+			           type="prompt"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="dmgr.ServerName"
+			           label="was_servername"
+			           type="plaintext"
+			           accessibilityName="was_servername"
+			           accessibilityDesc="was_servername"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+	</target>
+
+	<target name="rename_was_properties"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        if="isCommandLine">
+
+		<!-- DEPRECATED target -->
+		<if isTrue="${isNodeAgent}">
+
+			<autopdproperty name="CellName" value="${nodeagent.CellName}" />
+			<autopdproperty name="NodeName" value="${nodeagent.NodeName}" />
+			<autopdproperty name="ServerName" value="${nodeagent.ServerName}" />
+		</if>
+		<if isTrue="${isDMGR}">
+
+			<autopdproperty name="CellName" value="${dmgr.CellName}" />
+			<autopdproperty name="NodeName" value="${dmgr.NodeName}" />
+			<autopdproperty name="ServerName" value="${dmgr.ServerName}" />
+		</if>
+	</target>
+
+	<target name="get_was_server_soap_port"
+	        description="DEPECATED: Use the aim/common-setup.xml targets."
+	        unless="wasnothere">
+
+		<autopdxmlproperty filename="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/serverindex.xml"
+		                   path="ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint"
+		                   property="port"
+		                   output="was.server.soap.port" />
+		<condition property="was.server.soap.port.set">
+			<isset property="was.server.soap.port" />
+		</condition>
+		<if isNotTrue="${was.server.soap.port.set}">
+			<autopdxmlproperty filename="${was.enhanced.root}/config/cells/${CellName}/nodes/${NodeName}/serverindex.xml"
+			                   path="XMI.ServerIndex.ServerEntries(serverName=${ServerName}).specialEndpoints(endPointName=SOAP_CONNECTOR_ADDRESS).endpoint"
+			                   property="port"
+			                   output="was.server.soap.port" />
+		</if>
+
+		<echo message="was.server.soap.port:${was.server.soap.port}" />
+	</target>
+
+	<target name="collect_core_heap"
+	        description="DEPECATED: Use the aim/common-setup.xml targets.">
+
+		<!--  core files -->
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}"
+			            prefix="autopdzip/${was.enhanced.root}">
+				<include name="javacore*.*" />
+				<include name="heapdump*.*" />
+			</zipfileset>
+			<zipfileset dir="${was.enhanced.root}/bin"
+			            prefix="autopdzip/${was.enhanced.root}/bin">
+				<include name="javacore*.*" />
+				<include name="heapdump*.*" />
+			</zipfileset>
+		</zip>
+	</target>
+
+</project>

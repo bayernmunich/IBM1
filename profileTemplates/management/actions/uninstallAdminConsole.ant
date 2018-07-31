@@ -1,0 +1,61 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="uninstallAdminConsole" default="uninstallAdminConsole" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+    <taskdef name="checkForOmittedApps" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.CheckForOmittedApps"/>
+    &importExternalLogs;   
+    <target name="checkForOmitted">
+    
+        <checkForOmittedApps appToCheck="deployAdminConsole" property="isAppOmitted"/>
+
+        <condition property="uninstallConsole" value="true">
+           <equals arg1="${isAppOmitted}" arg2="true"/>
+        </condition>
+
+        <wscmtlog> Value of uninstallConsole = ${uninstallConsole}</wscmtlog>
+        <wscmtlog> Value of isAppOmitted = ${isAppOmitted} </wscmtlog>
+        
+    </target> 
+    
+    <target name="doUninstallAdminConsole"
+            description="Undeploys Admin Console application"
+            if="uninstallConsole">
+            
+       <wscmtlog> Uninstall admin console application, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/uninstallAdminConsole.log </wscmtlog>
+            <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->        
+       <wsadmin conntype="none"
+                lang="jacl"
+                 failonerror="false"
+			     returnproperty="rcProperty"
+                tracefile="${WS_CMT_LOG_HOME}/${profileName}/uninstallAdminConsole.log"
+                wasHome="${WAS_HOME}"
+                wasInstallRoot="${WAS_HOME}"
+                wasRepositoryRoot="${profilePath}/config"
+                userInstallRoot="${profilePath}"
+                localCell="${cellName}"
+                localNode="${nodeName}"
+                wsadminProps="${profilePath}/properties/wsadmin.properties"
+                ipcFilename="${profilePath}/temp/wsadmin"
+                >
+                <command value="$AdminApp uninstall isclite"/>
+                <command value="$$AdminConfig save"/>
+       </wsadmin>      
+          <antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/uninstallAdminConsole.log" />
+            <param name="description" value="Uninstall admin console application" />
+            <param name="precondition" value="foetrue" />
+        </antcall>        
+       <wscmtlog>Undeploying admin console is successfully done!</wscmtlog>
+       
+    </target>
+    
+    <target name="uninstallAdminConsole"
+            description="uninstall Admin Console application if -omitAction deployAdminConsole is specified"
+            depends="checkForOmitted,
+                     doUninstallAdminConsole"/>
+</project>

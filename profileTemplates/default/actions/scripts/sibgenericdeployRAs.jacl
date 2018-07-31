@@ -1,0 +1,293 @@
+##
+## sibgenericdeployRAs.jacl
+##
+## Deploys the WebSphere MQ RA, SIB JMS RA, and creates a set of associated resources.
+##
+
+##
+## Globals
+##
+
+## ThreadPool for SIB JMS RA
+set sibJMSRAThreadPoolName           SIBJMSRAThreadPool
+set sibJMSRAThreadPoolNameDesc       "Service Integration Bus JMS Resource Adapter thread pool"
+## SIB JMS RA params
+set sibratpl                         (templates/system|sibjmsresources-ra.xml#SIBJMSResourceAdapter_1)
+set sibraname                        "SIB JMS Resource Adapter"
+set sibjmsrathreadpool               "SIBJMSRAThreadPool"
+
+## ThreadPool for WebSphere MQ RA
+set wmqJcaRaThreadPoolName           WMQJCAResourceAdapter
+set wmqJcaRaThreadPoolDescription    "WebSphere MQ Resource Adapter thread pool"
+## WebSphere MQ RA params 
+set wmqRarName                       "WebSphere MQ Resource Adapter"
+set wmqratpl                         (templates/system|wmqjmsresources-ra.xml#WMQJMSResourceAdapter_1)
+
+
+##
+## Find the given RA at the chosen scope ONLY
+##
+proc findRAAtScope {raName scope} {
+  
+  global AdminConfig
+
+  puts "Searching for RA $raName at scope $scope ..."
+
+  ## Extract scope id string
+  set scopeIdStart [string first ( $scope]
+  set scopeIdEnd [string first | $scope]
+  set scopeStr [string range $scope $scopeIdStart $scopeIdEnd]
+
+  set RAs [$AdminConfig list J2CResourceAdapter $scope]
+  set foundRA ""
+  foreach RA $RAs {
+    set name [$AdminConfig showAttribute $RA name]
+    ## Is this the correct RA at the exact scope we need?
+    if {[string equal $name $raName] && [string first $scopeStr $RA] != -1} {
+      set foundRA $RA
+      puts "Found existing RA: $foundRA"
+      break
+    }
+  }
+
+  if {[string equal $foundRA ""]} {
+    puts "RA $raName not found at scope $scope"
+  }
+
+  return $foundRA
+}
+
+
+##
+## Create the thread pools for the SIB JMS RA on the given server
+##
+proc createSIBJMSRAThreadPools {server} {
+  
+  global AdminConfig
+  global sibJMSRAThreadPoolName
+  global sibJMSRAThreadPoolNameDesc
+
+  puts "Creating SIB JMS RA thread pool for server: $server"
+
+  ## Create threadpool. First we need to get hold of the thread pool manager...
+  set tpm [$AdminConfig list ThreadPoolManager $server]
+
+  if {[llength $tpm] > 0} {
+    ## Check if thread pool is already defined
+    set tpSIBRADefined "false"
+    set threadPools [$AdminConfig list ThreadPool $server]
+    if {[llength $threadPools] > 0} {
+      foreach threadPool $threadPools {
+        set tpName [$AdminConfig showAttribute $threadPool name]
+        if {[string equal $tpName "$sibJMSRAThreadPoolName"]} {
+          set tpSIBRADefined "true"
+          puts "$sibJMSRAThreadPoolName already defined"
+          break
+        }
+      }
+    }
+   
+    ## Create a threadpool for the SIB JMS RA
+    if {[string equal $tpSIBRADefined "false"]} {
+      puts "Creating $sibJMSRAThreadPoolName thread pool"
+      set sibJMSRAThreadPool [$AdminConfig create ThreadPool $tpm "{name $sibJMSRAThreadPoolName} {description \"$sibJMSRAThreadPoolNameDesc\"} {maximumSize 41} {minimumSize 35} {inactivityTimeout 3500}"]
+    }
+   
+    puts "Created SIB JMS RA thread pool successfully."
+  } else {
+    puts "No ThreadPoolManager on server $server."
+  }
+
+}
+
+##
+## Create the thread pools for the WebSphere MQ RA on the given server
+##
+proc createWebSphereMQRAThreadPools {server} {
+  
+  global AdminConfig
+  global wmqJcaRaThreadPoolName
+  global wmqJcaRaThreadPoolDescription
+
+  puts "Creating WebSphere MQ RA thread pools for server: $server"
+
+  ## Create threadpool. First we need to get hold of the thread pool manager...
+  set tpm [$AdminConfig list ThreadPoolManager $server]
+
+  if {[llength $tpm] > 0} {
+    ## Check if thread pools are already defined
+    set tpMQRADefined "false"
+    set threadPools [$AdminConfig list ThreadPool $server]
+    if {[llength $threadPools] > 0} {
+      foreach threadPool $threadPools {
+        set tpName [$AdminConfig showAttribute $threadPool name]
+        if {[string equal $tpName "$wmqJcaRaThreadPoolName"]} {
+          set tpMQRADefined "true"
+          puts "$wmqJcaRaThreadPoolName already defined"
+        }
+      }
+    }
+    
+    ## Create a threadpool for the use by the WMQ JCA RA
+    if {[string equal $tpMQRADefined "false"]} {
+      puts "Creating $wmqJcaRaThreadPoolName thread pool"
+      set wmqJcaRaThreadPool [$AdminConfig create ThreadPool $tpm "{name $wmqJcaRaThreadPoolName} {description \"$wmqJcaRaThreadPoolDescription\"} {maximumSize 50} {minimumSize 10}"]
+    }
+
+    puts "Created WebSphere MQ RA thread pools successfully."
+  } else {
+    puts "No ThreadPoolManager on server $server."
+  }
+
+}
+##
+## Copy and RA to the given scope
+##
+
+proc copyJMSRAToScope {scope raTpl raName threadPool} {
+  global AdminConfig
+  global AdminTask
+
+  ## Copy the JMS RA to the given scope if not already defined
+
+  puts "Checking for existing '$raName' at scope $scope"
+  set jmsRA [findRAAtScope $raName $scope]
+  if {[string equal $jmsRA ""]} {
+    puts "... not found, copying '$raName' to scope $scope...."
+    set copyparams [list -scope $scope -name $raName]
+    set ra_server [$AdminTask copyResourceAdapter $raTpl $copyparams]
+    $AdminConfig modify $ra_server [subst {{threadPoolAlias $threadPool}}]
+
+    puts "copied '$raName' to scope $scope successfully."
+  } else {
+    puts "... already exists at scope $scope."
+  }
+}
+
+##
+## Main <localNodeName> <deploySIBRA> <deployMQRA>
+##   localNodeName : node name of profile
+##   deploySIBRA   : true or false, whether to deploy SIB JMS RA
+##   deployMQRA    : true or false, whether to deploy WebSphere MQ RA
+##
+set localNodeName [lindex $argv 0]
+set deploySIBRA   [lindex $argv 1]
+set deployMQRA    [lindex $argv 2]
+
+#
+## Get a list of all application server templates.
+##
+set default_5X     "default_5X"
+set defaultZOS_5X  "defaultZOS_5X"
+set default_6      "default_6"
+set defaultZOS_6   "defaultZOS_6"
+
+set serverIds [$AdminConfig listTemplates Server templates/servertypes/APPLICATION_SERVER/servers]
+if {[llength $serverIds] > 0} {
+  ##
+  ## Add the RAs to each application server template.
+  ##
+  foreach serverId $serverIds {
+    set serverName [$AdminConfig showAttribute $serverId name]
+
+    puts "Adding RA definitions to server template $serverName"
+
+    ## Copy SIB JMS RA to template
+    if {[string equal $deploySIBRA "true"]} {
+      createSIBJMSRAThreadPools $serverId
+      copyJMSRAToScope $serverId $sibratpl $sibraname $sibjmsrathreadpool
+    }
+        
+    ## Don't copy WebSphere MQ RA to pre version 7 templates
+    if {![string equal $default_5X $serverName] &&
+        ![string equal $defaultZOS_5X $serverName] &&
+        [string first $default_6 $serverName] == -1 &&
+        [string first $defaultZOS_6 $serverName] == -1} {
+      if {[string equal $deployMQRA "true"]} {
+        createWebSphereMQRAThreadPools $serverId
+        copyJMSRAToScope $serverId $wmqratpl $wmqRarName $wmqJcaRaThreadPoolName
+      }
+    }
+  }
+}
+
+##
+## Iterate over nodes copying RAs to nodes and their servers
+##
+set nodeIds [$AdminConfig list Node]
+if {[llength $nodeIds] == 0} {
+  puts "Did not find any nodes to add the RAs into."
+} else {
+  foreach nodeId $nodeIds {
+    set nodeName [$AdminConfig showAttribute $nodeId name]
+
+    puts "Adding RA definitions to node $nodeName"
+
+    if {[string equal $deploySIBRA "true"]} {
+      copyJMSRAToScope $nodeId $sibratpl $sibraname $sibjmsrathreadpool
+    }
+
+    if {[string equal $deployMQRA "true"]} {
+      copyJMSRAToScope $nodeId $wmqratpl $wmqRarName $wmqJcaRaThreadPoolName
+    }
+
+    ##
+    ## Copy RA definitions to all AppServers on the node
+    ##
+    puts "Adding RA definitions to all AppServers on node $nodeName"
+    set serverIds [$AdminConfig list Server $nodeId]
+    if {[llength $serverIds] == 0} {
+      puts "Did not find any servers on node $nodeName"
+    } else {
+      foreach serverId $serverIds {
+          set serverName [$AdminConfig showAttribute $serverId name]
+      
+          ## Is it an ApplicationServer, DeploymentManager or AdminAgent?
+          set serverTypeParms [list -nodeName $nodeName -serverName $serverName]
+          set serverType [$AdminTask getServerType $serverTypeParms]
+          if {[string equal $serverType "APPLICATION_SERVER"] ||
+              [string equal $serverType "DEPLOYMENT_MANAGER"] ||
+              [string equal $serverType "ADMIN_AGENT"]} {
+
+              ## Deploy SIB JMS RA, except on AdminAgent
+              if {[string equal $deploySIBRA "true"] &&
+                  ![string equal $serverType "ADMIN_AGENT"]} {
+                createSIBJMSRAThreadPools $serverId
+                copyJMSRAToScope $serverId $sibratpl $sibraname $sibjmsrathreadpool
+              }
+
+              ## Deploy WebSphere MQ RA
+              if {[string equal $deployMQRA "true"]} {
+                createWebSphereMQRAThreadPools $serverId
+                copyJMSRAToScope $serverId $wmqratpl $wmqRarName $wmqJcaRaThreadPoolName
+              }
+          }
+      }
+    }
+  }
+}
+
+##
+## Add RA definitions to cell scope
+##
+puts "Adding RA definitions to Cell scope..."
+set cellIds [$AdminConfig list Cell]
+set cell [lindex $cellIds 0]
+set cellName [$AdminConfig showAttribute $cell name]
+
+puts "Adding RA definitions to Cell $cellName"
+
+if {[string equal $deploySIBRA "true"]} {
+  copyJMSRAToScope $cell $sibratpl $sibraname $sibjmsrathreadpool
+}
+
+if {[string equal $deployMQRA "true"]} {
+  copyJMSRAToScope $cell $wmqratpl $wmqRarName $wmqJcaRaThreadPoolName
+}
+
+##
+## Save the modified configuration.
+##
+puts "Saving updated configuration...."
+$AdminConfig save
+

@@ -1,0 +1,768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+
+<!--THIS PRODUCT CONTAINS RESTRICTED MATERIALS OF IBM
+5724-i63, 5724-H88(C) COPYRIGHT International Business Machines Corp., 1997, 2004
+All Rights Reserved * Licensed Materials - Property of IBM
+US Government Users Restricted Rights - Use, duplication or disclosure
+restricted by GSA ADP Schedule Contract with IBM Corp.-->
+
+
+<tiles-definitions>
+<!-- PLACEMENT CONFIG -->
+	<definition name="nodegroups.placementconfig.main" extends="detail.config.view" controllerClass="com.ibm.ws.console.nodegroups.controller.PlacementConfigController">
+	   <put name="contextType" value="PlacementCtrl"/>
+	   <putList name="list">
+	       <add value="nodegroups.placementconfig.title"/>
+	       <add value="nodegroups.placementconfig.tabs"/>
+	   </putList>
+	</definition>
+	
+	<definition name="nodegroups.placementconfig.title" extends="detail.title">
+		<put name="formName" value="PlacementDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="titleKey" value="nodegroup.placementconfig.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=nodegroups.detail.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="blankField" /> <!-- we want it to use the displayname, which it does if it gets "" back -->
+		<put name="instanceDescription" value="nodegroup.placementconfig.description" />
+		<put name="displayName" value="nodegroup.placementconfig.displayname" />
+	</definition>
+		
+	<definition name="nodegroups.placementconfig.tabs" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectedIndex" value="1"/>
+        <put name="parameterName" value="tabIndex"/>
+		<put name="selectUri" value="DisplayPlacementDetails.do" />
+        <put name="formName" value="PlacementDetailForm"/>		
+		<putList name="tabList">
+		 </putList>
+	</definition>
+	
+	<definition name="nodegroups.placementconfig.config.tab" extends="detail.config.tab.view">
+		<putList name="list">
+			<add value="nodegroups.placementconfig.general.properties" />			
+			<add value="nodegroups.placementconfig.additional.properties" />
+		</putList>
+	</definition>
+	
+	 <definition name="nodegroups.placementconfig.additional.properties" extends="detail.config.additional.properties">
+        <put name="formName" value="PlacementDetailForm" />
+        <putList name="list"/>
+    </definition>
+
+	<definition name="nodegroups.placementconfig.runtime.tab" extends="detail.config.tab.view" controllerClass="com.ibm.ws.console.nodegroups.controller.PlacementRuntimeController">
+		<putList name="list">
+			<add value="nodegroups.placementconfig.runtime.general.properties" />			
+		</putList>
+	</definition>
+
+	<definition name="nodegroups.placementconfig.runtime.general.properties" path="/com.ibm.ws.console.xdnodegroups/placementConfigPropLayout.jsp">
+		<put name="formAction" value="PlacementDetail.do" />
+		<put name="formName" value="PlacementDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementDetailForm" />
+		<put name="formFocus" value="refId" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+			<item value="nodegroup.placementconfig.saveToRepos:saveToRepos:no:checkbox:nodegroup.placementconfig.desc.saveToRepos:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodegroup.placementconfig.enable:enable:no:checkbox:nodegroup.placementconfig.desc.enabled:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="nodegroup.placementconfig.approvalTimeOut:approvalTimeOut:no:Text:nodegroup.placementconfig.desc.approvalTimeOut:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="nodegroup.placementconfig.serverOperationTimeOut:serverOperationTimeout:no:Text:nodegroup.placementconfig.desc.serverOperationTimeOut:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		    <item value="nodegroup.placementconfig.minTimeBetweenPlacementChange:minTimeBetweenPlacementChange:no:Text:nodegroup.placementconfig.desc.minTimeBetweenPlacementChange:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		    <!--  Elasticity Mode -->
+		     <item value="elasticitymode.label:consolidationMode:no:jsp:elasticitymode.desc:no:yes: : :/com.ibm.ws.console.xdnodegroups/elasticityModeLayout.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+		</putList>
+	</definition>
+		
+	<definition name="nodegroups.placementconfig.general.properties" extends="detail.config.general.properties">
+		<put name="formAction" value="PlacementDetail.do" />
+		<put name="formName" value="PlacementDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementDetailForm" />
+		<put name="formFocus" value="refId" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+			<item value="nodegroup.placementconfig.enable:enable:no:checkbox:nodegroup.placementconfig.desc.enabled:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="nodegroup.placementconfig.approvalTimeOut:approvalTimeOut:no:Text:nodegroup.placementconfig.desc.approvalTimeOut:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="nodegroup.placementconfig.serverOperationTimeOut:serverOperationTimeout:no:Text:nodegroup.placementconfig.desc.serverOperationTimeOut:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="nodegroup.placementconfig.minTimeBetweenPlacementChange:minTimeBetweenPlacementChange:no:Text:nodegroup.placementconfig.desc.minTimeBetweenPlacementChange:no:yes: : :units.minutes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+              <!--  Elasticity Mode -->
+		    <item value="elasticitymode.label:consolidationMode:no:jsp:elasticitymode.desc:no:yes: : :/com.ibm.ws.console.xdnodegroups/elasticityModeLayout.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	
+		</putList>
+	</definition>
+		
+	<!-- END PLACEMENT CONFIG -->
+
+<!-- PLACEMENT CUSTOM PROPS -->
+ <definition name="Property.placement.content.main" path="/secure/layouts/contentLayout.jsp"  controllerClass="com.ibm.ws.console.nodegroups.controller.PlacementPropertyController">
+        <put name="contextType" value="PlacementCtrl"/>
+        <put name="descTitle" value="Component.properties.displayName"/>
+        <put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups"/>
+        <put name="descText" value="Property.description"/>
+        <putList name="contentList">
+        <add value="Property.placement.paging.extend"/>
+        <add value="Property.placement.quicksearch.extend"/>
+        <add value="Property.placement.collection.table.extend"/>
+        </putList>
+    </definition>
+
+    <definition name="Property.placement.quicksearch.extend" extends="quicksearch.main">
+        <put name="selectUri" value="PlacementPropertyCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="PlacementPropertyCollectionForm"/>
+        <put name="formAction" value="PlacementPropertyCollection.do"/>
+        <put name="formName" value="PlacementPropertyCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementPropertyCollectionForm"/>
+        <putList name="searchList">
+            <add value="Property.name.displayName:propName"/>
+            <add value="Property.value.displayName:propValue"/>
+            <add value="Property.description.displayName:description"/>
+            <!-- <add value="Property.required.displayName:required"/> -->
+            <!-- <add value="Property.validationExpression.displayName:validationExpression"/> -->
+        </putList>
+    </definition>
+
+    <definition name="Property.placement.paging.extend" extends="paging.main">
+        <put name="displayLabelKey" value="Property.displayName"/>
+        <put name="collectionForm" value="PlacementPropertyCollectionForm"/>
+        <put name="formAction" value="PlacementPropertyCollection.do"/>
+        <put name="formName" value="PlacementPropertyCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementPropertyCollectionForm"/>
+    </definition>
+
+    <definition name="Property.placement.collection.table.extend" extends="collection.table.main">
+        <put name="iterationName" value="PlacementPropertyCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="formAction" value="PlacementPropertyCollection.do"/>
+        <put name="formName" value="PlacementPropertyCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementPropertyCollectionForm"/>
+        <put name="buttons" value="Property.placement.collection.buttons.panel"/>
+        <put name="parent" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=Property.placement.content.main"/>
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown" />
+        <putList name="collectionList">
+<!--            <item value="propName:sort" link="DisplayPlacementPropertyDetail.do?EditAction=true&amp;" icon="" tooltip="Property.name.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/>-->
+            <item value="propName:sort" link="PlacementPropertyDetail.do?EditAction=true&amp;" icon="" tooltip="Property.name.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/>
+            <item value="propValue:sort" link="" icon="" tooltip="Property.value.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/>
+            <item value="description:nosort" link="" icon="" tooltip="Property.description.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/>
+            <!-- <item value="required:sort" link="" icon="" tooltip="Property.required.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/> -->
+            <!-- <item value="validationExpression:sort" link="" icon="" tooltip="Property.validationExpression.displayName" classtype="com.ibm.ws.console.core.item.CollectionItem"/> -->
+        </putList>
+        <putList name="collectionPreferenceList">
+            <item value="text:UI/Collections/PlacementProperty/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+            <item value="checkbox:UI/Collections/Property/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem"/>
+        </putList>
+    </definition>
+
+    <definition name="Property.placement.collection.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="Property.placement.collection.buttons.panel"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+            <item value="button.new:PlacementPropertyCollection.do" link="" icon="" tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem"/>
+            <item value="button.delete:PlacementPropertyCollection.do" link="" icon="" tooltip="administrator,configurator" classtype="com.ibm.ws.console.core.item.ActionSetItem"/>
+        </putList>
+    </definition>
+
+    <definition name="Property.placement.detail.create" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="PlacementCtrl"/>
+		<putList name="list">
+			<add value="Property.placement.detail.title" />
+			<add value="Properties.placement.create.properties" />
+		</putList>
+	</definition>
+	
+	<definition name="Property.placement.detail.edit" path="/secure/layouts/configboxLayout.jsp">
+        <put name="contextType" value="PlacementCtrl"/>
+		<putList name="list">
+			<add value="Property.placement.detail.title" />
+			<add value="Properties.placement.edit.properties" />
+		</putList>
+	</definition>
+	
+	<definition name="Property.placement.detail.title" extends="detail.title">
+		<put name="formName" value="PlacementPropertyDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="titleKey" value="Property.placement.detail.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=Property.placement.content.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="propName" />
+		<put name="instanceDescription" value="property.nodegroup.detail.description" />
+		<put name="displayName" value="property.nodegroup.detail.displayname" />
+	</definition>
+	<definition name="Properties.placement.create.properties" extends="detail.config.general.properties">
+		<put name="formAction" value="PlacementPropertyDetail.do" />
+		<put name="formName" value="PlacementPropertyDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementPropertyDetailForm" />
+		<put name="formFocus" value="propName" />
+		<put name="readOnlyView" value="no" />
+		<putList name="attributeList">
+			<item value="nodegroups.label.name:propName:yes:Text:nodegroups.property.desc.name:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodegroups.label.value:propValue:yes:Text:nodegroups.property.desc.value:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodegroups.detail.descriptionfield:description:no:Text:nodegroups.property.detail.description.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+
+    <definition name="Properties.placement.edit.properties" extends="Properties.placement.create.properties">
+		<put name="formAction" value="PlacementPropertyDetail.do" />
+		<put name="formName" value="PlacementPropertyDetailForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.PlacementPropertyDetailForm" />
+		<put name="formFocus" value="propValue" />
+		<putList name="attributeList">
+			<item value="nodegroups.label.name:propName:yes:Text:nodegroups.property.desc.name:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodegroups.label.value:propValue:yes:Text:nodegroups.property.desc.value:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="nodegroups.detail.descriptionfield:description:no:Text:nodegroups.property.detail.description.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+		</putList>
+	</definition>
+
+    <!-- END PLACEMENT CUSTOM PROPS -->
+
+    <!-- BEGIN AUTONOMIC REQUEST FLOW MANAGER PANEL -->
+    <definition name="AutonomicRequestFlowManager.detail.main" extends="detail.config.view">
+        <put name="contextType" value="ARFMCtrl"/>
+        <putList name="list">
+            <add value="AutonomicRequestFlowManager.detail.title"/>
+            <add value="AutonomicRequestFlowManager.detail.tabs"/>
+        </putList>
+    </definition>
+
+    <definition name="AutonomicRequestFlowManager.detail.tabs" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectedIndex" value="1"/>
+        <put name="parameterName" value="tabIndex"/>
+		<put name="selectUri" value="DisplayNodeGroupDetails.do"/>
+        <put name="formName" value="AutonomicRequestFlowManagerDetailForm"/>
+        <putList name="tabList">
+		 </putList>
+    </definition>
+
+    <definition name="AutonomicRequestFlowManager.detail.title" extends="detail.title">
+        <put name="formName" value="AutonomicRequestFlowManagerDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.xdnodegroups"/>
+        <put name="titleKey" value="AutonomicRequestFlowManager.detail.title" />
+        <put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=NodeGroup.content.main&amp;noChange=true" />
+        <put name="includeLink" value="yes" />
+        <put name="instanceDetails" value="refId" />
+        <put name="instanceDescription" value="AutonomicRequestFlowManager.detail.description" />
+        <put name="displayName" value="AutonomicRequestFlowManager.detail.displayname" />
+    </definition>
+
+    <definition name="AutonomicRequestFlowManager.detail.config" extends="detail.config.tab.view">
+        <putList name="list">
+            <add value="AutonomicRequestFlowManager.general.properties"/>
+        </putList>
+    </definition>
+	
+    <definition name="AutonomicRequestFlowManager.general.properties" extends="detail.config.general.properties">
+        <put name="formAction" value="SubmitAutonomicRequestFlowManagerDetails.do?forwardName=AutonomicRequestFlowManager.detail.main"/>
+        <put name="formName" value="AutonomicRequestFlowManagerDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.AutonomicRequestFlowManagerDetailForm"/>
+        <put name="formFocus" value="refId"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+        	<!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item value="AutonomicRequestFlowManager.label.aggregationPeriod:aggregationPeriod:yes:jsp:AutonomicRequestFlowManager.desc.aggregationPeriod:no:yes: : :/com.ibm.ws.console.xdnodegroups/valueAndIntervalLayoutWSeconds.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="AutonomicRequestFlowManager.label.controlCycleMinimumLength:controlCycleMinimumLength:yes:jsp:AutonomicRequestFlowManager.desc.controlCycleMinimumLength:no:yes: : :/com.ibm.ws.console.xdnodegroups/valueAndIntervalLayoutWSeconds.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item value="AutonomicRequestFlowManager.label.smoothingWindow:smoothingWindow:yes:Text:AutonomicRequestFlowManager.desc.smoothingWindow:no:yes: : :AutonomicRequestFlowManager.units.smoothingWindow" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+            <item value="AutonomicRequestFlowManager.label.maximumQueueLength:maximumQueueLength:yes:Text:AutonomicRequestFlowManager.desc.maximumQueueLength:no:yes: : :AutonomicRequestFlowManager.units.maximumQueueLength" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+			<item value="AutonomicRequestFlowManager.memory.overload.protection:maximumPercentServerMaxHeap:yes:Text:AutonomicRequestFlowManager.memory.overload.protection:no:yes: : :AutonomicRequestFlowManager.units.maximumCPUUtilization" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+        	<item value="AutonomicRequestFlowManager.cpu.overload.protection:rejectPolicy:yes:Custom:AutonomicRequestFlowManager.cpu.overload.protection.desc:no:yes: : :/com.ibm.ws.console.xdnodegroups/radioButtonLayout.jsp" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+        </putList>
+    </definition>
+
+    <!-- END AUTONOMIC REQUEST FLOW MANAGER PANEL -->
+
+    <!-- START MAINTENTANCE MODE PANEL -->
+
+    <definition name="Node.main.confirmMaintMode" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="NodeGroup"/>
+        <put name="descTitle" value="nodegroups.confirmMaintMode.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="nodegroups.confirmMaintMode.desc"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.xdnodegroups/confirmMaintMode.jsp"/>
+        </putList>
+    </definition>
+
+    <definition name="Node.main.confirmAllMaintMode" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="NodeGroup"/>
+        <put name="descTitle" value="nodegroups.confirmMaintMode.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="nodegroups.confirmMaintMode.desc"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.xdnodegroups/confirmAllMaintMode.jsp"/>
+        </putList>
+    </definition>
+
+    <definition name="MiddlewareNode.main.confirmMaintMode" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="NodeGroup"/>
+        <put name="descTitle" value="nodegroups.confirmMaintMode.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="nodegroups.confirmMaintMode.desc"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.xdnodegroups/confirmMaintModeMiddlewareNodes.jsp"/>
+        </putList>
+    </definition>
+
+    <definition name="MiddlewareNode.main.confirmAllMaintMode" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="NodeGroup"/>
+        <put name="descTitle" value="nodegroups.confirmMaintMode.title"/>
+        <put name="descImage" value="images/save.gif"/>
+        <put name="descText" value="nodegroups.confirmMaintMode.desc"/>
+        <putList name="contentList">
+            <add value="/com.ibm.ws.console.xdnodegroups/confirmAllMaintModeMiddlewareNodes.jsp"/>
+        </putList>
+    </definition>
+	
+	
+<!-- start of the Elasticity Custom action Panel -->
+	<definition name="elasticity.customaction.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.nodegroups.controller.ElasticityCustomActionCollectionController">
+		<put name="contextType" value="ElasticityCustomAction"/>
+		<put name="descTitle" value="elasticityCustomAction" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="descText" value="desc.elasticity.customAction.text" />
+		<put name="helpTopic" value="ElasticityCustomAction.collection" />
+		<putList name="contentList">
+			<add value="elasticity.customaction.collection.paging.extend" />
+			<add value="elasticity.customaction.collection.quicksearch.extend" />
+			<add value="elasticity.customaction.collection.table.main" />
+		</putList>
+	</definition>
+
+
+	<!-- paging is the page # at the top of the filter  -->
+	<definition name="elasticity.customaction.collection.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="ElasticityCustomActionCollectionForm" />
+		<put name="formAction" value="ElasticityCustomActionCollection.do" />
+		<put name="formName" value="ElasticityCustomActionCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionCollectionForm" />
+	</definition>
+
+
+	<!-- quicksearch is the filter panel -->
+	<definition name="elasticity.customaction.collection.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="ElasticityCustomActionCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ElasticityCustomActionCollectionForm" />
+		<put name="formAction" value="ElasticityCustomActionCollection.do" />
+		<put name="formName" value="ElasticityCustomActionCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionCollectionForm" />
+		<putList name="searchList">
+			<add value="elasticity.customAction.name:name" />
+		</putList>
+	</definition>
+
+	<!-- the table main contains the table of the current objects -->
+	<definition name="elasticity.customaction.collection.table.main" path="/com.ibm.ws.console.xdnodegroups/elasticityCustomActionCollectionTableLayout.jsp">
+		<put name="iterationName" value="ElasticityCustomActionCollectionForm" />
+		<put name="formName" value="ElasticityCustomActionCollectionForm" />
+		<put name="formAction" value="ElasticityCustomActionCollection.do" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionCollectionForm" />
+		<put name="buttons" value="elasticity.customaction.collection.buttons.panel" />
+		<put name="parent" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticity.customaction.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown"/>
+		<put name="htmlFilter" value="true"/>
+		<putList name="collectionList">
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ElasticityCustomAction/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ElasticityCustomAction/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+
+	<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->
+	<definition name="elasticity.customaction.collection.buttons.panel" path="/com.ibm.ws.console.xdnodegroups/buttonLayout.jsp">
+		<put name="buttonCount" value="2" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="elasticity.customaction.collection.buttons.panel" />
+		<putList name="actionList">
+		</putList>
+	</definition>
+	
+	<definition name="elasticitycustom.wizard" path="/com.ibm.ws.console.xdnodegroups/showMeStepsLayout.jsp">
+		<put name="titleKey" value="elasticity.customAction.wizard.title" />
+		<put name="descKey" value="elasticity.customAction.wizard.description" />
+		<put name="stepArraySessionKey" value="default_STEPARRAY" />
+		<put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+		<put name="actionHandler" value="" />
+		<put name="actionForm" value="" />
+		<put name="formType" value="" />
+		<put name="disableStepsLink" value="" />
+		<put name="helpTopic" value="ElasticityCustomAction.wizard" />
+		<putList name="stepsList"></putList>
+	</definition>
+
+	<definition name="elasticitycustom.wizard.steps" extends="elasticitycustom.wizard">
+		<put name="contextType" value="elasticitycustom.wizard.steps" />
+		<put name="stepArraySessionKey" value="ELASTICITYCUSTOM_STEPARRAY" />
+		<put name="disableStepsLink" value="true" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<putList name="stepsList">
+			<item value="elasticity.customAction.wizard.steps.actionType"   link="/com.ibm.ws.console.xdnodegroups/CreateElasticityCustomAction"  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+			<item value="elasticity.customAction.wizard.steps.customAction" link="/com.ibm.ws.console.xdnodegroups/DefineElasticityCustomAction"  classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+	    	<item value="elasticity.customAction.wizard.steps.confirm"      link="/com.ibm.ws.console.xdnodegroups/ConfirmElasticityCustomAction" classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+		</putList>
+		
+	</definition>
+	<definition name="elasticity.customAction.wizard.steps.customAction" extends="elasticitycustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="actionHandler" value="DefineElasticityCustomAction" />
+		<put name="actionForm" value="DefineElasticityCustomActionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+	</definition>
+	
+	<definition name="elasticity.customAction.wizard.steps.actionType" extends="elasticitycustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="actionHandler" value="CreateElasticityCustomAction" />
+		<put name="actionForm" value="CreateElasticityCustomActionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+	</definition>
+	
+	<definition name="elasticity.customAction.wizard.steps.confirm" extends="elasticitycustom.wizard.steps">
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="actionHandler" value="ConfirmElasticityCustomAction" />
+		<put name="actionForm" value="ConfirmElasticityCustomActionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.CreateElasticityCustomActionWizardForm" />
+	</definition>
+	
+	
+	<!-- NamedJavaPrcessDef page -->
+    <definition extends="detail.config.view" name="elasticity.customAction.JavaProcDef.config.view">
+	    <put name="contextType" value="ElasticityCustomActionJavaProcDef"/>
+	<put name="helpTopic" value="ElasticityCustomAction.java.detail" />
+        <putList name="list">
+            <add value="elasticity.customAction.JavaProcDef.detail.title"/>
+            <add value="elasticity.customAction.JavaProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="elasticity.customAction.JavaProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.xdnodegroups"/>
+        <put name="titleKey" value="elasticity.customAction.wizard.title"/>
+        <put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticity.customaction.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="elasticity.customAction.display.description"/>
+	<put name="helpTopic" value="ElasticityCustomAction.java.detail" />
+        <put name="displayName" value="elasticity.customAction.wizard.title"/>
+    </definition>
+    <definition name="elasticity.customAction.JavaProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="ElasticityCustomActionDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="elasticity.customAction.JavaProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="elasticity.customAction.JavaProcDef.detail.buttons.panel"/>
+            <add value="elasticity.customAction.JavaProcDef.config.general.properties"/>
+         <!--   <add value="elasticity.customAction.JavaProcDef.config.additional.properties"/> -->
+        </putList>
+    </definition>
+    <definition name="elasticity.customAction.JavaProcDef.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="elasticity.customAction.JavaProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+    <definition extends="detail.config.general.properties" name="elasticity.customAction.JavaProcDef.config.general.properties" path="/com.ibm.ws.console.xdnodegroups/configGenPropLayout.jsp">
+        <put name="formAction" value="ElasticityCustomActionDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+  			<item  value="elasticity.customAction.name:name:yes:Text:ProcessDef.executableName.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.location:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:no:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.usernameVar:usernameVar:no:Text:elasticity.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.usernameVal:usernameVal:no:Text:elasticity.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVar:passwordVar:no:Text:elasticity.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVal:passwordVal:no:Password:elasticity.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="elasticity.customAction.executable.os:osnamesList:no:Dynamicselect:elasticity.customAction.executable.os:no:yes:windows,unix,zos:elasticity.customAction.windows,elasticity.customAction.unix,elasticity.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.displayPidVarName:pidVarName:no:Text:elasticity.customAction.pidVarName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+          </putList>
+    </definition>
+	
+	<definition name="elasticity.customAction.wizard.JavaProcDef" path="/com.ibm.ws.console.xdnodegroups/createProcDef.jsp">
+        <put name="formName" value="DefineElasticityCustomProcessTypeForm"/>
+        <put name="actionForm" value="DefineElasticityCustomProcessTypeForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item  value="elasticity.customAction.name:name:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.location:executableTarget:no:Text:JavaProcessDef.executableTarget.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="JavaProcessDef.executableTargetKind.displayName:executableTargetKind:no:Select:JavaProcessDef.executableTargetKind.description:no:yes:JAVA_CLASS,EXECUTABLE_JAR:ExecutableTargetKind.JAVA_CLASS,ExecutableTargetKind.EXECUTABLE_JAR" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.usernameVar:usernameVar:no:Text:elasticity.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.usernameVal:usernameVal:no:Text:elasticity.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVar:passwordVar:no:Text:elasticity.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVal:passwordVal:no:Password:elasticity.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="elasticity.customAction.executable.os:osnamesList:no:Dynamicselect:elasticity.customAction.executable.os:no:yes:windows,unix,zos:elasticity.customAction.windows,elasticity.customAction.unix,elasticity.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.displayPidVarName:pidVarName:no:Text:elasticity.customAction.pidVarName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+
+            </putList>
+    </definition>
+
+
+
+    <!--  Server Operations - Detail View -->
+<!-- NamedPrcessDef page -->
+    <definition extends="detail.config.view" name="elasticity.customAction.ProcDef.config.view">
+        <put name="contextType" value="ElasticityCustomActionProcDef"/>
+	<put name="helpTopic" value="ElasticityCustomAction.nonjava.detail" />
+        <putList name="list">
+            <add value="elasticity.customAction.ProcDef.detail.title"/>
+            <add value="elasticity.customAction.ProcDef.detail.tabsLayout"/>
+        </putList>
+    </definition>
+    <definition extends="detail.title" name="elasticity.customAction.ProcDef.detail.title">
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="objectTypeImage" value="ApplicationServer.smallIcon:pluginId=com.ibm.ws.console.xdnodegroups"/>
+        <put name="titleKey" value="elasticity.customAction.wizard.title"/>
+        <put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticity.customaction.content.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="name"/>
+        <put name="instanceDescription" value="elasticity.customAction.display.description"/>
+        <put name="displayName" value="elasticity.customAction.wizard.title"/>
+	<put name="helpTopic" value="ElasticityCustomAction.nonjava.detail" />
+    </definition>
+    <definition name="elasticity.customAction.ProcDef.detail.tabsLayout" path="/secure/layouts/tabsLayout.jsp">
+        <put name="selectUri" value="ElasticityCustomActionDetail.do"/>
+        <put name="selectedPerspective" value="tab.configuration"/>
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <putList name="tabList"/>
+    </definition>
+    <definition extends="detail.config.tab.view" name="elasticity.customAction.ProcDef.config.tab.view" path="/secure/layouts/configTabLayout.jsp">
+        <putList name="list">
+            <add value="elasticity.customAction.ProcDef.detail.buttons.panel"/>
+            <add value="elasticity.customAction.ProcDef.config.general.properties"/>
+         <!--   <add value="elasticity.customAction.ProcDef.config.additional.properties"/> -->
+        </putList>
+    </definition>
+    <definition name="elasticity.customAction.ProcDef.detail.buttons.panel" extends="buttons.panel">
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="elasticity.customAction.ProcDef.detail.buttons.panel"/>
+        <put name="includeForm" value="yes"/>
+        <putList name="actionList">
+        </putList>
+    </definition>
+    <!-- Wizard -->
+    <definition extends="detail.config.general.properties" name="elasticity.customAction.ProcDef.config.general.properties" path="/com.ibm.ws.console.xdnodegroups/configGenPropLayout.jsp">
+        <put name="formAction" value="ElasticityCustomActionDetail.do"/>
+        <put name="formName" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityCustomActionDetailForm"/>
+        <put name="formFocus" value="name"/>
+        <put name="readOnlyView" value="no"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item  value="elasticity.customAction.name:name:yes:Text:ProcessDef.executableName.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.usernameVar:usernameVar:no:Text:elasticity.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="elasticity.customAction.usernameVal:usernameVal:no:Text:elasticity.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVar:passwordVar:no:Text:elasticity.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="elasticity.customAction.passwordVal:passwordVal:no:Password:elasticity.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="elasticity.customAction.executable.os:osnamesList:no:Dynamicselect:elasticity.customAction.executable.os:no:yes:windows,unix,zos:elasticity.customAction.windows,elasticity.customAction.unix,elasticity.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            </putList>
+    </definition>
+
+
+
+    <!-- for wizard: attributeList must keep the same as above -->
+    <definition name="elasticity.customAction.wizard.ProcDef" path="/com.ibm.ws.console.xdnodegroups/createProcDef.jsp">
+        <put name="formName" value="DefineElasticityCustomProcessTypeForm"/>
+        <put name="actionForm" value="DefineElasticityCustomProcessTypeForm"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional), enumDesc(optional), units, isMultiSelect, legend -->
+            <item  value="elasticity.customAction.name:name:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.executable.displayName:executableName:yes:Text:ProcessDef.executableName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.executableArguments.displayName:executableArguments:no:TextArea:ProcessDef.executableArguments.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="elasticity.customAction.usernameVar:usernameVar:no:Text:elasticity.customAction.usernameVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="elasticity.customAction.usernameVal:usernameVal:no:Text:elasticity.customAction.usernameVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	    	<item  value="elasticity.customAction.passwordVar:passwordVar:no:Text:elasticity.customAction.passwordVar.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	   		<item  value="elasticity.customAction.passwordVal:passwordVal:no:Password:elasticity.customAction.passwordVal.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+	        <item  value="elasticity.customAction.executable.os:osnamesList:no:Dynamicselect:elasticity.customAction.executable.os:no:yes:windows,unix,zos:elasticity.customAction.windows,elasticity.customAction.unix,elasticity.customAction.zos: :true" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+            <item  value="ProcessDef.workingDirectory.displayName:workingDirectory:yes:FILEPATH:ProcessDef.workingDirectory.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/>
+      <!--  <item  value="elasticity.customaction.displayPidVarName:pidVarName:no:Text:elasticity.customaction.pidVarName.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem"/> -->
+            </putList>
+    </definition>
+	
+    <!-- elasticity ActionPlan Wizard -->
+     <definition name="elasticityclass.actionPlan.wizard" path="/com.ibm.ws.console.xdnodegroups/showMeStepsLayout.jsp">
+                <put name="titleKey" value="elasticityclass.actionPlan.wizard.title" />
+                <put name="descKey" value="elasticityclass.actionPlan.wizard.description" />
+                <put name="stepArraySessionKey" value="default_STEPARRAY" />
+                <put name="reqdTaskSessionKey" value="default_ReqdTaskMap" />
+                <put name="actionHandler" value="" />
+                <put name="actionForm" value="" />
+                <put name="formType" value="" />
+                <put name="disableStepsLink" value="" />
+                <put name="helpTopic" value="ElasticityClass.actionPlan.wizard" />
+                <putList name="stepsList"></putList>
+        </definition>
+
+        <definition name="elasticityclass.actionPlan.wizard.steps" extends="elasticityclass.actionPlan.wizard">
+                <put name="contextType" value="elasticityclass.actionPlan.wizard.steps" />
+                <put name="stepArraySessionKey" value="ELASTICITYACTION_STEPARRAY" />
+                <put name="disableStepsLink" value="true" />
+                <put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+                <putList name="stepsList">
+         	          <item value="elasticityclass.actionPlan.wizard.steps.selectType"  link="/com.ibm.ws.console.xdnodegroups/CreateElasticityActionPlanType" classtype="com.ibm.ws.console.core.item.AppInstallItem" /> 
+                       <item value="elasticityclass.actionPlan.wizard.steps.confirm"     link="/com.ibm.ws.console.xdnodegroups/ConfirmElasticityActionPlan"    classtype="com.ibm.ws.console.core.item.AppInstallItem" />
+                </putList>
+
+        </definition>
+        <definition name="elasticityclass.actionPlan.wizard.steps.selectType" extends="elasticityclass.actionPlan.wizard.steps">
+                <put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+                <put name="actionHandler" value="CreateElasticityActionPlanType" />
+                <put name="actionForm" value="CreateElasticityActionPlanTypeForm" />
+                <put name="formType" value="com.ibm.ws.console.nodegroups.form.CreateElasticityActionPlanWizardForm" />
+                <put name="readOnlyView" value="no" />
+        </definition>
+
+        
+        <definition name="elasticityclass.actionPlan.wizard.steps.confirm" extends="elasticityclass.actionPlan.wizard.steps">
+                <put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+                <put name="actionHandler" value="ConfirmElasticityActionPlan" />
+                <put name="actionForm" value="ConfirmElasticityActionPlanForm" />
+                <put name="formType" value="com.ibm.ws.console.nodegroups.form.CreateElasticityActionPlanWizardForm" />
+        </definition>
+    
+    
+    	<definition name="elasticityclass.content.main" path="/secure/layouts/contentLayout.jsp" controllerClass="com.ibm.ws.console.nodegroups.controller.ElasticityClassCollectionController">
+		<put name="contextType" value="ElasticityClass"/>
+                <put name="helpTopic" value="ElasticityClass.content.main" />
+		<put name="descTitle" value="elasticityClasses" />
+		<put name="descImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="descText" value="desc.elasticityclass.text" />
+		<putList name="contentList">
+			<add value="elasticityclass.collection.paging.extend" />
+			<add value="elasticityclass.collection.quicksearch.extend" />
+			<add value="elasticityclass.collection.table.main" />
+		</putList>
+	</definition>
+
+
+	<!-- paging is the page # at the top of the filter  -->
+	<definition name="elasticityclass.collection.paging.extend" extends="paging.main">
+		<put name="collectionForm" value="ElasticityClassCollectionForm" />
+		<put name="formAction" value="ElasticityClassCollection.do" />
+		<put name="formName" value="ElasticityClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityClassCollectionForm" />
+	</definition>
+
+
+	<!-- quicksearch is the filter panel -->
+	<definition name="elasticityclass.collection.quicksearch.extend" extends="quicksearch.main">
+		<put name="selectUri" value="ElasticityClassCollection.do?ToggleViewAction=true" />
+		<put name="collectionForm" value="ElasticityClassCollectionForm" />
+		<put name="formAction" value="ElasticityClassCollection.do" />
+		<put name="formName" value="ElasticityClassCollectionForm" />
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityClassCollectionForm" />
+		<putList name="searchList">
+			<add value="elasticityclass.name:name" />
+		</putList>
+	</definition>
+
+	<!-- the table main contains the table of the current objects -->
+	<definition name="elasticityclass.collection.table.main" path="/com.ibm.ws.console.xdnodegroups/ElasticityClassCollectionTableLayout.jsp">
+		<put name="iterationName" value="ElasticityClassCollectionForm" />
+		<put name="formName" value="ElasticityClassCollectionForm" />
+		<put name="formAction" value="ElasticityClassCollection.do" />
+		<put name="buttons" value="elasticityclass.collection.buttons.panel" /> 
+		<put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityClassCollectionForm" />
+		<put name="parent" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticityclass.content.main" />
+		<put name="iterationProperty" value="subsetList" />
+		<put name="showCheckBoxes" value="true" />
+		<put name="sortIconLocation" value="right" />
+		<put name="columnWidth" value="25%" />
+		<put name="idColumn" value="refId" />
+		<put name="statusType" value="unknown"/>
+		<put name="htmlFilter" value="true"/>
+		<putList name="collectionList">
+		</putList>
+		<putList name="collectionPreferenceList">
+			<item value="text:UI/Collections/ElasticityClass/Preferences#maximumRows:25" link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+			<item value="checkbox:UI/Collections/ElasticityClass/Preferences#retainSearchCriteria:32" link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" classtype="com.ibm.ws.console.core.item.PreferenceItem" />
+		</putList>
+	</definition>
+	
+	<!-- The buttons panels include the NEW and DELETE buttons at the to of the collection.table.main -->
+	<definition name="elasticityclass.collection.buttons.panel" path="/com.ibm.ws.console.xdnodegroups/buttonLayout.jsp">
+		<put name="buttonCount" value="0" />
+		<put name="includeForm" value="no" />
+		<put name="definitionName" value="elasticityclass.collection.buttons.panel" />
+		<putList name="actionList">
+		</putList>
+	</definition>
+	
+
+
+	<!-- The detail main panels are shown when you select an existing to display, or new -->
+	<definition name="elasticityclass.detail.main" path="/secure/layouts/configboxLayout.jsp">
+		<put name="contextType" value="ElasticityClass"/>
+                <put name="helpTopic" value="ElasticityClass.detail" />
+		<putList name="list">
+			<add value="elasticityclass.detail.title" />
+			<add value="elasticityclass.detail.tabs" />
+		</putList>
+	</definition>
+
+	<!-- The detail.title includes the title information at the top of the detail page -->
+	<definition name="elasticityclass.detail.title" extends="detail.title">
+		<put name="formName" value="ElasticityClassDetailForm" />
+		<put name="objectTypeImage" value="pluginId=com.ibm.ws.console.xdnodegroups" />
+		<put name="titleKey" value="elasticityclass.detail.title" />
+		<put name="collectionLink" value="com.ibm.ws.console.nodegroups.forwardCmd.do?forwardName=elasticityclass.content.main&amp;noChange=true" />
+		<put name="includeLink" value="yes" />
+		<put name="instanceDetails" value="refId" />
+		<put name="instanceDescription" value="elasticityclass.detail.description" />
+		<put name="displayName" value="elasticityclass.name" />
+	</definition>
+
+	<!-- the detail.tabs goes below the detail.title in the detail panel.  It has config and runtime tabs -->
+	<definition name="elasticityclass.detail.tabs" path="/secure/layouts/tabsLayout.jsp">
+		<put name="selectUri" value="DisplayElasticityClassDetails.do" />
+		<put name="selectedPerspective" value="tab.configuration" />
+		<put name="formName" value="ElasticityClassDetailForm" />
+		<putList name="tabList">
+		</putList>
+	</definition>
+	
+       <!--The detail.config is the panel that shows the General and Additional properties -->
+        <definition name="elasticityclass.detail.config" path="/secure/layouts/vboxLayout.jsp">
+                <putList name="list">
+                        <add value="elasticityclass.general.properties" />
+                </putList>
+        </definition>
+
+        <!-- This defines all the general properties -->
+        <definition name="elasticityclass.general.properties" path="/com.ibm.ws.console.xdnodegroups/ElasticityClassCustomPropsLayout.jsp">
+                <put name="formAction" value="ElasticityClassDetail.do" />
+                <put name="formName" value="ElasticityClassDetailForm" />
+                <put name="formType" value="com.ibm.ws.console.nodegroups.form.ElasticityClassDetailForm" />
+                <put name="formFocus" value="description" />
+                <put name="readOnlyView" value="no" />
+                <putList name="attributeList">
+                        <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+                        <item value="elasticityclass.name:name:yes:Text:elasticityclass.name.description:yes:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+                        <item value="elasticityclass.description:description:no:Textarea:elasticityclass.description.description:no:yes" link="" icon="" tooltip="" classtype="com.ibm.ws.console.core.item.PropertyItem" />
+                </putList>
+        </definition>
+    
+</tiles-definitions>

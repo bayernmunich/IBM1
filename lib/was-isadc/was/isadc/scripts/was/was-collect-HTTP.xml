@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2006. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="Collect HTTP information as WSAS pairwise script" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.Collect HTTP information as WSAS pairwise script}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+		ASSUMING THE GSKit Version is on par with the WAS version.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/was/HTTP/HTTP-common.xml"  />
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"  />
+
+	<property name="autopdProblem" value="Server_Collection_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="ihs.local" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain" description="This is AutoPD main to control running steps" depends="set_problem_type_with_nls_bundle_ws,
+					 setup_autopd, 
+					 validate_os,
+					 query_pmrfilename,
+					 perform_ihs_collection,
+					 zip_General_Must_Gather,
+					 script_completed">
+	</target>
+
+	<target name="perform_ihs_collection" depends="ihs_setup,
+					 get_ihs_root,
+					 select_http_conf,
+					 get_ihs_version,
+  			         get_my_ihs_plugin_cfg_location, 
+
+					 backup_http_plugin-cfg.xml,
+					 stop_web_server1,
+					 set_http_plugin_trace,
+					 start_web_server1, 
+					 IHS_sync_WSAS_instructions,
+					  
+					 collect_ihs_info,
+					 collect_SSL_related_files,
+					 restore_http_plugin-cfg">
+	</target>
+
+	<!-- display the usage message -->
+		<target name="usage"
+		        description="&lt;h2&gt;Step 1 of 3: HTTP SSL Handshake Failure&lt;/h2&gt;&lt;p&gt;
+			Run this script on the IHS Web Server host to configure the trace parameters for the web server, only.
+					You will be given the option to manage (set trace) or do a simple collection, only. Once this 
+					step is complete, move on 'HTTP SSL Handshake Problem Step 2'.&lt;/p&gt;">
+
+			<condition property="remote.collector.only">
+				<equals arg1="NO_GUI" arg2="${console}" />
+			</condition>
+
+			<if isNotTrue="${remote.collector.only}">
+				<property name="collection.message"
+				          value="Run this script on the IHS Web Server host to configure the trace 
+parameters for the web server, only. You will be given the option to manage (set trace) or do a simple 
+collection, only. Once this step is complete, move on 'HTTP SSL Handshake Problem Step 2'." />
+			</if>
+
+			<if isTrue="${remote.collector.only}">
+				<property name="collection.message"
+				          value="Step 1 of 3: HTTP SSL Handshake Failure => 
+					Run this script on the IHS Web Server host to configure the trace parameters for the web server, only.
+							You will be given the option to manage (set trace) or do a simple collection, only. Once this 
+							step is complete, move on 'HTTP SSL Handshake Problem Step 2'." />
+			</if>
+
+			<autopdinput message="${collection.message}"
+			             validargs="OK"
+			             addproperty="run.current.script"
+			             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</target>
+</project>

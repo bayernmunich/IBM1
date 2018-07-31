@@ -1,0 +1,451 @@
+<?xml version="1.0"?>
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<project name="WebSphere Security Problem" default="autopdmain">
+
+	<taskdef file="${autopdrootdir}/properties/autopdtaskdef.properties" loaderref="ISA"  />
+
+	<dirname property="script.basedir" file="${ant.file.WebSphere Security Problem}" />
+	<dirname property="script.parentdir" file="${script.basedir}" />
+	<dirname property="bundle.basedir" file="${script.parentdir}" />
+
+	<!-- Targets shared among multiple scripts are in the XML documents *-sharedtargets.xml. 
+		The following imports pull these shared targets into this script.
+	-->
+	<autopdimport file="${bundle.basedir}/scripts/aim/trace-setup.xml"/>
+	<autopdimport file="${bundle.basedir}/scripts/aim/common-setup.xml"/>
+	
+	<property name="autopdProblem" value="WAS_Security_Problem" />
+	<property name="autopdProblem_nlsbundle" value="properties/SSEQTP/autopdtoolstrings_was" />
+	<property name="infocollectProblemType" value="was-security" />
+	<property name="was_log_redirect.needed" value="true" />
+	<property name="app.updated.version" value="true" />
+	<property name="taxonomy" value="SSEQTP" />
+	<property name="baseTaxonomy" value="SSEQTP" />
+
+	<!-- This target is the main entry point into the script.  It is the target that is called
+		by the AutoPD Tool after this collection type has been selected, and collection in started. 
+	-->
+	<target name="autopdmain"
+	        description="This is AutoPD main to control running steps"
+	        depends="load_sharedelements_tasks,
+		set_problem_type_with_nls_bundle,
+		setup_autopd_v2, 
+		validate_os, 
+
+		was_stack_custom_init,	
+		generate_security_trace_string,  
+		generate_security_jvm_arguments,
+		questionnaires,
+		
+		trace_setup_custom, 
+		 	
+		execute_collector,
+		execute_vce_info_for_was,
+		common_postamble_general_with_ftp">
+	</target>
+
+	<!-- This target provides an alternate entry point into the script.  The AutoPD Tool calls
+		this target when it detects that a problem has occurred, so that the script has an
+		opportunity to restore the system to the correct state before terminating. 
+	-->
+	<target name="autopdmainrecovery"
+	        description="Recover Portal Server state from AutoPD's failure"
+	        depends="collect_was_recovery_common, 
+					 collect_was_security_recovery, 
+					 restore_user_default_trace_values,
+					 recovery_completed">
+		<wsnlsecho key="AutoPD_recovery_is_performed"
+		           bundle="autopdtoolstrings"
+		           message="Automated Problem Determination Tool recovery has been performed."
+		           id="2269"
+		           level="info" />
+	</target>
+
+	<!-- This target is used to check if the SAS, ORB, or COMM traces should be collected. -->
+
+	<target name="check_SAS_ORG_COMM"
+	        description="check if you should collect SAS, ORB, and COMM traces"
+	        if="isWASVersion5">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Check_if_the_SAS_ORB_COMM_traces_needs_to_be_enabled"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Check if the SAS, ORB, COMM traces needs to be enabled"
+		           replace="${autopdts};;${step.count}"
+		           id="1129"
+		           level="info" />
+		<autopdinput message="Please_Answer_IF_SAS_ORB_COMM_traces_are_required_by_support"
+		             validargs="YES,NO"
+		             addproperty="SAS_ORB_COMM.trace"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		<echo message="SAS_ORB_COMM.trace: ${SAS_ORB_COMM.trace}" />
+		<condition property="doSAS_ORB_COMM_Traces">
+			<equals arg1="YES" arg2="${SAS_ORB_COMM.trace}" />
+		</condition>
+		<echo message="doSAS_ORB_COMM_Traces: ${doSAS_ORB_COMM_Traces}" />
+	</target>
+
+	<!-- This target is used to generate trace string for different versions, or conditions -->
+	<target name="generate_security_trace_string"
+	        description="generate trace strings for different versions, or conditions"
+		depends="check_SAS_ORG_COMM" >
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_trace_strings_for_the_SAS_ORB_COMM_traces"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generate trace strings for the SAS, ORB, COMM traces"
+		           replace="${autopdts};;${step.count}"
+		           id="1130"
+		           level="info" />
+		<condition property="doV5_SAS_ORB_COMM_Traces">
+			<and>
+				<isTrue value="${isWASVersion5}" />
+				<isTrue value="${doSAS_ORB_COMM_Traces}" />
+			</and>
+		</condition>
+
+		<if isTrue="${doV5_SAS_ORB_COMM_Traces}">
+			<property name="was.trace.string"
+			          value="SASRas=all=enabled:com.ibm.ws.security.*=all=enabled:ORBRas=all=enabled" />
+		</if>
+
+		<if isTrue="${isWASVersion5}">
+			<property name="was.trace.string" value="com.ibm.ws.security.*=all=enabled" />
+		</if>
+
+		<inputdialogtask noCancel="true" > 
+			<fieldtask name="security.ssl.prompt"
+					   label="select_one"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="security.ssl.prompt"
+			           label="Set_SSL_For_Security"
+			           type="selectlist" list="No:Yes" listDetails="No:Yes" 
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<condition property="set.security.ssl.trace">
+			<equals arg1="Yes" arg2="${security.ssl.prompt}" />
+		</condition>
+			
+		<if isTrue="${isWASVersion6}"> <!-- Task 23004--> 
+			<if isTrue="${set.security.ssl.trace}" > 
+				<property name="was.trace.string1" value="*=info:com.ibm.ws.security.*=all:com.ibm.websphere.wim.*=all:com.ibm.wsspi.wim.*=all:com.ibm.ws.wim.*=all:SecurityDomain=all:SSL=all" />
+			</if> 
+			<if isNotTrue="${set.security.ssl.trace}" > 
+				<property name="was.trace.string1" value="*=info:com.ibm.ws.security.*=all:com.ibm.websphere.wim.*=all:com.ibm.wsspi.wim.*=all:com.ibm.ws.wim.*=all:SecurityDomain=all" />
+			</if> 
+		</if>
+		
+		<inputdialogtask noCancel="true" > 
+			<fieldtask name="security.ssl.prompt1"
+					   label="select_one"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="security.ssl.prompt1"
+			           label="Set_SSL_For_Security1"
+			           type="selectlist" list="No:Yes" listDetails="No:Yes" 
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<condition property="set.security.ssl.trace1">
+			<equals arg1="Yes" arg2="${security.ssl.prompt1}" />
+		</condition>
+		<if isTrue="${set.security.ssl.trace1}" > 
+			<autopd_unset_property name="was.trace.string"/>
+			<property name="was.trace.string.ssl" value="${was.trace.string1}:SASRas=all:ORBRas=all" />
+		</if> 
+		<if isNotTrue="${set.security.ssl.trace1}" > 
+			<property name="was.trace.string.ssl" value="${was.trace.string1}" />
+		</if> 
+		
+		<!-- 28190 - OAuth --> 
+		<inputdialogtask noCancel="true" > 
+			<fieldtask name="security.ssl.prompt1"
+					   label="select_one"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="security.oauth.prompt"
+			           label="Set_Oauth_For_Security"
+			           type="selectlist" list="No:Yes" listDetails="No:Yes" 
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<condition property="set.security.oauth.prompt">
+			<equals arg1="Yes" arg2="${security.oauth.prompt}" />
+		</condition>
+		<if isTrue="${set.security.oauth.prompt}" > 
+			<autopd_unset_property name="was.trace.string"/>
+			<property name="was.trace.string" value="${was.trace.string.ssl}:com.ibm.ws.security.web.*=all:com.ibm.ws.security.oauth20.*=all:com.ibm.oauth.*=all" />
+		</if> 
+		<if isNotTrue="${set.security.oauth.prompt}" > 
+			<property name="was.trace.string" value="${was.trace.string.ssl}" />
+		</if> 
+		
+		<echo message="Trace specification string: ${was.trace.string}" />
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_security_jvm_arguments"
+	        description="generate generic JVM arguments">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+		<!-- 23004 -->
+		<inputdialogtask noCancel="true" >
+			<fieldtask name="ws.security.prompt"
+					   label="select_one"
+					   type="prompt"
+					   bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sec.jvm.arguments"
+			           label="JVM_Arguments_Set_Option"
+			           type="selectlist" list="No:Yes" listDetails="No:Yes" 
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<condition property="set.sec.jvm.arguments">
+			<equals arg1="Yes" arg2="${sec.jvm.arguments}" />
+		</condition>
+
+		<if isTrue="${set.sec.jvm.arguments}"> 
+			<property name="jvm_arguments" value="true" />
+
+			<if isTrue="${set.security.ssl.trace}" > 
+				<property name="generic.jvm.arguments"
+				          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true -Djavax.net.debug=true"' />
+			</if> 
+			<if isNotTrue="${set.security.ssl.trace}" > 
+				<property name="generic.jvm.arguments"
+				          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+			</if> 
+
+			<autopdlog message="Generic JVM arguments: ${generic.jvm.arguments}"
+			           id="1184"
+			           level="info" />
+		</if>
+		
+		<if isNotTrue="${set.sec.jvm.arguments}">
+			<if isTrue="${set.security.ssl.trace}" > 
+				<property name="jvm_arguments" value="true" />
+				<property name="generic.jvm.arguments"
+			          value='"-Djavax.net.debug=true"' />
+				<autopdlog message="Generic JVM arguments: ${generic.jvm.arguments}"
+							           id="1184"
+							           level="info" />
+			</if> 
+		</if> 
+			
+	</target>
+
+	<!-- This target is used to generate generic JVM arguments -->
+	<target name="generate_security_jvm_arguments_with_condition"
+	        description="generate generic JVM arguments"
+	        if="security.generate.jvm.arguments.needed">
+
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_generate_generic_JVM_arguments"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Generating generic JVM arguments"
+		           replace="${autopdts};;${step.count}"
+		           id="1120"
+		           level="info" />
+			
+		<property name="jvm_arguments" value="true" />
+		<if isTrue="${doV5_SAS_ORB_COMM_Traces}">
+			<property name="generic.jvm.arguments"
+			          value='"-Dcom.ibm.CORBA.Debug=true -Dcom.ibm.CORBA.CommTrace=true"' />
+		</if>
+		<if isTrue="${doV5_SAS_ORB_COMM_Traces}">
+			<echo message="Generic JVM arguments: ${generic.jvm.arguments}" />
+		</if>
+	</target>
+
+	<!-- This target is used to set the path for how to proceed-->
+	<target name="set_jvm_sec_properties_for_how_to_proceed"
+	        description="set the path for how to proceed">
+
+		<if isTrue="${restart.server}">
+			<property name="enable.was.jvm.arguments" value="true" />
+			<property name="restore.was.jvm.arguments" value="true" />
+			<property name="security.generate.jvm.arguments.needed" value="true" />
+		</if>
+	</target>
+
+	<target name="questionnaires" description="Provide required information into a file">
+		<echo message=" " />
+		<stepcount />
+		<wsnlsecho key="Step_Questionnaires"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Questionnaires"
+		           replace="${autopdts};;${step.count}"
+		           id="1099"
+		           level="info" />
+		
+		<inputdialogtask doSkip="true" noCancel="true">
+			<fieldtask name="ws.security.prompt"
+					   label="Input_Required"
+					   type="prompt"
+					   bundle="autopdtoolstrings" />
+			<fieldtask name="sec.answer0"
+			           label="Security_Question0"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="sec.answer1"
+			           label="Security_Question1"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			1. Is your WebSphere Application Server running on a "real" machine or is there some kind of virtualization (LPAR/VMWare/etc)? ${line.separator}
+					${sec.answer0}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			2. What kind of environment is this: production/test/development/etc.? ${line.separator}
+					${sec.answer1}${line.separator}
+		</concat>
+		
+		<inputdialogtask doSkip="true" noCancel="true">
+			
+			<fieldtask name="ws.security.prompt"
+					   label="Input_Required"
+					   type="prompt"
+					   bundle="autopdtoolstrings" />
+			<fieldtask name="answer1"
+			           label="A_clear_specific_problem_description"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer2"
+			           label="Set_SSL_For_Security2"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer3"
+			           label="a_minimal_testcase_if_possible"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer4"
+			           label="Are_you_using_programmatic_login"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+			<fieldtask name="answer5"
+			           label="Provide_time_the_problem_occures_user_ID_and_exact_URL_being_invoked"
+			           type="textarea"
+			           bundle="properties/SSEQTP/autopdtoolstrings_was" />
+
+		</inputdialogtask>
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			1. A clear, specific problem description, including specific usage information and error scenario${line.separator}
+					${answer1}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			2. Describe the steps taken that caused the failure${line.separator}
+					${answer2}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			3. Provide a minimal testcase if possible${line.separator}
+					${answer3}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			4. Are you using programmatic login?${line.separator}
+					${answer4}${line.separator}
+		</concat>
+
+		<concat destfile="${autopdtmp}/autopd/RequiredInfoFile.txt" append="true">
+			5. Provide time the problem occures, user ID, and exact URL being invoked${line.separator}
+					${answer5}${line.separator}
+		</concat>
+	</target>
+
+	<!-- This target controls the collection activities for this script. 
+	-->
+	<target name="collect_was_security"
+	        description="Collect log tracing and other config information from Application Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Application Server information for {2}"
+		           replace="${autopdts};;${step.count};;${problem.type}"
+		           id="1126"
+		           level="info" />
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+
+			<zipfileset file="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			            prefix="autopdzip/autopd" />
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- This target lies on the alternate path invoked when the script is entered
+		at the "autopdmainrecovery" target. 
+	-->
+	<target name="collect_was_security_recovery"
+	        description="Collect log tracing and other config information for recovery from Portal Server">
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_information_of_WebSphere_Application_Server_for"
+		           bundle="properties/SSEQTP/autopdtoolstrings_was"
+		           message="[{0}] Step {1}: Collecting Portal Server trace information for {2}"
+		           replace="${autopdts};;${step.count};;${problem.type}"
+		           id="1126"
+		           level="info" />
+
+		<zip encoding="UTF8" destfile="${recovery_pmrfilename}" update="true">
+
+			<zipfileset file="${autopdtmp}/autopd/RequiredInfoFile.txt"
+			            prefix="autopdzip/autopd" />
+
+			<zipfileset dir="${autopdtmp}/autopd" prefix="autopdzip/autopd">
+				<include name="*.jar" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<!-- display the usage message -->
+	<target name="usage"
+	        description="&lt;h2&gt;WebSphere Security Problem&lt;/h2&gt;&lt;p&gt;
+				This problem category should be run on the host machine containing the adminstration console. It sets
+		security specific trace, allows the user to reproduce the problem, and then asks various questions regarding
+		the security problem being experienced. At the end of the script the logs, trace, and configuration files
+		are collected for further analysis. The state of the server is restored.&lt;/p&gt;">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1140669" />
+		<condition property="remote.collector.only">
+			<equals arg1="NO_GUI" arg2="${console}" />
+		</condition>
+
+		<if isNotTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="This problem category should be run on the host machine containing the 
+adminstration console. It sets security specific trace, allows the user to reproduce the problem, 
+and then asks various questions regarding the security problem being experienced. At the end of the 
+script the logs, trace, and configuration files are collected for further analysis. 
+The state of the server is restored." />
+		</if>
+
+		<if isTrue="${remote.collector.only}">
+			<property name="collection.message"
+			          value="Security Problem =>
+This problem category should be run on the host machine containing the adminstration console. It sets
+security specific trace, allows the user to reproduce the problem, and then asks various questions regarding
+the security problem being experienced. At the end of the script the logs, trace, and configuration files
+are collected for further analysis. The state of the server is restored." />
+		</if>
+
+		<autopdinput message="${collection.message}"
+		             validargs="OK"
+		             addproperty="run.current.script"
+		             bundle="properties/SSEQTP/autopdtoolstrings_was" />
+	</target>
+</project>

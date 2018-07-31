@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.1//EN"
+                               "http://jakarta.apache.org/struts/dtds/struts-config_1_1.dtd">
+<struts-config>
+	<form-beans>
+		<form-bean name="WorkClassCollectionForm" type="com.ibm.ws.console.workclass.form.WorkClassCollectionForm" />
+		<form-bean name="WorkClassDetailForm" type="com.ibm.ws.console.workclass.form.WorkClassDetailForm" />
+		<form-bean name="MatchRuleCollectionForm" type="com.ibm.ws.console.workclass.form.MatchRuleCollectionForm" />
+		<form-bean name="MatchRuleDetailForm" type="com.ibm.ws.console.workclass.form.MatchRuleDetailForm" />
+		<form-bean name="CreateWorkClassStep1Form" type="com.ibm.ws.console.workclass.form.WorkClassDetailForm" />
+		<form-bean name="CreateWorkClassStep2Form" type="com.ibm.ws.console.workclass.form.WorkClassDetailForm" />
+		<form-bean name="ConfirmWorkClassCreateForm" type="com.ibm.ws.console.workclass.form.WorkClassDetailForm" />
+		<form-bean name="RuleBuilderConditionDetailForm" type="com.ibm.ws.console.workclass.form.RuleBuilderConditionForm" />		
+		<!-- App Install form-beans -->
+		<form-bean name="CloneWorkClassClientTaskForm" type="com.ibm.ws.console.appmanagement.form.AppInstallForm"/>				
+	</form-beans>
+
+	<global-forwards>
+		<forward name="workclass.layout.editpatterns" path="workclass.layout.editpatterns" />
+		<forward name="workclass.wizard.steps.properties" path="workclass.wizard.steps.properties" />
+		<forward name="workclass.wizard.steps.members" path="workclass.wizard.steps.members" />
+		<forward name="workclass.wizard.steps.confirm" path="workclass.wizard.steps.confirm" />
+		<forward name="workclass.rulebuilder.main.panel" path="workclass.rulebuilder.main.panel" />
+		<forward name="MatchRuleCollection" path="workclass.layout.classificationrules" />
+		<forward name="ODRWorkClassRouting" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.odr.routing.content.main&amp;lastPage=ODR.config.view&amp;perspective=tab.workclass.router&amp;contextType=ODR"/>
+		<forward name="ODRWorkClassService" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.odr.service.content.main&amp;lastPage=ODR.config.view&amp;perspective=tab.workclass&amp;contextType=ODR"/>
+		<!-- App Install Forwards -->
+		<forward name="workclass.installwizard.CloneWorkClassClientTask" path="workclass.installwizard.CloneWorkClassClientTask" />
+		<!--<forward name="appmanagement.workclass.appedition" path="appmanagement.workclass.appedition" />-->
+		<forward name="MWADetailView" path="MiddlewareApps.detail.view"/>
+		<forward name="OSGiWorkClassRouting" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.routing.content.main&amp;contextType=CUDetail&amp;sfname=processDefinitions&amp;policyType=routing&amp;lastPage=CUDetail.config.view"/>
+		<forward name="OSGiWorkClassService" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.service.content.main&amp;contextType=CUDetail&amp;sfname=processDefinitions&amp;policyType=service&amp;lastPage=CUDetail.config.view"/>
+	</global-forwards>
+
+
+	<action-mappings>
+		<action path="/com.ibm.ws.console.workclass.forwardCmd" type="com.ibm.ws.console.core.action.ForwardAction">
+			<forward name="workclass.content.main" path="workclass.content.main" />
+			<forward name="workclass.odr.routing.content.main" path="workclass.odr.routing.content.main" />
+			<forward name="workclass.odr.service.content.main" path="workclass.odr.service.content.main" />
+    		<forward name="workclass.rulebuilder.condition.detail.panel" path="workclass.rulebuilder.condition.detail.panel" />
+			<forward name="workclass.osgi.routing.content.main" 	path="workclass.osgi.routing.content.main" />
+			<forward name="workclass.osgi.service.content.main" 	path="workclass.osgi.service.content.main" />
+		</action>
+
+       <action name="CloneWorkClassClientTaskForm" path="/CloneWorkClassClientTask" type="com.ibm.ws.console.workclass.action.CloneWorkClassClientTaskAction">
+          <forward name="this" path="workclass.installwizard.CloneWorkClassClientTask"/>
+       </action>
+
+		<action path="/ServicePolicyDetail" name="ServicePolicyDetailForm" scope="session" type="com.ibm.ws.console.workclass.action.ServicePolicyDetailAction">
+			<forward name="edit" path="ApplicationDeployment.config.view" />
+			<forward name="previous" path="ApplicationDeployment.content.main" />
+		</action>
+
+		<action path="/WorkClassCollection" name="WorkClassCollectionForm" scope="session" type="com.ibm.ws.console.workclass.action.WorkClassCollectionAction">
+			<forward name="new" path="workclass.wizard.steps.properties" />
+			<forward name="newODR" path="workclass.odr.wizard.steps.properties" />
+			<forward name="previous" path="ApplicationDeployment.config.view" />
+			<forward name="success" path="workclass.content.main"/>
+			<forward name="topology" path="serviceclass.detail.main"/>
+		</action>
+
+		<action path="/MatchRuleCollection" name="MatchRuleCollectionForm" scope="session" validate="true" input="/matchRuleLayout.jsp" type="com.ibm.ws.console.workclass.action.MatchRuleCollectionAction">
+			<forward name="success" path="workclass.layout.classificationrules" />
+			<forward name="failure" path="workclass.layout.classificationrules" />
+			<forward name="buildrule" path="workclass.rulebuilder.main.panel" />
+			<forward name="MatchRuleCollection" path="workclass.layout.classificationrules" />
+		</action>
+
+		<action path="/WorkClassDetail" name="WorkClassDetailForm" scope="session" type="com.ibm.ws.console.workclass.action.WorkClassDetailAction">
+			<forward name="patterns" path="workclass.layout.editpatterns" />
+			<forward name="members" path="workclass.layout.memberlist" />
+			<forward name="rules" path="workclass.layout.classificationrules" />
+			<forward name="wcmatchaction" path="workclass.layout.wcmatchaction" />
+			<forward name="edit" path="ApplicationDeployment.config.view" />
+		</action>
+
+		<action path="/MatchRuleDetail" name="MatchRuleDetailForm" scope="session" type="com.ibm.ws.console.workclass.action.MatchRuleDetailAction">
+		</action>
+
+		<action path="/CreateWorkClassStep1" name="CreateWorkClassStep1Form" scope="session" type="com.ibm.ws.console.workclass.action.CreateWorkClassStep1Action">
+			<forward name="cancel" path="ApplicationDeployment.config.view" />
+			<forward name="cancelnew" path="ApplicationDeployment.config.view" />
+		</action>
+
+		<action path="/CreateWorkClassStep2" name="CreateWorkClassStep2Form" scope="session" type="com.ibm.ws.console.workclass.action.CreateWorkClassStep2Action">
+			<forward name="cancel" path="ApplicationDeployment.config.view" />
+			<forward name="cancelnew" path="ApplicationDeployment.config.view" />
+			<forward name="edit" path="workclass.wizard.steps.members" />
+			<forward name="previous" path="workclass.wizard.steps.properties" />
+		</action>
+
+		<action path="/ConfirmWorkClassCreate" name="ConfirmWorkClassCreateForm" scope="session" type="com.ibm.ws.console.workclass.action.ConfirmWorkClassCreateAction">
+			<forward name="cancel" path="ApplicationDeployment.config.view" />
+			<forward name="cancelnew" path="ApplicationDeployment.config.view" />
+			<forward name="previous" path="workclass.wizard.steps.members" />
+			<forward name="previousODR" path="workclass.odr.wizard.steps.properties" />
+			<forward name="success" path="ApplicationDeployment.config.view" />
+			<forward name="successnew" path="ApplicationDeployment.config.view" />
+			<forward name="successODRrouting" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.odr.routing.content.main&amp;lastPage=ODR.config.view&amp;perspective=tab.workclass.router&amp;contextType=ODR"/>
+			<forward name="successODRservice" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.odr.service.content.main&amp;lastPage=ODR.config.view&amp;perspective=tab.workclass&amp;contextType=ODR"/>
+			<forward name="successOSGiRouting" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.routing.content.main&amp;policyType=routing&amp;lastPage=CUDetail.config.view&amp;contextType=CUDetail"/>
+			<forward name="successOSGiService" path="com.ibm.ws.console.workclass.forwardCmd.do?forwardName=workclass.osgi.service.content.main&amp;policyType=service&amp;lastPage=CUDetail.config.view&amp;contextType=CUDetail"/>
+		</action>
+
+		<action path="/RuleBuilderConditionDetail" name="RuleBuilderConditionDetailForm" scope="session" type="com.ibm.ws.console.workclass.action.RuleBuilderConditionDetailAction">
+			<forward name="edit" path="workclass.rulebuilder.condition.detail.panel" />
+			<forward name="success" path="workclass.rulebuilder.main.panel" />
+		</action>
+
+
+	</action-mappings>
+</struts-config>

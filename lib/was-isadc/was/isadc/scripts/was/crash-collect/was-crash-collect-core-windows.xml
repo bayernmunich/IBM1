@@ -1,0 +1,161 @@
+<!-- (C) COPYRIGHT International Business Machines Corp., 2004-2005. All Rights Reserved * Licensed Materials - Property of IBM -->
+
+<!-- This file contains the targets that are specifically used to collect the WAS hangs problem for
+     Windows platform. It should be included in the WAS hangs collect Ant scripts. 
+-->
+<project name="was-crash-collect-core-windows" >
+
+	<dirname property="was.crash.collect.core.windows.basedir" file="${ant.file.was-crash-collect-core-windows}"/>
+	<dirname property="was.crash.collect.core.windows.parentdir" file="${was.crash.collect.core.windows.basedir}"/>
+	<dirname property="was.crash.collect.core.windows.grandparentdir" file="${was.crash.collect.core.windows.parentdir}"/>
+	<dirname property="was.crash.collect.core.windows.bundle.basedir" file="${was.crash.collect.core.windows.grandparentdir}"/>
+
+	<!-- This target is used ot create core file output -->
+	<target name="create_windows_core_output" description="Collect a full core" if="isWindows">
+		<echo file="${autopdtmp}/autopd/TechnoteQualifier.txt" message="1053924" />
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Create_Windows_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Creating Crash Output for Windows..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+				
+		<if isTrue="${jextract_prev}"> 
+			<property name="core.sdff.path" value="-o ${autopdtmp}/autopd/crash/windows/core.sdff" />				
+			<copy file="${was.crash.collect.core.windows.bundle.basedir}/scripts/was/shell/jextract-template.bat" 
+					tofile="${autopdtmp}/autopd/crash/windows/jextract-filled.bat" overwrite="true">
+				<filterset>
+					<filter token="jextract.command" value='"${was.root}/java/jre/bin/jextract"' />
+					<filter token="core.sdff" value='"${core.sdff.path}"' />
+					<filter token="core.path" value='"${user.dmp.file.path}"' />				
+				</filterset>
+			</copy>
+		</if> 
+		<if isTrue="${jextract_new}"> 
+			<copy file="${was.crash.collect.core.windows.bundle.basedir}/scripts/was/shell/jextract-template-new.bat" 
+					tofile="${autopdtmp}/autopd/crash/windows/jextract-filled.bat" overwrite="true">
+				<filterset>
+					<filter token="jextract.command" value='"${was.root}/java/jre/bin/jextract"' />
+					<filter token="core.path" value='"${user.dmp.file.path}"' />				
+				</filterset>
+			</copy>
+		</if> 
+		
+		<available file="${user.dmp.file.path}" type="file" property="user.dump.file.existing" />
+		<if isNotTrue="${user.dump.file.existing}">				
+			<autopdinput message="The_core_file_input_by_user_doesnt_exist_and_continue_collection" validargs="OK,Cancel" addproperty="do.cancel" />
+			<wsnlsecho key="The_core_file_input_by_user_doesnt_exist" bundle="autopdtoolstrings" message="The core file input by user does not exist" 
+				id="2602"
+				level="error"
+				component="was-crahs-collect-core-windows"/>			
+		</if>
+		<if isNotTrue="${user.dump.file.existing}">
+			<condition property="do.abort.collect.windows.core">
+				<equals arg1="Cancel" arg2="${do.cancel}" />
+			</condition>
+		</if>			
+		<if isNotTrue="${user.dump.file.existing}">
+			<fail if="do.abort.collect.windows.core">Automated Problem Determination Tool aborted by user.</fail>				
+		</if>				
+		<if isTrue="${user.dump.file.existing}" >
+			<exec executable="${autopdtmp}/autopd/crash/windows/jextract-filled.bat" 
+				dir="${autopdtmp}/autopd/crash/windows" output="${autopd.echolog.instance}" append="true">
+				<arg line="" />
+			</exec>	
+		</if>
+		<available file="${core.sdff.path}" type="file" property="core.sdff.path.existing" />
+		<if isTrue="${core.sdff.path.existing}" >
+			<dirname property="core.sdff.path.dir" file="${core.sdff.path}" />
+			<basename property="core.sdff.path.name" file="${core.sdff.path}" />
+			
+		</if>
+
+	</target>
+	
+	<!-- This target is used to collect core file and related output -->
+	
+	<target name="collect_windows_was_core" description="Collect was core problem" if="isWindows">
+		
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Collect_Windows_Crash_Ouput" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Crash Output for Windows..." 
+			replace="${autopdts};;${step.count}" 
+			id="1000" />
+
+<!--			
+		<echo message=" " />
+		<stepcount />
+		<autopdtimestamp property="autopdts" pattern="yyyy.MM.dd-HH.mm.ss.SSSz" />
+		<wsnlsecho key="Step_collect_core_output_information_of_Application_Server" 
+			bundle="properties/SSEQTP/autopdtoolstrings_was" 
+			message="[{0}] Step {1}: Collecting Application Server core output information" 
+			replace="${autopdts};;${step.count}" 
+			id="1044"  
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-windows.xml"/>
+		<wsnlsecho key="Zip_all_log_and_related_information_to_a_zip_file_pmrfilename" 
+			bundle="autopdtoolstrings" 
+			message="Zipping all log and related information to a zip file: {0}" 
+			replace="${pmrfilename}" 
+			id="1030" 
+			level="info"
+			component="\scripts\was\crash-collect\was-crash-collect-core-windows.xml"/>
+--> 
+		<trim_filename key="jvm.working.path.trimmed" filename="${was.jvm.workingDirectory}" prefixTrim=".:\\|.:/|..:\\|..:/|/"/>		
+
+		<condition property="contains.was.jvm.workingdir" >
+			<or>
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}" />
+				<equals arg1="${was.jvm.workingDirectory}" arg2="${was.enhanced.root}/bin" />
+			</or>
+		</condition>
+
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			
+			<zipfileset dir="${drwtson30.log.file.dir}" prefix="${autopdProblem}/DrWatson" >
+				<include name="${drwtson30.log.file.name}" />
+			</zipfileset>						
+
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}/${was.enhanced.root}" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+			<zipfileset dir="${was.enhanced.root}/bin" prefix="autopdzip/${was.enhanced.root}/bin" >
+				<include name="javacore*.*" />
+			</zipfileset>						
+		</zip>
+		<if isNotTrue="${contains.was.jvm.workingdir}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${was.jvm.workingDirectory}" prefix="${autopdProblem}/{jvm.working.path.trimmed}" >
+					<include name="javacore*.*" />
+				</zipfileset>						
+			</zip>
+		</if>		
+		<if isTrue="${core.sdff.path.existing}" >
+			<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+				<zipfileset dir="${core.sdff.path.dir}" prefix="autopdzip/autopd" >
+					<include name="${core.sdff.path.name}" />
+					<include name="${core.sdff.path.name}.hdr" />
+				</zipfileset>						
+			</zip>
+		</if>	
+		<zip encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${was.enhanced.root}" prefix="${autopdProblem}" > 
+				<include name="core.sdff" /> 
+				<include name="*.zip" /> 
+			</zipfileset>
+		</zip> 
+<!--		
+		<zip  encoding="UTF8" destfile="${pmrfilename}" update="true">
+			<zipfileset dir="${user.dmp.file.dir}" prefix="${autopdProblem}/UserDump" >
+				<include name="${user.dmp.file.name}" />
+			</zipfileset>						
+		</zip> 
+--> 		
+	</target>
+</project>

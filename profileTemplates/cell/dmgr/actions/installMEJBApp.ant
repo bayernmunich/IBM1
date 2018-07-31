@@ -1,0 +1,57 @@
+<!DOCTYPE project [
+    <!ENTITY importExternalLogs SYSTEM "file:./scripts/importExternalLogs.xml">
+]>
+<project name="mejbConfig" default="mejbConfig" basedir=".">
+    
+    <taskdef name="wscmtlog"
+        classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+        
+    <taskdef name="wsadmin" classname="com.ibm.websphere.ant.tasks.WsAdminInProcess"/>
+      &importExternalLogs; 
+    <property name="NODE_NAME" value="${WS_CMT_NODE_NAME}"/>
+    <property name="CELL_NAME" value="${WS_CMT_CELL_NAME}"/>
+    <property name="serverName" value="dmgr"/>
+
+    <target name="convertWASHomeToUNIXStylePath">
+        <path id="id.was.home">
+            <pathelement location="${WAS_HOME}"/>
+        </path>
+    
+        <pathconvert targetos="unix" 
+            property="WAS_HOME_UNIX_STYLE" 
+            refid="id.was.home"/>
+    </target>
+        
+    <target name="deployMejbApp"
+            description="Deploys the Mejb EAR Application">
+            
+        <wscmtlog>Deploying Mejb EAR, the output will be recorded in: ${WS_CMT_LOG_HOME}/${profileName}/mejb_config.log</wscmtlog>
+       <!-- fail on error was true, but changed to false to accomodate F69142-65189 -->               
+        <wsadmin conntype="none"
+                 failonerror="false"
+				 returnproperty="rcProperty"
+				 lang="jacl"
+                 tracefile="${WS_CMT_LOG_HOME}/${profileName}/mejb_config.log"
+                 wasHome="${WAS_HOME}"
+                 wasInstallRoot="${WAS_HOME}"
+                 wasRepositoryRoot="${profilePath}/config"
+                 userInstallRoot="${profilePath}"
+                 localCell="${cellName}"
+                 localNode="${nodeName}"
+                 wsadminProps="${profilePath}/properties/wsadmin.properties"
+                 command="$AdminApp install &quot;${WAS_HOME_UNIX_STYLE}/systemApps/ManagementEJB.ear&quot; {-node ${NODE_NAME} -cell ${CELL_NAME} -appname ManagementEJB -server ${serverName}}"
+                 ipcFilename="${profilePath}/temp/wsadmin"
+                 >
+        </wsadmin>
+		<antcall target="importLogsToMain" >
+            <param name="logfile" value="${WS_CMT_LOG_HOME}/${profileName}/mejb_config.log" />
+            <param name="description" value="Deploying Mejb EAR" />
+            <param name="precondition" value="foetrue" />
+        </antcall>	
+    </target>
+
+    <target name="mejbConfig"
+        description="Configures Mejb"
+        depends="convertWASHomeToUNIXStylePath,
+                 deployMejbApp"/>
+</project>

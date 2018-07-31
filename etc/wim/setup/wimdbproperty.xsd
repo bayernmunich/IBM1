@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Begin Copyright
+
+  Licensed Materials - Property of IBM
+
+  Virtual Member Manager
+
+  (C) Copyright IBM Corp. 2005 All Rights Reserved.
+
+  US Government Users Restricted Rights - Use, duplication or
+  disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+
+  %Z% %W% %I% %E% %U%
+
+  End Copyright
+-->
+<xsd:schema targetNamespace="http://www.ibm.com/websphere/wim/wimprop" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wimprop="http://www.ibm.com/websphere/wim/wimprop"  version="1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    
+    
+  <!-- ****************************** MAIN PORTION *********************************** -->
+
+    
+  <!-- Property definition -->
+    
+
+  <xsd:complexType name="EntityListType">
+    <xsd:sequence>
+      <xsd:element name="entityName" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+	
+
+  <xsd:complexType name="PropertyType">
+    		
+
+    <xsd:sequence>
+      <xsd:element name="applicableEntityName" type="wimprop:EntityListType" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="requiredEntityName" type="wimprop:EntityListType" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="wimPropertyName" type="xsd:string" use="required"/>
+    <xsd:attribute name="repositoryPropertyName" type="xsd:string" use="optional"/>
+    <xsd:attribute name="dataType" type="xsd:string" use="required"/>
+    <xsd:attribute name="classname" type="xsd:string" use="optional"/>
+    <xsd:attribute name="multiValued" type="xsd:boolean" use="optional" default="true"/>
+    <xsd:attribute name="readOnly" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="caseExactMatch" type="xsd:boolean" use="optional" default="true"/>
+    <xsd:attribute name="valueLength" type="xsd:integer" use="optional"/>
+    <xsd:attribute name="metadataName" type="xsd:string" use="optional" default="DEFAULT"/>
+    <xsd:attribute name="description" type="xsd:string" use="optional"/>
+    <xsd:attribute name="applicationId" type="xsd:string" use="optional" default="com.ibm.websphere.wim"/>
+		
+
+  </xsd:complexType>
+
+  <xsd:complexType name="ComponentPropertyType">
+    <xsd:attribute name="wimPropertyName" type="xsd:string" use="required"/>
+    <xsd:attribute name="pluginPropertyName" type="xsd:string" use="optional"/>
+    <xsd:attribute name="dataType" type="xsd:string" use="required"/>
+    <xsd:attribute name="classname" type="xsd:string" use="optional"/>
+    <xsd:attribute name="multiValued" type="xsd:boolean" use="optional" default="true"/>
+    <xsd:attribute name="readOnly" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="caseExactMatch" type="xsd:boolean" use="optional" default="true"/>
+    <xsd:attribute name="valueLength" type="xsd:integer" use="optional"/>
+    <xsd:attribute name="description" type="xsd:string" use="optional"/>
+    <xsd:attribute name="requiredInComposite" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="keyInComposite" type="xsd:boolean" use="optional" default="false"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="ComponentCompositePropertyType">
+    <xsd:sequence>
+      <xsd:element name="componentProperty" type="wimprop:ComponentPropertyType" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="wimPropertyName" type="xsd:string" use="required"/>
+    <xsd:attribute name="pluginPropertyName" type="xsd:string" use="optional"/>
+    <xsd:attribute name="multiValued" type="xsd:boolean" use="optional" default="true"/>
+    <xsd:attribute name="readOnly" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="description" type="xsd:string" use="optional"/>
+    <xsd:attribute name="requiredInComposite" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="keyInComposite" type="xsd:boolean" use="optional" default="false"/>
+  </xsd:complexType>
+
+    	
+
+  <xsd:complexType name="CompositePropertyType">
+    <xsd:complexContent>
+      <xsd:extension base="wimprop:PropertyType">
+        <xsd:sequence>
+          <xsd:element name="componentProperty" type="wimprop:ComponentPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+          <xsd:element name="componentCompositeProperty" type="wimprop:ComponentCompositePropertyType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+    
+    
+  <!-- the main portion of the XML schema -->
+  <xsd:element name="repositoryProperty">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="property" type="wimprop:PropertyType" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="compositeProperty" type="wimprop:CompositePropertyType" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="repositoryName" type="xsd:string" use="required"/>
+    </xsd:complexType>
+  </xsd:element>
+    	
+
+</xsd:schema>

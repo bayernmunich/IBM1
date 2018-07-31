@@ -1,0 +1,157 @@
+<%-- IBM Confidential OCO Source Material --%>
+<%-- 5724-J34, 5655-P28 (C) COPYRIGHT International Business Machines Corp. 2006 --%>
+<%-- The source code for this program is not published or otherwise divested --%>
+<%-- of its trade secrets, irrespective of what has been deposited with the --%>
+<%-- U.S. Copyright Office. --%>
+
+
+<%@ page language="java" import="com.ibm.ws.console.middlewareserver.*"%>
+<%@ page import="com.ibm.ws.xd.util.MiddlewareServerConstants"%>
+<%@ taglib uri="/WEB-INF/ibmcommon.tld" prefix="ibmcommon" %>
+<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
+<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
+<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/tiles.tld" prefix="tiles" %>
+
+<tiles:useAttribute name="iterationName" classname="java.lang.String" />
+<bean:define id="typeFilter" name="<%=iterationName%>" property="typeFilter" scope="session"/>
+<bean:define id="selectedNodeFilter" name="<%=iterationName%>" property="selectedNodeFilter" type="java.lang.String" scope="session"/>
+<bean:define id="selectedClusterFilter" name="<%=iterationName%>" property="selectedClusterFilter" type="java.lang.String" scope="session"/>
+<bean:define id="selectedStatusFilter" name="<%=iterationName%>" property="selectedStatusFilter" type="java.lang.String" scope="session"/>
+<bean:define id="serverTypesList" name="<%=iterationName%>" property="serverTypesList" type="java.util.List" toScope="request"/>
+
+
+<%
+MessageResources filterMessages = (MessageResources)application.getAttribute(org.apache.struts.Globals.MESSAGES_KEY);
+boolean isCurrentSelectable = false;
+
+%>
+
+<SCRIPT language="JavaScript">
+function selectFilters() {
+    
+    var serverTypesChoicesBox    = document.getElementById("searchFilter"); 
+    var searchPattern = document.getElementById("searchPattern").value;
+    var selectedNodeFilter = document.getElementByID("selectedNodeFilter").value;
+    var selectedClusterFilter = document.getElementByID("selectedClusterFilter").value;
+    var selectedStatusFilter = document.getElementByID("selectedStatusFilter").value;
+    var selectedTypeFilters = document.getElementById("typeFilter").value;
+   	
+    var serverTypesChoicesFilter = "";
+    var serverTypesChoicesOpts   = serverTypesChoicesBox.options;
+    for (var n=0; n<serverTypesChoicesOpts.length; n++) {
+        if (serverTypesChoicesOpts[n].selected) {
+            if (serverTypesChoicesFilter.length == 0)
+                serverTypesChoicesFilter = serverTypesChoicesOpts[n].value;
+            else 
+                serverTypesChoicesFilter = serverTypesChoicesFilter + ':' + serverTypesChoicesOpts[n].value;
+        }
+    }
+ 
+    
+  }
+
+</script>
+
+        <TBODY ID="filterControls" STYLE="display:<%=filterDisplay%>">
+        <TR  width="100%">
+            <TD CLASS="column-filter-expanded" COLSPAN=<%=chkcounter+1%>>
+            <table width="10%" border="0" role="presentation">
+            	<tr>
+            		<td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+		                <b> <bean:message key="middlewareServer.filter.desc"/> </b>
+		            </td>
+                </tr>
+                <tr>
+                        <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+                          <b> <LABEL for="typeFilter" title="<bean:message key="middlewareServer.filter.serverType"/>">
+                          		<bean:message key="middlewareServer.filter.serverType"/>
+                          </LABEL> </b>
+                        </td>
+                        
+                        <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+                            <BR> 
+                              <html:select multiple="true" property="typeFilter" size="5" styleId="typeFilter">
+                  				 <logic:iterate id="typeFilter" name="<%=iterationName%>" property="serverTypesList">
+									<% String value = (String)typeFilter;
+									   value=value.trim();	
+									   					
+									   if (!value.equals("")) {   %>
+									     <LABEL for="<%=value%>"> <%=value%> </LABEL>
+									     <html:option value="<%=value%>"><%=value%></html:option>
+								   <% } else { %>
+								         <LABEL for="<%=value%>"> <bean:message key="none.text"/> </LABEL>
+       									 <html:option value="<%=value%>"><bean:message key="none.text"/></html:option>
+								   <%  } %>
+								 </logic:iterate>
+			                </html:select>
+                        </td>
+
+                 </tr>
+              
+                    <tr>
+                        <br>
+                       	 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				<b><LABEL for="searchNamePattern" title="<bean:message key="middlewareServer.filter.name"/>"><bean:message key="middlewareServer.filter.name"/></LABEL></b>
+            			</td>
+            			 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				 <INPUT TYPE="text" class="textEntry" NAME="searchPattern" ID="searchNamePattern" VALUE="<bean:write name="<%=formName%>" property="searchPattern" scope="session"/>" onkeypress="return onenter(event, this.form)">
+               			</td>
+
+			        </tr>
+			        <tr>
+			            <br>
+                    	 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				<b><LABEL for="selectedNodeFilter" title="<bean:message key="middlewareServer.filter.node"/>"><bean:message key="middlewareServer.filter.node"/></LABEL></b>
+            			</td>
+            			 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				 <INPUT TYPE="text" class="textEntry" NAME="selectedNodeFilter" ID="selectedNodeFilter" VALUE="<bean:write name="<%=formName%>" property="selectedNodeFilter" scope="session"/>" onkeypress="return onenter(event, this.form)">
+               			</td>
+
+			        </tr>
+			        <tr>
+			            <br>
+                    	 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				<b><LABEL for="selectedClusterFilter" title="<bean:message key="middlewareServer.filter.cluster"/>"><bean:message key="middlewareServer.filter.cluster"/></LABEL></b>
+            			</td>
+            			 <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            				 <INPUT TYPE="text" class="textEntry" NAME="selectedClusterFilter" ID="selectedClusterFilter" VALUE="<bean:write name="<%=formName%>" property="selectedClusterFilter" scope="session"/>" onkeypress="return onenter(event, this.form)">
+               			</td>
+
+			        </tr>
+			        <tr>
+			            <br>
+                        <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+                            <b><LABEL for="selectedStatusFilter" title="<bean:message key="middlewareServer.filter.status"/>"><bean:message key="middlewareServer.filter.status"/></LABEL></b>
+                        </td>
+                        <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+                            <html:select property="selectedStatusFilter" size="1" styleId="selectedStatusFilter">
+                  				 <logic:iterate id="statusType" name="<%=iterationName%>" property="statusTypes">
+									<% String value = (String)statusType;
+									   value=value.trim();						
+									   if (!value.equals("")) {   %>
+									    <LABEL for="<%=value%>"> <bean:message key="<%=value%>"/> </LABEL>
+									     <html:option value="<%=value%>"><bean:message key="<%=value%>"/></html:option>
+								   <% } else { %>
+ 	 									   <LABEL for="<%=value%>"> <bean:message key="none.text"/> </LABEL>
+       									 <html:option value="<%=value%>"><bean:message key="none.text"/></html:option>
+								   <%  } %>
+								 </logic:iterate>
+			                </html:select>
+                        </td>
+                      
+                    </tr>
+
+			        
+			        <tr>
+			            <br>
+				        <td NOWRAP CLASS="column-filter-expanded" align="left" valign="top">
+            			  <INPUT TYPE="submit" NAME="searchAction" ID="searchActionSelect" VALUE="<bean:message key="wsc.collection.filter.go"/>" CLASS="buttons-filter">
+			            </td>
+			        </tr>
+				</table>
+            </TD> 
+        </TR>
+        </TBODY>
+
+

@@ -1,0 +1,640 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration//EN"
+                                   "http://jakarta.apache.org/struts/dtds/tiles-config_1_1.dtd">
+<tiles-definitions>
+    <!-- Called from JavaScript to register XML capability -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.JsRegisterController"
+        name="tpv.js.register" path="/com.ibm.ws.console.tpv/xmlRegisterData.jsp"/>
+    <!-- Called from JavaScript to get new data, returns XML -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.JsDataFetchController"
+        name="tpv.js.dataFetch" path="/com.ibm.ws.console.tpv/xmlStatisticData.jsp"/>
+    <!-- Called from SVG to show point details -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.StatisticDetailController"
+        name="tpv.point.details" path="/com.ibm.ws.console.tpv/tpvPointDetails.jsp"/>
+    <!-- Displays an SVG graph -->
+    <definition name="tpv.svgChart" path="/com.ibm.ws.console.tpv/tiles/graphTile.jsp"/>
+    <!-- Displays an DOJO graph -->
+    <!-- F001146.1 -->
+    <definition name="tpv.dojoChart" path="/com.ibm.ws.console.tpv/tiles/dojoGraphTile.jsp"/>
+    <!-- Adds a refresh tag to the page -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.RefreshController"
+        name="tpv.meta.refresh" path="/com.ibm.ws.console.tpv/tiles/metaRefreshTile.jsp"/>
+    <!-- Sets the default browser status -->
+    <definition name="tpv.browser.status" path="/com.ibm.ws.console.tpv/tiles/browserStatusTile.jsp"/>
+    <!-- Sets the text at the top of a displayed page. Put String attribute pageTitleStr in the request. -->
+    <definition name="tpv.title" path="/com.ibm.ws.console.tpv/tiles/titleTile.jsp"/>
+    <!-- Shows a link to the InfoCenter for the viewing data frame -->
+    <definition name="tpv.dataViewHelp" path="/com.ibm.ws.console.tpv/tiles/dataViewHelpTile.jsp"/>
+    <!-- Shows a link to the InfoCenter for the TPA panel -->
+    <definition name="tpa.help" path="/com.ibm.ws.console.tpv/tiles/tpaHelpTile.jsp"/>
+    <!-- Shows the log controls if user is viewing a log (data chart/data table only) -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.ViewLogsController"
+        name="tpv.log.controls" path="/com.ibm.ws.console.tpv/tiles/tpvLogControls.jsp"/>
+    <!-- Shows the buttons for starting/stopping a log -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.StartStopLogController"
+        name="tpv.log.startStopButton" path="/com.ibm.ws.console.tpv/tiles/messageFormTile.jsp"/>
+    <!-- Shows the buttons for viewing summary of a log -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.ViewLogSummaryController"
+        name="tpv.log.summaryControls" path="/com.ibm.ws.console.tpv/tiles/tpvLogSummaryControls.jsp"/>
+    <!-- Show the PMI statistics that can be selected for viewing -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.ServerSideSelectCollectionController"
+        name="tpv.pmi.statistics" path="/com.ibm.ws.console.tpv/serverSideSelectCollectionLayout.jsp">
+        <put name="formAction" value="tpvUpdateData.do"/>
+        <put name="formName" value="com.ibm.ws.console.tpv.form.StatisticCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.StatisticCollectionForm"/>
+    </definition>
+    <!-- Top level tile for PMI Data -->
+    <definition name="tpv.stat.data.view" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.pmi.data"/>
+        <put name="descTitle" value="tpv.statData.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.statData.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.log.controls"/>
+            <add value="tpv.dataViewHelp"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.pmi.statistics"/>
+        </putList>
+    </definition>
+    <!-- Top level tile for EJB summaries -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.summary.TpvEjbSummaryController"
+        name="tpv.summary.ejb" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.summary.table"/>
+        <put name="descTitle" value="tpv.summary.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.summary.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.title"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.log.summaryControls"/>
+            <add value="tpv.summary.ejb.quicksearch.extend"/>
+            <add value="tpv.summary.ejb.list"/>
+            <add value="tpv.summary.paging.extend"/>
+        </putList>
+    </definition>
+    <!-- Top level tile for EJB method summaries -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.summary.TpvEjbMethodSummaryController"
+        name="tpv.summary.ejbMethods" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.summary.table"/>
+        <put name="descTitle" value="tpv.summary.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.summary.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.title"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.log.summaryControls"/>
+            <add value="tpv.summary.ejb.quicksearch.extend"/>
+            <add value="tpv.summary.ejb.list"/>
+            <add value="tpv.summary.paging.extend"/>
+        </putList>
+    </definition>
+    <!-- Top level tile for servlet summaries -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.summary.TpvServletSummaryController"
+        name="tpv.summary.servlet" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.summary.table"/>
+        <put name="descTitle" value="tpv.summary.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.summary.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.title"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.log.summaryControls"/>
+            <add value="tpv.summary.servlet.quicksearch.extend"/>
+            <add value="tpv.summary.servlet.list"/>
+            <add value="tpv.summary.paging.extend"/>
+        </putList>
+    </definition>
+    <!-- Top level tile for Pool summaries -->
+    <definition name="tpv.summary.pool" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.summary.pool"/>
+        <put name="descTitle" value="tpv.summary.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.summary.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.title"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.log.summaryControls"/>
+            <add value="tpv.svgChart"/>
+        </putList>
+    </definition>
+    <!-- Top level tile for Pool summaries using dojo graphs (Added at Version 8.0) F001146.1 -->
+    <definition name="tpv.summary.pool.dojo" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.summary.pool.dojo"/>
+        <put name="descTitle" value="tpv.summary.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.summary.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.title"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.log.summaryControls"/>
+            <add value="tpv.dojoChart"/>
+        </putList>
+    </definition>
+    <!-- This tile actually populates the output table with data (one ejb per line) -->
+    <definition name="tpv.summary.ejb.list" path="/secure/layouts/genericCollectionLayout.jsp">
+        <put name="contextType" value="tpv.summary"/>
+        <put name="iterationName" value="tpvSummaryForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="none"/>
+        <put name="createButtons" value="false"/>
+        <put name="selectName" value="selectedItems"/>
+        <put name="formAction" value="tpvSummary.do"/>
+        <put name="formName" value="tpvSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.GenericSummaryCollectionForm"/>
+        <put name="includeButtonTile" value="false"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.name" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.application" value="appName:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.methodCalls" value="invocations:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.avgRespTime" value="avgRespTime:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.totalTime" value="totalTime:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.time" value="time:sort"/>
+        </putList>
+    </definition>
+    <!-- This tile actually populates the output table with data (one servlet per line) -->
+    <definition name="tpv.summary.servlet.list" path="/secure/layouts/genericCollectionLayout.jsp">
+        <put name="contextType" value="tpv.summary"/>
+        <put name="iterationName" value="tpvSummaryForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="none"/>
+        <put name="createButtons" value="false"/>
+        <put name="selectName" value="selectedItems"/>
+        <put name="formAction" value="tpvSummary.do"/>
+        <put name="formName" value="tpvSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.GenericSummaryCollectionForm"/>
+        <put name="includeButtonTile" value="false"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.name" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.application" value="appName:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link=""
+                tooltip="tpv.summaryColumn.totalRequests" value="invocations:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.avgRespTime" value="avgRespTime:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.totalTime" value="totalTime:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.summaryColumn.time" value="time:sort"/>
+        </putList>
+    </definition>
+    <!-- this tile adds searching capabilities -->
+    <definition extends="quicksearch.main" name="tpv.summary.servlet.quicksearch.extend">
+        <put name="selectUri" value="tpvSummary.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="tpvSummaryForm"/>
+        <put name="formAction" value="tpvSummary.do"/>
+        <put name="formName" value="tpvSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.GenericSummaryCollectionForm"/>
+        <putList name="searchList">
+            <add value="tpv.summaryColumn.name:name"/>
+            <add value="tpv.summaryColumn.application:appName"/>
+            <add value="tpv.summaryColumn.totalRequests:invocations"/>
+            <add value="tpv.summaryColumn.avgRespTime:avgRespTime"/>
+            <add value="tpv.summaryColumn.totalTime:totalTime"/>
+            <add value="tpv.summaryColumn.time:time"/>
+        </putList>
+    </definition>
+    <definition extends="quicksearch.main" name="tpv.summary.ejb.quicksearch.extend">
+        <put name="selectUri" value="tpvSummary.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="tpvSummaryForm"/>
+        <put name="formAction" value="tpvSummary.do"/>
+        <put name="formName" value="tpvSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.GenericSummaryCollectionForm"/>
+        <putList name="searchList">
+            <add value="tpv.summaryColumn.name:name"/>
+            <add value="tpv.summaryColumn.application:appName"/>
+            <add value="tpv.summaryColumn.methodCalls:invocations"/>
+            <add value="tpv.summaryColumn.avgRespTime:avgRespTime"/>
+            <add value="tpv.summaryColumn.totalTime:totalTime"/>
+            <add value="tpv.summaryColumn.time:time"/>
+        </putList>
+    </definition>
+    <!-- This tile adds the paging to the bottom of the summary reports -->
+    <definition extends="paging.main" name="tpv.summary.paging.extend">
+        <put name="displayLabelKey" value="tpa.label.title"/>
+        <put name="collectionForm" value="tpvSummaryForm"/>
+        <put name="formAction" value="tpvSummary.do"/>
+        <put name="formName" value="tpvSummaryForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.GenericCollectionSummaryForm"/>
+    </definition>
+    <!-- The top-most tile for TPV -->
+    <definition name="tpv.data.main" path="/com.ibm.ws.console.tpv/verticalLayout.jsp">
+        <put name="contextType" value="tpv.data.main"/>
+        <putList name="list">
+            <add value="tpv.data.detail.title"/>
+            <add value="tpv.data.detail"/>
+        </putList>
+    </definition>
+    <!-- Displays the title for TPV -->
+    <definition name="tpv.data.detail.title" path="/secure/layouts/detailTitleLayout.jsp">
+        <put name="formName" value="tpvServerDetailForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.tpv"/>
+        <put name="titleKey" value="tpv.console.displayName"/>
+        <put name="collectionLink" value="forwardCmd.do?forwardName=console.users.main&amp;noChange=true"/>
+        <put name="includeLink" value="no"/>
+        <put name="instanceDetails" value="server"/>
+        <put name="instanceDescription" value="tpv.serverData.description"/>
+        <put name="displayName" value="tpv.serverList.server"/>
+    </definition>
+    <!-- Wraps the nav-tree and the data pane -->
+    <definition name="tpv.data.detail" path="/com.ibm.ws.console.tpv/tpvDetail.jsp"/>
+    <!-- This tile is the JSP that shows the navigation tree -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.TpvNavTreeController"
+        name="tpv.navTree.view" path="/com.ibm.ws.console.tpv/tpvNavTree.jsp"/>
+    <!-- Main server error tile -->
+    <definition name="TPVServerError.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="TPVServerError"/>
+        <put name="descTitle" value="tpv.console.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.console.serverError.description"/>
+        <putList name="contentList">
+            <add value="tpv.server.error"/>
+        </putList>
+    </definition>
+    <!-- The JSP we forward to when we encounter a server error -->
+    <definition name="tpv.server.error" path="/com.ibm.ws.console.tpv/tpvServerError.jsp"/>
+    <!-- Main stats error tile -->
+    <definition name="TPVStatsError.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="TPVStatsError"/>
+        <put name="descTitle" value="tpv.console.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.console.serverError.description"/>
+        <putList name="contentList">
+            <add value="tpv.stats.error"/>
+        </putList>
+    </definition>
+    <!-- The JSP we forward to when we encounter a stats error -->
+    <definition name="tpv.stats.error" path="/com.ibm.ws.console.tpv/tpvStatsError.jsp"/>
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.LogSelectController"
+        name="tpv.logging.view.new" path="/com.ibm.ws.console.tpv/logViewer.jsp"/>
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.AttributePromoter"
+        name="TPVLogViewer.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="attributePromoteList" value="currentFormType,session"/>
+        <put name="currentFormType" value="TPVLogViewerMain"/>
+        <put name="contextType" value="TPVLogViewer"/>
+        <put name="descTitle" value="tpv.console.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.console.logging.description"/>
+        <putList name="contentList">
+            <add value="tpv.logging.view.new"/>
+            <add value="tpv.logging.view.active"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.LogListController"
+        name="tpv.logging.view.active" path="/com.ibm.ws.console.tpv/genericTableLayout.jsp">
+        <put name="iterationName" value="tpvLogListCollectionForm"/>
+        <put name="iterationProperty" value="contents"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.logging.logfilename.label" value="linkref"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.serverList.node" value="node"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.serverList.server" value="server"/>
+        </putList>
+    </definition>
+    <definition name="tpv.user.settings" path="/com.ibm.ws.console.tpv/tpvUserSettings.jsp"/>
+    <!-- This tile is the container for the advisor output -->
+    <definition name="tpa.output" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpa.output"/>
+        <put name="descTitle" value="tpa.title"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpa.desc"/>
+        <putList name="docHeadList">
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpa.help"/>
+            <add value="tpa.middle"/>
+            <add value="tpa.resource.list"/>
+            <add value="tpa.output.quicksearch.extend"/>
+            <add value="tpa.output.list"/>
+            <add value="tpa.output.paging.extend"/>
+        </putList>
+    </definition>
+    <!-- This tile creates two columns -->
+    <definition name="tpa.middle" path="/com.ibm.ws.console.tpv/twoColumnLayout.jsp">
+        <putList name="slotList">
+            <add value="tpa.container.status"/>
+            <add value="tpa.graphs"/>
+        </putList>
+    </definition>
+    <!-- This tile adds the graphs for advisor -->
+    <definition name="tpa.graphs" path="/com.ibm.ws.console.tpv/tpaGraphs.jsp"/>
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.advisor.controller.TpaContainerSummaryController"
+        name="tpa.container.status" path="/com.ibm.ws.console.tpv/genericTableLayout.jsp">
+        <put name="iterationName" value="tpaContainerSummaryForm"/>
+        <put name="iterationProperty" value="contents"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.containertable.container" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.containertable.reqpersec" value="requestsPerSecond:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.containertable.resptime" value="responseTime:sort"/>
+        </putList>
+    </definition>
+    <!-- this tile adds searching capabilities -->
+    <definition extends="quicksearch.main" name="tpa.output.quicksearch.extend">
+        <put name="selectUri" value="tpaOutput.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="tpaOutputForm"/>
+        <put name="formAction" value="tpaOutput.do"/>
+        <put name="formName" value="tpaOutputForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.advisor.form.TpaOutputForm"/>
+        <putList name="searchList">
+            <add value="tpa.label.severity:severity"/>
+            <add value="tpa.label.message:message"/>
+            <add value="tpa.label.status:status"/>
+        </putList>
+    </definition>
+    <!-- this tile does something... -->
+    <definition extends="paging.main" name="tpa.output.paging.extend">
+        <put name="displayLabelKey" value="tpa.label.title"/>
+        <put name="collectionForm" value="tpaOutputForm"/>
+        <put name="formAction" value="tpaOutput.do"/>
+        <put name="formName" value="tpaOutputForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.advisor.form.TpaOutputForm"/>
+    </definition>
+    <!-- This tile actually populates the output table with data (one rule per line) -->
+    <definition name="tpa.output.list" path="/com.ibm.ws.console.tpv/tpaCollectionLayout.jsp">
+        <put name="contextType" value="tpa.output"/>
+        <put name="iterationName" value="tpaOutputForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="multiple"/>
+        <put name="createButtons" value="false"/>
+        <put name="selectName" value="selectedItems"/>
+        <put name="formAction" value="tpaOutput.do"/>
+        <put name="formName" value="tpaOutputForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.advisor.form.TpaOutputForm"/>
+        <put name="includeButtonTile" value="true"/>
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="tpa.output.list"/>
+        <put name="includeForm" value="no"/>
+        <putList name="actionList">
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="tpa.button.refresh:tpaOutput.do"/>
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="tpa.button.remove:tpaOutput.do"/>
+        </putList>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="" value="ruleUID:nosort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.label.severity" value="severity:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.label.message" value="shortMessage:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.label.status" value="status:sort"/>
+        </putList>
+    </definition>
+    <!-- This tile actually populates the output table with data (one rule per line) -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.advisor.controller.TpaResourceController"
+        name="tpa.resource.list" path="/com.ibm.ws.console.tpv/genericTableLayout.jsp">
+        <put name="iterationName" value="tpaResourceCollectionForm"/>
+        <put name="iterationProperty" value="contents"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.label.resource" value="name:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.usagegraph.busy" value="used:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.usagegraph.idle" value="idle:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpa.usagegraph.total" value="total:sort"/>
+        </putList>
+    </definition>
+    <!-- This tile is the container for a single advisor rule output -->
+    <definition name="tpa.rule.output" path="/com.ibm.ws.console.tpv/configboxLayout.jsp">
+        <put name="contextType" value="tpa.ruleOutput"/>
+        <putList name="list">
+            <!-- <add value="tpa.rule.output.title"/> -->
+            <add value="tpa.rule.output.properties"/>
+        </putList>
+    </definition>
+    <!-- This tile displays the page title, etc -->
+    <definition name="tpa.rule.output.title" path="/secure/layouts/detailTitleLayout.jsp">
+        <put name="formName" value="tpaRuleOutputForm"/>
+        <put name="objectTypeImage" value="pluginId=com.ibm.ws.console.tpv"/>
+        <put name="titleKey" value="tpa.rule.output.title.label"/>
+        <put name="collectionLink" value="forwardCmd.do?forwardName=tpa.output&amp;noChange=true"/>
+        <!-- Not used any more -->
+        <put name="includeLink" value="yes"/>
+        <!-- Not used any more -->
+        <put name="instanceDetails" value="title"/>
+        <put name="instanceDescription" value="tpa.rule.output.title.desc"/>
+        <put name="displayName" value="tpa.rule.output.title.label"/>
+    </definition>
+    <!-- This tile displays the rule details -->
+    <definition extends="detail.config.general.properties" name="tpa.rule.output.properties">
+        <put name="formAction" value="tpaOutput.do?action=Back"/>
+        <put name="formName" value="tpaRuleOutputForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.advisor.form.TpaRuleOutputForm"/>
+        <put name="formFocus" value="title"/>
+        <put name="readOnlyView" value="yes"/>
+        <putList name="attributeList">
+            <!-- value is list of label,attribute name,isrequired,type,description,isReadonly,showdescription,enumValues(optional) and enumDesc(optional) -->
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="tpa.label.message:message:yes:TextArea:tpa.desc.message:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="tpa.label.severity:severity:yes:Text:tpa.desc.severity:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="tpa.label.description:description:yes:Text:tpa.desc.description:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="tpa.label.useraction:userAction:yes:TextArea:tpa.desc.useraction:yes:yes"/>
+            <item classtype="com.ibm.ws.console.core.item.PropertyItem"
+                icon="" link="" tooltip="" value="tpa.label.detail:detail:yes:TextArea:tpa.desc.detail:yes:yes"/>
+        </putList>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.core.controller.BrowseRemoteController"
+        extends="remote.node.browse" name="tpv.remote.node.browse">
+        <put name="select" value="single"/>
+        <put name="fileExt" value="xml"/>
+        <put name="backTo" value="tpvViewLog"/>
+        <put name="nodeBrowse" value="tpv.remote.node.browse"/>
+        <put name="contextType" value="tpv.remote.node.browse"/>
+    </definition>
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.ServerListController"
+        name="TPVServerList.content.main" path="/secure/layouts/contentLayout.jsp">
+        <put name="contextType" value="TPVServerList"/>
+        <put name="descTitle" value="tpv.console.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.console.description"/>
+        <putList name="contentList">
+            <add value="TPVServerList.quicksearch.extend"/>
+            <add value="TPVServerList.collection.table.extend"/>
+            <add value="TPVServerList.paging.extend"/>
+        </putList>
+    </definition>
+    <definition extends="paging.main" name="TPVServerList.paging.extend">
+        <put name="displayLabelKey" value="tpv.console.displayName"/>
+        <put name="collectionForm" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="formAction" value="tpvServerListCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+    </definition>
+    <definition extends="quicksearch.main" name="TPVServerList.quicksearch.extend">
+        <put name="selectUri" value="tpvServerListCollection.do?ToggleViewAction=true"/>
+        <put name="collectionForm" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="formAction" value="tpvServerListCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <putList name="searchList">
+            <add value="server.label:server"/>
+            <add value="node.label:node"/>
+            <add value="node.version.displayName:version"/>
+            <add value="status.label:status"/>
+        </putList>
+    </definition>
+    <definition name="TPVServerList.collection.table.extend" path="/com.ibm.ws.console.tpv/serversCollectionLayout.jsp">
+        <put name="iterationName" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="iterationProperty" value="subsetList"/>
+        <put name="selectionType" value="multiple"/>
+        <put name="createButtons" value="false"/>
+        <put name="selectName" value="selectedObjectIds"/>
+        <put name="parent" value="navigatorCmd.do?forwardName=TPVServerList.content.main"/>
+        <put name="includeButtonTile" value="true"/>
+        <put name="buttonCount" value="2"/>
+        <put name="definitionName" value="TPVServerList.collection.table.extend"/>
+        <put name="includeForm" value="no"/>
+        <put name="formAction" value="tpvServerListCollection.do"/>
+        <put name="formName" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.ServerListCollectionForm"/>
+        <putList name="columnList">
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="tpvServerSelect.do"
+                tooltip="tpv.serverList.server" value="server:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.serverList.node" value="node:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="Host.name.displayName" value="hostName:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.serverList.version" value="extendedVersion:sort"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.CollectionItem"
+                icon="" link="" tooltip="tpv.serverList.status" value="status:sort"/>
+        </putList>
+        <putList name="actionList">
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="tpv.serverList.startMonitoring:tpvControlMonitoring.do?action=start"/>
+            <item classtype="com.ibm.ws.console.core.item.ActionSetItem"
+                icon="" link="" tooltip="" value="tpv.serverList.stopMonitoring:tpvControlMonitoring.do?action=stop"/>
+        </putList>
+        <putList name="collectionList"/>
+        <putList name="collectionPreferenceList">
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.maxRowLabel: :collection.preferences.maxRowDesc:20" value="text:UI/Collections/TivoliPerformanceViewer/Preferences#maximumRows:25"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.searchHistoryLabel:collection.preferences.searchHistoryUnits:collection.preferences.searchHistoryDesc" value="checkbox:UI/Collections/TivoliPerformanceViewer/Preferences#retainSearchCriteria:32"/>
+            <item
+                classtype="com.ibm.ws.console.core.item.PreferenceItem"
+                link="collection.preferences.roleFilterLabel: :collection.preferences.roleFilterDesc:ALL" value="list:UI/Collections/TPVServerList/Preferences#roleFilter:32: :ALL,administrator,operator,monitor,configurator,deployer:role.all.label,role.administrator,role.operator,role.monitor,role.configurator,role.deployer"/>
+        </putList>
+    </definition>
+    <!-- Show the PMI statistics that can be selected for viewing - F001146.1 -->
+    <definition
+        controllerClass="com.ibm.ws.console.tpv.controller.ServerSideSelectCollectionController"
+        name="tpv.pmi.dojo.statistics" path="/com.ibm.ws.console.tpv/serverSideSelectCollectionDojoLayout.jsp">
+        <put name="formAction" value="tpvUpdateData.do"/>
+        <put name="formName" value="com.ibm.ws.console.tpv.form.StatisticCollectionForm"/>
+        <put name="formType" value="com.ibm.ws.console.tpv.form.StatisticCollectionForm"/>
+    </definition>
+    <!-- Top level tile for PMI Data with Dojo-->
+    <definition name="tpv.stat.data.dojo.view" path="/com.ibm.ws.console.tpv/tiles/contentLayout.jsp">
+        <put name="contextType" value="tpv.pmi.data"/>
+        <put name="descTitle" value="tpv.statData.displayName"/>
+        <put name="descImage" value="com.ibm.ws.console.probdetermination/images/logsandtrace.gif:pluginId=com.ibm.ws.console.tpv"/>
+        <put name="descText" value="tpv.statData.description"/>
+        <putList name="docHeadList">
+            <add value="tpv.meta.refresh"/>
+            <add value="tpv.browser.status"/>
+        </putList>
+        <putList name="contentList">
+            <add value="tpv.log.controls"/>
+            <add value="tpv.dataViewHelp"/>
+            <add value="tpv.log.startStopButton"/>
+            <add value="tpv.pmi.dojo.statistics"/>
+        </putList>
+    </definition>
+</tiles-definitions>

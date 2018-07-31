@@ -1,0 +1,68 @@
+<project name="modifyPathValueLaunchWsadminListener.ant" default="install" basedir=".">
+	<taskdef name="wscmtlog" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.AntTaskToLogToConfigManagersLogFiles"/>
+    
+	<taskdef name="replaceTokenInFile" classname="com.ibm.ws.install.configmanager.actionengine.ant.utils.ReplaceTokenInFileAntTask" />
+	
+	<property name="filePath" value="${WAS_HOME}/bin/launchWsadminListener.bat"/>
+	<property name="setPathToken" value='set PATH=%WAS_PATH%' />
+	<property name="lookFor" value='CALL "%~dp0setupCmdLine.bat" %*' />
+	<property name="replaceWith" value='CALL "%~dp0setupCmdLine.bat" %*${line.separator}${setPathToken}' />
+	
+    <target name="detectPlatform"
+            description="Detects the current OS family">
+        
+        <condition property="isCurrentPlatformWindows" value="true">
+            <os family="windows"/>
+        </condition>
+
+        <wscmtlog>Current platform is: ${os.name}</wscmtlog>
+		<echo>Current platform is: ${os.name}</echo>
+    </target>
+
+	<target name="isAlreadyChanged" description="checks whether the path variable is already added" if="isCurrentPlatformWindows">
+		
+		<loadfile property="launchwsAdminListener" srcFile="${filePath}">
+		</loadfile>
+		
+		<condition property="setPATHneeded">
+		<not>
+			<contains string="${launchwsAdminListener}" substring="set PATH=%WAS_PATH%">
+			</contains>
+		</not>
+		</condition>	
+		
+		<condition property="removeSetPathneeded">
+			<contains string="${launchwsAdminListener}" substring="set PATH=%WAS_PATH%">
+			</contains>
+		</condition>
+		
+		<wscmtlog>Need to modify PATH value: ${setPATHneeded}</wscmtlog>
+		<wscmtlog>Is there a modified Path value: ${removeSetPATHneeded}</wscmtlog>
+		<echo>Need to modify Path Value: ${setPATHneeded}</echo>
+		<echo>Is there a modified Path value: ${removeSetPathneeded}</echo>
+		
+	</target>	
+	
+	<target name="setNewPATHValue" description="sets the new PATH value" depends=
+	"isAlreadyChanged" if="setPATHneeded">
+	    	
+		<replaceTokenInFile path="${filePath}" token="${lookFor}" value="${replaceWith}" property="isReplaced" ignorecase="false" />
+		
+		<wscmtlog>Did ${filePath} get modified:  ${isReplaced} </wscmtlog>
+		<echo>Did ${filePath} get modified:  ${isReplaced} </echo>
+	
+	</target>
+	
+	<target name="removeSetNewPATHValue" description="removes the set PATH line" depends ="isAlreadyChanged" if="removeSetPathneeded">
+		<replaceTokenInFile path="${filePath}" token="${setPathToken}" value="" property="isRemoved" ignorecase="false" />
+		<wscmtlog>Did modifications to ${filePath} get removed: ${isRemoved}</wscmtlog>
+		<echo>Did modifications to ${filePath} get removed: ${isRemoved}</echo>
+	</target>
+	
+    <target name="install" depends="detectPlatform, setNewPATHValue">	
+	</target>
+	
+	<target name="uninstall" depends="detectPlatform, removeSetNewPATHValue">
+	</target>
+
+</project>

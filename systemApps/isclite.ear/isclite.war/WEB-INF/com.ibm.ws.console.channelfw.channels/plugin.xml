@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plugin SYSTEM "plugin.dtd">
+
+<!-- Definitions for WebSphere Application Server Administrative Console   -->
+<!-- 5724-J08, 5724-I63, 5724-H88, 5724-H89, 5655-N02, 5733-W70 COPYRIGHT International Business Machines Corp. 2004,2011 -->
+<!-- All Rights Reserved * Licensed Materials - Property of IBM -->
+<plugin id="com.ibm.ws.console.channelfw.channels"
+        name="channelfw.channels"
+        version="6.0.0"
+        vendor-name="IBM Corp. - WebSphere Channel Framework"
+        embedded="true"
+        context-root="channelfw.channels">
+
+  <requires>
+    <import plugin="com.ibm.ws.console.core"/>
+    <import plugin="com.ibm.ws.console.channelfw"/>
+    <import plugin="com.ibm.ws.console.servermanagement"/>
+  </requires>
+
+  <!-- TCPInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="TCPInboundChannel"
+                   detailPage="TCPInboundChannel.config.view"
+                   displayName="TCPInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.tcp.TCPInboundChannelSummarizer"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.TCPInboundChannel.properties.link"
+             contextType="TCPInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=TCPInboundChannel.config.view"/>
+
+      <link categoryId="related.items"
+            label="NamedEndPoint.displayName"
+            description="NamedEndPoint.description"
+            actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints"/>
+
+      <link categoryId="related.items"
+            label="ThreadPools.displayName"
+            description="ThreadPools.description"
+            actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=ThreadPools.content.main&amp;sfname=services">
+            <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+            </compatibility>
+      </link>
+    </linkSet>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.form">
+      <form id="detail.config.general.properties" contextType="TCPInboundChannel">
+           <field attributeName="threadPool" perspective="config">
+                <compatibility>
+                    <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os400|aix|hpux|linux|solaris|windows)"/>
+                </compatibility>
+           </field>   
+      </form>
+  </extension>
+
+  <!-- SSLInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="SSLInboundChannel"
+                   detailPage="SSLInboundChannel.config.view"
+                   displayName="SSLInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.ssl.SSLInboundChannelSummarizer"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.SSLInboundChannel.properties.link"
+             contextType="SSLInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=SSLInboundChannel.config.view"/>
+
+      <link categoryId="related.items"
+            label="ServerSSLConfig.displayName"
+            description="ServerSSLConfig.description"
+            actionURI="com.ibm.ws.console.security.forwardCmd.do?forwardName=SSLConfig.content.main"/>
+   
+    </linkSet>
+  </extension>
+
+  <!-- HTTPInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="HTTPInboundChannel"
+                   detailPage="HTTPInboundChannel.config.view"
+                   displayName="HTTPInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.http.HTTPInboundChannelSummarizer"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.HTTPInboundChannel.properties.link"
+             contextType="HTTPInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=HTTPInboundChannel.config.view"/>
+             
+      <link categoryId="related.items"
+            label="HTTPAccessLoggingService.displayName"
+            description="HTTPAccessLoggingService.description"
+            actionURI="com.ibm.ws.console.httpaccesslogging.forwardCmd.do?forwardName=HTTPAccessLoggingService.config.view&amp;sfname=services&amp;parentType=Server"/>
+    </linkSet>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.form">
+  <form id="HTTPInboundChannel.config.general.properties" contextType="HTTPInboundChannel">
+    <field attributeName="denialOfServiceJSP"
+         perspective="config">         
+         <compatibility>    
+           <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>               
+         </compatibility> 
+    </field>
+    <field attributeName="enableLogging"
+         perspective="config">         
+         <compatibility>    
+           <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[5-6]"/>               
+         </compatibility> 
+    </field>
+    <field attributeName="loggingJSP"
+         perspective="config">         
+         <compatibility>    
+           <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>               
+         </compatibility> 
+    </field>
+  </form>
+  </extension>
+
+  <!-- HTTPTunnelInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="HTTPTunnelInboundChannel"
+                   detailPage="HTTPTunnelInboundChannel.config.view"
+                   displayName="HTTPTunnelInboundChannel.displayName"/>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.HTTPTunnelInboundChannel.properties.link"
+             contextType="HTTPTunnelInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=HTTPTunnelInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+  <!-- WebContainerInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="WebContainerInboundChannel"
+                   detailPage="WebContainerInboundChannel.config.view"
+                   displayName="WebContainerInboundChannel.displayName"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.form">
+  <form id="detail.config.general.properties" contextType="WebContainerInboundChannel">
+    <field attributeName="enableFRCA"
+         perspective="config">         
+         <compatibility>  
+           <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>  
+           <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[7-9]"/>               
+         </compatibility> 
+    </field>
+  </form>
+  </extension>
+    
+  <extension point="com.ibm.websphere.wsc.link">
+    
+    <linkSet id="channelfw.WebContainerInboundChannel.properties.link"
+             contextType="WebContainerInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=WebContainerInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+
+  <!-- GenericInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="GenericInboundChannel"
+                   detailPage="GenericInboundChannel.config.view"
+                   displayName="GenericInboundChannel.displayName"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.GenericInboundChannel.properties.link"
+             contextType="GenericInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=GenericInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+  <!-- DCSInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="DCSInboundChannel"
+                   detailPage="DCSInboundChannel.config.view"
+                   displayName="DCSInboundChannel.displayName"/>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.DCSInboundChannel.properties.link"
+             contextType="DCSInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=DCSInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+  <!-- ProxyInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="ProxyInboundChannel"
+                   detailPage="ProxyInboundChannel.config.view"
+                   displayName="ProxyInboundChannel.displayName"/>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.ProxyInboundChannel.properties.link"
+             contextType="ProxyInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ProxyInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+<!-- LIDB2356-40 changes begin here -->
+
+<!-- UDPInboundChannel -->
+<extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="UDPInboundChannel"
+                   detailPage="UDPInboundChannel.config.view"
+                   displayName="UDPInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.udp.UDPInboundChannelSummarizer"/>
+</extension>
+  
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.UDPInboundChannel.properties.link"
+             contextType="UDPInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=UDPInboundChannel.config.view"/>
+
+      <link categoryId="related.items"
+            label="NamedEndPoint.displayName"
+            description="NamedEndPoint.description"
+            actionURI="com.ibm.ws.console.servermanagement.forwardCmd.do?forwardName=NamedEndPoint.content.main&amp;sfname=specialEndpoints"/>
+    </linkSet>
+</extension>
+
+  <!-- SIPInboundChannel -->
+<extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="SIPInboundChannel"
+                   detailPage="SIPInboundChannel.config.view"
+                   displayName="SIPInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.sip.SIPInboundChannelSummarizer"/>
+</extension>
+  
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.SIPInboundChannel.properties.link"
+             contextType="SIPInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=SIPInboundChannel.config.view"/>
+    </linkSet>            
+</extension>
+
+<!-- SIPContainerInboundChannel -->
+<extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="SIPContainerInboundChannel"
+                   detailPage="SIPContainerInboundChannel.config.view"
+                   displayName="SIPContainerInboundChannel.displayName"/>
+</extension>
+  
+<extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.SIPContainerInboundChannel.properties.link"
+             contextType="SIPContainerInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=SIPContainerInboundChannel.config.view"/>
+    </linkSet>
+</extension>
+  
+  <!-- SIPProxyInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="SIPProxyInboundChannel"
+                   detailPage="SIPProxyInboundChannel.config.view"
+                   displayName="SIPProxyInboundChannel.displayName"
+                   summarizer="com.ibm.ws.console.channelfw.channels.sipproxy.SIPProxyInboundChannelSummarizer"/>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.detailTab">
+    <detailTab id="sipproxy.SIPProxyInboundChannel.detailTab1" contextType="SIPProxyInboundChannel">
+        <tab
+              label="tab.configuration"
+              contentURI="SIPProxyInboundChannel.config.tab.view">
+        </tab>
+    </detailTab>
+  </extension>
+  
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.SIPProxyInboundChannel.properties.link"
+             contextType="SIPProxyInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=SIPProxyInboundChannel.config.view"/>
+    </linkSet>            
+  </extension>
+  
+<!-- LIDB2356-40 changes end here -->
+<!-- ORBInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="ORBInboundChannel"
+                   detailPage="ORBInboundChannel.config.view"
+                   displayName="ORBInboundChannel.displayName"/>
+  </extension>
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.ORBInboundChannel.properties.link"
+             contextType="ORBInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=ORBInboundChannel.config.view"/>
+            
+      <link categoryId="related.items"
+                label="ORBServiceTransports.displayName"
+                description="ORBInboundChannel.description"
+                actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Chain.content.main&amp;lastPage=ObjectRequestBroker.config.view&amp;chainAcceptorFilter=ORBInboundChannel"/>
+            
+    </linkSet>
+    
+   </extension>
+  <extension point="com.ibm.websphere.wsc.link">
+     <linkSet id="channelfw.ORBInboundChannel.properties.link" 
+              contextType="ObjectRequestBroker">
+              
+        <link categoryId="additional.properties"
+              label="ORBServiceTransports.displayName"
+              description="ORBInboundChannel.description"
+              actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=ORBChain.content.main&amp;lastPage=ObjectRequestBroker.config.view&amp;chainAcceptorFilter=ORBInboundChannel">
+              <!-- 371964 edited line above -->
+              <compatibility>
+                <match key="com.ibm.websphere.nodeOperatingSystem"  value="(os390)"/>
+                <!-- PM20587 Hide this link from V5 -->
+                <match key="com.ibm.websphere.baseProductMajorVersion" 	value="[6-9]"/>
+              </compatibility>
+        </link>
+     </linkSet>
+  </extension>
+     
+  <!-- End ORBInboundChannel -->
+
+  <!-- DataPowerMgrInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="DataPowerMgrInboundChannel"
+                   detailPage="DataPowerMgrInboundChannel.config.view"
+                   displayName="DataPowerMgrInboundChannel.displayName"/>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.DataPowerMgrInboundChannel.properties.link"
+             contextType="DataPowerMgrInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=DataPowerMgrInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+
+	<!-- End DataPowerMgrInboundChannel -->
+	
+  <!-- HTTPQueueInboundChannel -->
+  <extension point="com.ibm.ws.console.channelfw.channelDetail">
+    <channelDetail contextType="HTTPQueueInboundChannel"
+                   detailPage="HTTPQueueInboundChannel.config.view"
+                   displayName="HTTPQueueInboundChannel.displayName"/>
+  </extension>
+
+  <extension point="com.ibm.websphere.wsc.link">
+    <linkSet id="channelfw.HTTPQueueInboundChannel.properties.link"
+             contextType="HTTPQueueInboundChannel">
+             
+      <link categoryId="additional.properties"
+            label="Component.properties.displayName"
+            description="Component.properties.description"
+            actionURI="com.ibm.ws.console.channelfw.forwardCmd.do?forwardName=Property.content.main&amp;sfname=properties&amp;lastPage=HTTPQueueInboundChannel.config.view"/>
+    </linkSet>
+  </extension>
+  <!-- End HTTPQueueInboundChannel -->
+
+  <extension point="com.ibm.ws.console.core.help">
+	<toc file="toc.xml" primary="true" />
+  </extension>
+  
+</plugin>
